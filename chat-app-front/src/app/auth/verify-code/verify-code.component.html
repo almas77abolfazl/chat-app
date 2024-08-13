@@ -1,0 +1,13 @@
+<div class="verify-code-container">
+  <div class="verify-box">
+    <h2>Verify Your Number</h2>
+    <p>A verification code has been sent to {{ phoneNumber }}</p>
+    <input
+      type="text"
+      [(ngModel)]="verificationCode"
+      placeholder="Enter Verification Code"
+      class="input-field"
+    />
+    <button (click)="verifyCode()" class="submit-btn">Verify</button>
+  </div>
+</div>
