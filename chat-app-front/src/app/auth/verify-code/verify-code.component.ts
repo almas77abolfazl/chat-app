@@ -19,6 +19,6 @@ export class VerifyCodeComponent {
 
   verifyCode() {
     // اینجا باید کدی نوشته بشه که کد تایید رو به سرور بفرسته و صحت اون رو بررسی کنه
-    this.router.navigate(['/chat']);
+    this.router.navigate(['/home']);
   }
 }
