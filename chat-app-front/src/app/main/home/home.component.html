@@ -1,50 +1,55 @@
-<div class="home-container">
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <h3>Chat App</h3>
-      <button class="new-chat-btn">+</button>
-    </div>
-    <div class="sidebar-content">
-      <input type="text" placeholder="Search" class="search-input" />
-      <div class="contact-list">
-        <!-- لیست دوستان و گروه‌ها اینجا نمایش داده می‌شود -->
-        <div class="contact-item active">
-          <div class="avatar"></div>
-          <div class="contact-info">
-            <h4>John Doe</h4>
-            <p>Last message preview...</p>
-          </div>
-        </div>
-        <!-- تکرار برای هر دوست/گروه/چنل -->
+<!-- home.component.html -->
+<div class="chat-container">
+  <div class="chat-sidebar">
+    <div class="chat-sidebar-header">
+      <div class="profile-section">
+        <div class="avatar"></div>
+        <h3>Your Name</h3>
       </div>
+      <button class="new-chat-btn">New Chat</button>
+    </div>
+    <input type="text" placeholder="Search" class="chat-search-input" />
+    <div class="chat-list">
+      <div class="chat-list-item active">
+        <div class="avatar"></div>
+        <div class="chat-list-info">
+          <h4>John Doe</h4>
+          <p>Last message preview...</p>
+        </div>
+        <span class="chat-time">10:30 AM</span>
+      </div>
+      <!-- تکرار برای سایر چت‌ها -->
     </div>
   </div>
 
-  <div class="chat-area">
-    <div class="chat-header">
-      <div class="chat-info">
+  <div class="chat-main">
+    <div class="chat-main-header">
+      <div class="chat-header-info">
+        <div class="avatar"></div>
         <h4>John Doe</h4>
         <p>Online</p>
       </div>
-      <div class="chat-actions">
-        <button class="search-btn">🔍</button>
-        <button class="more-btn">⋮</button>
+      <div class="chat-header-actions">
+        <button>Search</button>
+        <button>Call</button>
+        <button>More</button>
       </div>
     </div>
-    <div class="chat-content">
-      <!-- پیام‌ها اینجا نمایش داده می‌شوند -->
+
+    <div class="chat-messages">
       <div class="message received">
         <p>Hello, how are you?</p>
         <span class="message-time">10:30 AM</span>
       </div>
       <div class="message sent">
-        <p>I'm fine, thanks!</p>
+        <p>I'm fine, thanks! And you?</p>
         <span class="message-time">10:32 AM</span>
       </div>
-      <!-- تکرار برای هر پیام -->
+      <!-- تکرار برای سایر پیام‌ها -->
     </div>
+
     <div class="chat-input-area">
-      <input type="text" placeholder="Type a message..." class="chat-input" />
+      <input type="text" placeholder="Type your message..." />
       <button class="send-btn">Send</button>
     </div>
   </div>

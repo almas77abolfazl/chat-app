@@ -1,3 +1,4 @@
+import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
@@ -12,12 +13,23 @@ import { Router, RouterModule } from '@angular/router';
 export class LoginComponent {
   phoneNumber: string = '';
 
-  constructor(private router: Router) {}
+  constructor(private http: HttpClient, private router: Router) {}
 
   sendCode() {
-    // اینجا باید کدی نوشته بشه که شماره تلفن رو به سرور بفرسته و درخواست ارسال کد بده
-    this.router.navigate(['/verify-code'], {
-      queryParams: { phone: this.phoneNumber },
-    });
+    this.http
+      .post<{ code: string }>('/api/auth/send-code', {
+        phoneNumber: this.phoneNumber,
+      })
+      .subscribe({
+        next: (response) => {
+          console.log('Verification code:', response.code);
+          this.router.navigate(['/verify-code'], {
+            queryParams: { phone: this.phoneNumber },
+          });
+        },
+        error: (error) => {
+          console.error('Error sending code:', error);
+        },
+      });
   }
 }

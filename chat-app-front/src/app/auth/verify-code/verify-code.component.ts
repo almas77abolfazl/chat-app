@@ -1,3 +1,4 @@
+import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -13,12 +14,30 @@ export class VerifyCodeComponent {
   verificationCode: string = '';
   phoneNumber: string | null = null;
 
-  constructor(private route: ActivatedRoute, private router: Router) {
+  constructor(
+    private http: HttpClient,
+    private route: ActivatedRoute,
+    private router: Router
+  ) {
     this.phoneNumber = this.route.snapshot.queryParamMap.get('phone');
   }
 
   verifyCode() {
-    // اینجا باید کدی نوشته بشه که کد تایید رو به سرور بفرسته و صحت اون رو بررسی کنه
-    this.router.navigate(['/home']);
+    this.http
+      .post<{ success: boolean }>('/api/auth/verify-code', {
+        code: this.verificationCode,
+      })
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            console.log('Verification successful');
+
+            this.router.navigate(['/home']);
+          }
+        },
+        error: (err) => {
+          console.error('Invalid verification code');
+        },
+      });
   }
 }
