@@ -47,7 +47,7 @@ export class AuthService {
           });
         },
         error: (error) => {
-          console.error('Error sending code:', error);
+          console.error('Error sending code:', error.error.message);
         },
       });
   }
