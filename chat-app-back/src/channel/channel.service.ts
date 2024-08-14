@@ -40,7 +40,7 @@ export class ChannelService {
     sender: string,
     content: string,
   ): Promise<Message> {
-    // Logic to send a message in a channel
+    return null;
   }
 
   create(createChannelDto: CreateChannelDto) {

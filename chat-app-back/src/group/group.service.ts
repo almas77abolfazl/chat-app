@@ -32,6 +32,7 @@ export class GroupService {
     sender: string,
     content: string,
   ): Promise<Message> {
+    return null;
     // Logic to send a message in a group
   }
 

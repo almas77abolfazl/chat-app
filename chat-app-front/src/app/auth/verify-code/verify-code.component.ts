@@ -1,7 +1,7 @@
-import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { AuthService } from '../auth.service';
 
 @Component({
   selector: 'app-verify-code',
@@ -14,30 +14,11 @@ export class VerifyCodeComponent {
   verificationCode: string = '';
   phoneNumber: string | null = null;
 
-  constructor(
-    private http: HttpClient,
-    private route: ActivatedRoute,
-    private router: Router
-  ) {
-    this.phoneNumber = this.route.snapshot.queryParamMap.get('phone');
+  constructor(private authService: AuthService, private route: ActivatedRoute) {
+    this.phoneNumber = this.route.snapshot.queryParamMap.get('phoneNumber');
   }
 
   verifyCode() {
-    this.http
-      .post<{ success: boolean }>('/api/auth/verify-code', {
-        code: this.verificationCode,
-      })
-      .subscribe({
-        next: (response) => {
-          if (response.success) {
-            console.log('Verification successful');
-
-            this.router.navigate(['/home']);
-          }
-        },
-        error: (err) => {
-          console.error('Invalid verification code');
-        },
-      });
+    this.authService.verifyCode(this.verificationCode);
   }
 }
