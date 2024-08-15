@@ -12,13 +12,13 @@ import { AuthService } from '../auth.service';
 })
 export class VerifyCodeComponent {
   verificationCode: string = '';
-  phoneNumber: string | null = null;
+  phoneNumber: string = '';
 
   constructor(private authService: AuthService, private route: ActivatedRoute) {
     this.phoneNumber = this.route.snapshot.queryParamMap.get('phoneNumber');
   }
 
   verifyCode() {
-    this.authService.verifyCode(this.verificationCode);
+    this.authService.verifyCode(this.verificationCode, this.phoneNumber);
   }
 }

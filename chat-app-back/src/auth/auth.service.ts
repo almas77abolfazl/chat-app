@@ -18,11 +18,15 @@ export class AuthService {
   ) {}
 
   async sendVerificationCode(phoneNumber: string): Promise<{ code: string }> {
-    this.userService.createUser(phoneNumber);
-    console.log(
-      `Sending verification code ${this.verificationCode} to ${phoneNumber}`,
-    );
-    return { code: this.verificationCode };
+    try {
+      this.userService.createUser(phoneNumber);
+      console.log(
+        `Sending verification code ${this.verificationCode} to ${phoneNumber}`,
+      );
+      return { code: this.verificationCode };
+    } catch (error) {
+      handleException(error);
+    }
   }
 
   async verifyCode(
@@ -31,7 +35,7 @@ export class AuthService {
   ): Promise<{ access_token: string; userId: string }> {
     try {
       if (verifyCodeDto.code === this.verificationCode) {
-        const accessToken = this.jwtService.sign(verifyCodeDto.phoneNumber);
+        const accessToken = this.jwtService.sign(verifyCodeDto);
         const refreshToken = this.generateRefreshToken();
         const user = await this.userService.findUserByPhoneNumber(
           verifyCodeDto.phoneNumber,

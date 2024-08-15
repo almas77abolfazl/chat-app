@@ -1,14 +1,12 @@
 import { Injectable } from '@angular/core';
-import { Observable, map, catchError, of, take } from 'rxjs';
+import { Observable, take } from 'rxjs';
 import { Router } from '@angular/router';
-import { HttpHeaders } from '@angular/common/http';
 import { HttpRequestService } from '../helpers/http-request.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly loginUrl = 'auth/login';
   private readonly logoutUrl = 'auth/logout';
   private readonly refreshTokenUrl = 'auth/refreshToken';
 
@@ -16,23 +14,6 @@ export class AuthService {
     private httpRequestService: HttpRequestService,
     private router: Router
   ) {}
-
-  public login(email: string, password: string): Observable<boolean> {
-    return this.httpRequestService
-      .post(this.loginUrl, { email, password })
-      .pipe(
-        take(1),
-        map((response: { access_token: string; userId: string }) => {
-          localStorage.setItem('auth_token', response.access_token);
-          localStorage.setItem('user-id', response.userId);
-          return true;
-        }),
-        catchError((error) => {
-          console.error('Login error', error);
-          return of(false);
-        })
-      );
-  }
 
   sendCode(phoneNumber: string) {
     this.httpRequestService
@@ -52,19 +33,20 @@ export class AuthService {
       });
   }
 
-  verifyCode(code: string) {
-    this.httpRequestService.post('auth/verify-code', { code }).subscribe({
-      next: (response) => {
-        if (response.success) {
+  verifyCode(code: string, phoneNumber: string) {
+    this.httpRequestService
+      .post('auth/verify-code', { code, phoneNumber })
+      .subscribe({
+        next: (response) => {
+          localStorage.setItem('auth_token', response.access_token);
+          localStorage.setItem('user-id', response.userId);
           console.log('Verification successful');
-
           this.router.navigate(['/home']);
-        }
-      },
-      error: (err) => {
-        console.error('Invalid verification code');
-      },
-    });
+        },
+        error: (err) => {
+          console.error('Invalid verification code');
+        },
+      });
   }
 
   public refreshToken(): Observable<any> {
