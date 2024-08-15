@@ -1,7 +1,8 @@
-import { BadRequestException, Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Post, Req } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SendCodeDto } from './dto/send-code.dto';
 import { VerifyCodeDto } from './dto/verify-code.dto';
+import { RequestWithUser } from './interfaces/request-with-user.model';
 
 @Controller('auth')
 export class AuthController {
@@ -15,11 +16,9 @@ export class AuthController {
   @Post('verify-code')
   async verifyCode(
     @Body() verifyCodeDto: VerifyCodeDto,
-  ): Promise<{ success: boolean }> {
-    const isValid = await this.authService.verifyCode(verifyCodeDto.code);
-    if (!isValid) {
-      throw new BadRequestException('Invalid verification code');
-    }
-    return { success: true };
+    @Req() request: RequestWithUser,
+  ): Promise<{ access_token: string; userId: string }> {
+    const deviceName = request['useragent'].deviceNameAndIp;
+    return await this.authService.verifyCode(verifyCodeDto, deviceName);
   }
 }
