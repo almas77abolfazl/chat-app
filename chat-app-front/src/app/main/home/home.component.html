@@ -1,56 +1,78 @@
-<!-- home.component.html -->
 <div class="chat-container">
-  <div class="chat-sidebar">
-    <div class="chat-sidebar-header">
-      <div class="profile-section">
-        <div class="avatar"></div>
-        <h3>Your Name</h3>
-      </div>
-      <button class="new-chat-btn">New Chat</button>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="menu-item">
+      <fa-icon [icon]="['fas', 'comments']"></fa-icon>
+      All chats
     </div>
-    <input type="text" placeholder="Search" class="chat-search-input" />
-    <div class="chat-list">
-      <div class="chat-list-item active">
-        <div class="avatar"></div>
-        <div class="chat-list-info">
-          <h4>John Doe</h4>
-          <p>Last message preview...</p>
-        </div>
-        <span class="chat-time">10:30 AM</span>
-      </div>
-      <!-- تکرار برای سایر چت‌ها -->
+    <div class="menu-item">
+      <fa-icon [icon]="['fas', 'briefcase']"></fa-icon>
+      Work
+    </div>
+    <div class="menu-item">
+      <fa-icon [icon]="['fas', 'user-friends']"></fa-icon>
+      Friends
+    </div>
+    <div class="menu-item">
+      <fa-icon [icon]="['fas', 'newspaper']"></fa-icon>
+      News
+    </div>
+    <div class="menu-item">
+      <fa-icon [icon]="['fas', 'archive']"></fa-icon>
+      Archive chats
+    </div>
+    <div class="menu-item">
+      <fa-icon [icon]="['fas', 'user-circle']"></fa-icon>
+      Profile
+    </div>
+    <div class="menu-item">
+      <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
+      Log out
     </div>
   </div>
 
-  <div class="chat-main">
-    <div class="chat-main-header">
-      <div class="chat-header-info">
-        <div class="avatar"></div>
-        <h4>John Doe</h4>
-        <p>Online</p>
+  <!-- Chat List -->
+  <div class="chat-list">
+    <div class="chat-item">
+      <div class="avatar"></div>
+      <div class="chat-info">
+        <div class="chat-name">Design chat</div>
+        <div class="last-message">Jessie Rollins sent a message</div>
       </div>
-      <div class="chat-header-actions">
-        <button>Search</button>
-        <button>Call</button>
-        <button>More</button>
+      <div class="message-time">4m</div>
+      <div class="message-count">1</div>
+    </div>
+    <!-- More chat items... -->
+  </div>
+
+  <!-- Chat Area -->
+  <div class="chat-area">
+    <div class="chat-header">
+      <div class="chat-title">Design chat</div>
+      <div class="chat-info">23 members, 10 online</div>
+      <div class="chat-options">
+        <fa-icon [icon]="['fas', 'search']" class="icon"></fa-icon>
+        <fa-icon [icon]="['fas', 'ellipsis-h']" class="icon"></fa-icon>
       </div>
     </div>
 
     <div class="chat-messages">
-      <div class="message received">
-        <p>Hello, how are you?</p>
-        <span class="message-time">10:30 AM</span>
+      <div class="message">
+        <div class="avatar"></div>
+        <div class="message-content">
+          <div class="message-author">Jasmin Lowery</div>
+          <div class="message-text">
+            I added new flows to our design system...
+          </div>
+        </div>
+        <div class="message-time">09:23</div>
       </div>
-      <div class="message sent">
-        <p>I'm fine, thanks! And you?</p>
-        <span class="message-time">10:32 AM</span>
-      </div>
-      <!-- تکرار برای سایر پیام‌ها -->
+      <!-- More messages... -->
     </div>
 
-    <div class="chat-input-area">
-      <input type="text" placeholder="Type your message..." />
-      <button class="send-btn">Send</button>
+    <div class="chat-input">
+      <input type="text" placeholder="Your message" />
+      <fa-icon [icon]="['fas', 'paper-plane']" class="send-icon"></fa-icon>
     </div>
   </div>
 </div>
