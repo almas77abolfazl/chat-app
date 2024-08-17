@@ -1,13 +1,17 @@
 <div class="login-container">
-  <div class="login-box">
-    <h2>Welcome Back</h2>
-    <p>Please enter your phone number to continue</p>
-    <input
-      type="text"
-      [(ngModel)]="phoneNumber"
-      placeholder="Phone Number"
-      class="input-field"
-    />
-    <button (click)="sendCode()" class="submit-btn">Send Code</button>
+  <div class="login-card">
+    <h2 class="login-title">Enter your phone number</h2>
+    <div class="input-group">
+      <label for="phone" class="input-label">Phone Number</label>
+      <input
+        type="text"
+        id="phone"
+        class="input-field"
+        placeholder="+1 234 567 8901"
+      />
+    </div>
+    <button class="submit-btn" (click)="sendCode()">
+      Send Verification Code
+    </button>
   </div>
 </div>

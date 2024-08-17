@@ -1,9 +1,10 @@
 import { Component } from '@angular/core';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 @Component({
   selector: 'app-chat-list',
   standalone: true,
-  imports: [],
+  imports: [FontAwesomeModule],
   templateUrl: './chat-list.component.html',
   styleUrl: './chat-list.component.scss'
 })
