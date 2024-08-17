@@ -19,7 +19,12 @@
     <fa-icon [icon]="['fas', 'archive']"></fa-icon>
     Archive chats
   </div>
-  <div class="menu-item">
+
+
+  -------
+
+
+  <div class="menu-item" (click)="mainService.openEditProfileModal()">
     <fa-icon [icon]="['fas', 'user-circle']"></fa-icon>
     Profile
   </div>
