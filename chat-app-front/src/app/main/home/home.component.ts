@@ -15,17 +15,24 @@ import {
   faEllipsisH,
   faPaperPlane,
 } from '@fortawesome/free-solid-svg-icons';
+import { SideBarComponent } from './side-bar/side-bar.component';
+import { ChatListComponent } from './chat-list/chat-list.component';
+import { ChatAreaComponent } from './chat-area/chat-area.component';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [FontAwesomeModule],
+  imports: [
+    FontAwesomeModule,
+    SideBarComponent,
+    ChatListComponent,
+    ChatAreaComponent,
+  ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
 export class HomeComponent {
   constructor(library: FaIconLibrary) {
-    // اضافه کردن آیکون‌های مورد نیاز به کتابخانه
     library.addIcons(
       faComments,
       faBriefcase,
@@ -36,7 +43,7 @@ export class HomeComponent {
       faSignOutAlt,
       faPaperPlane,
       faSearch,
-      faEllipsisH,
+      faEllipsisH
     );
   }
 }
