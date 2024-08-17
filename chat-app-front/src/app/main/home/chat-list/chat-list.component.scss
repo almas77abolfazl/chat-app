@@ -1,3 +1,36 @@
+.search-container {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 0;
+  border: unset;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 16px;
+  color: #333;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+
+  &:focus {
+    outline: none;
+    border-color: #4a76a8;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.search-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #aaa;
+  font-size: 18px;
+  pointer-events: none;
+}
+
 .chat-list {
   width: 300px;
   background-color: #ffffff;
@@ -6,8 +39,8 @@
   .chat-item {
     display: flex;
     align-items: center;
-    margin-bottom: 15px;
-    padding: 10px;
+    margin-bottom: 8px;
+    padding: 8px;
     cursor: pointer;
     &:hover {
       background-color: #f0f0f0;
