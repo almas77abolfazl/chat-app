@@ -1,4 +1,4 @@
-import { IsMongoId, IsOptional, IsString, Length } from 'class-validator';
+import { IsOptional, IsString, Length } from 'class-validator';
 
 export class UpdateUserNamesDto {
   @IsString()
@@ -10,7 +10,4 @@ export class UpdateUserNamesDto {
   @IsOptional()
   @Length(0, 20)
   lastName: string;
-
-  @IsMongoId()
-  id: string;
 }

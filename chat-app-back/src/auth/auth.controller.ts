@@ -17,7 +17,7 @@ export class AuthController {
   async verifyCode(
     @Body() verifyCodeDto: VerifyCodeDto,
     @Req() request: RequestWithUser,
-  ): Promise<{ access_token: string; userId: string }> {
+  ): Promise<{ access_token: string; userId: string; hasName: boolean }> {
     const deviceName = request['useragent'].deviceNameAndIp;
     return await this.authService.verifyCode(verifyCodeDto, deviceName);
   }

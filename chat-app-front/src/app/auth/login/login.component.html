@@ -4,10 +4,11 @@
     <div class="input-group">
       <label for="phone" class="input-label">Phone Number</label>
       <input
+        [(ngModel)]="phoneNumber"
         type="text"
         id="phone"
         class="input-field"
-        placeholder="+1 234 567 8901"
+        placeholder="+989103404865"
       />
     </div>
     <button class="submit-btn" (click)="sendCode()">

@@ -41,10 +41,24 @@ export class AuthService {
           localStorage.setItem('auth_token', response.access_token);
           localStorage.setItem('user-id', response.userId);
           console.log('Verification successful');
-          this.router.navigate(['/home']);
+          if (response.hasName) this.router.navigate(['/home']);
+          else this.router.navigate(['/fill-names']);
         },
         error: (err) => {
           console.error('Invalid verification code');
+        },
+      });
+  }
+
+  updateUserNames(firstName: string, lastName: string) {
+    this.httpRequestService
+      .post('user/updateUserNames', { firstName, lastName })
+      .subscribe({
+        next: (response) => {
+          this.router.navigate(['/home']);
+        },
+        error: (err) => {
+          console.error('Invalid updating user names');
         },
       });
   }
