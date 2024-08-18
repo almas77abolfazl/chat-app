@@ -12,10 +12,16 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
   styleUrl: './edit-profile.component.scss',
 })
 export class EditProfileComponent {
+  pictureSrc = 'default_profile.jpg';
   constructor(
     public dialogRef: MatDialogRef<EditProfileComponent>,
     @Inject(MAT_DIALOG_DATA)
-    public data: { name: string; bio: string; status: string }
+    public data: {
+      firstName: string;
+      lastName: string;
+      bio: string;
+      status: string;
+    }
   ) {}
 
   onCancel(): void {
@@ -25,9 +31,9 @@ export class EditProfileComponent {
   onSave(): void {
     // فرض کنید تغییرات را ذخیره کنید و سپس مودال را ببندید
     this.dialogRef.close({
-      name: this.data.name,
-      bio: this.data.bio,
-      status: this.data.status,
+      firstName: this.data.firstName,
+      lastName: this.data.lastName,
+      bio: this.data.bio
     });
   }
 

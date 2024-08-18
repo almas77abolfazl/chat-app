@@ -9,6 +9,7 @@ import { HttpRequestService } from '../helpers/http-request.service';
 export class AuthService {
   private readonly logoutUrl = 'auth/logout';
   private readonly refreshTokenUrl = 'auth/refreshToken';
+  phoneNumber: string = localStorage.getItem('phoneNumber');
 
   constructor(
     private httpRequestService: HttpRequestService,
@@ -23,6 +24,7 @@ export class AuthService {
       .subscribe({
         next: (response) => {
           console.log('Verification code:', response.code);
+          localStorage.setItem('phoneNumber', phoneNumber);
           this.router.navigate(['/verify-code'], {
             queryParams: { phoneNumber },
           });
@@ -40,8 +42,11 @@ export class AuthService {
         next: (response) => {
           localStorage.setItem('auth_token', response.access_token);
           localStorage.setItem('user-id', response.userId);
+          localStorage.setItem('user-firstName', response.firstName);
+          localStorage.setItem('user-lastName', response.lastName);
+          localStorage.setItem('user-bio', response.bio);
           console.log('Verification successful');
-          if (response.hasName) this.router.navigate(['/home']);
+          if (response.firstName && response.lastName) this.gotoHome();
           else this.router.navigate(['/fill-names']);
         },
         error: (err) => {
@@ -55,12 +60,28 @@ export class AuthService {
       .post('user/updateUserNames', { firstName, lastName })
       .subscribe({
         next: (response) => {
-          this.router.navigate(['/home']);
+          this.gotoHome();
         },
         error: (err) => {
           console.error('Invalid updating user names');
         },
       });
+  }
+
+  public gotoHome() {
+    this.router.navigate(['/home']);
+  }
+
+  public gotoLogin() {
+    this.router.navigate(['/login']);
+  }
+
+  public async isLoggedIn() {
+    const token = this.getAuthToken();
+    const userId = this.getUserId();
+    if (!token || !userId) return false;
+    //TODO call api
+    return true;
   }
 
   public refreshToken(): Observable<any> {
@@ -70,14 +91,29 @@ export class AuthService {
 
   public logout(): void {
     const headers = { _id: this.getUserId() };
-    this.router.navigate(['/login']);
     this.httpRequestService
       .post(this.logoutUrl, {}, headers)
       .pipe(take(1))
-      .subscribe((x: any) => {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('user-id');
-      });
+      .subscribe(
+        (x: any) => {
+          this.gotoLogin();
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user-id');
+          localStorage.removeItem('phoneNumber');
+          localStorage.removeItem('user-lastName');
+          localStorage.removeItem('user-firsName');
+          localStorage.removeItem('user-bio');
+        },
+        (err) => {
+          this.gotoLogin();
+          localStorage.removeItem('auth_token');
+          localStorage.removeItem('user-id');
+          localStorage.removeItem('phoneNumber');
+          localStorage.removeItem('user-lastName');
+          localStorage.removeItem('user-firsName');
+          localStorage.removeItem('user-bio');
+        }
+      );
   }
 
   public getAuthToken(): string {

@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { VerifyCodeDto } from './dto/verify-code.dto';
 import * as crypto from 'crypto';
 import { IUser } from 'src/user/interfaces/user.interface';
+import { RequestWithUser } from './interfaces/request-with-user.model';
 
 @Injectable()
 export class AuthService {
@@ -32,7 +33,12 @@ export class AuthService {
   async verifyCode(
     verifyCodeDto: VerifyCodeDto,
     deviceName: string,
-  ): Promise<{ access_token: string; userId: string; hasName: boolean }> {
+  ): Promise<{
+    access_token: string;
+    userId: string;
+    firstName: string;
+    lastName: string;
+  }> {
     try {
       if (verifyCodeDto.code === this.verificationCode) {
         const accessToken = this.jwtService.sign(verifyCodeDto);
@@ -44,7 +50,8 @@ export class AuthService {
         return {
           access_token: accessToken,
           userId: user._id as string,
-          hasName: !!user.lastName || !!user.firstName,
+          firstName: user.firstName,
+          lastName: user.lastName,
         };
       }
       new BadRequestException('Invalid verification code');
@@ -72,6 +79,20 @@ export class AuthService {
   public async validateUserByJwt(payload: JwtPayload): Promise<User> {
     try {
       return await this.userService.findUserByPhoneNumber(payload.phoneNumber);
+    } catch (error) {
+      handleException(error);
+    }
+  }
+
+  public async logout(request: RequestWithUser, userId: string) {
+    try {
+      const deviceName = request['useragent'].deviceNameAndIp;
+      const user = await this.userService.findById(userId);
+      user.sessions = user.sessions.filter(
+        (x) => x['deviceName'] != deviceName,
+      );
+      await this.userService.update(user._id as string, user);
+      return { message: 'ok' };
     } catch (error) {
       handleException(error);
     }

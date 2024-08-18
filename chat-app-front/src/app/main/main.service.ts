@@ -1,18 +1,19 @@
 import { Injectable } from '@angular/core';
 import { EditProfileComponent } from './edit-profile/edit-profile.component';
 import { MatDialog } from '@angular/material/dialog';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class MainService {
-  constructor(private dialog: MatDialog) {}
+  constructor(private dialog: MatDialog, private authService: AuthService) {}
 
   openEditProfileModal(): void {
     const dialogRef = this.dialog.open(EditProfileComponent, {
       width: '500px',
       data: {
-        name: 'Current User',
-        bio: 'Current Bio',
-        status: 'Available',
+        firstName: localStorage.getItem('user-firstName') || '',
+        lastName: localStorage.getItem('user-lastName') || '',
+        bio: localStorage.getItem('user-bio') || '',
       },
     });
 
@@ -22,5 +23,9 @@ export class MainService {
         // اینجا می‌توانید اطلاعات جدید را ذخیره کنید یا صفحه را به‌روزرسانی کنید
       }
     });
+  }
+
+  logout() {
+    this.authService.logout();
   }
 }

@@ -42,6 +42,10 @@ function handle401Error(
   next: HttpHandlerFn,
   authService: AuthService
 ): Observable<HttpEvent<any>> {
+  if (req.url.includes('logout')) {
+    authService.logout();
+    return throwError(() => new Error('به مولا بای'));
+  }
   if (!isRefreshing) {
     isRefreshing = true;
     refreshTokenSubject.next(null);
