@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { EditProfileComponent } from './edit-profile/edit-profile.component';
 import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../auth/auth.service';
+import { ContactsComponent } from './contacts/contacts.component';
 
 @Injectable({ providedIn: 'root' })
 export class MainService {
@@ -26,13 +27,9 @@ export class MainService {
   }
 
   showContacts() {
-    const dialogRef = this.dialog.open(EditProfileComponent, {
-      width: '500px',
-      data: {
-        firstName: localStorage.getItem('user-firstName') || '',
-        lastName: localStorage.getItem('user-lastName') || '',
-        bio: localStorage.getItem('user-bio') || '',
-      },
+    const dialogRef = this.dialog.open(ContactsComponent, {
+      width: '300px',
+      data: {},
     });
 
     dialogRef.afterClosed().subscribe((result) => {
