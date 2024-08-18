@@ -25,6 +25,24 @@ export class MainService {
     });
   }
 
+  showContacts() {
+    const dialogRef = this.dialog.open(EditProfileComponent, {
+      width: '500px',
+      data: {
+        firstName: localStorage.getItem('user-firstName') || '',
+        lastName: localStorage.getItem('user-lastName') || '',
+        bio: localStorage.getItem('user-bio') || '',
+      },
+    });
+
+    dialogRef.afterClosed().subscribe((result) => {
+      if (result) {
+        console.log('Profile updated:', result);
+        // اینجا می‌توانید اطلاعات جدید را ذخیره کنید یا صفحه را به‌روزرسانی کنید
+      }
+    });
+  }
+
   logout() {
     this.authService.logout();
   }

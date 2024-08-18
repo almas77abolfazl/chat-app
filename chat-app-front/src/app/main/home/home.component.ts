@@ -15,6 +15,7 @@ import {
   faEllipsisH,
   faPaperPlane,
   faCamera,
+  faUserPlus,
 } from '@fortawesome/free-solid-svg-icons';
 import { SideBarComponent } from './side-bar/side-bar.component';
 import { ChatListComponent } from './chat-list/chat-list.component';
@@ -54,7 +55,8 @@ export class HomeComponent {
       faPaperPlane,
       faSearch,
       faEllipsisH,
-      faCamera
+      faCamera,
+      faUserPlus
     );
   }
 }
