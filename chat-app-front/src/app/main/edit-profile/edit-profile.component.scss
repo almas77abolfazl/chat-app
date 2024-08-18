@@ -1,61 +1,79 @@
-.profile-header {
+.dialog-title {
   text-align: center;
-  margin-bottom: 2rem;
+}
 
-  .profile-picture {
-    position: relative;
-    width: 120px;
-    height: 120px;
-    margin: 0 auto;
-    border-radius: 50%;
-    overflow: hidden;
-    border: 3px solid #ddd;
+.edit-profile-container {
+  display: flex;
+  flex-direction: column;
 
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
+  .profile-header {
+    text-align: center;
+    margin-bottom: 1rem;
 
-    .change-picture {
-      position: absolute;
-      bottom: 0;
-      right: 0;
-      background-color: rgba(0, 0, 0, 0.5);
-      color: #fff;
-      padding: 0.5rem;
+    .profile-picture {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      margin: 0 auto;
       border-radius: 50%;
-      cursor: pointer;
+      overflow: hidden;
+      border: 3px solid #ddd;
 
-      fa-icon {
-        font-size: 16px;
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .change-picture {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        color: #fff;
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        fa-icon {
+          font-size: 16px;
+        }
       }
     }
   }
-}
 
-.profile-form {
-  .form-group {
-    margin-bottom: 1.5rem;
+  .profile-form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    .form-group {
+      margin: 10px;
 
-    label {
-      display: block;
-      font-weight: bold;
-      margin-bottom: 0.5rem;
-    }
+      label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+      }
 
-    .form-control {
-      width: 100%;
-      padding: 0.75rem;
-      border: 1px solid #ddd;
-      border-radius: 5px;
-      font-size: 16px;
-      transition: border-color 0.3s ease;
+      .form-control {
+        width: 300px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
 
-      &:focus {
-        outline: none;
-        border-color: #4a76a8;
+        &:focus {
+          outline: none;
+          border-color: #4a76a8;
+        }
       }
     }
+  }
+  .edit-profile-footer {
+    margin: 10px;
   }
 }

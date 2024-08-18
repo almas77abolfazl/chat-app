@@ -11,11 +11,11 @@ import { AuthService } from '../auth.service';
   styleUrl: './login.component.scss',
 })
 export class LoginComponent {
-  phoneNumber: string = '';
-
-  constructor(private authService: AuthService) {}
+  constructor(public authService: AuthService) {
+    if (authService.getUserId()) authService.gotoHome();
+  }
 
   sendCode() {
-    this.authService.sendCode(this.phoneNumber);
+    this.authService.sendCode(this.authService.phoneNumber);
   }
 }

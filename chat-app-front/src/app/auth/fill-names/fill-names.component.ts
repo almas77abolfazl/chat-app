@@ -15,7 +15,10 @@ export class FillNamesComponent {
   lastName: string = '';
   errorMessage: string = '';
 
-  constructor(private authService: AuthService) {}
+  constructor(private authService: AuthService) {
+    if (authService.getUserId()) authService.gotoHome();
+    if (!authService.phoneNumber) authService.gotoLogin();
+  }
 
   onSubmit(): void {
     if (!this.firstName && !this.lastName) {

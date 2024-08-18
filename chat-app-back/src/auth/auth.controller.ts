@@ -1,8 +1,16 @@
-import { Body, Controller, Post, Req } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Req,
+  UseGuards,
+  Headers,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SendCodeDto } from './dto/send-code.dto';
 import { VerifyCodeDto } from './dto/verify-code.dto';
 import { RequestWithUser } from './interfaces/request-with-user.model';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -17,8 +25,26 @@ export class AuthController {
   async verifyCode(
     @Body() verifyCodeDto: VerifyCodeDto,
     @Req() request: RequestWithUser,
-  ): Promise<{ access_token: string; userId: string; hasName: boolean }> {
+  ): Promise<{
+    access_token: string;
+    userId: string;
+    firstName: string;
+    lastName: string;
+  }> {
     const deviceName = request['useragent'].deviceNameAndIp;
     return await this.authService.verifyCode(verifyCodeDto, deviceName);
+  }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  async logout(
+    @Req() request: RequestWithUser,
+    @Headers('_id') userId: string,
+  ) {
+    try {
+      return this.authService.logout(request, userId);
+    } catch (error) {
+      return error;
+    }
   }
 }

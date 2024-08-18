@@ -46,6 +46,19 @@ export class UserService {
     }
   }
 
+  async findById(id: string): Promise<IUser | undefined> {
+    try {
+      const user = await this.userModel.findById(id).exec();
+      if (!user) {
+        throw new NotFoundException(`User with ID ${id} not found`);
+      }
+
+      return user;
+    } catch (error) {
+      handleException(error);
+    }
+  }
+
   async update(id: string, user: IUser) {
     try {
       const updatedUser = await this.userModel
