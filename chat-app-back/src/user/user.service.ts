@@ -31,9 +31,12 @@ export class UserService {
     }
   }
 
-  async updateUserNames(dto: UpdateUserNamesDto): Promise<IUser | null> {
+  async updateUserNames(
+    dto: UpdateUserNamesDto,
+    userId: string,
+  ): Promise<IUser | null> {
     try {
-      const user = await this.userModel.findById(dto.id).exec();
+      const user = await this.userModel.findById(userId).exec();
       user.lastName = dto.lastName;
       user.firstName = dto.firstName;
       await user.save();

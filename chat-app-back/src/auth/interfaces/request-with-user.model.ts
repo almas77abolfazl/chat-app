@@ -1,3 +1,3 @@
-import { User } from 'src/user/entities/user.entity';
+import { IUser } from 'src/user/interfaces/user.interface';
 
-export type RequestWithUser = Request & { user: User };
+export type RequestWithUser = Request & { user: IUser };

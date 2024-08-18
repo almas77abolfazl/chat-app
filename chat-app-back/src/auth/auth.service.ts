@@ -32,7 +32,7 @@ export class AuthService {
   async verifyCode(
     verifyCodeDto: VerifyCodeDto,
     deviceName: string,
-  ): Promise<{ access_token: string; userId: string }> {
+  ): Promise<{ access_token: string; userId: string; hasName: boolean }> {
     try {
       if (verifyCodeDto.code === this.verificationCode) {
         const accessToken = this.jwtService.sign(verifyCodeDto);
@@ -41,7 +41,11 @@ export class AuthService {
           verifyCodeDto.phoneNumber,
         );
         await this.saveSessionToDatabase(user, refreshToken, deviceName);
-        return { access_token: accessToken, userId: user._id as string };
+        return {
+          access_token: accessToken,
+          userId: user._id as string,
+          hasName: !!user.lastName || !!user.firstName,
+        };
       }
       new BadRequestException('Invalid verification code');
     } catch (error) {
