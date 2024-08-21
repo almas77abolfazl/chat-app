@@ -6,6 +6,17 @@ import { ContactsComponent } from './contacts/contacts.component';
 
 @Injectable({ providedIn: 'root' })
 export class MainService {
+  currentChat: {
+    title?: string;
+    info?: string;
+    messages?: {
+      avatar: string;
+      author: string;
+      text: string;
+      time: string;
+    }[];
+  } = null;
+
   constructor(private dialog: MatDialog, private authService: AuthService) {}
 
   openEditProfileModal(): void {
