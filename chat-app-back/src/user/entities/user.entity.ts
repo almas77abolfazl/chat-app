@@ -22,6 +22,9 @@ export class User {
   lastName: string;
 
   @Prop()
+  bio: string;
+
+  @Prop()
   profilePicture: string;
 
   @Prop()
