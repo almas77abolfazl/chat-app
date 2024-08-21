@@ -6,6 +6,7 @@ export interface IUser extends Document {
   phoneNumber: string;
   firstName: string;
   lastName: string;
+  bio: string;
   email: string;
   profilePicture: string;
   status: string;
