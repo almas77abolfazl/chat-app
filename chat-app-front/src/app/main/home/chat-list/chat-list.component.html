@@ -4,15 +4,18 @@
       <input type="text" placeholder="Search" class="search-input" />
       <fa-icon [icon]="['fas', 'search']" class="search-icon"></fa-icon>
     </div>
+
+    @for (item of chatItems; track $index) {
     <div class="chat-item">
-      <div class="avatar"></div>
+      <div class="avatar" item.avatar></div>
       <div class="chat-info">
-        <div class="chat-name">Design chat</div>
-        <div class="last-message">Jessie Rollins sent a message</div>
+        <div class="chat-name">{{ item.chatName }}</div>
+        <div class="last-message">{{ item.lastMessage }}</div>
       </div>
-      <div class="message-time">4m</div>
-      <div class="message-count">1</div>
+      <div class="message-time">{{ item.messageTime }}</div>
+      <div class="message-count">{{ item.messageCount }}</div>
     </div>
+    }
   </div>
   <div class="contacts-button-container" (click)="mainService.showContacts()">
     <fa-icon [icon]="['fas', 'user-plus']" class="show-contacts"></fa-icon>

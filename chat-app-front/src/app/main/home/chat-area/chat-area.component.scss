@@ -1,6 +1,7 @@
 .chat-area {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   height: 100%;
   .chat-header {
     display: flex;
@@ -84,5 +85,13 @@
         color: #2d5ebf;
       }
     }
+  }
+
+  .empty-chat {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 22px;
   }
 }

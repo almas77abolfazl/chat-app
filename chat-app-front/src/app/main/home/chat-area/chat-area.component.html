@@ -1,28 +1,38 @@
 <div class="chat-area">
+  @if (mainService.currentChat) {
+
   <div class="chat-header">
-    <div class="chat-title">Design chat</div>
-    <div class="chat-info">23 members, 10 online</div>
+    <div class="chat-title">{{ mainService.currentChat.title }}</div>
+    <div class="chat-info">{{ mainService.currentChat.info }}</div>
     <div class="chat-options">
       <fa-icon [icon]="['fas', 'search']" class="icon"></fa-icon>
       <fa-icon [icon]="['fas', 'ellipsis-h']" class="icon"></fa-icon>
     </div>
   </div>
 
+  @for (msg of mainService.currentChat.messages; track $index) {
+
   <div class="chat-messages">
     <div class="message">
-      <div class="avatar"></div>
+      <div class="avatar" msg.avatar></div>
       <div class="message-content">
-        <div class="message-author">Jasmin Lowery</div>
+        <div class="message-author">{{ msg.author }}</div>
         <div class="message-text">
-          I added new flows to our design system...
+          {{ msg.text }}
         </div>
       </div>
-      <div class="message-time">09:23</div>
+      <div class="message-time">{{ msg.time }}</div>
     </div>
   </div>
+
+  }
 
   <div class="chat-input">
     <input type="text" placeholder="Your message" />
     <fa-icon [icon]="['fas', 'paper-plane']" class="send-icon"></fa-icon>
   </div>
+
+  } @else {
+  <div class="empty-chat">select a chat ...</div>
+  }
 </div>

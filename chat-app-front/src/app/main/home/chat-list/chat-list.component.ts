@@ -10,5 +10,12 @@ import { MainService } from '../../main.service';
   styleUrl: './chat-list.component.scss',
 })
 export class ChatListComponent {
+  chatItems: {
+    avatar: string;
+    chatName: string;
+    lastMessage: string;
+    messageTime: string;
+    messageCount: number;
+  }[] = [];
   constructor(public mainService: MainService) {}
 }
