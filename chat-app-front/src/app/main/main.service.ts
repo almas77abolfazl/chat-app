@@ -3,6 +3,7 @@ import { EditProfileComponent } from './edit-profile/edit-profile.component';
 import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../auth/auth.service';
 import { ContactsComponent } from './contacts/contacts.component';
+import { HttpRequestService } from '../helpers/http-request.service';
 
 @Injectable({ providedIn: 'root' })
 export class MainService {
@@ -17,7 +18,11 @@ export class MainService {
     }[];
   } = null;
 
-  constructor(private dialog: MatDialog, private authService: AuthService) {}
+  constructor(
+    private dialog: MatDialog,
+    private authService: AuthService,
+    private httpRequestService: HttpRequestService
+  ) {}
 
   openEditProfileModal(): void {
     const dialogRef = this.dialog.open(EditProfileComponent, {
@@ -53,5 +58,9 @@ export class MainService {
 
   logout() {
     this.authService.logout();
+  }
+
+  search(query: string) {
+    return this.httpRequestService.get('search?query=' + query);
   }
 }
