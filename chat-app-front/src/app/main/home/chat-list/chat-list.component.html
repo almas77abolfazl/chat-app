@@ -1,11 +1,28 @@
 <div class="chat-list-container">
   <div class="chat-list">
     <div class="search-container">
-      <input type="text" placeholder="Search" class="search-input" />
+      <input
+        type="text"
+        placeholder="Search"
+        class="search-input"
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange($event)"
+      />
       <fa-icon [icon]="['fas', 'search']" class="search-icon"></fa-icon>
     </div>
 
-    @for (item of chatItems; track $index) {
+    @if (searchResults.length > 0) {
+
+    <div class="search-results">
+      @for (result of searchResults; track $index) {
+      <div class="search-result-item">
+        <div class="result-name">{{ result.name }}</div>
+        <div class="result-type">{{ result.type }}</div>
+        <!-- مثلا یوزر یا چنل -->
+      </div>
+      }
+    </div>
+    } @for (item of chatItems; track $index) {
     <div class="chat-item">
       <div class="avatar" item.avatar></div>
       <div class="chat-info">
