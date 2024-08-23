@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ErrorInterceptor } from './helpers/error.interceptor';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { SearchModule } from './search/search.module';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
@@ -33,6 +34,7 @@ import jwtConfig from './config/jwt.config';
     ChatModule,
     GroupModule,
     ChannelModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [
