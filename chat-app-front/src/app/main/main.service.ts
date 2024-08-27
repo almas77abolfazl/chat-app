@@ -4,6 +4,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../auth/auth.service';
 import { ContactsComponent } from './contacts/contacts.component';
 import { HttpRequestService } from '../helpers/http-request.service';
+import { take } from 'rxjs';
 
 @Injectable({ providedIn: 'root' })
 export class MainService {
@@ -34,12 +35,15 @@ export class MainService {
       },
     });
 
-    dialogRef.afterClosed().subscribe((result) => {
-      if (result) {
-        console.log('Profile updated:', result);
-        // اینجا می‌توانید اطلاعات جدید را ذخیره کنید یا صفحه را به‌روزرسانی کنید
-      }
-    });
+    dialogRef
+      .afterClosed()
+      .pipe(take(1))
+      .subscribe((result) => {
+        if (result) {
+          console.log('Profile updated:', result);
+          // اینجا می‌توانید اطلاعات جدید را ذخیره کنید یا صفحه را به‌روزرسانی کنید
+        }
+      });
   }
 
   showContacts() {
