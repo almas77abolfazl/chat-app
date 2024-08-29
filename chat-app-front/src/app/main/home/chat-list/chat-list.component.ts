@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MainService } from '../../main.service';
 import { FormsModule } from '@angular/forms';
-import { debounceTime, Subject } from 'rxjs';
+import { debounceTime, Subject, take } from 'rxjs';
 
 @Component({
   selector: 'app-chat-list',
@@ -40,7 +40,7 @@ export class ChatListComponent {
       return;
     }
 
-    this.mainService.search(query).subscribe(
+    this.mainService.search(query).pipe(take(1)).subscribe(
       (results: any) => {
         this.searchResults = results;
       },
