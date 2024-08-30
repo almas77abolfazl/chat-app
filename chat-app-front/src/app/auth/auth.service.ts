@@ -58,6 +58,7 @@ export class AuthService {
   updateUserNames(firstName: string, lastName: string) {
     this.httpRequestService
       .post('user/updateUserNames', { firstName, lastName })
+      .pipe(take(1))
       .subscribe({
         next: (response) => {
           this.gotoHome();
