@@ -15,16 +15,16 @@ export class FillNamesComponent {
   lastName: string = '';
   errorMessage: string = '';
 
-  constructor(private authService: AuthService) {
-    if (authService.getUserId()) authService.gotoHome();
-    if (!authService.phoneNumber) authService.gotoLogin();
+  constructor(private auth: AuthService) {
+    if (auth.getUserId() && auth.getUserNames()) auth.gotoHome();
+    if (!auth.phoneNumber) auth.gotoLogin();
   }
 
   onSubmit(): void {
     if (!this.firstName && !this.lastName) {
       this.errorMessage = 'Please enter at least your first name or last name.';
     } else {
-      this.authService.updateUserNames(this.firstName, this.lastName);
+      this.auth.updateUserNames(this.firstName, this.lastName);
     }
   }
 }

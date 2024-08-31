@@ -42,12 +42,13 @@ export class AuthService {
         next: (response) => {
           localStorage.setItem('auth_token', response.access_token);
           localStorage.setItem('user-id', response.userId);
-          localStorage.setItem('user-firstName', response.firstName);
-          localStorage.setItem('user-lastName', response.lastName);
-          localStorage.setItem('user-bio', response.bio);
+          if (response.firstName && response.lastName) {
+            localStorage.setItem('user-firstName', response.firstName);
+            localStorage.setItem('user-lastName', response.lastName);
+            localStorage.setItem('user-bio', response.bio);
+            this.gotoHome();
+          } else this.router.navigate(['/fill-names']);
           console.log('Verification successful');
-          if (response.firstName && response.lastName) this.gotoHome();
-          else this.router.navigate(['/fill-names']);
         },
         error: (err) => {
           console.error('Invalid verification code');
@@ -123,5 +124,11 @@ export class AuthService {
 
   public getUserId(): string {
     return localStorage.getItem('user-id') || '';
+  }
+
+  public getUserNames(): string {
+    const lastName = localStorage.getItem('user-lastName') || '';
+    const firstName = localStorage.getItem('user-firsName') || '';
+    return lastName + firstName;
   }
 }
