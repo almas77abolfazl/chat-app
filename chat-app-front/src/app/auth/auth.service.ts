@@ -21,6 +21,7 @@ export class AuthService {
       .post('auth/send-code', {
         phoneNumber,
       })
+      .pipe(take(1))
       .subscribe({
         next: (response) => {
           console.log('Verification code:', response.code);
