@@ -74,6 +74,24 @@ export class UserService {
     }
   }
 
+  async findUsersByQuery(query: string) {
+    try {
+      const searchRegex = new RegExp(query, 'i');
+      const users = await this.userModel
+        .find({
+          $or: [
+            { username: { $regex: searchRegex } },
+            { firstName: { $regex: searchRegex } },
+            { lastName: { $regex: searchRegex } },
+          ],
+        })
+        .select('firstName lastName username _id');
+      return users;
+    } catch (error) {
+      handleException(error);
+    }
+  }
+
   private async doesUserExist(phoneNumber: string): Promise<boolean> {
     try {
       const user = await this.userModel.findOne({ phoneNumber });
