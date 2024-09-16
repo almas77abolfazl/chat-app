@@ -10,9 +10,9 @@
     </div>
   </div>
 
-  @for (msg of mainService.currentChat.messages; track $index) {
-
   <div class="chat-messages">
+    @for (msg of mainService.currentChat.messages; track $index) {
+
     <div class="message">
       <div class="avatar" msg.avatar></div>
       <div class="message-content">
@@ -23,9 +23,9 @@
       </div>
       <div class="message-time">{{ msg.time }}</div>
     </div>
-  </div>
 
-  }
+    }
+  </div>
 
   <div class="chat-input">
     <input #input type="text" placeholder="Your message" />

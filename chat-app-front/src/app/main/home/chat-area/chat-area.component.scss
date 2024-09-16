@@ -32,6 +32,7 @@
   .chat-messages {
     flex-grow: 1;
     padding: 10px;
+    overflow: auto;
     .message {
       display: flex;
       align-items: center;

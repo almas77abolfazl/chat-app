@@ -13,8 +13,6 @@ import { ChatListItem } from '../../../models/chat-list-item.model';
   styleUrl: './chat-list.component.scss',
 })
 export class ChatListComponent {
-
-
   searchQuery: string = ''; // رشته جستجو
   searchResults: any[] = []; // لیست نتایج جستجو
   searchSubject: Subject<string> = new Subject(); // برای دیباونس جستجو
@@ -50,6 +48,7 @@ export class ChatListComponent {
 
   selectChat(user) {
     this.mainService.currentChat = {
+      Id: null,
       title: user.firstName + ' ' + user.lastName,
       info: 'last seen a long time ago',
       messages: [
