@@ -5,25 +5,26 @@ import { AuthService } from '../auth/auth.service';
 import { ContactsComponent } from './contacts/contacts.component';
 import { HttpRequestService } from '../helpers/http-request.service';
 import { take } from 'rxjs';
+import { CurrentChat } from '../models/current-chat.model';
+import { ChatListItem } from '../models/chat-list-item.model';
+import { SocketService } from './socket.service';
 
 @Injectable({ providedIn: 'root' })
 export class MainService {
-  currentChat: {
-    title?: string;
-    info?: string;
-    messages?: {
-      avatar: string;
-      author: string;
-      text: string;
-      time: string;
-    }[];
-  } = null;
+  currentChat: CurrentChat = null;
+  chatItems: ChatListItem[] = [];
 
   constructor(
     private dialog: MatDialog,
     private authService: AuthService,
-    private httpRequestService: HttpRequestService
-  ) {}
+    private httpRequestService: HttpRequestService,
+    private socketService: SocketService
+  ) {
+    this.socketService.receiveMessages().subscribe((message: string) => {
+      const chatItem = this.chatItems.find((x) => x);
+      chatItem.messages.push(null);
+    });
+  }
 
   openEditProfileModal(): void {
     const dialogRef = this.dialog.open(EditProfileComponent, {
@@ -69,5 +70,15 @@ export class MainService {
 
   search(query: string) {
     return this.httpRequestService.get('search?query=' + query);
+  }
+
+  sendMessage(receiverId: string, input: HTMLInputElement) {
+    const messageData = {
+      sender: this.authService.getUserId(), // آی‌دی کاربر فرستنده
+      receiver: receiverId, // آی‌دی دریافت‌کننده (کاربر یا چنل)
+      content: input.value, // محتوای پیام
+    };
+    this.socketService.sendMessage(messageData);
+    input.value = '';
   }
 }

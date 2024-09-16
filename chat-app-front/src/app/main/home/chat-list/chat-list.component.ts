@@ -3,6 +3,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MainService } from '../../main.service';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, Subject, take } from 'rxjs';
+import { ChatListItem } from '../../../models/chat-list-item.model';
 
 @Component({
   selector: 'app-chat-list',
@@ -12,13 +13,7 @@ import { debounceTime, Subject, take } from 'rxjs';
   styleUrl: './chat-list.component.scss',
 })
 export class ChatListComponent {
-  chatItems: {
-    avatar: string;
-    chatName: string;
-    lastMessage: string;
-    messageTime: string;
-    messageCount: number;
-  }[] = [];
+
 
   searchQuery: string = ''; // رشته جستجو
   searchResults: any[] = []; // لیست نتایج جستجو
@@ -40,13 +35,38 @@ export class ChatListComponent {
       return;
     }
 
-    this.mainService.search(query).pipe(take(1)).subscribe(
-      (results: any) => {
-        this.searchResults = results;
-      },
-      (error) => {
-        console.error('Search error:', error);
-      }
-    );
+    this.mainService
+      .search(query)
+      .pipe(take(1))
+      .subscribe(
+        (results: any) => {
+          this.searchResults = results;
+        },
+        (error) => {
+          console.error('Search error:', error);
+        }
+      );
+  }
+
+  selectChat(user) {
+    this.mainService.currentChat = {
+      title: user.firstName + ' ' + user.lastName,
+      info: 'last seen a long time ago',
+      messages: [
+        { author: 'abolfazl', avatar: '', text: 'سلام خوبی', time: '10:50' },
+        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
+        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
+        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
+        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
+        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
+        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
+        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
+        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
+        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
+        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
+        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
+        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
+      ],
+    };
   }
 }

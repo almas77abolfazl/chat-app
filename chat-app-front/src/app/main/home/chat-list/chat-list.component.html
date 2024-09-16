@@ -15,7 +15,7 @@
 
     <div class="search-results">
       @for (result of searchResults; track $index) {
-      <div class="search-result-item">
+      <div class="search-result-item" (click)="selectChat(result)">
         <div class="result-name">
           {{ result.firstName + " " + result.lastName }}
         </div>
@@ -24,7 +24,7 @@
       </div>
       }
     </div>
-    } @for (item of chatItems; track $index) {
+    } @for (item of mainService.chatItems; track $index) {
     <div class="chat-item">
       <div class="avatar" item.avatar></div>
       <div class="chat-info">
