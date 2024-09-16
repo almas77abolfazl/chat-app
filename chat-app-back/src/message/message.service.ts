@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { CreateMessageDto } from './dto/create-message.dto';
-import { UpdateMessageDto } from './dto/update-message.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Message, MessageDocument } from './entities/message.entity';
@@ -11,7 +9,7 @@ export class MessageService {
     @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
   ) {}
 
-  async sendMessage(
+  async saveMessage(
     sender: string,
     receiver: string,
     content: string,
@@ -32,25 +30,5 @@ export class MessageService {
         ],
       })
       .exec();
-  }
-
-  create(createMessageDto: CreateMessageDto) {
-    return 'This action adds a new message';
-  }
-
-  findAll() {
-    return `This action returns all message`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} message`;
-  }
-
-  update(id: number, updateMessageDto: UpdateMessageDto) {
-    return `This action updates a #${id} message`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} message`;
   }
 }
