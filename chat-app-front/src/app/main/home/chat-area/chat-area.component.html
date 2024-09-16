@@ -28,8 +28,12 @@
   }
 
   <div class="chat-input">
-    <input type="text" placeholder="Your message" />
-    <fa-icon [icon]="['fas', 'paper-plane']" class="send-icon"></fa-icon>
+    <input #input type="text" placeholder="Your message" />
+    <fa-icon
+      [icon]="['fas', 'paper-plane']"
+      class="send-icon"
+      (click)="mainService.sendMessage(mainService.currentChat.Id, input)"
+    ></fa-icon>
   </div>
 
   } @else {
