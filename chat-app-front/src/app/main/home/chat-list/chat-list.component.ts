@@ -48,9 +48,9 @@ export class ChatListComponent {
 
   selectChat(user) {
     this.mainService.currentChat = {
-      Id: null,
+      Id: user._id,
       title: user.firstName + ' ' + user.lastName,
-      info: 'last seen a long time ago',
+      info: user.status,
       messages: [
         { author: 'abolfazl', avatar: '', text: 'سلام خوبی', time: '10:50' },
         { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },

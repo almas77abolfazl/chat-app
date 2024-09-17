@@ -25,6 +25,7 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { EditProfileComponent } from '../edit-profile/edit-profile.component';
 import { MainService } from '../main.service';
+import { SocketService } from '../socket.service';
 
 @Component({
   selector: 'app-home',
@@ -42,9 +43,11 @@ import { MainService } from '../main.service';
 export class HomeComponent {
   constructor(
     library: FaIconLibrary,
-
+    socketService: SocketService,
     public mainService: MainService
   ) {
+    socketService.init();
+    mainService.listenToMessages();
     library.addIcons(
       faComments,
       faBriefcase,
