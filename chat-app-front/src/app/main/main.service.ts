@@ -19,7 +19,9 @@ export class MainService {
     private authService: AuthService,
     private httpRequestService: HttpRequestService,
     private socketService: SocketService
-  ) {
+  ) {}
+
+  listenToMessages() {
     this.socketService.receiveMessages().subscribe((message: string) => {
       const chatItem = this.chatItems.find((x) => x);
       chatItem.messages.push(null);

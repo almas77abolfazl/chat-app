@@ -1,15 +1,21 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
+import { AuthService } from '../auth/auth.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SocketService {
   private socket: Socket;
-  constructor() {
-    this.socket = io('http://localhost:3000/message', {
+  constructor(private authService: AuthService) {}
+
+  init() {
+    this.socket = io('http://localhost:3000/', {
       transports: ['websocket'],
+      query: {
+        token: this.authService.getAuthToken(),
+      },
     });
   }
 
