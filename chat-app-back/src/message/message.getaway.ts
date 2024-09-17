@@ -3,22 +3,24 @@ import {
   SubscribeMessage,
   MessageBody,
   WebSocketServer,
+  ConnectedSocket,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { MessageService } from './message.service';
-import { JwtService } from '@nestjs/jwt';
+import { AuthService } from 'src/auth/auth.service';
 
-@WebSocketGateway({ cors: { origin: '*' } })
+@WebSocketGateway({ cors: { origin: '*', transports: ['websocket'] } })
 export class MessageGateway {
   @WebSocketServer()
   server: Server;
 
   constructor(
     private messageService: MessageService,
-    private jwtService: JwtService,
+    private authService: AuthService,
   ) {}
 
   afterInit(server: Server) {
+    console.log(server);
     console.log('Socket server initialized');
   }
 
@@ -31,14 +33,25 @@ export class MessageGateway {
   }
 
   @SubscribeMessage('sendMessage')
-  async handleMessage(@MessageBody() messageData: any, client: Socket) {
-    console.log(client);
-    const token = client.handshake.headers.authorization?.split(' ')[1];
-    const decoded = this.jwtService.verify(token);
+  async handleMessage(
+    @MessageBody() messageData: any,
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      console.log(client);
+      const token = client.handshake.query.token;
+      const decoded = this.authService.decodeToken(token as string);
 
-    const sender = decoded.userId;
-    const { receiver, content } = messageData;
-    await this.messageService.saveMessage(sender, receiver, content);
-    this.server.emit('receiveMessage', { sender, receiver, content });
+      const user = await this.authService.userService.findUserByPhoneNumber(
+        decoded.phoneNumber,
+      );
+      const sender = user.id as string;
+
+      const { receiver, content } = messageData;
+      await this.messageService.saveMessage(sender, receiver, content);
+      this.server.emit('receiveMessage', { sender, receiver, content });
+    } catch (error) {
+      console.log(error);
+    }
   }
 }
