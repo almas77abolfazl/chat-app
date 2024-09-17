@@ -85,7 +85,7 @@ export class UserService {
             { lastName: { $regex: searchRegex } },
           ],
         })
-        .select('firstName lastName username _id');
+        .select('firstName lastName username status _id');
       return users;
     } catch (error) {
       handleException(error);

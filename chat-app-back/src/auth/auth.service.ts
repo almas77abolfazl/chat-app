@@ -14,7 +14,7 @@ export class AuthService {
   private readonly verificationCode = '123456';
 
   constructor(
-    private userService: UserService,
+    public userService: UserService,
     private jwtService: JwtService,
   ) {}
 
@@ -96,6 +96,11 @@ export class AuthService {
     } catch (error) {
       handleException(error);
     }
+  }
+
+  decodeToken(token: string) {
+    const decoded = this.jwtService.verify(token as string);
+    return decoded;
   }
 
   private generateRefreshToken(): string {
