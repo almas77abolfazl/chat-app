@@ -24,10 +24,6 @@ export class MessageGateway {
     console.log('Socket server initialized');
   }
 
-  handleConnection(client: Socket) {
-    console.log(`Client connected: ${client.id}`);
-  }
-
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
   }
@@ -49,9 +45,17 @@ export class MessageGateway {
 
       const { receiver, content } = messageData;
       await this.messageService.saveMessage(sender, receiver, content);
-      this.server.emit('receiveMessage', { sender, receiver, content });
+      this.server.to(receiver).emit('receiveMessage', { sender, content });
     } catch (error) {
       console.log(error);
     }
+  }
+
+  @SubscribeMessage('connect')
+  async handleConnection(client: Socket) {
+    const token = client.handshake.query.token;
+    const decoded = this.authService.decodeToken(token as string);
+    const userId = decoded.userId;
+    client.join(userId);
   }
 }
