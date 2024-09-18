@@ -17,6 +17,12 @@ export class SocketService {
         token: this.authService.getAuthToken(),
       },
     });
+
+    this.socket.on('connect', () => {
+      console.log('Connected to WebSocket server');
+      const userId = this.authService.getUserId();
+      this.socket.emit('connect', { userId });
+    });
   }
 
   sendMessage(message: any) {
