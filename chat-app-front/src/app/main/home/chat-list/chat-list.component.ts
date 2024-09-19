@@ -51,21 +51,7 @@ export class ChatListComponent {
       Id: user._id,
       title: user.firstName + ' ' + user.lastName,
       info: user.status,
-      messages: [
-        { author: 'abolfazl', avatar: '', text: 'سلام خوبی', time: '10:50' },
-        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
-        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
-        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
-        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
-        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
-        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
-        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
-        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
-        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
-        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
-        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
-        { author: 'hossein', avatar: '', text: 'سلام خوبی', time: '10:50' },
-      ],
+      messages: [],
     };
   }
 }
