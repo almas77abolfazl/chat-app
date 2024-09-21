@@ -1,8 +1,9 @@
-<div class="verification-container">
+<div class="verification-container" (keyup.enter)="verifyCode()">
   <div class="verification-card">
     <h2 class="verification-title">Enter Verification Code</h2>
     <p class="verification-text">
-      We’ve sent a code to your phone {{ authService.phoneNumber }}. Please enter it below.
+      We’ve sent a code to your phone {{ authService.phoneNumber }}. Please
+      enter it below.
     </p>
     <div class="input-group">
       <label for="code" class="input-label">Verification Code</label>
