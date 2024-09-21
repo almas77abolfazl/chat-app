@@ -1,4 +1,4 @@
-<div class="user-details-container">
+<div class="user-details-container" (keyup.enter)="onSubmit()">
   <div class="fill-names-card">
     <h2>Please Complete Your Profile</h2>
     <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
