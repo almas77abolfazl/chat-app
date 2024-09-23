@@ -21,7 +21,7 @@ export class Message {
   content: string;
 
   @Prop({ default: Date.now })
-  timestamp: Date;
+  createdAt: Date;
 
   @Prop({ default: false })
   read: boolean;

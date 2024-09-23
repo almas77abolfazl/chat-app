@@ -1,6 +1,7 @@
 export interface Message {
   avatar: string;
-  author: string;
-  text: string;
-  time: string;
+  sender: string;
+  content: string;
+  createdAt: Date;
+  receiver: string;
 }
