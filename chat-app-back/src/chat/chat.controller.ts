@@ -19,6 +19,7 @@ export class ChatController {
       lastName: chat.participants[0].lastName,
       lastMessage: chat.lastMessage,
       messageCount: chat.unreadCounts.get(userId) || 0,
+      messages: [],
     }));
   }
 }

@@ -2,8 +2,8 @@
   @if (mainService.currentChat) {
 
   <div class="chat-header">
-    <div class="chat-title">{{ mainService.currentChat.title }}</div>
-    <div class="chat-info">{{ mainService.currentChat.info }}</div>
+    <div class="chat-title">{{ mainService.currentChat.firstName + " " + mainService.currentChat.lastName }}</div>
+    <div class="chat-info">{{ mainService.currentChat.status }}</div>
     <div class="chat-options">
       <fa-icon [icon]="['fas', 'search']" class="icon"></fa-icon>
       <fa-icon [icon]="['fas', 'ellipsis-h']" class="icon"></fa-icon>
@@ -16,23 +16,23 @@
     <div class="message">
       <div class="avatar" msg.avatar></div>
       <div class="message-content">
-        <div class="message-author">{{ msg.sender }}</div>
+        <div class="message-author">{{ msg.sender?.firstName + " " + msg.sender?.lastName }}</div>
         <div class="message-text">
           {{ msg.content }}
         </div>
       </div>
-      <div class="message-time">{{ msg.createdAt | date: 'short' }}</div>
+      <div class="message-time">{{ msg.createdAt | date : "short" }}</div>
     </div>
 
     }
   </div>
 
   <div class="chat-input">
-    <input #input type="text" placeholder="Your message" />
+    <input #input type="text" placeholder="Your message" (keyup.enter)="mainService.sendMessage(mainService.currentChat, input)" />
     <fa-icon
       [icon]="['fas', 'paper-plane']"
       class="send-icon"
-      (click)="mainService.sendMessage(mainService.currentChat.Id, input)"
+      (click)="mainService.sendMessage(mainService.currentChat, input)"
     ></fa-icon>
   </div>
 

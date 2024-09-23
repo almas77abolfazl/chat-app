@@ -12,7 +12,8 @@ export class ChatService {
     try {
       const chats = await this.chatModel
         .find({ participants: userId })
-        .populate('participants', 'firstName lastName') // Populate با فیلدهای مورد نیاز
+        .populate('participants', 'firstName lastName')
+        .populate('lastMessage', 'content')
         .sort({ updatedAt: -1 })
         .exec();
 

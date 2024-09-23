@@ -20,8 +20,6 @@ export class SocketService {
 
     this.socket.on('connect', () => {
       console.log('Connected to WebSocket server');
-      const userId = this.authService.getUserId();
-      this.socket.emit('connect', { userId });
     });
   }
 

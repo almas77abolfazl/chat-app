@@ -1,11 +1,12 @@
 import { Message } from './message.model';
 
 export interface ChatListItem {
-  participants: string[];
+  _id: string;
   lastMessage: Message;
-  updatedAt: Date;
+  updatedAt?: Date;
   messages?: Message[];
-  messageCount: number;
-  firstName: string;
-  lastName: string;
+  messageCount?: number;
+  firstName?: string;
+  lastName?: string;
+  status?: string;
 }

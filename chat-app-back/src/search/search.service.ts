@@ -5,7 +5,7 @@ import { UserService } from 'src/user/user.service';
 export class SearchService {
   constructor(private userService: UserService) {}
 
-  findByQuery(query: string) {
-    return this.userService.findUsersByQuery(query);
+  findByQuery(query: string, userId: string) {
+    return this.userService.findUsersByQuery(query, userId);
   }
 }
