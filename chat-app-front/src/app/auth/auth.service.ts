@@ -46,7 +46,7 @@ export class AuthService {
           if (response.firstName && response.lastName) {
             localStorage.setItem('user-firstName', response.firstName);
             localStorage.setItem('user-lastName', response.lastName);
-            localStorage.setItem('user-bio', response.bio);
+            localStorage.setItem('user-bio', response.bio || '');
             this.gotoHome();
           } else this.router.navigate(['/fill-names']);
           console.log('Verification successful');
@@ -63,6 +63,8 @@ export class AuthService {
       .pipe(take(1))
       .subscribe({
         next: (response) => {
+          localStorage.setItem('user-firstName', firstName);
+          localStorage.setItem('user-lastName', lastName);
           this.gotoHome();
         },
         error: (err) => {
