@@ -10,7 +10,7 @@ import { AuthService } from './auth.service';
 import { SendCodeDto } from './dto/send-code.dto';
 import { VerifyCodeDto } from './dto/verify-code.dto';
 import { RequestWithUser } from './interfaces/request-with-user.model';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { LocalAuthGuard } from './guards/local-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -36,7 +36,7 @@ export class AuthController {
   }
 
   @Post('logout')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(LocalAuthGuard)
   async logout(
     @Req() request: RequestWithUser,
     @Headers('_id') userId: string,

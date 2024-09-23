@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -10,9 +10,13 @@ export class HttpRequestService {
     this.ROOT_URL = 'http://localhost:3000/v1';
   }
 
-  public get(uri: string, headers?: HttpHeaders): Observable<any> {
+  public get(
+    uri: string,
+    headers?: HttpHeaders,
+    params?: HttpParams
+  ): Observable<any> {
     headers = headers ?? new HttpHeaders();
-    return this.http.get(`${this.ROOT_URL}/${uri}`, { headers });
+    return this.http.get(`${this.ROOT_URL}/${uri}`, { headers, params });
   }
 
   public getById(uri: string, id: string, headers?: any): Observable<any> {

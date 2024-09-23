@@ -10,18 +10,18 @@
     </div>
   </div>
 
-  <div class="chat-messages">
+  <div class="chat-messages" (scroll)="onScroll()">
     @for (msg of mainService.currentChat.messages; track $index) {
 
     <div class="message">
       <div class="avatar" msg.avatar></div>
       <div class="message-content">
-        <div class="message-author">{{ msg.author }}</div>
+        <div class="message-author">{{ msg.sender }}</div>
         <div class="message-text">
-          {{ msg.text }}
+          {{ msg.content }}
         </div>
       </div>
-      <div class="message-time">{{ msg.time }}</div>
+      <div class="message-time">{{ msg.createdAt | date: 'short' }}</div>
     </div>
 
     }

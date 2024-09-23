@@ -1,10 +1,11 @@
-import { Message } from "./message.model";
+import { Message } from './message.model';
 
 export interface ChatListItem {
-  avatar: string;
-  chatName: string;
-  lastMessage: string;
-  messageTime: string;
-  messageCount: number;
+  participants: string[];
+  lastMessage: Message;
+  updatedAt: Date;
   messages?: Message[];
+  messageCount: number;
+  firstName: string;
+  lastName: string;
 }

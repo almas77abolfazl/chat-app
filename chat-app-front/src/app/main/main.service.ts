@@ -4,15 +4,19 @@ import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../auth/auth.service';
 import { ContactsComponent } from './contacts/contacts.component';
 import { HttpRequestService } from '../helpers/http-request.service';
-import { take } from 'rxjs';
+import { Observable, take } from 'rxjs';
 import { CurrentChat } from '../models/current-chat.model';
 import { ChatListItem } from '../models/chat-list-item.model';
 import { SocketService } from './socket.service';
+import { HttpParams } from '@angular/common/http';
+import { Message } from '../models/message.model';
 
 @Injectable({ providedIn: 'root' })
 export class MainService {
   currentChat: CurrentChat = null;
   chatItems: ChatListItem[] = [];
+  currentPage: number;
+  totalPages: number;
 
   constructor(
     private dialog: MatDialog,
@@ -75,12 +79,55 @@ export class MainService {
   }
 
   sendMessage(receiverId: string, input: HTMLInputElement) {
-    const messageData = {
-      sender: this.authService.getUserId(), // آی‌دی کاربر فرستنده
-      receiver: receiverId, // آی‌دی دریافت‌کننده (کاربر یا چنل)
-      content: input.value, // محتوای پیام
+    const messageData: Message = {
+      sender: this.authService.getUserId(),
+      receiver: receiverId,
+      content: input.value,
+      avatar: null,
+      createdAt: new Date(),
     };
+    this.currentChat.messages.push(messageData);
     this.socketService.sendMessage(messageData);
     input.value = '';
+  }
+
+  getMessages(
+    receiverId: string,
+    page: number = 1,
+    limit: number = 20
+  ): Observable<any> {
+    const params = new HttpParams()
+      .set('receiverId', receiverId)
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+
+    return this.httpRequestService.get('message', null, params);
+  }
+
+  loadMessages(page: number = 1) {
+    this.getMessages(this.currentChat.Id, page).subscribe(
+      (response) => {
+        this.currentChat.messages = [
+          ...this.currentChat.messages,
+          ...response.messages,
+        ];
+        this.currentPage = response.currentPage;
+        this.totalPages = response.totalPages;
+      },
+      (error) => {
+        console.error('Error loading messages:', error);
+      }
+    );
+  }
+
+  getChatList() {
+    this.httpRequestService.get('chat/list').subscribe(
+      (response) => {
+        this.chatItems = response;
+      },
+      (error) => {
+        console.error('Error loading chat list:', error);
+      }
+    );
   }
 }

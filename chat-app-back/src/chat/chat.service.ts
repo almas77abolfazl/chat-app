@@ -1,26 +1,32 @@
+// chat.service.ts
 import { Injectable } from '@nestjs/common';
-import { CreateChatDto } from './dto/create-chat.dto';
-import { UpdateChatDto } from './dto/update-chat.dto';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { Chat, ChatDocument } from './entities/chat.entity';
 
 @Injectable()
 export class ChatService {
-  create(createChatDto: CreateChatDto) {
-    return 'This action adds a new chat';
-  }
+  constructor(@InjectModel(Chat.name) private chatModel: Model<ChatDocument>) {}
 
-  findAll() {
-    return `This action returns all chat`;
-  }
+  async getChatList(userId: string): Promise<any> {
+    try {
+      const chats = await this.chatModel
+        .find({ participants: userId })
+        .populate('participants', 'firstName lastName') // Populate با فیلدهای مورد نیاز
+        .sort({ updatedAt: -1 })
+        .exec();
 
-  findOne(id: number) {
-    return `This action returns a #${id} chat`;
-  }
+      const formattedChats = chats.map((chat) => {
+        const otherParticipant: any = chat.participants.find(
+          (participant) => participant._id.toString() !== userId,
+        );
+        chat.participants = otherParticipant;
+        return chat;
+      });
 
-  update(id: number, updateChatDto: UpdateChatDto) {
-    return `This action updates a #${id} chat`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} chat`;
+      return formattedChats;
+    } catch (error) {
+      throw new Error('Error fetching chats');
+    }
   }
 }

@@ -4,11 +4,12 @@ import { MainService } from '../../main.service';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, Subject, take } from 'rxjs';
 import { ChatListItem } from '../../../models/chat-list-item.model';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-chat-list',
   standalone: true,
-  imports: [FontAwesomeModule, FormsModule],
+  imports: [FontAwesomeModule, FormsModule, DatePipe],
   templateUrl: './chat-list.component.html',
   styleUrl: './chat-list.component.scss',
 })
@@ -17,6 +18,7 @@ export class ChatListComponent {
   searchResults: any[] = []; // لیست نتایج جستجو
   searchSubject: Subject<string> = new Subject(); // برای دیباونس جستجو
   constructor(public mainService: MainService) {
+    this.mainService.getChatList();
     this.searchSubject.pipe(debounceTime(300)).subscribe((query) => {
       this.performSearch(query); // اجرای جستجو با دیباونس 300 میلی‌ثانیه
     });
@@ -53,5 +55,6 @@ export class ChatListComponent {
       info: user.status,
       messages: [],
     };
+    this.mainService.loadMessages();
   }
 }

@@ -25,13 +25,13 @@
       }
     </div>
     } @for (item of mainService.chatItems; track $index) {
-    <div class="chat-item">
+    <div class="chat-item" (click)="selectChat(item)">
       <div class="avatar" item.avatar></div>
       <div class="chat-info">
-        <div class="chat-name">{{ item.chatName }}</div>
+        <div class="chat-name">{{ item.firstName + " " + item.lastName }}</div>
         <div class="last-message">{{ item.lastMessage }}</div>
       </div>
-      <div class="message-time">{{ item.messageTime }}</div>
+      <div class="message-time">{{ item.updatedAt | date : "short" }}</div>
       <div class="message-count">{{ item.messageCount }}</div>
     </div>
     }
