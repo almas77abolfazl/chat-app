@@ -53,9 +53,13 @@ export class MessageGateway {
 
   @SubscribeMessage('connect')
   async handleConnection(client: Socket) {
-    const token = client.handshake.query.token;
-    const decoded = this.authService.decodeToken(token as string);
-    const userId = decoded.userId;
-    client.join(userId);
+    try {
+      const token = client.handshake.query.token;
+      const decoded = this.authService.decodeToken(token as string);
+      const userId = decoded.userId;
+      client.join(userId);
+    } catch (error) {
+      console.log('error in connceting get away' + error);
+    }
   }
 }
