@@ -14,24 +14,24 @@ import { DatePipe } from '@angular/common';
   styleUrl: './chat-list.component.scss',
 })
 export class ChatListComponent {
-  searchQuery: string = ''; // رشته جستجو
-  searchResults: any[] = []; // لیست نتایج جستجو
-  searchSubject: Subject<string> = new Subject(); // برای دیباونس جستجو
+  searchQuery: string = '';
+  searchResults: any[] = [];
+  searchSubject: Subject<string> = new Subject();
   constructor(public mainService: MainService) {
     this.mainService.getChatList();
     this.searchSubject.pipe(debounceTime(300)).subscribe((query) => {
-      this.performSearch(query); // اجرای جستجو با دیباونس 300 میلی‌ثانیه
+      this.performSearch(query);
     });
   }
 
   onSearchChange(query: string) {
-    this.searchSubject.next(query); // ارسال query به searchSubject
+    this.searchSubject.next(query);
   }
 
   // متد برای جستجو از طریق API
   performSearch(query: string) {
     if (query.trim() === '') {
-      this.searchResults = []; // اگر چیزی وارد نشده، نتایج خالی شوند
+      this.searchResults = [];
       return;
     }
 
@@ -49,12 +49,13 @@ export class ChatListComponent {
   }
 
   selectChat(user) {
-    this.mainService.currentChat = {
-      Id: user._id,
-      title: user.firstName + ' ' + user.lastName,
-      info: user.status,
-      messages: [],
-    };
+    this.mainService.currentChat = user;
     this.mainService.loadMessages();
+    const chatItem = this.mainService.chatItems.find((x) => x._id === user._id);
+    chatItem.messageCount = 0;
+    setTimeout(() => {
+      const messagesDiv = document.querySelector('.chat-messages');
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }, 200);
   }
 }

@@ -30,14 +30,14 @@ export class MessageService {
         participants: [sender, receiver],
         messages: [message._id],
         unreadCounts: { [receiver]: 1, [sender]: 0 },
-        lastMessage: content,
+        lastMessage: message.id,
         updatedAt: new Date(),
       });
     } else {
       chat.messages.push(message.id);
       chat.lastMessage = message.id;
       chat.updatedAt = new Date();
-      chat.unreadCounts[receiver] = (chat.unreadCounts[receiver] || 0) + 1;
+      chat.unreadCounts.set(receiver, chat.unreadCounts.get(receiver) + 1);
     }
 
     await chat.save();
@@ -68,6 +68,7 @@ export class MessageService {
           { sender: receiverId, receiver: senderId },
         ],
       })
+      .populate('sender', 'firstName lastName')
       .sort({ createdAt: 1 })
       .skip(skip)
       .limit(limit)
@@ -78,9 +79,15 @@ export class MessageService {
       {
         sender: receiverId,
         receiver: senderId,
-        isRead: false,
+        read: false,
       },
-      { $set: { isRead: true } },
+      { $set: { read: true } },
+    );
+
+    await this.chatModel.findOneAndUpdate(
+      { participants: { $all: [senderId, receiverId] } },
+      { $set: { [`unreadCounts.${senderId}`]: 0 } },
+      { new: true },
     );
 
     const totalMessages = await this.messageModel.countDocuments({

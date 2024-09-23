@@ -9,13 +9,13 @@ export class Message {
   sender: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'User', required: false })
-  receiver: Types.ObjectId; // برای پیام‌های خصوصی
+  receiver: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Group', required: false })
-  group: Types.ObjectId; // برای پیام‌های گروهی
+  group: Types.ObjectId;
 
   @Prop({ type: Types.ObjectId, ref: 'Channel', required: false })
-  channel: Types.ObjectId; // برای پیام‌های کانال
+  channel: Types.ObjectId;
 
   @Prop({ required: true })
   content: string;

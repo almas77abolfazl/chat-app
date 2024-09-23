@@ -5,7 +5,6 @@ import { AuthService } from '../auth/auth.service';
 import { ContactsComponent } from './contacts/contacts.component';
 import { HttpRequestService } from '../helpers/http-request.service';
 import { Observable, take } from 'rxjs';
-import { CurrentChat } from '../models/current-chat.model';
 import { ChatListItem } from '../models/chat-list-item.model';
 import { SocketService } from './socket.service';
 import { HttpParams } from '@angular/common/http';
@@ -13,7 +12,7 @@ import { Message } from '../models/message.model';
 
 @Injectable({ providedIn: 'root' })
 export class MainService {
-  currentChat: CurrentChat = null;
+  currentChat: ChatListItem = null;
   chatItems: ChatListItem[] = [];
   currentPage: number;
   totalPages: number;
@@ -26,10 +25,20 @@ export class MainService {
   ) {}
 
   listenToMessages() {
-    this.socketService.receiveMessages().subscribe((message: string) => {
-      const chatItem = this.chatItems.find((x) => x);
-      chatItem.messages.push(null);
-    });
+    this.socketService
+      .receiveMessages()
+      .subscribe((message: { sender: string; msg: Message }) => {
+        const chatItem = this.chatItems.find((x) => x._id === message.sender);
+        if (chatItem) {
+          message.msg.sender = {
+            firstName: chatItem.firstName,
+            lastName: chatItem.lastName,
+          };
+          chatItem.messages.push(message.msg);
+          chatItem.lastMessage = message.msg;
+          ++chatItem.messageCount;
+        } else this.getChatList();
+      });
   }
 
   openEditProfileModal(): void {
@@ -78,17 +87,35 @@ export class MainService {
     return this.httpRequestService.get('search?query=' + query);
   }
 
-  sendMessage(receiverId: string, input: HTMLInputElement) {
+  sendMessage(currentChat: ChatListItem, input: HTMLInputElement) {
     const messageData: Message = {
       sender: this.authService.getUserId(),
-      receiver: receiverId,
+      receiver: currentChat._id,
       content: input.value,
       avatar: null,
       createdAt: new Date(),
     };
-    this.currentChat.messages.push(messageData);
     this.socketService.sendMessage(messageData);
+    messageData.sender = {
+      firstName: currentChat.firstName,
+      lastName: currentChat.lastName,
+    };
+    this.currentChat.messages.push(messageData);
     input.value = '';
+    const chatItem = this.chatItems.find((x) => x._id === currentChat._id);
+    if (!chatItem) {
+      this.chatItems.unshift({
+        _id: currentChat._id,
+        firstName: currentChat.firstName,
+        lastName: currentChat.lastName,
+        lastMessage: messageData,
+        messages: [messageData],
+      });
+    }
+    setTimeout(() => {
+      const messagesDiv = document.querySelector('.chat-messages');
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }, 100);
   }
 
   getMessages(
@@ -105,7 +132,7 @@ export class MainService {
   }
 
   loadMessages(page: number = 1) {
-    this.getMessages(this.currentChat.Id, page).subscribe(
+    this.getMessages(this.currentChat._id, page).subscribe(
       (response) => {
         this.currentChat.messages = [
           ...this.currentChat.messages,

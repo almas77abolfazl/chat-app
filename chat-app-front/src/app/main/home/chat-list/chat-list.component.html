@@ -29,10 +29,12 @@
       <div class="avatar" item.avatar></div>
       <div class="chat-info">
         <div class="chat-name">{{ item.firstName + " " + item.lastName }}</div>
-        <div class="last-message">{{ item.lastMessage }}</div>
+        <div class="last-message">{{ item.lastMessage?.content }}</div>
       </div>
       <div class="message-time">{{ item.updatedAt | date : "short" }}</div>
+      @if (item.messageCount) {
       <div class="message-count">{{ item.messageCount }}</div>
+      }
     </div>
     }
   </div>

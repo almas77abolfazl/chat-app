@@ -74,7 +74,7 @@ export class UserService {
     }
   }
 
-  async findUsersByQuery(query: string) {
+  async findUsersByQuery(query: string, userId: string) {
     try {
       const searchRegex = new RegExp(query, 'i');
       const users = await this.userModel
@@ -84,6 +84,7 @@ export class UserService {
             { firstName: { $regex: searchRegex } },
             { lastName: { $regex: searchRegex } },
           ],
+          $and: [{ _id: { $ne: userId } }],
         })
         .select('firstName lastName username status _id');
       return users;

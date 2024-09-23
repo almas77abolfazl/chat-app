@@ -44,8 +44,12 @@ export class MessageGateway {
       const sender = user.id as string;
 
       const { receiver, content } = messageData;
-      await this.messageService.saveMessage(sender, receiver, content);
-      this.server.to(receiver).emit('receiveMessage', { sender, content });
+      const msg = await this.messageService.saveMessage(
+        sender,
+        receiver,
+        content,
+      );
+      this.server.to(receiver).emit('receiveMessage', { sender, msg });
     } catch (error) {
       console.log(error);
     }
@@ -56,8 +60,10 @@ export class MessageGateway {
     try {
       const token = client.handshake.query.token;
       const decoded = this.authService.decodeToken(token as string);
-      const userId = decoded.userId;
-      client.join(userId);
+      const user = await this.authService.validateUserByPhoneNumber(
+        decoded.phoneNumber,
+      );
+      client.join(user._id.toString());
     } catch (error) {
       console.log('error in connceting get away' + error);
     }
