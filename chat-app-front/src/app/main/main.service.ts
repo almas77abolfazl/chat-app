@@ -30,6 +30,12 @@ export class MainService {
       .subscribe((message: { sender: string; msg: Message }) => {
         const chatItem = this.chatItems.find((x) => x._id === message.sender);
         if (chatItem) {
+          if (this.currentChat._id === message.sender) {
+            setTimeout(() => {
+              const messagesDiv = document.querySelector('.chat-messages');
+              messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            }, 200);
+          }
           message.msg.sender = {
             firstName: chatItem.firstName,
             lastName: chatItem.lastName,

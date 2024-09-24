@@ -56,6 +56,6 @@ export class ChatListComponent {
     setTimeout(() => {
       const messagesDiv = document.querySelector('.chat-messages');
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }, 200);
+    }, 500);
   }
 }
