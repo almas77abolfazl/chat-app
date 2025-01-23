@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { AuthService } from '../auth.service';
 
 @Component({
@@ -12,16 +12,15 @@ import { AuthService } from '../auth.service';
 })
 export class VerifyCodeComponent {
   verificationCode: string = '';
+  phoneNumber = '';
 
   constructor(public authService: AuthService) {
     if (authService.getUserId()) authService.gotoHome();
-    if (!authService.phoneNumber) authService.gotoLogin();
+    if (!authService.getPhoneNumber()) authService.gotoLogin();
+    else this.phoneNumber = authService.getPhoneNumber();
   }
 
   verifyCode() {
-    this.authService.verifyCode(
-      this.verificationCode,
-      this.authService.phoneNumber
-    );
+    this.authService.verifyCode(this.verificationCode, this.phoneNumber);
   }
 }
