@@ -18,8 +18,8 @@ export class MainService {
   totalPages: number;
 
   constructor(
+    public authService: AuthService,
     private dialog: MatDialog,
-    private authService: AuthService,
     private httpRequestService: HttpRequestService,
     private socketService: SocketService
   ) {}

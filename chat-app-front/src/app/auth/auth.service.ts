@@ -9,7 +9,6 @@ import { HttpRequestService } from '../helpers/http-request.service';
 export class AuthService {
   private readonly logoutUrl = 'auth/logout';
   private readonly refreshTokenUrl = 'auth/refreshToken';
-  phoneNumber: string = localStorage.getItem('phoneNumber');
 
   constructor(
     private httpRequestService: HttpRequestService,
@@ -127,6 +126,10 @@ export class AuthService {
 
   public getUserId(): string {
     return localStorage.getItem('user-id') || '';
+  }
+
+  public getPhoneNumber(): string {
+    return localStorage.getItem('phoneNumber') || '';
   }
 
   public getUserNames(): string {

@@ -42,7 +42,7 @@
         height: 40px;
         background-color: #d9d9d9;
         border-radius: 50%;
-        margin-right: 15px;
+        margin: 0 15px;
       }
       .message-content {
         background-color: #e0e7ff;
@@ -60,6 +60,9 @@
         color: #9fa0a2;
         margin-left: auto;
         margin-right: 15px;
+      }
+      &.my-message {
+        direction: rtl;
       }
     }
   }

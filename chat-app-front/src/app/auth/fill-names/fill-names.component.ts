@@ -17,7 +17,7 @@ export class FillNamesComponent {
 
   constructor(private auth: AuthService) {
     if (auth.getUserId() && auth.getUserNames()) auth.gotoHome();
-    if (!auth.phoneNumber) auth.gotoLogin();
+    if (!auth.getPhoneNumber()) auth.gotoLogin();
   }
 
   onSubmit(): void {
