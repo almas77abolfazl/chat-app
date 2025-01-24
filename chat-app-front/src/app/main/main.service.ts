@@ -95,11 +95,12 @@ export class MainService {
 
   sendMessage(currentChat: ChatListItem, input: HTMLInputElement) {
     const messageData: Message = {
-      sender: this.authService.getUserId(),
+      sender: { _id: this.authService.getUserId() },
       receiver: currentChat._id,
       content: input.value,
       avatar: null,
       createdAt: new Date(),
+      _id: null,
     };
     this.socketService.sendMessage(messageData);
     messageData.sender = {
@@ -138,19 +139,30 @@ export class MainService {
   }
 
   loadMessages(page: number = 1) {
-    this.getMessages(this.currentChat._id, page).subscribe(
-      (response) => {
-        this.currentChat.messages = [
-          ...this.currentChat.messages,
-          ...response.messages,
-        ];
-        this.currentPage = response.currentPage;
-        this.totalPages = response.totalPages;
-      },
-      (error) => {
-        console.error('Error loading messages:', error);
-      }
-    );
+    this.getMessages(this.currentChat._id, page)
+      .pipe(take(1))
+      .subscribe(
+        (response: {
+          messages: Message[];
+          totalMessages: number;
+          currentPage: number;
+          totalPages: number;
+        }) => {
+          const existIds = this.currentChat.messages.map((x) => x._id);
+          const newMessages = response.messages.filter(
+            (x) => !existIds.includes(x._id)
+          );
+          this.currentChat.messages = [
+            ...this.currentChat.messages,
+            ...newMessages,
+          ];
+          this.currentPage = response.currentPage;
+          this.totalPages = response.totalPages;
+        },
+        (error) => {
+          console.error('Error loading messages:', error);
+        }
+      );
   }
 
   getChatList() {
