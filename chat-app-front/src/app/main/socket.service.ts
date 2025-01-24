@@ -11,7 +11,7 @@ export class SocketService {
   constructor(private authService: AuthService) {}
 
   init() {
-    this.socket = io('http://192.168.247.142:3000/', {
+    this.socket = io('http://localhost:3000/', {
       transports: ['websocket'],
       query: {
         token: this.authService.getAuthToken(),
