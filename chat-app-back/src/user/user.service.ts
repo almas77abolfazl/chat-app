@@ -5,6 +5,7 @@ import { Model } from 'mongoose';
 import { handleException } from 'src/helpers/error.interceptor';
 import { IUser } from './interfaces/user.interface';
 import { UpdateUserNamesDto } from './dto/update-user-names.dto';
+import * as fs from 'fs';
 
 @Injectable()
 export class UserService {
@@ -90,6 +91,47 @@ export class UserService {
       return users;
     } catch (error) {
       handleException(error);
+    }
+  }
+
+  async updateProfilePicture(userId: string, filename: string): Promise<User> {
+    try {
+      const user = await this.userModel.findById(userId);
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      if (user.profilePicture) {
+        const path = `./uploads/avatars/${user.profilePicture}`;
+        if (fs.existsSync(path)) {
+          fs.unlinkSync(path);
+        }
+      }
+
+      user.profilePicture = filename;
+      await user.save();
+
+      return user;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  async getUserAvatar(userId: string): Promise<string> {
+    try {
+      const user = await this.userModel.findById(userId);
+      if (!user || !user.profilePicture) {
+        throw new NotFoundException('User or avatar not found');
+      }
+      try {
+        const path = `./uploads/avatars/${user.profilePicture}`;
+        const fileBuffer = await fs.readFileSync(path);
+        return fileBuffer.toString('base64');
+      } catch (error) {
+        throw new NotFoundException('Avatar file not found');
+      }
+    } catch (error) {
+      console.log(error);
     }
   }
 

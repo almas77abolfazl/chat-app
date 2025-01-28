@@ -16,6 +16,9 @@ import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
 
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -28,6 +31,10 @@ import jwtConfig from './config/jwt.config';
         uri: configService.get<string>('mongoUri'),
       }),
       inject: [ConfigService],
+    }),
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'uploads'),
+      serveRoot: '/uploads', // روت برای دسترسی به فایل‌ها
     }),
     MessageModule,
     UserModule,

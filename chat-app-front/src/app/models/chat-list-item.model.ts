@@ -9,4 +9,5 @@ export interface ChatListItem {
   firstName?: string;
   lastName?: string;
   status?: string;
+  avatar?: string;
 }

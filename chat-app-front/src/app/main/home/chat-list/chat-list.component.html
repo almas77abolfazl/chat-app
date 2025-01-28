@@ -26,7 +26,7 @@
     </div>
     } @for (item of mainService.chatItems; track $index) {
     <div class="chat-item" (click)="selectChat(item)">
-      <div class="avatar" item.avatar></div>
+      <img class="avatar" src="{{ item.avatar }}" />
       <div class="chat-info">
         <div class="chat-name">{{ item.firstName + " " + item.lastName }}</div>
         <div class="last-message">{{ item.lastMessage?.content }}</div>

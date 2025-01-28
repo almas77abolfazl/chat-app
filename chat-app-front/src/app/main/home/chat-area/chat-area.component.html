@@ -20,7 +20,7 @@
     @for (msg of mainService.currentChat.messages; track $index) {
 
     <div class="message" [ngClass]="{ 'my-message': msg.sender._id == userId }">
-      <div class="avatar" msg.avatar></div>
+      <img class="avatar" src="{{ msg.avatar || 'default_profile.jpg' }}" />
       <div class="message-content">
         <div class="message-author">
           {{ msg.sender?.firstName + " " + msg.sender?.lastName }}
