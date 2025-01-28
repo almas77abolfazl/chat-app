@@ -17,12 +17,29 @@ export class MainService {
   currentPage: number;
   totalPages: number;
 
+  file: any;
+  pictureSrc = 'default_profile.jpg';
+
   constructor(
     public authService: AuthService,
     private dialog: MatDialog,
     private httpRequestService: HttpRequestService,
     private socketService: SocketService
-  ) {}
+  ) {
+    this.getAvatar(authService.getUserId())
+      .pipe(take(1))
+      .subscribe({
+        next: (response: any) => {
+          if (response.avatar) {
+            const objectURL = 'data:image/jpeg;base64,' + response.avatar;
+            this.pictureSrc = objectURL;
+          }
+        },
+        error: (err) => {
+          console.error('Error uploading profile picture:', err);
+        },
+      });
+  }
 
   listenToMessages() {
     this.socketService
@@ -54,6 +71,7 @@ export class MainService {
         firstName: localStorage.getItem('user-firstName') || '',
         lastName: localStorage.getItem('user-lastName') || '',
         bio: localStorage.getItem('user-bio') || '',
+        pictureSrc: this.pictureSrc,
       },
     });
 
@@ -62,8 +80,9 @@ export class MainService {
       .pipe(take(1))
       .subscribe((result) => {
         if (result) {
-          console.log('Profile updated:', result);
-          // اینجا می‌توانید اطلاعات جدید را ذخیره کنید یا صفحه را به‌روزرسانی کنید
+          this.pictureSrc = result.pictureSrc;
+          this.file = result.file;
+          this.saveAvatar();
         }
       });
   }
@@ -156,6 +175,22 @@ export class MainService {
             ...this.currentChat.messages,
             ...newMessages,
           ];
+          this.currentChat.messages.forEach((msg) => {
+            this.getAvatar(msg.sender._id)
+              .pipe(take(1))
+              .subscribe({
+                next: (response: any) => {
+                  if (response.avatar) {
+                    const objectURL =
+                      'data:image/jpeg;base64,' + response.avatar;
+                    msg.avatar = objectURL;
+                  }
+                },
+                error: (err) => {
+                  console.error('Error uploading profile picture:', err);
+                },
+              });
+          });
           this.currentPage = response.currentPage;
           this.totalPages = response.totalPages;
         },
@@ -166,13 +201,56 @@ export class MainService {
   }
 
   getChatList() {
-    this.httpRequestService.get('chat/list').subscribe(
-      (response) => {
-        this.chatItems = response;
-      },
-      (error) => {
-        console.error('Error loading chat list:', error);
-      }
-    );
+    this.httpRequestService
+      .get('chat/list')
+      .pipe(take(1))
+      .subscribe(
+        (response) => {
+          this.chatItems = response;
+          this.chatItems.forEach((item) => {
+            item.avatar = 'default_profile.jpg';
+            this.getAvatar(item._id)
+              .pipe(take(1))
+              .subscribe({
+                next: (response: any) => {
+                  if (response.avatar) {
+                    const objectURL =
+                      'data:image/jpeg;base64,' + response.avatar;
+                    item.avatar = objectURL;
+                  }
+                },
+                error: (err) => {
+                  console.error('Error uploading profile picture:', err);
+                },
+              });
+          });
+        },
+        (error) => {
+          console.error('Error loading chat list:', error);
+        }
+      );
+  }
+
+  saveAvatar() {
+    if (this.file) {
+      const formData = new FormData();
+      formData.append('avatar', this.file);
+
+      this.httpRequestService
+        .post('user/upload-avatar', formData)
+        .pipe(take(1))
+        .subscribe({
+          next: (response: any) => {
+            console.log('Profile picture uploaded successfully:', response);
+          },
+          error: (err) => {
+            console.error('Error uploading profile picture:', err);
+          },
+        });
+    }
+  }
+
+  getAvatar(userId: string) {
+    return this.httpRequestService.get(`user/${userId}/avatar`);
   }
 }

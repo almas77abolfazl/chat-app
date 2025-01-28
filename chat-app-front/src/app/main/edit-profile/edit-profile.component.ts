@@ -12,7 +12,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
   styleUrl: './edit-profile.component.scss',
 })
 export class EditProfileComponent {
-  pictureSrc = 'default_profile.jpg';
+  file: any;
   constructor(
     public dialogRef: MatDialogRef<EditProfileComponent>,
     @Inject(MAT_DIALOG_DATA)
@@ -21,6 +21,7 @@ export class EditProfileComponent {
       lastName: string;
       bio: string;
       status: string;
+      pictureSrc: string;
     }
   ) {}
 
@@ -29,19 +30,23 @@ export class EditProfileComponent {
   }
 
   onSave(): void {
-    // فرض کنید تغییرات را ذخیره کنید و سپس مودال را ببندید
     this.dialogRef.close({
       firstName: this.data.firstName,
       lastName: this.data.lastName,
-      bio: this.data.bio
+      bio: this.data.bio,
+      file: this.file,
+      pictureSrc: this.data.pictureSrc,
     });
   }
 
   onProfilePictureChange(event: any): void {
-    const file = event.target.files[0];
-    if (file) {
-      // اینجا می‌توانید تصویر جدید را آپلود کنید و نمایش دهید
-      console.log('New profile picture selected:', file);
+    this.file = event.target.files[0];
+    if (this.file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.data.pictureSrc = reader.result as string;
+      };
+      reader.readAsDataURL(this.file);
     }
   }
 }

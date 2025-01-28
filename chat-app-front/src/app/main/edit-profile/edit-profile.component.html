@@ -2,7 +2,7 @@
 <div mat-dialog-content class="edit-profile-container">
   <div class="profile-header">
     <div class="profile-picture">
-      <img src="{{ pictureSrc }}" alt="Profile Picture" />
+      <img src="{{ data?.pictureSrc }}" alt="Profile Picture" />
       <label for="profile-picture-upload" class="change-picture">
         <fa-icon [icon]="['fas', 'camera']"></fa-icon>
       </label>
@@ -10,6 +10,7 @@
         type="file"
         id="profile-picture-upload"
         (change)="onProfilePictureChange($event)"
+        accept="image/png, image/jpg, image/jpeg"
         hidden
       />
     </div>
