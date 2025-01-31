@@ -4,11 +4,12 @@ import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../auth/auth.service';
 import { ContactsComponent } from './contacts/contacts.component';
 import { HttpRequestService } from '../helpers/http-request.service';
-import { Observable, take } from 'rxjs';
+import { firstValueFrom, Observable, take, tap } from 'rxjs';
 import { ChatListItem } from '../models/chat-list-item.model';
 import { SocketService } from './socket.service';
 import { HttpParams } from '@angular/common/http';
 import { Message } from '../models/message.model';
+import { CacheService } from '../helpers/cache.service';
 
 @Injectable({ providedIn: 'root' })
 export class MainService {
@@ -24,21 +25,15 @@ export class MainService {
     public authService: AuthService,
     private dialog: MatDialog,
     private httpRequestService: HttpRequestService,
-    private socketService: SocketService
+    private socketService: SocketService,
+    private cacheService: CacheService
   ) {
-    this.getAvatar(authService.getUserId())
-      .pipe(take(1))
-      .subscribe({
-        next: (response: any) => {
-          if (response.avatar) {
-            const objectURL = 'data:image/jpeg;base64,' + response.avatar;
-            this.pictureSrc = objectURL;
-          }
-        },
-        error: (err) => {
-          console.error('Error uploading profile picture:', err);
-        },
-      });
+    this.getAvatar(authService.getUserId()).then((avatar: string) => {
+      if (avatar) {
+        const objectURL = 'data:image/jpeg;base64,' + avatar;
+        this.pictureSrc = objectURL;
+      }
+    });
   }
 
   listenToMessages() {
@@ -176,20 +171,12 @@ export class MainService {
             ...newMessages,
           ];
           this.currentChat.messages.forEach((msg) => {
-            this.getAvatar(msg.sender._id)
-              .pipe(take(1))
-              .subscribe({
-                next: (response: any) => {
-                  if (response.avatar) {
-                    const objectURL =
-                      'data:image/jpeg;base64,' + response.avatar;
-                    msg.avatar = objectURL;
-                  }
-                },
-                error: (err) => {
-                  console.error('Error uploading profile picture:', err);
-                },
-              });
+            this.getAvatar(msg.sender._id).then((avatar: string) => {
+              if (avatar) {
+                const objectURL = 'data:image/jpeg;base64,' + avatar;
+                msg.avatar = objectURL;
+              }
+            });
           });
           this.currentPage = response.currentPage;
           this.totalPages = response.totalPages;
@@ -209,20 +196,12 @@ export class MainService {
           this.chatItems = response;
           this.chatItems.forEach((item) => {
             item.avatar = 'default_profile.jpg';
-            this.getAvatar(item._id)
-              .pipe(take(1))
-              .subscribe({
-                next: (response: any) => {
-                  if (response.avatar) {
-                    const objectURL =
-                      'data:image/jpeg;base64,' + response.avatar;
-                    item.avatar = objectURL;
-                  }
-                },
-                error: (err) => {
-                  console.error('Error uploading profile picture:', err);
-                },
-              });
+            this.getAvatar(item._id).then((avatar: string) => {
+              if (avatar) {
+                const objectURL = 'data:image/jpeg;base64,' + avatar;
+                item.avatar = objectURL;
+              }
+            });
           });
         },
         (error) => {
@@ -250,7 +229,19 @@ export class MainService {
     }
   }
 
-  getAvatar(userId: string) {
-    return this.httpRequestService.get(`user/${userId}/avatar`);
+  async getAvatar(userId: string) {
+    const avatar = await this.cacheService.getItem('avatars', userId);
+    if (avatar) return avatar;
+    return firstValueFrom(
+      this.httpRequestService.get(`user/${userId}/avatar`).pipe(
+        take(1),
+        tap((res) => {
+          this.cacheService.setItem('avatars', {
+            id: userId,
+            avatar: res.avatar,
+          });
+        })
+      )
+    );
   }
 }
