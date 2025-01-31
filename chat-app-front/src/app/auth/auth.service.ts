@@ -7,9 +7,6 @@ import { HttpRequestService } from '../helpers/http-request.service';
   providedIn: 'root',
 })
 export class AuthService {
-  private readonly logoutUrl = 'auth/logout';
-  private readonly refreshTokenUrl = 'auth/refreshToken';
-
   constructor(
     private httpRequestService: HttpRequestService,
     private router: Router
@@ -89,14 +86,16 @@ export class AuthService {
   }
 
   public refreshToken(): Observable<any> {
+    const refreshTokenUrl = 'auth/refreshToken';
     const headers = { _id: this.getUserId() };
-    return this.httpRequestService.post(this.refreshTokenUrl, {}, headers);
+    return this.httpRequestService.post(refreshTokenUrl, {}, headers);
   }
 
   public logout(): void {
+    const logoutUrl = 'auth/logout';
     const headers = { _id: this.getUserId() };
     this.httpRequestService
-      .post(this.logoutUrl, {}, headers)
+      .post(logoutUrl, { phoneNumber: this.getPhoneNumber() }, headers)
       .pipe(take(1))
       .subscribe(
         (x: any) => {
