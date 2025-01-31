@@ -149,7 +149,16 @@ export class MainService {
       .set('page', page.toString())
       .set('limit', limit.toString());
 
-    return this.httpRequestService.get('message', null, params);
+    return this.httpRequestService.get('message', null, params).pipe(
+      take(1),
+      tap((res) => {
+        // this.cacheService.setItem('messages', {
+        //   id: receiverId,
+        //   messages: res.messages,
+        //   timestamp: Date.now(),
+        // });
+      })
+    );
   }
 
   loadMessages(page: number = 1) {
@@ -229,9 +238,9 @@ export class MainService {
     }
   }
 
-  async getAvatar(userId: string) {
+  async getAvatar(userId: string): Promise<string> {
     const avatar = await this.cacheService.getItem('avatars', userId);
-    if (avatar) return avatar;
+    if (avatar) return avatar.avatar;
     return firstValueFrom(
       this.httpRequestService.get(`user/${userId}/avatar`).pipe(
         take(1),

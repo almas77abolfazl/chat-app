@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, take } from 'rxjs';
 import { Router } from '@angular/router';
 import { HttpRequestService } from '../helpers/http-request.service';
+import { CacheService } from '../helpers/cache.service';
 
 @Injectable({
   providedIn: 'root',
@@ -9,7 +10,8 @@ import { HttpRequestService } from '../helpers/http-request.service';
 export class AuthService {
   constructor(
     private httpRequestService: HttpRequestService,
-    private router: Router
+    private router: Router,
+    private cacheService: CacheService
   ) {}
 
   sendCode(phoneNumber: string) {
@@ -100,21 +102,15 @@ export class AuthService {
       .subscribe(
         (x: any) => {
           this.gotoLogin();
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('user-id');
-          localStorage.removeItem('phoneNumber');
-          localStorage.removeItem('user-lastName');
-          localStorage.removeItem('user-firsName');
-          localStorage.removeItem('user-bio');
+          this.cacheService.clearCache();
+          localStorage.clear();
+          sessionStorage.clear();
         },
         (err) => {
           this.gotoLogin();
-          localStorage.removeItem('auth_token');
-          localStorage.removeItem('user-id');
-          localStorage.removeItem('phoneNumber');
-          localStorage.removeItem('user-lastName');
-          localStorage.removeItem('user-firsName');
-          localStorage.removeItem('user-bio');
+          this.cacheService.clearCache();
+          localStorage.clear();
+          sessionStorage.clear();
         }
       );
   }

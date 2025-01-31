@@ -18,7 +18,7 @@ export class CacheService {
           db.createObjectStore('messages', { keyPath: 'id' });
         }
         if (!db.objectStoreNames.contains('users')) {
-          db.createObjectStore('users', { keyPath: 'id' });
+          db.createObjectStore('avatars', { keyPath: 'id' });
         }
       },
     });
@@ -39,5 +39,16 @@ export class CacheService {
   async deleteItem(storeName: string, id: string) {
     const db = await this.dbPromise;
     return db.transaction(storeName, 'readwrite').store.delete(id);
+  }
+
+  async clearCache() {
+    const db = await this.dbPromise;
+    const tx = db.transaction(db.objectStoreNames, 'readwrite');
+
+    for (const storeName of db.objectStoreNames) {
+      tx.objectStore(storeName).clear();
+    }
+
+    return tx.done;
   }
 }
