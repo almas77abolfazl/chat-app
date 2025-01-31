@@ -40,22 +40,28 @@ export class MainService {
     this.socketService
       .receiveMessages()
       .subscribe((message: { sender: string; msg: Message }) => {
-        const chatItem = this.chatItems.find((x) => x._id === message.sender);
-        if (chatItem) {
-          if (this.currentChat._id === message.sender) {
-            setTimeout(() => {
-              const messagesDiv = document.querySelector('.chat-messages');
-              messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            }, 200);
-          }
-          message.msg.sender = {
-            firstName: chatItem.firstName,
-            lastName: chatItem.lastName,
-          };
-          chatItem.messages.push(message.msg);
-          chatItem.lastMessage = message.msg;
-          ++chatItem.messageCount;
-        } else this.getChatList();
+        const senderId = message.msg.sender;
+        this.getAvatar(senderId).then((res) => {
+          const chatItem = this.chatItems.find((x) => x._id === message.sender);
+          if (chatItem) {
+            message.msg.avatar = 'data:image/jpeg;base64,' + res;
+            message.msg.sender = {
+              _id: senderId,
+              firstName: chatItem.firstName,
+              lastName: chatItem.lastName,
+            };
+
+            chatItem.messages.push(message.msg);
+            chatItem.lastMessage = message.msg;
+            ++chatItem.messageCount;
+            if (this.currentChat._id === message.sender) {
+              setTimeout(() => {
+                const messagesDiv = document.querySelector('.chat-messages');
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+              }, 200);
+            }
+          } else this.getChatList();
+        });
       });
   }
 
@@ -109,18 +115,19 @@ export class MainService {
 
   sendMessage(currentChat: ChatListItem, input: HTMLInputElement) {
     const messageData: Message = {
-      sender: { _id: this.authService.getUserId() },
+      sender: {
+        _id: this.authService.getUserId(),
+        firstName: currentChat.firstName,
+        lastName: currentChat.lastName,
+      },
       receiver: currentChat._id,
       content: input.value,
-      avatar: null,
+      avatar: this.pictureSrc,
       createdAt: new Date(),
       _id: null,
     };
     this.socketService.sendMessage(messageData);
-    messageData.sender = {
-      firstName: currentChat.firstName,
-      lastName: currentChat.lastName,
-    };
+
     this.currentChat.messages.push(messageData);
     input.value = '';
     const chatItem = this.chatItems.find((x) => x._id === currentChat._id);
