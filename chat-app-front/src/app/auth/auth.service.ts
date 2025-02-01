@@ -8,11 +8,7 @@ import { CacheService } from '../helpers/cache.service';
   providedIn: 'root',
 })
 export class AuthService {
-  constructor(
-    private httpRequestService: HttpRequestService,
-    private router: Router,
-    private cacheService: CacheService
-  ) {}
+  constructor(private httpRequestService: HttpRequestService, private router: Router, private cacheService: CacheService) {}
 
   sendCode(phoneNumber: string) {
     this.httpRequestService
@@ -35,24 +31,22 @@ export class AuthService {
   }
 
   verifyCode(code: string, phoneNumber: string) {
-    this.httpRequestService
-      .post('auth/verify-code', { code, phoneNumber })
-      .subscribe({
-        next: (response) => {
-          localStorage.setItem('auth_token', response.access_token);
-          localStorage.setItem('user-id', response.userId);
-          if (response.firstName && response.lastName) {
-            localStorage.setItem('user-firstName', response.firstName);
-            localStorage.setItem('user-lastName', response.lastName);
-            localStorage.setItem('user-bio', response.bio || '');
-            this.gotoHome();
-          } else this.router.navigate(['/fill-names']);
-          console.log('Verification successful');
-        },
-        error: (err) => {
-          console.error('Invalid verification code');
-        },
-      });
+    this.httpRequestService.post('auth/verify-code', { code, phoneNumber }).subscribe({
+      next: (response) => {
+        localStorage.setItem('auth_token', response.access_token);
+        localStorage.setItem('user-id', response.userId);
+        if (response.firstName && response.lastName) {
+          localStorage.setItem('user-firstName', response.firstName);
+          localStorage.setItem('user-lastName', response.lastName);
+          localStorage.setItem('user-bio', response.bio || '');
+          this.gotoHome();
+        } else this.router.navigate(['/fill-names']);
+        console.log('Verification successful');
+      },
+      error: (err) => {
+        console.error('Invalid verification code');
+      },
+    });
   }
 
   updateUserNames(firstName: string, lastName: string) {
@@ -127,9 +121,17 @@ export class AuthService {
     return localStorage.getItem('phoneNumber') || '';
   }
 
+  public getFirstName() {
+    return localStorage.getItem('user-firstName') || '';
+  }
+
+  public getLastName() {
+    return localStorage.getItem('user-lastName') || '';
+  }
+
   public getUserNames(): string {
     const lastName = localStorage.getItem('user-lastName') || '';
-    const firstName = localStorage.getItem('user-firsName') || '';
+    const firstName = localStorage.getItem('user-firstName') || '';
     return lastName + firstName;
   }
 }
