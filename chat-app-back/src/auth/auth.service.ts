@@ -21,9 +21,7 @@ export class AuthService {
   async sendVerificationCode(phoneNumber: string): Promise<{ code: string }> {
     try {
       this.userService.createUser(phoneNumber);
-      console.log(
-        `Sending verification code ${this.verificationCode} to ${phoneNumber}`,
-      );
+      console.log(`Sending verification code ${this.verificationCode} to ${phoneNumber}`);
       return { code: this.verificationCode };
     } catch (error) {
       handleException(error);
@@ -43,9 +41,7 @@ export class AuthService {
       if (verifyCodeDto.code === this.verificationCode) {
         const accessToken = this.jwtService.sign(verifyCodeDto);
         const refreshToken = this.generateRefreshToken();
-        const user = await this.userService.findUserByPhoneNumber(
-          verifyCodeDto.phoneNumber,
-        );
+        const user = await this.userService.findUserByPhoneNumber(verifyCodeDto.phoneNumber);
         await this.saveSessionToDatabase(user, refreshToken, deviceName);
         return {
           access_token: accessToken,
@@ -88,9 +84,7 @@ export class AuthService {
     try {
       const deviceName = request['useragent'].deviceNameAndIp;
       const user = await this.userService.findById(userId);
-      user.sessions = user.sessions.filter(
-        (x) => x['deviceName'] != deviceName,
-      );
+      user.sessions = user.sessions.filter((x) => x['deviceName'] != deviceName);
       await this.userService.update(user._id as string, user);
       return { message: 'ok' };
     } catch (error) {
@@ -112,11 +106,7 @@ export class AuthService {
     }
   }
 
-  private async saveSessionToDatabase(
-    user: IUser,
-    refreshToken: string,
-    deviceName: string,
-  ): Promise<void> {
+  private async saveSessionToDatabase(user: IUser, refreshToken: string, deviceName: string): Promise<void> {
     try {
       const expiresAt = this.generateRefreshTokenExpiryTime();
       if (!user.sessions) user.sessions = [];
