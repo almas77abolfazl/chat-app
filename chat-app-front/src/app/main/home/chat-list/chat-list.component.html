@@ -1,13 +1,7 @@
 <div class="chat-list-container">
   <div class="chat-list">
     <div class="search-container">
-      <input
-        type="text"
-        placeholder="Search"
-        class="search-input"
-        [(ngModel)]="searchQuery"
-        (ngModelChange)="onSearchChange($event)"
-      />
+      <input type="text" placeholder="Search" class="search-input" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange($event)" />
       <fa-icon [icon]="['fas', 'search']" class="search-icon"></fa-icon>
     </div>
 
@@ -20,11 +14,10 @@
           {{ result.firstName + " " + result.lastName }}
         </div>
         <div class="result-type">{{ "awli" }}</div>
-        <!-- مثلا یوزر یا چنل -->
       </div>
       }
     </div>
-    } @for (item of mainService.chatItems; track $index) {
+    } @else { @for (item of mainService.chatItems; track $index) {
     <div class="chat-item" (click)="selectChat(item)">
       <img class="avatar" src="{{ item.avatar }}" />
       <div class="chat-info">
@@ -36,7 +29,7 @@
       <div class="message-count">{{ item.messageCount }}</div>
       }
     </div>
-    }
+    } }
   </div>
   <div class="contacts-button-container" (click)="mainService.showContacts()">
     <fa-icon [icon]="['fas', 'user-plus']" class="show-contacts"></fa-icon>

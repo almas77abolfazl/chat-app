@@ -48,14 +48,31 @@ export class ChatListComponent {
       );
   }
 
-  selectChat(user) {
+  selectChat(user: ChatListItem) {
     this.mainService.currentChat = user;
-    this.mainService.loadMessages();
-    const chatItem = this.mainService.chatItems.find((x) => x._id === user._id);
-    chatItem.messageCount = 0;
-    setTimeout(() => {
-      const messagesDiv = document.querySelector('.chat-messages');
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }, 500);
+    this.mainService
+      .loadMessages()
+      .pipe(take(1))
+      .subscribe(async (res) => {
+        if (!this.mainService.chatItems?.length) {
+          this.mainService.chatItems = [
+            {
+              _id: user._id,
+              lastMessage: null,
+              messageCount: 0,
+              messages: [],
+              firstName: user.firstName,
+              lastName: user.lastName,
+              avatar: await this.mainService.getAvatar(user._id),
+            },
+          ];
+        }
+        const chatItem = this.mainService.chatItems.find((x) => x._id === user._id);
+        chatItem.messageCount = 0;
+        setTimeout(() => {
+          const messagesDiv = document.querySelector('.chat-messages');
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }, 500);
+      });
   }
 }

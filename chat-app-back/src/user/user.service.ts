@@ -9,9 +9,7 @@ import * as fs from 'fs';
 
 @Injectable()
 export class UserService {
-  constructor(
-    @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
-  ) {}
+  constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>) {}
 
   async createUser(phoneNumber: string): Promise<User> {
     try {
@@ -32,10 +30,7 @@ export class UserService {
     }
   }
 
-  async updateUserNames(
-    dto: UpdateUserNamesDto,
-    userId: string,
-  ): Promise<IUser | null> {
+  async updateUserNames(dto: UpdateUserNamesDto, userId: string): Promise<IUser | null> {
     try {
       const user = await this.userModel.findById(userId).exec();
       user.lastName = dto.lastName;
@@ -62,12 +57,9 @@ export class UserService {
 
   async update(id: string, user: IUser) {
     try {
-      const updatedUser = await this.userModel
-        .findByIdAndUpdate(id, user, { new: true })
-        .exec();
+      const updatedUser = await this.userModel.findByIdAndUpdate(id, user, { new: true }).exec();
 
-      if (!updatedUser)
-        throw new NotFoundException(`User with ID ${id} not found`);
+      if (!updatedUser) throw new NotFoundException(`User with ID ${id} not found`);
 
       return updatedUser;
     } catch (error) {
@@ -80,11 +72,7 @@ export class UserService {
       const searchRegex = new RegExp(query, 'i');
       const users = await this.userModel
         .find({
-          $or: [
-            { username: { $regex: searchRegex } },
-            { firstName: { $regex: searchRegex } },
-            { lastName: { $regex: searchRegex } },
-          ],
+          $or: [{ username: { $regex: searchRegex } }, { firstName: { $regex: searchRegex } }, { lastName: { $regex: searchRegex } }],
           $and: [{ _id: { $ne: userId } }],
         })
         .select('firstName lastName username status _id');
