@@ -156,24 +156,19 @@ export class MainService {
   }
 
   loadMessages(page: number = 1) {
-    this.getMessages(this.currentChat._id, page)
-      .pipe(take(1))
-      .subscribe(
-        (response: { messages: Message[]; totalMessages: number; currentPage: number; totalPages: number }) => {
-          const existIds = this.currentChat.messages.map((x) => x._id);
-          const newMessages = response.messages.filter((x) => !existIds.includes(x._id));
-          this.currentChat.messages = [...this.currentChat.messages, ...newMessages];
-          this.currentChat.messages.forEach(async (msg) => {
-            const avatar = await this.getAvatar(msg.sender._id);
-            msg.avatar = avatar;
-          });
-          this.currentPage = response.currentPage;
-          this.totalPages = response.totalPages;
-        },
-        (error) => {
-          console.error('Error loading messages:', error);
-        }
-      );
+    return this.getMessages(this.currentChat._id, page).pipe(
+      tap((response: { messages: Message[]; totalMessages: number; currentPage: number; totalPages: number }) => {
+        const existIds = this.currentChat.messages.map((x) => x._id);
+        const newMessages = response.messages.filter((x) => !existIds.includes(x._id));
+        this.currentChat.messages = [...this.currentChat.messages, ...newMessages];
+        this.currentChat.messages.forEach(async (msg) => {
+          const avatar = await this.getAvatar(msg.sender._id);
+          msg.avatar = avatar;
+        });
+        this.currentPage = response.currentPage;
+        this.totalPages = response.totalPages;
+      })
+    );
   }
 
   getChatList() {
@@ -182,7 +177,7 @@ export class MainService {
       .pipe(take(1))
       .subscribe(
         (response) => {
-          this.chatItems = response;
+          this.chatItems = response || [];
           this.chatItems.forEach(async (item) => {
             item.avatar = 'default_profile.jpg';
             const avatar = await this.getAvatar(item._id);
