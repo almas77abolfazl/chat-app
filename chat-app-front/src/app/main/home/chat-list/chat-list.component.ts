@@ -11,7 +11,6 @@ import { DatePipe } from '@angular/common';
   imports: [FontAwesomeModule, FormsModule, DatePipe],
   templateUrl: './chat-list.component.html',
   styleUrl: './chat-list.component.scss',
-  standalone: true,
 })
 export class ChatListComponent {
   searchQuery: string = '';

@@ -18,9 +18,7 @@ import {
 import { SideBarComponent } from './side-bar/side-bar.component';
 import { ChatListComponent } from './chat-list/chat-list.component';
 import { ChatAreaComponent } from './chat-area/chat-area.component';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { EditProfileComponent } from '../edit-profile/edit-profile.component';
+import { MatDialogModule } from '@angular/material/dialog';
 import { MainService } from '../main.service';
 import { SocketService } from '../socket.service';
 
@@ -29,7 +27,6 @@ import { SocketService } from '../socket.service';
   imports: [FontAwesomeModule, SideBarComponent, ChatListComponent, ChatAreaComponent, MatDialogModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
-  standalone : true
 })
 export class HomeComponent {
   constructor(library: FaIconLibrary, socketService: SocketService, public mainService: MainService) {

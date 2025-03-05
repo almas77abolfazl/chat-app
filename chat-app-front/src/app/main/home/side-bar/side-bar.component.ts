@@ -6,7 +6,6 @@ import { MainService } from '../../main.service';
   imports: [FontAwesomeModule],
   templateUrl: './side-bar.component.html',
   styleUrl: './side-bar.component.scss',
-  standalone: true,
 })
 export class SideBarComponent {
   customItems: { icon: string; title: string; id: string }[] = [];
