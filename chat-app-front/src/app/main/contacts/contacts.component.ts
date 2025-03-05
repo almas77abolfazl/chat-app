@@ -4,11 +4,10 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MatDialog } from '@angular/material/dialog';
 
 @Component({
-  selector: 'app-contacts',
-  standalone: true,
-  imports: [FontAwesomeModule, NgFor],
-  templateUrl: './contacts.component.html',
-  styleUrl: './contacts.component.scss',
+    selector: 'app-contacts',
+    imports: [FontAwesomeModule, NgFor],
+    templateUrl: './contacts.component.html',
+    styleUrl: './contacts.component.scss'
 })
 export class ContactsComponent {
   contacts = [

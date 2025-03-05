@@ -8,10 +8,10 @@ import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-chat-list',
-  standalone: true,
   imports: [FontAwesomeModule, FormsModule, DatePipe],
   templateUrl: './chat-list.component.html',
   styleUrl: './chat-list.component.scss',
+  standalone: true,
 })
 export class ChatListComponent {
   searchQuery: string = '';
