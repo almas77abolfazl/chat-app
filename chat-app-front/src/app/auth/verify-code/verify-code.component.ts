@@ -4,11 +4,10 @@ import { RouterModule } from '@angular/router';
 import { AuthService } from '../auth.service';
 
 @Component({
-  selector: 'app-verify-code',
-  standalone: true,
-  imports: [RouterModule, FormsModule],
-  templateUrl: './verify-code.component.html',
-  styleUrl: './verify-code.component.scss',
+    selector: 'app-verify-code',
+    imports: [RouterModule, FormsModule],
+    templateUrl: './verify-code.component.html',
+    styleUrl: './verify-code.component.scss'
 })
 export class VerifyCodeComponent {
   verificationCode: string = '';

@@ -1,8 +1,5 @@
 import { Component } from '@angular/core';
-import {
-  FaIconLibrary,
-  FontAwesomeModule,
-} from '@fortawesome/angular-fontawesome';
+import { FaIconLibrary, FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import {
   faComments,
   faBriefcase,
@@ -29,23 +26,13 @@ import { SocketService } from '../socket.service';
 
 @Component({
   selector: 'app-home',
-  standalone: true,
-  imports: [
-    FontAwesomeModule,
-    SideBarComponent,
-    ChatListComponent,
-    ChatAreaComponent,
-    MatDialogModule,
-  ],
+  imports: [FontAwesomeModule, SideBarComponent, ChatListComponent, ChatAreaComponent, MatDialogModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
+  standalone : true
 })
 export class HomeComponent {
-  constructor(
-    library: FaIconLibrary,
-    socketService: SocketService,
-    public mainService: MainService
-  ) {
+  constructor(library: FaIconLibrary, socketService: SocketService, public mainService: MainService) {
     socketService.init();
     mainService.listenToMessages();
     library.addIcons(

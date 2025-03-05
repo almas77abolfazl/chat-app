@@ -7,10 +7,10 @@ import { take } from 'rxjs';
 
 @Component({
   selector: 'app-chat-area',
-  standalone: true,
   imports: [FontAwesomeModule, DatePipe, NgClass],
   templateUrl: './chat-area.component.html',
   styleUrl: './chat-area.component.scss',
+  standalone: true,
 })
 export class ChatAreaComponent {
   userId = '';

@@ -4,11 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../auth.service';
 
 @Component({
-  selector: 'app-fill-names',
-  standalone: true,
-  imports: [FormsModule, NgIf],
-  templateUrl: './fill-names.component.html',
-  styleUrl: './fill-names.component.scss',
+    selector: 'app-fill-names',
+    imports: [FormsModule, NgIf],
+    templateUrl: './fill-names.component.html',
+    styleUrl: './fill-names.component.scss'
 })
 export class FillNamesComponent {
   firstName: string = '';
