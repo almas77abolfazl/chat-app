@@ -7,7 +7,7 @@ export class HttpRequestService {
   readonly ROOT_URL: string;
 
   constructor(private http: HttpClient) {
-    this.ROOT_URL = 'http://localhost:3000/v1';
+    this.ROOT_URL = 'http://192.168.247.142:3000/v1';
   }
 
   public get(
