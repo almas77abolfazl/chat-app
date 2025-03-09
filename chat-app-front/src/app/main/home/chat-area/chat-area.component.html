@@ -2,14 +2,15 @@
   @if (mainService.currentChat) {
 
   <div class="chat-header">
-    <div class="chat-title">
-      {{
-        mainService.currentChat.firstName +
-          " " +
-          mainService.currentChat.lastName
-      }}
+    <div class="chat-info">
+      <div class="chat-avatar">
+        <img src="{{ mainService.currentChat.avatar || 'default_profile.jpg' }}" />
+      </div>
+      <div class="chat-title">
+        {{ mainService.currentChat.firstName + " " + mainService.currentChat.lastName }}
+      </div>
     </div>
-    <div class="chat-info">{{ mainService.currentChat.status }}</div>
+    <div class="chat-status">{{ mainService.currentChat.status }}</div>
     <div class="chat-options">
       <fa-icon [icon]="['fas', 'search']" class="icon"></fa-icon>
       <fa-icon [icon]="['fas', 'ellipsis-h']" class="icon"></fa-icon>
@@ -36,17 +37,8 @@
   </div>
 
   <div class="chat-input">
-    <input
-      #input
-      type="text"
-      placeholder="Your message"
-      (keyup.enter)="mainService.sendMessage(mainService.currentChat, input)"
-    />
-    <fa-icon
-      [icon]="['fas', 'paper-plane']"
-      class="send-icon"
-      (click)="mainService.sendMessage(mainService.currentChat, input)"
-    ></fa-icon>
+    <input #input type="text" placeholder="Your message" (keyup.enter)="mainService.sendMessage(mainService.currentChat, input)" />
+    <fa-icon [icon]="['fas', 'paper-plane']" class="send-icon" (click)="mainService.sendMessage(mainService.currentChat, input)"></fa-icon>
   </div>
 
   } @else {
