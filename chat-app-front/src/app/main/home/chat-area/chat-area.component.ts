@@ -4,6 +4,8 @@ import { MainService } from '../../main.service';
 import { Message } from '../../../models/message.model';
 import { DatePipe, NgClass } from '@angular/common';
 import { take } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
+import { ProfileComponent } from '../../profile/profile.component';
 
 @Component({
   selector: 'app-chat-area',
@@ -13,7 +15,7 @@ import { take } from 'rxjs';
 })
 export class ChatAreaComponent {
   userId = '';
-  constructor(public mainService: MainService) {
+  constructor(public mainService: MainService, private dialog: MatDialog) {
     this.userId = this.mainService.authService.getUserId();
   }
 
@@ -24,5 +26,21 @@ export class ChatAreaComponent {
         .pipe(take(1))
         .subscribe();
     }
+  }
+
+  showProfile() {
+    const dialogRef = this.dialog.open(ProfileComponent, {
+      width: '500px',
+      data: this.mainService.currentChat,
+    });
+
+    dialogRef
+      .afterClosed()
+      .pipe(take(1))
+      .subscribe((result) => {
+        if (result) {
+          console.log('Profile updated:', result);
+        }
+      });
   }
 }
