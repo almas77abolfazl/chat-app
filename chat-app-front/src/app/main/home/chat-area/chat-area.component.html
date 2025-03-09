@@ -2,7 +2,7 @@
   @if (mainService.currentChat) {
 
   <div class="chat-header">
-    <div class="chat-info">
+    <div class="chat-info" (click)="showProfile()">
       <div class="chat-avatar">
         <img src="{{ mainService.currentChat.avatar || 'default_profile.jpg' }}" />
       </div>
