@@ -3,27 +3,18 @@
   <div class="profile-header">
     <div class="profile-picture">
       <img src="{{ data?.avatar }}" alt="Profile Picture" />
-      <label for="profile-picture-upload" class="change-picture">
-        <fa-icon [icon]="['fas', 'camera']"></fa-icon>
-      </label>
     </div>
   </div>
 
   <div class="profile-form">
-    <div class="form-group">
-      <label for="firstName">First Name</label>
-      <input type="text" id="firstName" [(ngModel)]="data.firstName" class="form-control" />
-    </div>
+    <label for="firstName">First Name</label>
+    {{ data.firstName }}
 
-    <div class="form-group">
-      <label for="lastName">Last Name</label>
-      <input type="text" id="lastName" [(ngModel)]="data.lastName" class="form-control" />
-    </div>
+    <label for="lastName">Last Name</label>
+    {{ data.lastName }}
 
-    <div class="form-group">
-      <label for="bio">Bio</label>
-      <!-- <textarea id="bio" [(ngModel)]="data.bio" class="form-control"></textarea> -->
-    </div>
+    <label for="bio">Bio</label>
+    <!-- {{ data.bio }} -->
   </div>
   <div mat-dialog-actions class="profile-footer"></div>
 </div>
