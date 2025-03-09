@@ -50,27 +50,11 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    .form-group {
-      margin: 10px;
 
-      label {
-        display: block;
-        font-weight: bold;
-        margin-bottom: 0.5rem;
-      }
-
-      .form-control {
-        width: 300px;
-        border: 1px solid #ddd;
-        border-radius: 5px;
-        font-size: 16px;
-        transition: border-color 0.3s ease;
-
-        &:focus {
-          outline: none;
-          border-color: #4a76a8;
-        }
-      }
+    label {
+      display: block;
+      font-weight: bold;
+      margin: 1rem;
     }
   }
   .profile-footer {
