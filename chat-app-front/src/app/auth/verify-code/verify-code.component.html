@@ -1,19 +1,13 @@
-<div class="verification-container" (keyup.enter)="verifyCode()">
-  <div class="verification-card">
-    <h2 class="verification-title">Enter Verification Code</h2>
-    <p class="verification-text">
-      We’ve sent a code to your phone {{ phoneNumber }}. Please enter it below.
-    </p>
-    <div class="input-group">
-      <label for="code" class="input-label">Verification Code</label>
-      <input
-        [(ngModel)]="verificationCode"
-        type="text"
-        id="code"
-        class="input-field"
-        placeholder="Enter your code"
-      />
+<div class="auth-container">
+  <div class="auth-card">
+    <h2 class="auth-title">کد تأیید را وارد کنید</h2>
+    <p class="auth-text">کدی به شماره {{ phoneNumber }} ارسال شده است. لطفاً آن را در کادر زیر وارد کنید.</p>
+    <div class="auth-form">
+      <div class="form-group">
+        <label for="code" class="form-label">کد تأیید</label>
+        <input [(ngModel)]="verificationCode" type="text" id="code" class="form-input" placeholder="کد خود را وارد کنید" required />
+      </div>
+      <button type="submit" class="form-btn" (click)="verifyCode()">تأیید کد</button>
     </div>
-    <button class="submit-btn" (click)="verifyCode()">Verify Code</button>
   </div>
 </div>
