@@ -2,26 +2,26 @@
   <div class="sidebar-header">
     <div class="menu-item">
       <fa-icon [icon]="['fas', 'comments']"></fa-icon>
-      All chats
+      <span>چت‌ها</span>
     </div>
 
     @for (item of customItems; track $index) {
     <div class="menu-item">
       <fa-icon [icon]="['fas', item.icon]"></fa-icon>
-      {{ item.title }}
+      <span>{{ item.title }}</span>
     </div>
     }
   </div>
 
   <div class="sidebar-footer">
-    ------------
+    <hr class="divider" />
     <div class="menu-item" (click)="mainService.openEditProfileModal()">
       <fa-icon [icon]="['fas', 'user-circle']"></fa-icon>
-      Profile
+      <span>پروفایل</span>
     </div>
     <div class="menu-item" (click)="mainService.logout()">
       <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
-      Log out
+      <span>خروج</span>
     </div>
   </div>
 </div>

@@ -107,7 +107,7 @@ export class MainService {
     return this.httpRequestService.get('search?query=' + query);
   }
 
-  sendMessage(currentChat: ChatListItem, input: HTMLInputElement) {
+  sendMessage(currentChat: ChatListItem, input: HTMLTextAreaElement) {
     const messageData: Message = {
       sender: {
         _id: this.authService.getUserId(),

@@ -1,47 +1,34 @@
-<div class="chat-area">
+<div class="chat-area-container">
   @if (mainService.currentChat) {
 
   <div class="chat-header">
-    <div class="chat-info" (click)="showProfile()">
-      <div class="chat-avatar">
-        <img src="{{ mainService.currentChat.avatar || 'default_profile.jpg' }}" />
-      </div>
-      <div class="chat-title">
-        {{ mainService.currentChat.firstName + " " + mainService.currentChat.lastName }}
-      </div>
+    <div class="chat-header-info">
+      <img [src]="mainService.currentChat?.avatar" alt="Avatar" class="chat-avatar" />
+      <div class="chat-name">{{ mainService.currentChat?.firstName + " " + mainService.currentChat?.lastName }}</div>
     </div>
-    <div class="chat-status">{{ mainService.currentChat.status }}</div>
-    <div class="chat-options">
-      <fa-icon [icon]="['fas', 'search']" class="icon"></fa-icon>
-      <fa-icon [icon]="['fas', 'ellipsis-h']" class="icon"></fa-icon>
-    </div>
+    <fa-icon [icon]="['fas', 'ellipsis-v']" class="chat-options-icon"></fa-icon>
   </div>
 
-  <div class="chat-messages" (scroll)="onScroll()">
-    @for (msg of mainService.currentChat.messages; track $index) {
-
-    <div class="message" [ngClass]="{ 'my-message': msg.sender._id == userId }">
-      <img class="avatar" src="{{ msg.avatar || 'default_profile.jpg' }}" />
-      <div class="message-content">
-        <div class="message-author">
-          {{ msg.sender?.firstName + " " + msg.sender?.lastName }}
-        </div>
-        <div class="message-text">
-          {{ msg.content }}
-        </div>
-      </div>
-      <div class="message-time">{{ msg.createdAt | date : "short" }}</div>
+  <div class="chat-messages">
+    @for (message of mainService.currentChat?.messages; track $index) {
+    <!-- [ngClass]="{ 'sent': message.isSent, 'received': !message.isSent }" -->
+    <div class="message">
+      <div class="message-content">{{ message.content }}</div>
+      <div class="message-time">{{ message.createdAt | date : "shortTime" }}</div>
     </div>
-
     }
   </div>
 
-  <div class="chat-input">
-    <input #input type="text" placeholder="Your message" (keyup.enter)="mainService.sendMessage(mainService.currentChat, input)" />
-    <fa-icon [icon]="['fas', 'paper-plane']" class="send-icon" (click)="mainService.sendMessage(mainService.currentChat, input)"></fa-icon>
+  <div class="chat-input-container">
+    <textarea
+      #element
+      class="chat-input"
+      placeholder="پیام خود را بنویسید..."
+      (keydown.enter)="mainService.sendMessage(mainService.currentChat, element)"
+    ></textarea>
+    <fa-icon [icon]="['fas', 'paper-plane']" class="send-icon" (click)="mainService.sendMessage(mainService.currentChat, element)"></fa-icon>
   </div>
-
-  } @else {
+  }@else {
   <div class="empty-chat">select a chat ...</div>
   }
 </div>

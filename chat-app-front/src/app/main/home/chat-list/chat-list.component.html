@@ -1,36 +1,40 @@
 <div class="chat-list-container">
   <div class="chat-list">
     <div class="search-container">
-      <input type="text" placeholder="Search" class="search-input" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange($event)" />
+      <input type="text" placeholder="جستجو در چت‌ها..." class="search-input" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange($event)" />
       <fa-icon [icon]="['fas', 'search']" class="search-icon"></fa-icon>
     </div>
 
     @if (searchResults.length > 0) {
-
     <div class="search-results">
-      @for (result of searchResults; track $index) {
+      @for ( result of searchResults; track $index) {
       <div class="search-result-item" (click)="selectChat(result)">
-        <div class="result-name">
-          {{ result.firstName + " " + result.lastName }}
+        <div class="result-name">{{ result.firstName + " " + result.lastName }}</div>
+        <div class="result-type">چت</div>
+      </div>
+      }
+    </div>
+    } @else {
+    <div class="chat-list-body">
+      @for ( chat of mainService.chatItems; track $index) {
+      <div class="chat-item" (click)="selectChat(chat)">
+        <div class="chat-avatar">
+          <img [src]="chat.avatar" alt="Avatar" />
         </div>
-        <div class="result-type">{{ "awli" }}</div>
+        <div class="chat-info">
+          <div class="chat-name">{{ chat.firstName + " " + chat.lastName }}</div>
+          <div class="chat-last-message">{{ chat.lastMessage?.content }}</div>
+        </div>
+        <div class="chat-time">{{ chat.updatedAt }}</div>
+        @if (chat.messageCount > 0) {
+        <div class="unread-count">{{ chat.messageCount }}</div>
+        }
       </div>
       }
     </div>
-    } @else { @for (item of mainService.chatItems; track $index) {
-    <div class="chat-item" (click)="selectChat(item)">
-      <img class="avatar" src="{{ item.avatar }}" />
-      <div class="chat-info">
-        <div class="chat-name">{{ item.firstName + " " + item.lastName }}</div>
-        <div class="last-message">{{ item.lastMessage?.content }}</div>
-      </div>
-      <div class="message-time">{{ item.updatedAt | date : "short" }}</div>
-      @if (item.messageCount) {
-      <div class="message-count">{{ item.messageCount }}</div>
-      }
-    </div>
-    } }
+    }
   </div>
+
   <div class="contacts-button-container" (click)="mainService.showContacts()">
     <fa-icon [icon]="['fas', 'user-plus']" class="show-contacts"></fa-icon>
   </div>
