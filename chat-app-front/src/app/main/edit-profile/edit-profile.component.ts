@@ -5,10 +5,10 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 
 @Component({
-    selector: 'app-edit-profile',
-    imports: [FontAwesomeModule, FormsModule, MatButtonModule],
-    templateUrl: './edit-profile.component.html',
-    styleUrl: './edit-profile.component.scss'
+  selector: 'app-edit-profile',
+  imports: [FontAwesomeModule, FormsModule, MatButtonModule],
+  templateUrl: './edit-profile.component.html',
+  styleUrls: ['./edit-profile.component.scss'],
 })
 export class EditProfileComponent {
   file: any;

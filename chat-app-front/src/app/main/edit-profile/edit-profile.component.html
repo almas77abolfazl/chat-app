@@ -1,49 +1,26 @@
-<h2 class="dialog-title" mat-dialog-title>Edit Profile</h2>
-<div mat-dialog-content class="edit-profile-container">
+<div class="edit-profile-container">
+  <h2 class="edit-profile-title">ویرایش پروفایل</h2>
   <div class="profile-header">
     <div class="profile-picture">
-      <img src="{{ data?.pictureSrc }}" alt="Profile Picture" />
+      <img [src]="data?.pictureSrc" alt="Profile Picture" />
       <label for="profile-picture-upload" class="change-picture">
         <fa-icon [icon]="['fas', 'camera']"></fa-icon>
       </label>
-      <input
-        type="file"
-        id="profile-picture-upload"
-        (change)="onProfilePictureChange($event)"
-        accept="image/png, image/jpg, image/jpeg"
-        hidden
-      />
+      <input type="file" id="profile-picture-upload" (change)="onProfilePictureChange($event)" accept="image/png, image/jpg, image/jpeg" hidden />
     </div>
   </div>
-
-  <div class="profile-form">
+  <div class="profile-form" >
     <div class="form-group">
-      <label for="firstName">First Name</label>
-      <input
-        type="text"
-        id="firstName"
-        [(ngModel)]="data.firstName"
-        class="form-control"
-      />
+      <label for="firstName">نام</label>
+      <input id="firstName" type="text" [(ngModel)]="data.firstName" class="form-control" placeholder="نام خود را وارد کنید" required />
     </div>
-
     <div class="form-group">
-      <label for="lastName">Last Name</label>
-      <input
-        type="text"
-        id="lastName"
-        [(ngModel)]="data.lastName"
-        class="form-control"
-      />
+      <label for="lastName">نام خانوادگی</label>
+      <input id="lastName" type="text" [(ngModel)]="data.lastName" class="form-control" placeholder="نام خانوادگی خود را وارد کنید" required />
     </div>
-
-    <div class="form-group">
-      <label for="bio">Bio</label>
-      <textarea id="bio" [(ngModel)]="data.bio" class="form-control"></textarea>
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" (click)="onSave()">ذخیره</button>
+      <button type="button" class="btn btn-secondary" (click)="onCancel()">لغو</button>
     </div>
-  </div>
-  <div mat-dialog-actions class="edit-profile-footer">
-    <button mat-button (click)="onCancel()">Cancel</button>
-    <button mat-button (click)="onSave()">Save</button>
   </div>
 </div>
