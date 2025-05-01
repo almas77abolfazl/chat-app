@@ -41,6 +41,8 @@
   }
 
   .chat-messages {
+    display: flex;
+    flex-direction: column;
     flex: 1;
     overflow-y: auto;
     padding: 1rem;
@@ -50,6 +52,7 @@
       display: flex;
       flex-direction: column;
       max-width: 70%;
+      min-width: 80px;
       margin-bottom: 1rem;
       padding: 0.5rem;
       border-radius: 8px;
@@ -57,13 +60,13 @@
       line-height: 1.4;
 
       &.sent {
-        align-self: flex-end;
+        align-self: flex-start;
         background-color: #4a76a8;
         color: #ffffff;
       }
 
       &.received {
-        align-self: flex-start;
+        align-self: flex-end;
         background-color: #e0e0e0;
         color: #333;
       }
@@ -76,6 +79,14 @@
         font-size: 0.7rem;
         color: #999;
         text-align: right;
+      }
+
+      .message-sender {
+        font-size: 0.8rem;
+        font-weight: bold;
+        color: #555;
+        margin-bottom: 0.3rem;
+        text-align: left;
       }
     }
   }

@@ -11,8 +11,10 @@
 
   <div class="chat-messages">
     @for (message of mainService.currentChat?.messages; track $index) {
-    <!-- [ngClass]="{ 'sent': message.isSent, 'received': !message.isSent }" -->
-    <div class="message">
+    <div class="message" [ngClass]="{ 'sent': message.sender._id == userId, 'received': message.sender._id != userId }">
+      @if (message.sender._id != userId) {
+      <div class="message-sender">{{ mainService.currentChat?.firstName + ' ' + mainService.currentChat?.lastName }}</div>
+      }
       <div class="message-content">{{ message.content }}</div>
       <div class="message-time">{{ message.createdAt | date : "shortTime" }}</div>
     </div>
