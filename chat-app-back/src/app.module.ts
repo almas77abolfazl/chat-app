@@ -12,6 +12,8 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ErrorInterceptor } from './helpers/error.interceptor';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SearchModule } from './search/search.module';
+import { AgentModule } from './agent/agent.module';
+import llmConfig from './config/llm.config';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
@@ -22,7 +24,8 @@ import { join } from 'path';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      load: [databaseConfig, jwtConfig, appConfig],
+      load: [databaseConfig, jwtConfig, appConfig, llmConfig],
+      isGlobal: true,
     }),
     AuthModule,
     MongooseModule.forRootAsync({
@@ -42,6 +45,7 @@ import { join } from 'path';
     GroupModule,
     ChannelModule,
     SearchModule,
+    AgentModule,
   ],
   controllers: [AppController],
   providers: [

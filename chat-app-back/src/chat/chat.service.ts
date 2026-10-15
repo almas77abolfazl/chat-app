@@ -8,26 +8,36 @@ import { Chat, ChatDocument } from './entities/chat.entity';
 export class ChatService {
   constructor(@InjectModel(Chat.name) private chatModel: Model<ChatDocument>) {}
 
-  async getChatList(userId: string): Promise<any> {
-    try {
-      const chats = await this.chatModel
-        .find({ participants: userId })
-        .populate('participants', 'firstName lastName')
-        .populate('lastMessage', 'content')
-        .sort({ updatedAt: -1 })
-        .exec();
+  async getChatList(userId: string) {
+    const chats = await this.chatModel
+      .find({ participants: userId })
+      .populate<{ participants: any[] }>('participants', 'firstName lastName')
+      .populate('lastMessage', 'content sender createdAt')
+      .sort({ updatedAt: -1 })
+      .exec();
 
-      const formattedChats = chats.map((chat) => {
-        const otherParticipant: any = chat.participants.find(
-          (participant) => participant._id.toString() !== userId,
-        );
-        chat.participants = otherParticipant;
-        return chat;
-      });
+    return chats.map((chat) => {
+      const otherParticipant = chat.participants.find((participant) => participant._id.toString() !== userId);
 
-      return formattedChats;
-    } catch (error) {
-      throw new Error('Error fetching chats');
-    }
+      let unreadCount = 0;
+      if (chat.unreadCounts) {
+        const counts = typeof chat.unreadCounts.get === 'function' ? chat.unreadCounts.get(userId) : (chat.unreadCounts as any)[userId];
+        unreadCount = Number(counts) || 0;
+      }
+
+      return {
+        chatId: chat._id,
+        otherParticipant: otherParticipant
+          ? {
+              _id: otherParticipant._id,
+              firstName: otherParticipant.firstName,
+              lastName: otherParticipant.lastName,
+            }
+          : null,
+        lastMessage: chat.lastMessage,
+        unreadCount,
+        updatedAt: chat.updatedAt,
+      };
+    });
   }
 }

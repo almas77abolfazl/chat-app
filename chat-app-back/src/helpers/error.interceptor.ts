@@ -1,12 +1,6 @@
-import {
-  CallHandler,
-  ExecutionContext,
-  Injectable,
-  NestInterceptor,
-} from '@nestjs/common';
+import { CallHandler, ExecutionContext, HttpException, Injectable, NestInterceptor } from '@nestjs/common';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { HttpException } from '@nestjs/common';
 
 @Injectable()
 export class ErrorInterceptor implements NestInterceptor {
@@ -14,30 +8,15 @@ export class ErrorInterceptor implements NestInterceptor {
     return next.handle().pipe(
       catchError((error) => {
         if (error instanceof HttpException) {
-          const response = error.getResponse();
-          const message =
-            typeof response === 'object' ? (response as any).message : response;
-          return throwError(() => ({
-            statusCode: error.getStatus(),
-            message: message,
-            error: error.message,
-          }));
-        } else {
-          return throwError(() => ({
-            statusCode: 500,
-            message: 'Internal server error',
-            error: error.message,
-          }));
+          return throwError(() => error);
         }
+        const status = error?.name === 'CastError' || error?.name === 'ValidationError' ? 400 : 500;
+        return throwError(() => new HttpException({ message: error?.message ?? 'Internal server error' }, status));
       }),
     );
   }
 }
 
 export function handleException(error: any): never {
-  if (error instanceof HttpException) {
-    throw error;
-  } else {
-    throw new HttpException({ message: error.message }, 500);
-  }
+  throw error;
 }

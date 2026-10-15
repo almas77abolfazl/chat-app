@@ -7,7 +7,7 @@ import { RequestWithUser } from 'src/auth/interfaces/request-with-user.model';
 export class MessageController {
   constructor(private readonly messageService: MessageService) {}
 
-  @Get('')
+  @Get()
   @UseGuards(JwtAuthGuard)
   async getMessages(
     @Req() request: RequestWithUser,
@@ -15,16 +15,7 @@ export class MessageController {
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 20,
   ) {
-    try {
-      const senderId = request.user.id;
-      return this.messageService.getMessagesBetweenUsers(
-        senderId,
-        receiverId,
-        page,
-        limit,
-      );
-    } catch (error) {
-      return { error: error.message };
-    }
+    const senderId = request.user._id as string;
+    return this.messageService.getMessagesBetweenUsers(senderId, receiverId, page, limit);
   }
 }
