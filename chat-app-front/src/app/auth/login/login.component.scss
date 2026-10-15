@@ -2,93 +2,89 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background-color: #f9f9f9;
-  padding: 1rem;
+  min-height: 100vh;
+  padding: 1.5rem;
+  background:
+    radial-gradient(60rem 30rem at 80% -10%, rgba(139, 92, 246, 0.14), transparent),
+    radial-gradient(50rem 26rem at 10% 110%, rgba(91, 92, 226, 0.16), transparent),
+    var(--color-bg);
+  direction: rtl;
 
   .login-card {
     width: 100%;
-    max-width: 400px;
-    background: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 2rem;
+    max-width: 25rem;
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    padding: 2.25rem 2rem;
     text-align: center;
 
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: var(--color-primary);
+
+      fa-icon {
+        font-size: 2rem;
+      }
+    }
+
     .login-title {
-      font-size: 1.5rem;
-      font-weight: bold;
-      margin-bottom: 0.5rem;
-      color: #333333;
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem;
     }
 
     .login-subtitle {
-      font-size: 1rem;
-      margin-bottom: 1.5rem;
-      color: #666666;
+      font-size: 0.9rem;
+      color: var(--color-text-secondary);
+      margin: 0 0 1.75rem;
     }
 
     .input-group {
+      text-align: start;
       margin-bottom: 1.5rem;
-      text-align: left;
 
       .input-label {
         display: block;
-        font-size: 0.875rem;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--color-text-secondary);
         margin-bottom: 0.5rem;
-        color: #333333;
-        text-align: right;
       }
 
       .input-field {
-        box-sizing: border-box;
         width: 100%;
-        padding: 0.75rem;
+        padding: 0.8rem 1rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-md);
+        background: var(--color-bg);
         font-size: 1rem;
-        border: 1px solid #cccccc;
-        border-radius: 4px;
+        letter-spacing: 0.05em;
         outline: none;
+        transition: border var(--transition), background var(--transition),
+          box-shadow var(--transition);
+
+        &::placeholder {
+          color: var(--color-text-faint);
+          letter-spacing: normal;
+        }
 
         &:focus {
-          border-color: #007bff;
+          background: var(--color-surface);
+          border-color: var(--color-primary);
+          box-shadow: 0 0 0 3px var(--color-primary-soft);
         }
       }
     }
 
     .submit-btn {
       width: 100%;
-      padding: 0.75rem;
-      font-size: 1rem;
-      color: #ffffff;
-      background-color: #007bff;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-
-      &:hover {
-        background-color: #0056b3;
-      }
-    }
-  }
-}
-
-// Responsive adjustments for mobile-first design
-@media (max-width: 768px) {
-  .login-container {
-    padding: 0.5rem;
-
-    .login-card {
-      padding: 1.5rem;
-
-      .input-field {
-        padding: 0.5rem;
-        font-size: 0.875rem;
-      }
-
-      .submit-btn {
-        padding: 0.5rem;
-        font-size: 0.875rem;
-      }
     }
   }
 }

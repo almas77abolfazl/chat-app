@@ -73,12 +73,10 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
-  public async isLoggedIn() {
+  public isLoggedIn(): boolean {
     const token = this.getAuthToken();
     const userId = this.getUserId();
-    if (!token || !userId) return false;
-    //TODO call api
-    return true;
+    return !!token && !!userId;
   }
 
   public refreshToken(): Observable<any> {

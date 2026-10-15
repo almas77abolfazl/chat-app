@@ -1,20 +1,26 @@
-<h2 class="dialog-title" mat-dialog-title>Profile</h2>
+<h2 class="dialog-title" mat-dialog-title>پروفایل</h2>
 <div mat-dialog-content class="profile-container">
   <div class="profile-header">
     <div class="profile-picture">
-      <img src="{{ data?.avatar }}" alt="Profile Picture" />
+      <img [src]="data?.avatar" alt="Profile Picture" />
     </div>
   </div>
 
   <div class="profile-form">
-    <label for="firstName">First Name</label>
-    {{ data.firstName }}
+    <div class="profile-row">
+      <span class="profile-label">نام</span>
+      <span class="profile-value">{{ data?.firstName }}</span>
+    </div>
 
-    <label for="lastName">Last Name</label>
-    {{ data.lastName }}
+    <div class="profile-row">
+      <span class="profile-label">نام خانوادگی</span>
+      <span class="profile-value">{{ data?.lastName }}</span>
+    </div>
 
-    <label for="bio">Bio</label>
-    <!-- {{ data.bio }} -->
+    <div class="profile-row">
+      <span class="profile-label">وضعیت</span>
+      <span class="profile-value">{{ data?.status ?? 'آنلاین' }}</span>
+    </div>
   </div>
   <div mat-dialog-actions class="profile-footer"></div>
 </div>

@@ -4,11 +4,10 @@ import { MainService } from '../../main.service';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, Subject, take } from 'rxjs';
 import { ChatListItem } from '../../../models/chat-list-item.model';
-import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-chat-list',
-  imports: [FontAwesomeModule, FormsModule, DatePipe],
+  imports: [FontAwesomeModule, FormsModule],
   templateUrl: './chat-list.component.html',
   styleUrl: './chat-list.component.scss',
 })
@@ -48,25 +47,25 @@ export class ChatListComponent {
   }
 
   selectChat(user: ChatListItem) {
-    this.mainService.currentChat = user;
+    let chatItem = this.mainService.chatItems.find((x) => x._id === user._id);
+    if (!chatItem) {
+      chatItem = {
+        _id: user._id,
+        lastMessage: null,
+        messageCount: 0,
+        messages: [],
+        firstName: user.firstName,
+        lastName: user.lastName,
+      };
+      this.mainService.chatItems.unshift(chatItem);
+      this.mainService.getAvatar(user._id).then((avatar) => (chatItem.avatar = avatar));
+    }
+
+    this.mainService.currentChat = chatItem;
     this.mainService
       .loadMessages()
       .pipe(take(1))
-      .subscribe(async (res) => {
-        if (!this.mainService.chatItems?.length) {
-          this.mainService.chatItems = [
-            {
-              _id: user._id,
-              lastMessage: null,
-              messageCount: 0,
-              messages: [],
-              firstName: user.firstName,
-              lastName: user.lastName,
-              avatar: await this.mainService.getAvatar(user._id),
-            },
-          ];
-        }
-        const chatItem = this.mainService.chatItems.find((x) => x._id === user._id);
+      .subscribe(() => {
         chatItem.messageCount = 0;
         setTimeout(() => {
           const messagesDiv = document.querySelector('.chat-messages');

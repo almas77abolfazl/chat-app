@@ -1,15 +1,17 @@
 <div class="contacts-page">
   <div class="header">
-    <div class="title">Contacts</div>
+    <div class="title">مخاطبان</div>
   </div>
   <div class="contacts-list">
-    <div class="contact-item" *ngFor="let contact of contacts">
-      <div class="avatar"></div>
+    @for (contact of contacts; track $index) {
+    <div class="contact-item">
+      <div class="avatar">{{ contact.name.charAt(0) }}</div>
       <div class="contact-info">
         <div class="contact-name">{{ contact.name }}</div>
         <div class="contact-status">{{ contact.status }}</div>
       </div>
       <fa-icon [icon]="['fas', 'check-circle']" class="select-icon"></fa-icon>
     </div>
+    }
   </div>
 </div>

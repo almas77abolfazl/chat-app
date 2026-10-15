@@ -1,39 +1,67 @@
 <div class="chat-list-container">
-  <div class="chat-list">
+  <div class="chat-list-header">
+    <h2 class="chat-list-title">چت‌ها</h2>
     <div class="search-container">
-      <input type="text" placeholder="جستجو در چت‌ها..." class="search-input" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange($event)" />
+      <input
+        type="text"
+        placeholder="جستجوی کاربران..."
+        class="search-input"
+        [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange($event)"
+      />
       <fa-icon [icon]="['fas', 'search']" class="search-icon"></fa-icon>
     </div>
+  </div>
 
-    @if (searchResults.length > 0) {
+  @if (searchResults.length > 0) {
+  <div class="chat-list">
     <div class="search-results">
-      @for ( result of searchResults; track $index) {
+      <div class="search-results-title">نتایج جستجو</div>
+      @for (result of searchResults; track $index) {
       <div class="search-result-item" (click)="selectChat(result)">
-        <div class="result-name">{{ result.firstName + " " + result.lastName }}</div>
-        <div class="result-type">چت</div>
+        <div class="result-avatar">{{ (result.firstName ?? '؟').charAt(0) }}</div>
+        <div class="chat-info">
+          <div class="result-name">{{ result.firstName + " " + result.lastName }}</div>
+          <div class="result-type">شروع گفتگو</div>
+        </div>
       </div>
       }
     </div>
-    } @else {
+  </div>
+  } @else {
+  <div class="chat-list">
     <div class="chat-list-body">
-      @for ( chat of mainService.chatItems; track $index) {
-      <div class="chat-item" (click)="selectChat(chat)">
+      @for (chat of mainService.chatItems; track $index) {
+      <div
+        class="chat-item"
+        [class.active]="mainService.currentChat?._id === chat._id"
+        (click)="selectChat(chat)"
+      >
         <div class="chat-avatar">
           <img [src]="chat.avatar" alt="Avatar" />
+          @if (mainService.isAgentChat(chat)) {
+          <span class="agent-dot"></span>
+          }
         </div>
         <div class="chat-info">
-          <div class="chat-name">{{ chat.firstName + " " + chat.lastName }}</div>
-          <div class="chat-last-message">{{ chat.lastMessage?.content }}</div>
+          <div class="chat-name">
+            @if (mainService.isAgentChat(chat)) {
+            <fa-icon [icon]="['fas', 'robot']" class="chat-agent-icon"></fa-icon>
+            }
+            <span>{{ chat.firstName + " " + chat.lastName }}</span>
+          </div>
+          <div class="chat-last-message">{{ chat.lastMessage?.content ?? 'بدون پیام' }}</div>
         </div>
-        <div class="chat-time">{{ chat.updatedAt }}</div>
-        @if (chat.messageCount > 0) {
-        <div class="unread-count">{{ chat.messageCount }}</div>
-        }
+        <div class="chat-meta">
+          @if (chat.messageCount > 0) {
+          <div class="unread-count">{{ chat.messageCount }}</div>
+          }
+        </div>
       </div>
       }
     </div>
-    }
   </div>
+  }
 
   <div class="contacts-button-container" (click)="mainService.showContacts()">
     <fa-icon [icon]="['fas', 'user-plus']" class="show-contacts"></fa-icon>

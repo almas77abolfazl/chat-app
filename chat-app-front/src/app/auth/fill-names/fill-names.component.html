@@ -1,29 +1,35 @@
 <div class="user-details-container" (keyup.enter)="onSubmit()">
   <div class="fill-names-card">
-    <h2>Please Complete Your Profile</h2>
+    <div class="auth-icon">
+      <fa-icon [icon]="['fas', 'user-plus']"></fa-icon>
+    </div>
+    <h2>پروفایل خود را تکمیل کنید</h2>
+    <p class="card-subtitle">نام و نام خانوادگی شما به دیگران نمایش داده می‌شود</p>
     <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
     <form (ngSubmit)="onSubmit()" class="user-details-form">
       <div class="form-group">
-        <label for="first-name">First Name</label>
+        <label for="first-name">نام</label>
         <input
           type="text"
           id="first-name"
           [(ngModel)]="firstName"
           name="firstName"
           class="form-control"
+          placeholder="مثلاً علی"
         />
       </div>
       <div class="form-group">
-        <label for="last-name">Last Name</label>
+        <label for="last-name">نام خانوادگی</label>
         <input
           type="text"
           id="last-name"
           [(ngModel)]="lastName"
           name="lastName"
           class="form-control"
+          placeholder="مثلاً احمدی"
         />
       </div>
-      <button mat-button type="submit" class="submit-button">Continue</button>
+      <button mat-button type="submit" class="submit-button">ادامه</button>
     </form>
   </div>
 </div>

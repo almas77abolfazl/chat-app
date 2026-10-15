@@ -1,5 +1,15 @@
 <div class="sidebar">
   <div class="sidebar-header">
+    <div class="sidebar-brand">
+      <fa-icon [icon]="['fas', 'comments']"></fa-icon>
+      <span>چت‌اپ</span>
+    </div>
+
+    <div class="menu-item agent-item" (click)="mainService.openAgentChat()">
+      <fa-icon [icon]="['fas', 'robot']"></fa-icon>
+      <span>دستیار هوشمند</span>
+    </div>
+
     <div class="menu-item">
       <fa-icon [icon]="['fas', 'comments']"></fa-icon>
       <span>چت‌ها</span>
@@ -14,12 +24,11 @@
   </div>
 
   <div class="sidebar-footer">
-    <hr class="divider" />
     <div class="menu-item" (click)="mainService.openEditProfileModal()">
       <fa-icon [icon]="['fas', 'user-circle']"></fa-icon>
       <span>پروفایل</span>
     </div>
-    <div class="menu-item" (click)="mainService.logout()">
+    <div class="menu-item logout-item" (click)="mainService.logout()">
       <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
       <span>خروج</span>
     </div>

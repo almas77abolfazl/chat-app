@@ -1,26 +1,117 @@
-/* You can add global styles to this file, and also import other style files */
-
 @font-face {
   font-family: "Shabnam";
-  src: url("../public/Shabnam.ttf") format("woff2");
+  src: url("/Shabnam.ttf") format("truetype");
   font-weight: normal;
   font-style: normal;
+  font-display: swap;
 }
 
-body {
-  margin: 0;
+:root {
+  --color-primary: #5b5ce2;
+  --color-primary-dark: #494bb8;
+  --color-primary-soft: #eef0ff;
+  --color-agent: #8b5cf6;
+  --color-agent-soft: #f3ecff;
+  --color-bg: #f3f4fa;
+  --color-surface: #ffffff;
+  --color-text: #1e2235;
+  --color-text-secondary: #767c96;
+  --color-text-faint: #a2a7bd;
+  --color-border: #e6e8f2;
+  --color-danger: #e5484d;
+  --color-success: #30a46c;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+  --radius-full: 999px;
+
+  --shadow-sm: 0 1px 2px rgba(30, 34, 53, 0.05);
+  --shadow-md: 0 4px 16px rgba(30, 34, 53, 0.07);
+  --shadow-lg: 0 12px 32px rgba(30, 34, 53, 0.12);
+
+  --transition: 160ms ease;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 html,
 body {
   height: 100%;
 }
+
 body {
   margin: 0;
   font-family: "Shabnam", "Helvetica Neue", sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  -webkit-font-smoothing: antialiased;
 }
 
 input,
-button {
+button,
+textarea {
   font-family: "Shabnam", "Helvetica Neue", sans-serif;
+}
+
+::selection {
+  background: var(--color-primary-soft);
+}
+
+::-webkit-scrollbar {
+  width: 0.4rem;
+  height: 0.4rem;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cfd2e3;
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b6bad2;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.app-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: none;
+  border-radius: var(--radius-full);
+  padding: 0.65rem 1.4rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, var(--color-primary), #7b7ce8);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform var(--transition), box-shadow var(--transition),
+    filter var(--transition);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+    filter: brightness(1.04);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &.ghost {
+    background: var(--color-primary-soft);
+    color: var(--color-primary-dark);
+  }
 }

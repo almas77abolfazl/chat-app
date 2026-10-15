@@ -6,17 +6,43 @@
       <img [src]="mainService.currentChat?.avatar" alt="Avatar" class="chat-avatar" />
       <div class="chat-name">{{ mainService.currentChat?.firstName + " " + mainService.currentChat?.lastName }}</div>
     </div>
-    <fa-icon [icon]="['fas', 'ellipsis-v']" class="chat-options-icon"></fa-icon>
+    @if (mainService.isAgentChat(mainService.currentChat)) {
+    <fa-icon [icon]="['fas', 'robot']" class="chat-agent-icon" title="دستیار هوشمند"></fa-icon>
+    }
+    <fa-icon [icon]="['fas', 'ellipsis-v']" class="chat-options-icon" (click)="showProfile()"></fa-icon>
   </div>
 
-  <div class="chat-messages">
+  @if (mainService.isAgentChat(mainService.currentChat)) {
+  <div class="agent-toolbar">
+    <button mat-stroked-button (click)="mainService.agentQuickAction('summarize')">خلاصه گفتگو</button>
+    <button mat-stroked-button (click)="mainService.agentQuickAction('tasks')">استخراج تسک</button>
+    <button mat-stroked-button (click)="mainService.agentQuickAction('reply')">پیشنهاد پاسخ</button>
+  </div>
+  }
+
+  <div class="chat-messages" (scroll)="onScroll($event)">
     @for (message of mainService.currentChat?.messages; track $index) {
-    <div class="message" [ngClass]="{ 'sent': message.sender._id == userId, 'received': message.sender._id != userId }">
-      @if (message.sender._id != userId) {
-      <div class="message-sender">{{ mainService.currentChat?.firstName + ' ' + mainService.currentChat?.lastName }}</div>
+    <div
+      class="message"
+      [ngClass]="{ 'sent': senderId(message) == userId, 'received': senderId(message) != userId }"
+    >
+      @if (message.toolCalls?.length) {
+      <div class="agent-tools">
+        @for (tool of message.toolCalls; track $index) {
+        <span class="agent-tool-badge">{{ tool.name }}</span>
+        }
+      </div>
       }
-      <div class="message-content">{{ message.content }}</div>
+      @if (senderId(message) != userId) {
+      <div class="message-sender">{{ mainService.currentChat?.firstName }}</div>
+      }
+      <div class="message-content">{{ message.content }}@if (message.isStreaming) {<span class="agent-cursor"></span>}</div>
       <div class="message-time">{{ message.createdAt | date : "shortTime" }}</div>
+    </div>
+    }
+    @if (mainService.agentWorking && !mainService.agentStreamingMessage) {
+    <div class="message received">
+      <div class="message-content agent-typing">دستیار در حال فکر کردن</div>
     </div>
     }
   </div>
@@ -28,9 +54,14 @@
       placeholder="پیام خود را بنویسید..."
       (keydown.enter)="mainService.sendMessage(mainService.currentChat, element)"
     ></textarea>
-    <fa-icon [icon]="['fas', 'paper-plane']" class="send-icon" (click)="mainService.sendMessage(mainService.currentChat, element)"></fa-icon>
+    <div class="send-icon" (click)="mainService.sendMessage(mainService.currentChat, element)">
+      <fa-icon [icon]="['fas', 'paper-plane']"></fa-icon>
+    </div>
   </div>
   }@else {
-  <div class="empty-chat">select a chat ...</div>
+  <div class="empty-chat">
+    <fa-icon [icon]="['fas', 'comments']" class="empty-icon"></fa-icon>
+    <p>یک گفتگو را انتخاب کنید یا دستیار هوشمند را امتحان کنید</p>
+  </div>
   }
 </div>
