@@ -5,7 +5,10 @@
 *yarn-error.log*
 
 # Environment variables
-*.env
+.env
+.env.*
+!.env.example
+*.env.local
 
 # Logs
 *logs
