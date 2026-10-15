@@ -1,11 +1,12 @@
 import { NgIf } from '@angular/common';
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { AuthService } from '../auth.service';
 
 @Component({
     selector: 'app-fill-names',
-    imports: [FormsModule, NgIf],
+    imports: [FormsModule, NgIf, FontAwesomeModule],
     templateUrl: './fill-names.component.html',
     styleUrl: './fill-names.component.scss'
 })

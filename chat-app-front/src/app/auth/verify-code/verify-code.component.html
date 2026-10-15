@@ -1,13 +1,26 @@
-<div class="auth-container">
+<div class="auth-container" (keyup.enter)="verifyCode()">
   <div class="auth-card">
+    <div class="auth-icon">
+      <fa-icon [icon]="['fas', 'key']"></fa-icon>
+    </div>
     <h2 class="auth-title">کد تأیید را وارد کنید</h2>
-    <p class="auth-text">کدی به شماره {{ phoneNumber }} ارسال شده است. لطفاً آن را در کادر زیر وارد کنید.</p>
+    <p class="auth-text">
+      کد ۶ رقمی ارسال‌شده به شماره <strong>{{ phoneNumber }}</strong> را وارد کنید.
+    </p>
     <div class="auth-form">
       <div class="form-group">
         <label for="code" class="form-label">کد تأیید</label>
-        <input [(ngModel)]="verificationCode" type="text" id="code" class="form-input" placeholder="کد خود را وارد کنید" required />
+        <input
+          [(ngModel)]="verificationCode"
+          type="text"
+          id="code"
+          class="form-input"
+          maxlength="6"
+          placeholder="------"
+          (keyup.enter)="verifyCode()"
+        />
       </div>
-      <button type="submit" class="form-btn" (click)="verifyCode()">تأیید کد</button>
+      <button type="button" class="form-btn app-button" (click)="verifyCode()">تأیید و ورود</button>
     </div>
   </div>
 </div>

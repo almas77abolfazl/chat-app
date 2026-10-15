@@ -5,4 +5,6 @@ export interface Message {
   content: string;
   createdAt: Date;
   receiver: string;
+  isStreaming?: boolean;
+  toolCalls?: { name: string; arguments: any }[];
 }

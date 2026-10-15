@@ -1,13 +1,21 @@
 <div class="login-container" (keyup.enter)="sendCode()">
   <div class="login-card">
-    <h2 class="login-title">ورود</h2>
+    <div class="brand">
+      <fa-icon [icon]="['fas', 'comments']"></fa-icon>
+      <span>چت‌اپ</span>
+    </div>
+    <h2 class="login-title">ورود به حساب</h2>
     <p class="login-subtitle">لطفاً شماره تلفن خود را وارد کنید</p>
     <div class="input-group">
       <label for="phone" class="input-label">شماره تلفن</label>
-      <div>
-        <input [(ngModel)]="phoneNumber" type="tel" id="phone" class="input-field" placeholder="+۹۸۹۱۲۳۴۵۶۷۸۹" />
-      </div>
+      <input
+        [(ngModel)]="phoneNumber"
+        type="tel"
+        id="phone"
+        class="input-field"
+        placeholder="۰۹۱۲۳۴۵۶۷۸۹"
+      />
     </div>
-    <button class="submit-btn" (click)="sendCode()">ارسال کد</button>
+    <button class="submit-btn app-button" (click)="sendCode()">ارسال کد تأیید</button>
   </div>
 </div>

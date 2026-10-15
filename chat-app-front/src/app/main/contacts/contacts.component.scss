@@ -1,82 +1,67 @@
 .contacts-page {
-  padding: 20px;
+  direction: rtl;
+  padding: 0.5rem;
 
   .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
+    padding: 0.5rem 0.5rem 1rem;
 
     .title {
-      font-size: 24px;
-      font-weight: bold;
-    }
-
-    .add-contact-btn {
-      display: flex;
-      align-items: center;
-      background-color: #4a76a8;
-      padding: 10px 20px;
-      border-radius: 8px;
-      color: #fff;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-
-      &:hover {
-        background-color: #3a5a7c;
-      }
-
-      .add-icon {
-        margin-right: 10px;
-        font-size: 18px;
-      }
+      font-size: 1.1rem;
+      font-weight: 700;
     }
   }
 
   .contacts-list {
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 0.25rem;
+    max-height: 20rem;
+    overflow-y: auto;
 
     .contact-item {
       display: flex;
       align-items: center;
-      background-color: #f9f9f9;
-      padding: 15px;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      gap: 0.75rem;
+      padding: 0.6rem;
+      border-radius: var(--radius-md);
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      transition: background var(--transition);
 
       &:hover {
-        background-color: #eef3f8;
+        background: var(--color-bg);
       }
 
       .avatar {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
-        background-color: #d9d9d9;
-        margin-right: 15px;
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: var(--radius-full);
+        background: linear-gradient(135deg, var(--color-primary), var(--color-agent));
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.95rem;
       }
 
       .contact-info {
-        flex-grow: 1;
+        flex: 1;
+        min-width: 0;
 
         .contact-name {
-          font-size: 18px;
+          font-size: 0.92rem;
           font-weight: 600;
         }
 
         .contact-status {
-          font-size: 14px;
-          color: #888;
+          font-size: 0.75rem;
+          color: var(--color-text-faint);
         }
       }
 
       .select-icon {
-        color: #4a76a8;
-        font-size: 24px;
+        color: var(--color-text-faint);
+        font-size: 1.1rem;
       }
     }
   }

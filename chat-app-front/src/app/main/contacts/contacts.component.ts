@@ -1,21 +1,20 @@
-import { NgFor } from '@angular/common';
 import { Component } from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MatDialog } from '@angular/material/dialog';
 
 @Component({
-    selector: 'app-contacts',
-    imports: [FontAwesomeModule, NgFor],
-    templateUrl: './contacts.component.html',
-    styleUrl: './contacts.component.scss'
+  selector: 'app-contacts',
+  imports: [FontAwesomeModule],
+  templateUrl: './contacts.component.html',
+  styleUrl: './contacts.component.scss',
 })
 export class ContactsComponent {
   contacts = [
-    { name: 'mamad', status: '1 min ago' },
-    { name: 'ahamd', status: '1 min ago' },
-    { name: 'morteza', status: '1 min ago' },
-    { name: 'zizi', status: '1 min ago' },
-    { name: 'titi', status: '1 min ago' },
+    { name: 'ممد', status: '۱ دقیقه پیش' },
+    { name: 'احمد', status: '۱ دقیقه پیش' },
+    { name: 'مرتضی', status: '۳ دقیقه پیش' },
+    { name: 'زی زی', status: '۵ دقیقه پیش' },
+    { name: 'تی تی', status: '۱۰ دقیقه پیش' },
   ];
 
   constructor(private dialog: MatDialog) {}

@@ -18,6 +18,10 @@
       <label for="lastName">نام خانوادگی</label>
       <input id="lastName" type="text" [(ngModel)]="data.lastName" class="form-control" placeholder="نام خانوادگی خود را وارد کنید" required />
     </div>
+    <div class="form-group">
+      <label for="bio">درباره من</label>
+      <textarea id="bio" [(ngModel)]="data.bio" class="form-control" placeholder="یک توضیح کوتاه درباره خودت"></textarea>
+    </div>
     <div class="form-actions">
       <button type="submit" class="btn btn-primary" (click)="onSave()">ذخیره</button>
       <button type="button" class="btn btn-secondary" (click)="onCancel()">لغو</button>

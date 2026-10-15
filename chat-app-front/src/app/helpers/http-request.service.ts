@@ -1,14 +1,13 @@
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class HttpRequestService {
-  readonly ROOT_URL: string;
+  readonly ROOT_URL: string = environment.apiUrl;
 
-  constructor(private http: HttpClient) {
-    this.ROOT_URL = 'http://192.168.247.142:3000/v1';
-  }
+  constructor(private http: HttpClient) {}
 
   public get(
     uri: string,

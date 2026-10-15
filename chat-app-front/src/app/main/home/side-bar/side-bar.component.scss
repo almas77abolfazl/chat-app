@@ -1,133 +1,133 @@
 .sidebar {
-  background-color: #f9f9f9;
-  width: 250px;
-  height: 100vh;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  border-left: 1px solid #e0e0e0;
-  font-family: 'Shabnam', 'Helvetica Neue', sans-serif;
+  height: 100vh;
+  background: var(--color-surface);
+  border-inline-start: 1px solid var(--color-border);
   direction: rtl;
 
   .sidebar-header {
-    padding: 1rem;
-    height: calc(100vh - 200px);
-    overflow: auto;
+    padding: 1.25rem 0.75rem;
+    border-bottom: 1px solid var(--color-border);
+
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0 0.5rem 1rem;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: var(--color-primary);
+
+      fa-icon {
+        font-size: 1.4rem;
+      }
+    }
 
     .menu-item {
       display: flex;
       align-items: center;
-      padding: 0.5rem 0;
-      font-size: 1rem;
-      color: #333;
+      gap: 0.75rem;
+      padding: 0.7rem 0.75rem;
+      margin-bottom: 0.25rem;
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--color-text-secondary);
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      transition: background var(--transition), color var(--transition);
 
       fa-icon {
-        margin-left: 0.5rem;
-        color: #555;
+        font-size: 1.1rem;
+        color: var(--color-text-faint);
+        transition: color var(--transition);
       }
 
       &:hover {
-        background-color: #f0f0f0;
-        border-radius: 5px;
+        background: var(--color-bg);
+        color: var(--color-text);
+      }
+
+      &.agent-item {
+        color: var(--color-agent);
+        background: var(--color-agent-soft);
+
+        fa-icon {
+          color: var(--color-agent);
+        }
       }
     }
   }
 
   .sidebar-footer {
-    padding: 1rem;
+    margin-top: auto;
+    padding: 0.75rem;
+    border-top: 1px solid var(--color-border);
 
     .divider {
-      border: none;
-      border-top: 1px solid #ddd;
-      margin: 1rem 0;
+      display: none;
     }
 
     .menu-item {
       display: flex;
       align-items: center;
-      padding: 0.5rem 0;
-      font-size: 1rem;
-      color: #333;
+      gap: 0.75rem;
+      padding: 0.7rem 0.75rem;
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--color-text-secondary);
       cursor: pointer;
-      transition: background-color 0.3s ease;
+      transition: background var(--transition), color var(--transition);
 
       fa-icon {
-        margin-left: 0.5rem;
-        color: #555;
+        font-size: 1.1rem;
+        color: var(--color-text-faint);
+        transition: color var(--transition);
       }
 
       &:hover {
-        background-color: #f0f0f0;
-        border-radius: 5px;
+        background: var(--color-bg);
+        color: var(--color-text);
       }
-    }
-  }
 
-  @media (max-width: 768px) {
-    width: 200px;
-
-    .sidebar-header {
-      padding: 0.5rem;
-      .menu-item {
-        font-size: 0.9rem;
+      &.logout-item:hover {
+        background: #fdeeee;
+        color: var(--color-danger);
 
         fa-icon {
-          margin-left: 0.3rem;
-        }
-      }
-    }
-
-    .sidebar-footer {
-      padding: 0.5rem;
-
-      .menu-item {
-        font-size: 0.9rem;
-
-        fa-icon {
-          margin-left: 0.3rem;
+          color: var(--color-danger);
         }
       }
     }
   }
 
-  @media (max-width: 480px) {
-    width: 100%;
-    height: auto;
-    flex-direction: row;
-    justify-content: space-between;
+  @media (max-width: 60rem) {
+    flex-basis: auto;
 
     .sidebar-header {
-      flex: 1;
-      display: flex;
-      flex-direction: row;
-      overflow-x: auto;
+      padding: 1rem 0.4rem;
+
+      .sidebar-brand span,
+      .menu-item span {
+        display: none;
+      }
 
       .menu-item {
-        flex: 0 0 auto;
-        padding: 0.5rem;
-        font-size: 0.8rem;
-
-        fa-icon {
-          margin-left: 0.2rem;
-        }
+        justify-content: center;
+        padding: 0.7rem;
       }
     }
 
     .sidebar-footer {
-      flex: 1;
-      display: flex;
-      flex-direction: row;
-      justify-content: space-around;
+      padding: 0.4rem;
 
       .menu-item {
-        flex: 0 0 auto;
-        padding: 0.5rem;
-        font-size: 0.8rem;
+        justify-content: center;
+        padding: 0.7rem;
 
-        fa-icon {
-          margin-left: 0.2rem;
+        span {
+          display: none;
         }
       }
     }

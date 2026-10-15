@@ -1,47 +1,30 @@
 .dialog-title {
   text-align: center;
+  font-weight: 700;
 }
 
 .profile-container {
+  direction: rtl;
   display: flex;
   flex-direction: column;
+  min-width: 18rem;
 
   .profile-header {
     text-align: center;
-    margin-bottom: 1rem;
+    margin-bottom: 1.25rem;
 
     .profile-picture {
-      position: relative;
-      width: 80px;
-      height: 80px;
+      width: 7rem;
+      height: 7rem;
       margin: 0 auto;
-      border-radius: 50%;
+      border-radius: var(--radius-full);
       overflow: hidden;
-      border: 3px solid #ddd;
+      border: 3px solid var(--color-primary-soft);
 
       img {
         width: 100%;
         height: 100%;
         object-fit: cover;
-      }
-
-      .change-picture {
-        position: absolute;
-        bottom: 0;
-        right: 0;
-        background-color: rgba(0, 0, 0, 0.5);
-        color: #fff;
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        cursor: pointer;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-
-        fa-icon {
-          font-size: 16px;
-        }
       }
     }
   }
@@ -49,15 +32,30 @@
   .profile-form {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    gap: 0.75rem;
 
-    label {
-      display: block;
-      font-weight: bold;
-      margin: 1rem;
+    .profile-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.6rem 0.9rem;
+      background: var(--color-bg);
+      border-radius: var(--radius-md);
+
+      .profile-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--color-text-secondary);
+      }
+
+      .profile-value {
+        font-size: 0.9rem;
+        font-weight: 600;
+      }
     }
   }
+
   .profile-footer {
-    margin: 10px;
+    margin: 1rem 0 0;
   }
 }
