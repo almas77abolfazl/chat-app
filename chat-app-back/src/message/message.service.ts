@@ -11,11 +11,7 @@ export class MessageService {
     @InjectModel(Chat.name) private chatModel: Model<ChatDocument>,
   ) {}
 
-  async saveMessage(
-    sender: string,
-    receiver: string,
-    content: string,
-  ): Promise<Message> {
+  async saveMessage(sender: string, receiver: string, content: string): Promise<MessageDocument> {
     const message = new this.messageModel({ sender, receiver, content });
     await message.save();
 
@@ -37,7 +33,8 @@ export class MessageService {
       chat.messages.push(message.id);
       chat.lastMessage = message.id;
       chat.updatedAt = new Date();
-      chat.unreadCounts.set(receiver, chat.unreadCounts.get(receiver) + 1);
+      const current = Number(typeof chat.unreadCounts?.get === 'function' ? chat.unreadCounts.get(receiver) : (chat.unreadCounts as any)?.[receiver]);
+      chat.unreadCounts.set(receiver, (Number.isFinite(current) ? current : 0) + 1);
     }
 
     await chat.save();
@@ -69,7 +66,7 @@ export class MessageService {
         ],
       })
       .populate('sender', 'firstName lastName')
-      .sort({ createdAt: 1 })
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
       .lean()

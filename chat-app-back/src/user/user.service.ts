@@ -2,7 +2,6 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './entities/user.entity';
 import { Model } from 'mongoose';
-import { handleException } from 'src/helpers/error.interceptor';
 import { IUser } from './interfaces/user.interface';
 import { UpdateUserNamesDto } from './dto/update-user-names.dto';
 import * as fs from 'fs';
@@ -12,123 +11,94 @@ export class UserService {
   constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>) {}
 
   async createUser(phoneNumber: string): Promise<User> {
-    try {
-      const doesUserExist = await this.doesUserExist(phoneNumber);
-      if (doesUserExist) return null;
-      const createdUser = new this.userModel({ phoneNumber });
-      return await createdUser.save();
-    } catch (error) {
-      handleException(error);
-    }
+    const doesUserExist = await this.doesUserExist(phoneNumber);
+    if (doesUserExist) return null;
+    const createdUser = new this.userModel({ phoneNumber });
+    return await createdUser.save();
   }
 
   async findUserByPhoneNumber(phoneNumber: string): Promise<IUser | null> {
-    try {
-      return this.userModel.findOne({ phoneNumber }).exec();
-    } catch (error) {
-      handleException(error);
-    }
+    return this.userModel.findOne({ phoneNumber }).exec();
   }
 
   async updateUserNames(dto: UpdateUserNamesDto, userId: string): Promise<IUser | null> {
-    try {
-      const user = await this.userModel.findById(userId).exec();
-      user.lastName = dto.lastName;
-      user.firstName = dto.firstName;
-      await user.save();
-      return user;
-    } catch (error) {
-      handleException(error);
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
     }
+    user.lastName = dto.lastName;
+    user.firstName = dto.firstName;
+    if (dto.bio !== undefined) {
+      user.bio = dto.bio;
+    }
+    await user.save();
+    return user;
   }
 
   async findById(id: string): Promise<IUser | undefined> {
-    try {
-      const user = await this.userModel.findById(id).exec();
-      if (!user) {
-        throw new NotFoundException(`User with ID ${id} not found`);
-      }
-
-      return user;
-    } catch (error) {
-      handleException(error);
+    const user = await this.userModel.findById(id).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
+    return user;
   }
 
   async update(id: string, user: IUser) {
-    try {
-      const updatedUser = await this.userModel.findByIdAndUpdate(id, user, { new: true }).exec();
+    const updatedUser = await this.userModel.findByIdAndUpdate(id, user, { new: true }).exec();
 
-      if (!updatedUser) throw new NotFoundException(`User with ID ${id} not found`);
-
-      return updatedUser;
-    } catch (error) {
-      handleException(error);
+    if (!updatedUser) {
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
+    return updatedUser;
   }
 
-  async findUsersByQuery(query: string, userId: string) {
-    try {
-      const searchRegex = new RegExp(query, 'i');
-      const users = await this.userModel
-        .find({
-          $or: [{ username: { $regex: searchRegex } }, { firstName: { $regex: searchRegex } }, { lastName: { $regex: searchRegex } }],
-          $and: [{ _id: { $ne: userId } }],
-        })
-        .select('firstName lastName username status _id');
-      return users;
-    } catch (error) {
-      handleException(error);
-    }
+  async findUsersByQuery(query: string, userId: string, limit = 20) {
+    const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const searchRegex = new RegExp(escaped, 'i');
+    const users = await this.userModel
+      .find({
+        $or: [{ username: { $regex: searchRegex } }, { firstName: { $regex: searchRegex } }, { lastName: { $regex: searchRegex } }],
+        $and: [{ _id: { $ne: userId } }],
+      })
+      .select('firstName lastName username status _id profilePicture')
+      .limit(limit)
+      .exec();
+    return users;
   }
 
   async updateProfilePicture(userId: string, filename: string): Promise<User> {
-    try {
-      const user = await this.userModel.findById(userId);
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-
-      if (user.profilePicture) {
-        const path = `./uploads/avatars/${user.profilePicture}`;
-        if (fs.existsSync(path)) {
-          fs.unlinkSync(path);
-        }
-      }
-
-      user.profilePicture = filename;
-      await user.save();
-
-      return user;
-    } catch (error) {
-      console.log(error);
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
+
+    const previous = user.profilePicture;
+    user.profilePicture = filename;
+    await user.save();
+
+    if (previous) {
+      const path = `./uploads/avatars/${previous}`;
+      if (fs.existsSync(path)) {
+        fs.unlinkSync(path);
+      }
+    }
+    return user;
   }
 
   async getUserAvatar(userId: string): Promise<string> {
-    try {
-      const user = await this.userModel.findById(userId);
-      if (!user || !user.profilePicture) {
-        throw new NotFoundException('User or avatar not found');
-      }
-      try {
-        const path = `./uploads/avatars/${user.profilePicture}`;
-        const fileBuffer = await fs.readFileSync(path);
-        return fileBuffer.toString('base64');
-      } catch (error) {
-        throw new NotFoundException('Avatar file not found');
-      }
-    } catch (error) {
-      console.log(error);
+    const user = await this.userModel.findById(userId);
+    if (!user || !user.profilePicture) {
+      throw new NotFoundException('Avatar not found');
     }
+    const path = `./uploads/avatars/${user.profilePicture}`;
+    if (!fs.existsSync(path)) {
+      throw new NotFoundException('Avatar file not found');
+    }
+    return fs.readFileSync(path).toString('base64');
   }
 
   private async doesUserExist(phoneNumber: string): Promise<boolean> {
-    try {
-      const user = await this.userModel.findOne({ phoneNumber });
-      return !!user;
-    } catch (error) {
-      handleException(error);
-    }
+    const user = await this.userModel.findOne({ phoneNumber });
+    return !!user;
   }
 }

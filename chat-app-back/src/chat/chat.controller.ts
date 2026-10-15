@@ -10,16 +10,19 @@ export class ChatController {
   @Get('list')
   @UseGuards(JwtAuthGuard)
   async getChatList(@Req() request: RequestWithUser) {
-    const userId = request.user.id;
+    const userId = request.user._id as string;
     const chats = await this.chatService.getChatList(userId);
 
-    return chats.map((chat) => ({
-      _id: chat.participants[0]._id.toString(),
-      firstName: chat.participants[0].firstName,
-      lastName: chat.participants[0].lastName,
-      lastMessage: chat.lastMessage,
-      messageCount: chat.unreadCounts.get(userId) || 0,
-      messages: [],
-    }));
+    return chats
+      .filter((chat) => chat.otherParticipant)
+      .map((chat) => ({
+        _id: chat.otherParticipant._id,
+        firstName: chat.otherParticipant.firstName,
+        lastName: chat.otherParticipant.lastName,
+        lastMessage: chat.lastMessage ?? null,
+        messageCount: chat.unreadCount,
+        updatedAt: chat.updatedAt,
+        messages: [],
+      }));
   }
 }

@@ -1,14 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Req,
-  UploadedFile,
-  UseGuards,
-  UseInterceptors,
-} from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserNamesDto } from './dto/update-user-names.dto';
 import { IUser } from './interfaces/user.interface';
@@ -23,23 +13,14 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Post('updateUserNames')
-  async updateUserNames(
-    @Body() dto: UpdateUserNamesDto,
-    @Req() request: RequestWithUser,
-  ): Promise<IUser> {
-    return await this.userService.updateUserNames(
-      dto,
-      request.user._id as string,
-    );
+  async updateUserNames(@Body() dto: UpdateUserNamesDto, @Req() request: RequestWithUser): Promise<IUser> {
+    return await this.userService.updateUserNames(dto, request.user._id as string);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('upload-avatar')
   @UseInterceptors(FileInterceptor('avatar', multerOptions))
-  async uploadAvatar(
-    @UploadedFile() file: Express.Multer.File,
-    @Req() request: RequestWithUser,
-  ) {
+  async uploadAvatar(@UploadedFile() file: Express.Multer.File, @Req() request: RequestWithUser) {
     const userId = request.user._id as string;
 
     if (!file) {
@@ -49,6 +30,7 @@ export class UserController {
     return await this.userService.updateProfilePicture(userId, file.filename);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get(':id/avatar')
   async getUserAvatar(@Param('id') id: string): Promise<{ avatar: string }> {
     const avatar = await this.userService.getUserAvatar(id);

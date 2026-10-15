@@ -10,4 +10,9 @@ export class UpdateUserNamesDto {
   @IsOptional()
   @Length(0, 20)
   lastName: string;
+
+  @IsString()
+  @IsOptional()
+  @Length(0, 200)
+  bio: string;
 }
