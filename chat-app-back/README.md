@@ -1,73 +1,50 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# چت‌اپ — بک‌اند
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+بک‌اند NestJS 10 با MongoDB، احراز هویت JWT (OTP تلفنی)، WebSocket (Socket.io) و دستیار هوشمند Agentic.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
-## Description
-
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Installation
+## اجرا
 
 ```bash
-$ npm install
+npm install
+cp .env.example .env      # سپس مقادیر را ویرایش کنید
+npm run start:dev         # http://localhost:3000  (پیشوند v1)
 ```
 
-## Running the app
+نیازمند‌ها: Node 20+ و یک نمونه MongoDB قابل‌دسترس (محلی یا ریموت) در `MONGO_URI`.
+
+## دستورها
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm test           # تست‌های واحد Jest (بدون نیاز به MongoDB)
+npm run lint       # ESLint با --fix
+npm run build      # بیلد پروداکشن → dist/
 ```
 
-## Test
+## ساختار
 
-```bash
-# unit tests
-$ npm run test
+| مسیر | توضیح |
+|------|-------|
+| `src/auth/` | ورود با کد یک‌بارمصرف، JWT، گاردها (HTTP + WS)، strategy ها |
+| `src/user/` | کاربر، نام‌ها، آواتار (Multer + ServeStatic) |
+| `src/chat/` | لیست گفتگوهای خصوصی |
+| `src/message/` | پیام‌ها؛ `message.gateway.ts` رویدادهای WebSocket |
+| `src/agent/` | دستیار هوشمند: حلقه tool-calling، کلاینت LLM، ابزارها، ربات |
+| `src/search/` | جستجوی کاربران |
+| `src/helpers/` | اینترسپتور خطا (حفظ کد وضعیت HTTP) |
 
-# e2e tests
-$ npm run test:e2e
+## API خلاصه
 
-# test coverage
-$ npm run test:cov
-```
+- `POST /v1/auth/send-code` — `{ phoneNumber }` → کد ۶ رقمی (لاگ سرور، نه پاسخ)
+- `POST /v1/auth/verify-code` — `{ phoneNumber, code }` → `{ access_token, userId, firstName, lastName }`
+- `POST /v1/auth/logout` — نیازمند Bearer token
+- `GET /v1/chat/list` — نیازمند Bearer token
+- `GET /v1/message?receiverId&page&limit` — نیازمند Bearer token
+- `GET /v1/agent/status` — نیازمند Bearer token → `{ configured, model, botUserId }`
+- `POST /v1/agent/message` — نیازمند Bearer token → `{ content }`
+- WS: رویدادهای `sendMessage` / `receiveMessage` و `agentMessage` (+ استریم `agentChunk`, `agentToolCall`, `agentDone`, `agentSaved`, `agentError`) — توکن در `handshake.query.token`
 
-## Support
+## دستیار هوشمند (Agentic)
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+دستیار یک ابزارمحور است: درخواست کاربر → تصمیم ابزار (`AgentTools`) → اجرای ابزار روی داده‌های همان کاربر → پاسخ نهایی. حداکثر تکرار: `AGENT_MAX_ITERATIONS`.
 
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
+کلید رایگان: [Google AI Studio](https://aistudio.google.com/apikey) — مقادیر `LLM_*` در `.env` قابل تنظیم هستند و هر سرویس سازگار با OpenAI (OpenRouter/Groq/Ollama) کار می‌کند. بدون کلید، دستیار پیام راهنما برمی‌گرداند و سرور از کار نمی‌افتد.

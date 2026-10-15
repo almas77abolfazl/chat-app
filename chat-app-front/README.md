@@ -1,27 +1,51 @@
-# ChatAppFront
+# چت‌اپ — فرانت‌اند
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 18.1.2.
+فرانت‌اند Angular 19 (standalone components + Material) برای اپلیکیشن چت.
 
-## Development server
+## اجرا
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+```bash
+npm install
+npm start        # ng serve روی پورت ۵۵۰۰ با host 0.0.0.0 → http://localhost:5500
+```
 
-## Code scaffolding
+## آدرس سرور
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+ادرس بک‌اند در `src/environments/environment.development.ts`:
 
-## Build
+```ts
+export const environment = {
+  apiUrl: 'http://localhost:3000/v1',
+  socketUrl: 'http://localhost:3000',
+};
+```
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+- `environment.development.ts` در حالت توسعه (`ng serve`) استفاده می‌شود
+- `environment.ts` در بیلد پروداکشن (`ng build`) استفاده می‌شود
+- برای تست روی موبایل در شبکه لوکال، مقادیر را به IP کامپیوتر خودتان (مثل `http://192.168.1.x:3000`) تغییر دهید
 
-## Running unit tests
+## بیلد
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+```bash
+npm run build    # خروجی در dist/chat-app-front
+```
 
-## Running end-to-end tests
+## ساختار
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+| مسیر | توضیح |
+|------|-------|
+| `src/app/auth/` | صفحات ورود: login، verify-code، fill-names + سرویس/گارد/interceptor |
+| `src/app/main/home/` | صفحه اصلی: sidebar، chat-list، chat-area |
+| `src/app/main/socket.service.ts` | اتصال WebSocket و رویدادهای دستیار |
+| `src/app/main/main.service.ts` | state مرکزی: چت‌ها، پیام‌ها، دستیار هوشمند |
+| `src/app/helpers/` | HttpRequestService (آدرس پایه) + CacheService (IndexedDB) |
+| `src/app/icons.ts` | ثبت سراسری آیکون‌های FontAwesome |
+| `src/environments/` | تنظیمات محیط توسعه و پروداکشن |
 
-## Further help
+## تست
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+```bash
+ng test          # Karma/Jasmine (تست واحدی)
+```
+
+تست‌های خود را کنار فایل‌ها با پسوند `.spec.ts` اضافه کنید.
