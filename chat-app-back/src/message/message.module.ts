@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ChatModule } from 'src/chat/chat.module';
 import { MessageService } from './message.service';
 import { MessageController } from './message.controller';
 import { MessageSchema } from './entities/message.entity';
@@ -12,6 +13,7 @@ import { AgentModule } from 'src/agent/agent.module';
   imports: [
     AuthModule,
     AgentModule,
+    ChatModule,
     MongooseModule.forFeature([{ name: 'Message', schema: MessageSchema }]),
     MongooseModule.forFeature([{ name: 'Chat', schema: ChatSchema }]),
   ],

@@ -36,4 +36,10 @@ export class UserController {
     const avatar = await this.userService.getUserAvatar(id);
     return { avatar };
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('search/:query')
+  async search(@Param('query') query: string, @Req() request: RequestWithUser) {
+    return this.userService.findUsersByQuery(query, request.user._id as string);
+  }
 }

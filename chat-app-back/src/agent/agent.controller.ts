@@ -4,6 +4,7 @@ import { BotService } from './bot/bot.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RequestWithUser } from 'src/auth/interfaces/request-with-user.model';
 import { MessageService } from 'src/message/message.service';
+import { ChatService } from 'src/chat/chat.service';
 
 @Controller('agent')
 export class AgentController {
@@ -11,6 +12,7 @@ export class AgentController {
     private readonly agentService: AgentService,
     private readonly botService: BotService,
     private readonly messageService: MessageService,
+    private readonly chatService: ChatService,
   ) {}
 
   @Get('status')
@@ -35,15 +37,19 @@ export class AgentController {
       return { text: 'پیام خالی است.', toolCalls: [], messageId: null };
     }
 
-    await this.messageService.saveMessage(user._id as string, bot._id as string, content);
+    const chat = await this.chatService.findOrCreateDirectChat(user._id as string, bot._id as string);
+    const chatId = chat._id.toString();
+
+    await this.messageService.saveMessageToChat(chatId, user._id as string, content);
 
     const result = await this.agentService.run(user, content);
-    const botMessage = await this.messageService.saveMessage(bot._id as string, user._id as string, result.text);
+    const botMessage = await this.messageService.saveMessageToChat(chatId, bot._id as string, result.text);
 
     return {
       text: result.text,
       toolCalls: result.toolCalls,
       messageId: botMessage._id,
+      chatId,
     };
   }
 }

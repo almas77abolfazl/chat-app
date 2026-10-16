@@ -8,7 +8,22 @@ export class Chat extends Document {
   @Prop({ type: [Types.ObjectId], ref: 'User', required: true })
   participants: Types.ObjectId[];
 
-  @Prop({ type: Types.ObjectId, ref: 'Message', required: true })
+  @Prop({ type: String })
+  name?: string;
+
+  @Prop({ default: false })
+  isGroup: boolean;
+
+  @Prop({ default: false })
+  isChannel: boolean;
+
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+  owner?: Types.ObjectId;
+
+  @Prop({ type: String })
+  avatar?: string;
+
+  @Prop({ type: Types.ObjectId, ref: 'Message' })
   lastMessage: Types.ObjectId;
 
   @Prop({ type: Date, default: Date.now })

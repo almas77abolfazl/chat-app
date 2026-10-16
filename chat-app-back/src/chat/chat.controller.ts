@@ -1,7 +1,8 @@
-import { Controller, Get, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RequestWithUser } from 'src/auth/interfaces/request-with-user.model';
+import { CreateChatDto, ChatMemberDto } from './dto/create-chat.dto';
 
 @Controller('chat')
 export class ChatController {
@@ -12,17 +13,47 @@ export class ChatController {
   async getChatList(@Req() request: RequestWithUser) {
     const userId = request.user._id as string;
     const chats = await this.chatService.getChatList(userId);
+    return chats;
+  }
 
-    return chats
-      .filter((chat) => chat.otherParticipant)
-      .map((chat) => ({
-        _id: chat.otherParticipant._id,
-        firstName: chat.otherParticipant.firstName,
-        lastName: chat.otherParticipant.lastName,
-        lastMessage: chat.lastMessage ?? null,
-        messageCount: chat.unreadCount,
-        updatedAt: chat.updatedAt,
-        messages: [],
-      }));
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  async createChat(@Body() dto: CreateChatDto, @Req() request: RequestWithUser) {
+    const userId = request.user._id as string;
+    const type = dto.type ?? 'direct';
+
+    if (type === 'direct') {
+      const peerId = dto.peerId;
+      if (!peerId) throw new Error('peerId is required for a direct chat');
+      return this.chatService.findOrCreateDirectChat(userId, peerId);
+    }
+    if (type === 'group') {
+      return this.chatService.createGroup(dto.name ?? '', userId, dto.memberIds ?? []);
+    }
+    if (type === 'channel') {
+      return this.chatService.createChannel(dto.name ?? '', userId);
+    }
+    throw new Error(`Unknown chat type: ${type}`);
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  async getChat(@Param('id') id: string, @Req() request: RequestWithUser) {
+    const chat = await this.chatService.findChat(id, request.user._id as string);
+    if (!chat) throw new Error('Chat not found');
+    return chat;
+  }
+
+  @Post(':id/member')
+  @UseGuards(JwtAuthGuard)
+  async addMember(@Param('id') id: string, @Body() dto: ChatMemberDto, @Req() request: RequestWithUser) {
+    const userId = dto.userId ?? (request.user._id as string);
+    return this.chatService.addMember(id, userId, request.user._id as string);
+  }
+
+  @Post(':id/subscriber')
+  @UseGuards(JwtAuthGuard)
+  async subscribeChannel(@Param('id') id: string, @Req() request: RequestWithUser) {
+    return this.chatService.subscribeChannel(id, request.user._id as string);
   }
 }
