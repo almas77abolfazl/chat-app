@@ -1,0 +1,53 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Backend: NestJS Debug",
+      "type": "pwa-node",
+      "request": "launch",
+      "runtimeExecutable": "${workspaceFolder}/chat-app-back/node_modules/.bin/nest",
+      "runtimeArgs": ["start", "--debug", "--watch"],
+      "cwd": "${workspaceFolder}/chat-app-back",
+      "port": 9229,
+      "console": "integratedTerminal",
+      "restart": true,
+      "env": {
+        "NODE_ENV": "development",
+        "PORT": "3000",
+        "MONGO_URI": "mongodb://127.0.0.1:27017/chat-app",
+        "JWT_SECRET": "dev-only-insecure-do-not-use-in-production",
+        "LLM_API_KEY": "",
+        "LLM_BASE_URL": "https://generativelanguage.googleapis.com/v1beta/openai/"
+      }
+    },
+    {
+      "name": "Frontend: Open in Chrome",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost:5500",
+      "webRoot": "${workspaceFolder}/chat-app-front",
+      "sourceMapPathOverrides": {
+        "webpack:///src/*": "${webRoot}/*"
+      }
+    },
+    {
+      "name": "Frontend: Docker (test only)",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost",
+      "webRoot": "${workspaceFolder}/chat-app-front"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "F5: Full Stack (Mongo+Backend+Frontend) - Debug",
+      "configurations": ["Backend: NestJS Debug", "Frontend: Open in Chrome"],
+      "preLaunchTask": "docker: start mongo"
+    },
+    {
+      "name": "F5: Docker Full Stack (test only)",
+      "configurations": ["Frontend: Docker (test only)"],
+      "preLaunchTask": "docker: full stack (all)"
+    }
+  ]
+}
