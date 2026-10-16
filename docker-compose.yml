@@ -1,0 +1,51 @@
+services:
+  mongo:
+    image: mongo:7
+    container_name: chat-app-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: chat-app
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./chat-app-back
+      dockerfile: Dockerfile
+    container_name: chat-app-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      MONGO_URI: mongodb://mongo:27017/chat-app
+      JWT_SECRET: ${JWT_SECRET:-dev-only-insecure-do-not-use-in-production}
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      LLM_BASE_URL: ${LLM_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai/}
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  web:
+    build:
+      context: ./chat-app-front
+      dockerfile: Dockerfile
+    container_name: chat-app-web
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      API_URL: http://localhost:3000
+    depends_on:
+      - api
+
+volumes:
+  mongo-data:
