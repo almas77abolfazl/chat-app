@@ -1,0 +1,43 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "docker: start mongo",
+      "type": "shell",
+      "command": "docker compose up -d mongo",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "docker: full stack (all)",
+      "type": "shell",
+      "command": "docker compose up -d",
+      "group": "build",
+      "problemMatcher": []
+    },
+    {
+      "label": "docker: stop all",
+      "type": "shell",
+      "command": "docker compose down",
+      "problemMatcher": []
+    },
+    {
+      "label": "frontend: ng serve (watch)",
+      "type": "shell",
+      "command": "npm start",
+      "options": {
+        "cwd": "chat-app-front"
+      },
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "ng-watch",
+        "pattern": { "name": "ng-error", "owner": "ng-watch", "file": "^.*$", "message": ".*" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Angular Live Development Server",
+          "endsPattern": "listening on"
+        }
+      }
+    }
+  ]
+}
