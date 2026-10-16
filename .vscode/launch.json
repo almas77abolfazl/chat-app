@@ -31,6 +31,17 @@
       }
     },
     {
+      "name": "Frontend: Angular Dev (auto ng serve)",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost:5500",
+      "webRoot": "${workspaceFolder}/chat-app-front",
+      "preLaunchTask": "frontend: ng serve (watch)",
+      "sourceMapPathOverrides": {
+        "webpack:///src/*": "${webRoot}/*"
+      }
+    },
+    {
       "name": "Frontend: Docker (test only)",
       "type": "pwa-chrome",
       "request": "launch",
@@ -41,7 +52,7 @@
   "compounds": [
     {
       "name": "F5: Full Stack (Mongo+Backend+Frontend) - Debug",
-      "configurations": ["Backend: NestJS Debug", "Frontend: Open in Chrome"],
+      "configurations": ["Backend: NestJS Debug", "Frontend: Angular Dev (auto ng serve)"],
       "preLaunchTask": "docker: start mongo"
     },
     {
