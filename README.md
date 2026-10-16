@@ -26,6 +26,25 @@ npm run start:dev      # http://localhost:3000 (پیشوند v1)
 
 پیش‌نیاز: Node 20+ و MongoDB.
 
+### اجرا با Docker (بدون نصب MongoDB محلی)
+
+```bash
+cp chat-app-back/.env.example chat-app-back/.env
+docker compose up --build
+# بک‌اند: http://localhost:3000/v1   فرانت‌اند: http://localhost   دیتابیس: 27017
+```
+
+سرویس‌ها: `mongo` (7)، `api` (NestJS)، `web` (Angular در nginx).
+
+### راه‌اندازی در VS Code (F5)
+
+دو لانچر آماده‌اند:
+
+- **F5: Full Stack (Mongo+Backend+Frontend) - Debug** — Mongo را در docker بالا می‌آورد و بک‌اند را با دیباگ TS + فرانت‌اند در Chrome اجرا می‌کند (برای برنامه‌نویسی).
+- **F5: Docker Full Stack (test only)** — کل استک را در Docker بالا می‌آورد و Chrome را باز می‌کند.
+
+```
+
 ### فرانت‌اند
 
 ```bash
