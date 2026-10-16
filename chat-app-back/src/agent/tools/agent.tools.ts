@@ -94,8 +94,10 @@ export class AgentTools {
   private async getChatList(ctx: ToolContext) {
     const chats = await this.chatService.getChatList(ctx.user._id as string);
     return chats.map((chat: any) => ({
-      userId: chat.otherParticipant?._id,
-      name: [chat.otherParticipant?.firstName, chat.otherParticipant?.lastName].filter(Boolean).join(' '),
+      chatId: chat.chatId,
+      isGroup: chat.isGroup,
+      isChannel: chat.isChannel,
+      name: chat.name ?? [chat.otherParticipant?.firstName, chat.otherParticipant?.lastName].filter(Boolean).join(' '),
       lastMessage: chat.lastMessage?.content ?? null,
       unreadCount: chat.unreadCount,
     }));

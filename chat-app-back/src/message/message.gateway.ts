@@ -7,6 +7,7 @@ import { WsJwtGuard } from 'src/auth/guards/ws-jwt.guard';
 import { IUser } from 'src/user/interfaces/user.interface';
 import { AgentService } from 'src/agent/agent.service';
 import { BotService } from 'src/agent/bot/bot.service';
+import { ChatService } from 'src/chat/chat.service';
 
 const MAX_MESSAGE_LENGTH = 2000;
 const MAX_AGENT_CONTENT_LENGTH = 4000;
@@ -22,6 +23,7 @@ export class MessageGateway {
     private authService: AuthService,
     private agentService: AgentService,
     private botService: BotService,
+    private chatService: ChatService,
   ) {}
 
   afterInit() {
@@ -57,30 +59,40 @@ export class MessageGateway {
   async handleMessage(@MessageBody() messageData: any, @ConnectedSocket() client: Socket) {
     try {
       const sender = client.data.user as IUser;
-      const receiver = messageData?.receiver;
-      const content = messageData?.content;
+      const senderId = sender._id as string;
+      let chatId = messageData?.chatId as string | undefined;
+      const content: string = messageData?.content;
 
-      if (typeof receiver !== 'string' || !receiver) {
-        client.emit('messageError', { message: 'receiver is required' });
-        return;
-      }
-      if (typeof content !== 'string' || !content.trim()) {
+      if ((typeof content !== 'string' || !content.trim()) && !messageData?.receiver) {
         client.emit('messageError', { message: 'content is required' });
         return;
       }
-      if (content.length > MAX_MESSAGE_LENGTH) {
+      if (typeof content === 'string' && content.length > MAX_MESSAGE_LENGTH) {
         client.emit('messageError', {
           message: `content must be at most ${MAX_MESSAGE_LENGTH} characters`,
         });
         return;
       }
 
-      const msg = await this.messageService.saveMessage(sender._id as string, receiver, content.trim());
-      this.server.to(receiver).emit('receiveMessage', {
-        sender: sender._id as string,
-        msg,
-      });
-      client.emit('messageSent', { msg });
+      if (!chatId && messageData?.receiver) {
+        const chat = await this.chatService.findOrCreateDirectChat(senderId, messageData.receiver);
+        chatId = chat._id.toString();
+      }
+
+      if (!chatId) {
+        client.emit('messageError', { message: 'chatId or receiver is required' });
+        return;
+      }
+
+      const msg = await this.messageService.saveMessageToChat(chatId, senderId, content.trim());
+      const participantIds = await this.chatService.getParticipantIds(chatId);
+      for (const pid of participantIds) {
+        if (pid === senderId) {
+          client.emit('messageSent', { chatId, message: msg });
+        } else {
+          this.server.to(pid).emit('receiveMessage', { chatId, message: msg });
+        }
+      }
     } catch (error) {
       client.emit('messageError', {
         message: error?.message ?? 'Failed to send message',
@@ -106,7 +118,8 @@ export class MessageGateway {
       }
 
       const bot = await this.botService.getBot();
-      await this.messageService.saveMessage(user._id as string, bot._id as string, content);
+      const chat = await this.chatService.findOrCreateDirectChat(user._id as string, bot._id as string);
+      await this.messageService.saveMessageToChat(chat._id.toString(), user._id as string, content);
 
       client.emit('agentStart', { botUserId: bot._id });
 
@@ -120,8 +133,8 @@ export class MessageGateway {
       );
 
       if (result.text) {
-        const botMessage = await this.messageService.saveMessage(bot._id as string, user._id as string, result.text);
-        client.emit('agentSaved', { messageId: botMessage._id });
+        const botMessage = await this.messageService.saveMessageToChat(chat._id.toString(), bot._id as string, result.text);
+        client.emit('agentSaved', { messageId: botMessage._id, chatId: chat._id.toString() });
       }
     } catch (error) {
       client.emit('agentError', {
