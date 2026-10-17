@@ -35,11 +35,14 @@ export class MainService {
   agentStreamingMessage: Message = null;
 
   private messagesSubscription: any;
+  private typingTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+  private typingUsersSubject = new BehaviorSubject<Map<string, string[]>>(new Map());
+  typingUsers$ = this.typingUsersSubject.asObservable();
 
   constructor(
     public authService: AuthService,
+    public httpRequestService: HttpRequestService,
     private dialog: MatDialog,
-    private httpRequestService: HttpRequestService,
     private socketService: SocketService,
     private cacheService: CacheService
   ) {
@@ -266,6 +269,11 @@ export class MainService {
         } else {
           chatItem.messageCount = (chatItem.messageCount || 0) + 1;
         }
+
+        // Mark received message as delivered (if not own message)
+        if (msg.senderId !== this.authService.getUserId() && msg.status !== 'delivered') {
+          this.socketService.emit('messageDelivered', { messageId: msg._id });
+        }
       });
 
     this.socketService.on('messageSent', (payload: { chatId: string; message: Message }) => {
@@ -282,11 +290,78 @@ export class MainService {
         chatItem.lastMessage = msg;
       }
     });
+
+    this.socketService.on('messageStatusUpdated', (payload: { messageId: string; status: string; userId: string }) => {
+      // Update message status in all chats that contain this message
+      this.chatItems.forEach((chatItem) => {
+        chatItem.messages = chatItem.messages || [];
+        const msg = chatItem.messages.find((m) => m._id === payload.messageId);
+        if (msg) {
+          msg.status = payload.status as 'sent' | 'delivered' | 'read';
+          if (payload.status === 'read') {
+            msg.read = true;
+            msg.readAt = new Date();
+          } else if (payload.status === 'delivered') {
+            msg.deliveredAt = new Date();
+          }
+        }
+      });
+      // Also update currentChat if separate
+      if (this.currentChat) {
+        this.currentChat.messages = this.currentChat.messages || [];
+        const msg = this.currentChat.messages.find((m) => m._id === payload.messageId);
+        if (msg) {
+          msg.status = payload.status as 'sent' | 'delivered' | 'read';
+          if (payload.status === 'read') {
+            msg.read = true;
+            msg.readAt = new Date();
+          } else if (payload.status === 'delivered') {
+            msg.deliveredAt = new Date();
+          }
+        }
+      }
+    });
+
+    this.socketService.on('typingStatus', (payload: { chatId: string; userId: string; userName: string; isTyping: boolean }) => {
+      const current = new Map<string, string[]>(this.typingUsersSubject.value as Iterable<readonly [string, string[]]>);
+      const chatUsers: string[] = current.get(payload.chatId) || [];
+      if (payload.isTyping) {
+        if (!chatUsers.includes(payload.userId)) {
+          chatUsers.push(payload.userId);
+        }
+      } else {
+        const idx = chatUsers.indexOf(payload.userId);
+        if (idx !== -1) chatUsers.splice(idx, 1);
+      }
+      current.set(payload.chatId, chatUsers);
+      this.typingUsersSubject.next(current);
+    });
   }
 
   stopListening() {
     this.messagesSubscription?.unsubscribe();
     this.messagesSubscription = null;
+    this.typingTimeouts.forEach((t) => clearTimeout(t));
+    this.typingTimeouts.clear();
+  }
+
+  sendTypingStart(chatId: string) {
+    this.socketService.emit('typingStart', { chatId });
+    this.scheduleTypingStop(chatId);
+  }
+
+  private scheduleTypingStop(chatId: string) {
+    const existing = this.typingTimeouts.get(chatId);
+    if (existing) clearTimeout(existing);
+    const timeout = setTimeout(() => {
+      this.socketService.emit('typingStop', { chatId });
+      this.typingTimeouts.delete(chatId);
+    }, 2000);
+    this.typingTimeouts.set(chatId, timeout);
+  }
+
+  getTypingUsers(chatId: string): string[] {
+    return this.typingUsersSubject.value.get(chatId) || [];
   }
 
   loadAgentStatus() {
