@@ -5,30 +5,34 @@
       <span>چت‌اپ</span>
     </div>
 
-    <div class="menu-item agent-item" (click)="mainService.openAgentChat()">
+    <div class="menu-item agent-item" (click)="mainService.openAgentChat()" data-tooltip="دستیار هوشمند" data-tooltip-placement="left">
       <fa-icon [icon]="['fas', 'robot']"></fa-icon>
       <span>دستیار هوشمند</span>
     </div>
 
-    <div class="menu-item">
-      <fa-icon [icon]="['fas', 'comments']"></fa-icon>
-      <span>چت‌ها</span>
+    <div class="nav-section">
+      <div class="nav-title">گفتگوها</div>
+      @for (item of navItems; track $index) {
+      <div
+        class="menu-item"
+        [class.active]="mainService.chatFilter === item.id"
+        (click)="selectNav(item.id)"
+        [attr.data-tooltip]="item.title"
+        data-tooltip-placement="left"
+      >
+        <fa-icon [icon]="['fas', item.icon]"></fa-icon>
+        <span>{{ item.title }}</span>
+      </div>
+      }
     </div>
-
-    @for (item of customItems; track $index) {
-    <div class="menu-item">
-      <fa-icon [icon]="['fas', item.icon]"></fa-icon>
-      <span>{{ item.title }}</span>
-    </div>
-    }
   </div>
 
   <div class="sidebar-footer">
-    <div class="menu-item" (click)="mainService.openEditProfileModal()">
+    <div class="menu-item" (click)="mainService.openEditProfileModal()" data-tooltip="پروفایل" data-tooltip-placement="left">
       <fa-icon [icon]="['fas', 'user-circle']"></fa-icon>
       <span>پروفایل</span>
     </div>
-    <div class="menu-item logout-item" (click)="mainService.logout()">
+    <div class="menu-item logout-item" (click)="mainService.logout()" data-tooltip="خروج" data-tooltip-placement="left">
       <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
       <span>خروج</span>
     </div>

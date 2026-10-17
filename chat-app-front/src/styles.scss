@@ -1,3 +1,23 @@
+@use '@angular/material' as mat;
+
+@include mat.core();
+
+$light-theme: mat.define-theme((
+  color: (
+    primary: mat.$violet-palette,
+    tertiary: mat.$blue-palette,
+    theme-type: light,
+  ),
+));
+
+:root {
+  @include mat.button-theme($light-theme);
+  @include mat.dialog-theme($light-theme);
+  @include mat.form-field-theme($light-theme);
+  @include mat.input-theme($light-theme);
+  @include mat.icon-theme($light-theme);
+}
+
 @font-face {
   font-family: "Shabnam";
   src: url("/Shabnam.ttf") format("truetype");
@@ -7,30 +27,53 @@
 }
 
 :root {
-  --color-primary: #5b5ce2;
-  --color-primary-dark: #494bb8;
+  --color-primary: #6366f1;
+  --color-primary-dark: #4f46e5;
   --color-primary-soft: #eef0ff;
-  --color-agent: #8b5cf6;
-  --color-agent-soft: #f3ecff;
-  --color-bg: #f3f4fa;
-  --color-surface: #ffffff;
-  --color-text: #1e2235;
-  --color-text-secondary: #767c96;
-  --color-text-faint: #a2a7bd;
+  --color-primary-glow: rgba(99, 102, 241, 0.45);
+  --color-agent: #a855f7;
+  --color-agent-dark: #9333ea;
+  --color-agent-soft: #f5f0ff;
+  --color-agent-glow: rgba(168, 85, 247, 0.4);
+  --color-bg: #f4f5fb;
+  --color-bg-deep: #eef0ff;
+  --color-surface: rgba(255, 255, 255, 0.72);
+  --color-surface-glass: rgba(255, 255, 255, 0.72);
+  --color-surface-solid: #ffffff;
+  --color-text: #1a1b2e;
+  --color-text-secondary: #5b5d7a;
+  --color-text-faint: #9a9bb5;
   --color-border: #e6e8f2;
-  --color-danger: #e5484d;
-  --color-success: #30a46c;
+  --color-border-strong: #d1d3e0;
+  --color-danger: #ef4444;
+  --color-success: #10b981;
 
-  --radius-sm: 0.5rem;
-  --radius-md: 0.875rem;
-  --radius-lg: 1.25rem;
+  --color-surface-container: #f8f9fb;
+  --color-surface-container-high: #fafbff;
+  --color-on-primary: #ffffff;
+  --color-on-surface: #1a1b2e;
+  --color-primary-gradient-end: #8b5cf6;
+  --color-message-gradient-end: #7c3aed;
+  --color-danger-soft: #fde2e2;
+  --color-scrollbar-thumb: #cfd2e3;
+  --color-scrollbar-thumb-hover: #b6bad2;
+
+  --radius-sm: 0.6rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2rem;
   --radius-full: 999px;
 
-  --shadow-sm: 0 1px 2px rgba(30, 34, 53, 0.05);
-  --shadow-md: 0 4px 16px rgba(30, 34, 53, 0.07);
-  --shadow-lg: 0 12px 32px rgba(30, 34, 53, 0.12);
+  --shadow-xs: 0 1px 2px 0 rgba(26, 27, 46, 0.04);
+  --shadow-sm: 0 1px 3px 0 rgba(26, 27, 46, 0.06), 0 1px 2px -1px rgba(26, 27, 46, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(26, 27, 46, 0.08), 0 2px 4px -2px rgba(26, 27, 46, 0.08);
+  --shadow-lg: 0 12px 24px -4px rgba(26, 27, 46, 0.12), 0 4px 8px -4px rgba(26, 27, 46, 0.1);
+  --shadow-xl: 0 24px 48px -8px rgba(26, 27, 46, 0.16), 0 8px 16px -8px rgba(26, 27, 46, 0.12);
+  --shadow-glow-primary: 0 8px 32px -4px rgba(99, 102, 241, 0.45);
+  --shadow-glow-agent: 0 8px 32px -4px rgba(168, 85, 247, 0.4);
 
-  --transition: 160ms ease;
+  --transition: 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  --transition-fast: 120ms ease;
 }
 
 * {
@@ -65,14 +108,14 @@ textarea {
   height: 0.4rem;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #cfd2e3;
-  border-radius: var(--radius-full);
-}
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-scrollbar-thumb);
+    border-radius: var(--radius-full);
+  }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #b6bad2;
-}
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--color-scrollbar-thumb-hover);
+  }
 
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -88,8 +131,8 @@ textarea {
   padding: 0.65rem 1.4rem;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #fff;
-  background: linear-gradient(135deg, var(--color-primary), #7b7ce8);
+  color: var(--color-on-primary);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-gradient-end));
   box-shadow: var(--shadow-sm);
   cursor: pointer;
   transition: transform var(--transition), box-shadow var(--transition),
@@ -113,5 +156,103 @@ textarea {
   &.ghost {
     background: var(--color-primary-soft);
     color: var(--color-primary-dark);
+  }
+}
+
+/* ---------- Cinematic surface utilities ---------- */
+
+.glass {
+  background: var(--color-surface-glass);
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid color-mix(in srgb, var(--color-surface) 60%, transparent);
+}
+
+.glass-deep {
+  background: color-mix(in srgb, var(--color-surface) 78%, transparent);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid color-mix(in srgb, var(--color-surface) 50%, transparent);
+}
+
+.glass-card {
+  background: var(--color-surface);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid color-mix(in srgb, var(--color-surface) 70%, transparent);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ---------- Tooltip system for icon-only buttons ---------- */
+[data-tooltip] {
+  position: relative;
+  cursor: help;
+  &[data-tooltip]:hover::after,
+  &[data-tooltip]:focus-visible::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    z-index: 50;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-4px);
+    padding: 0.35rem 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--color-on-surface);
+    background: #1a1b2e;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--transition-fast), transform var(--transition-fast);
+    box-shadow: var(--shadow-lg);
+  }
+  &[data-tooltip]:hover::after,
+  &[data-tooltip]:focus-visible::after {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  &[data-tooltip-placement="left"]::after {
+    bottom: 50%;
+    left: auto;
+    right: calc(100% + 8px);
+    transform: translateY(50%) translateX(-4px);
+  }
+  &[data-tooltip-placement="left"]:hover::after,
+  &[data-tooltip-placement="left"]:focus-visible::after {
+    transform: translateY(50%) translateX(0);
+  }
+}
+
+/* ---------- Shimmer / typing shimmer ---------- */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--color-surface-container) 0%) 0%,
+    color-mix(in srgb, var(--color-surface-container-high) 50%),
+    color-mix(in srgb, var(--color-surface-container) 100%) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

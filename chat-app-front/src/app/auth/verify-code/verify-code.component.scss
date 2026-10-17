@@ -5,8 +5,8 @@
   min-height: 100vh;
   padding: 1.5rem;
   background:
-    radial-gradient(60rem 30rem at 20% -10%, rgba(139, 92, 246, 0.14), transparent),
-    radial-gradient(50rem 26rem at 90% 110%, rgba(91, 92, 226, 0.16), transparent),
+    radial-gradient(60rem 30rem at 20% -10%, color-mix(in srgb, var(--color-agent) 14%, transparent), transparent),
+    radial-gradient(50rem 26rem at 90% 110%, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent),
     var(--color-bg);
   direction: rtl;
 
@@ -34,8 +34,13 @@
 
     .auth-title {
       font-size: 1.25rem;
-      font-weight: 700;
+      font-weight: 800;
       margin: 0 0 0.75rem;
+      letter-spacing: -0.01em;
+      background: linear-gradient(135deg, var(--color-text), var(--color-primary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .auth-text {

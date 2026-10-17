@@ -1,10 +1,10 @@
 <div class="chat-list-container">
   <div class="chat-list-header">
-    <h2 class="chat-list-title">چت‌ها</h2>
+    <div class="chat-list-title">گفتگوهای شما</div>
     <div class="search-container">
       <input
         type="text"
-        placeholder="جستجوی کاربران..."
+        placeholder="جستجو یا شروع گفتگو..."
         class="search-input"
         [(ngModel)]="searchQuery"
         (ngModelChange)="onSearchChange($event)"
@@ -18,12 +18,15 @@
     <div class="search-results">
       <div class="search-results-title">نتایج جستجو</div>
       @for (result of searchResults; track $index) {
-      <div class="search-result-item" (click)="selectChat(result)">
-        <div class="result-avatar">{{ (result.firstName ?? '؟').charAt(0) }}</div>
+      <div class="search-result-item" (click)="selectSearchResult(result)">
+        <div class="result-avatar">
+          {{ (result.firstName ?? (result.phoneNumber ?? '؟')).charAt(0) }}
+        </div>
         <div class="chat-info">
-          <div class="result-name">{{ result.firstName + " " + result.lastName }}</div>
+          <div class="result-name">{{ result.firstName }} {{ result.lastName }}</div>
           <div class="result-type">شروع گفتگو</div>
         </div>
+        <fa-icon [icon]="['fas', 'arrow-left']" class="result-arrow"></fa-icon>
       </div>
       }
     </div>
@@ -31,14 +34,19 @@
   } @else {
   <div class="chat-list">
     <div class="chat-list-body">
-      @for (chat of mainService.chatItems; track $index) {
+      @for (chat of mainService.visibleChats(); track $index; let i = $index) {
       <div
         class="chat-item"
         [class.active]="mainService.currentChat?._id === chat._id"
-        (click)="selectChat(chat)"
+        (click)="openChat(chat)"
+        [style.animation-delay]="(i * 45) + 'ms'"
       >
         <div class="chat-avatar">
-          <img [src]="chat.avatar" alt="Avatar" />
+          @if (chat.isGroup || chat.isChannel) {
+          <fa-icon [icon]="['fas', chat.isChannel ? 'broadcast-tower' : 'users']" class="group-icon"></fa-icon>
+          } @else {
+          <img [src]="chat.avatar || 'default_profile.jpg'" alt="Avatar" />
+          }
           @if (mainService.isAgentChat(chat)) {
           <span class="agent-dot"></span>
           }
@@ -48,22 +56,35 @@
             @if (mainService.isAgentChat(chat)) {
             <fa-icon [icon]="['fas', 'robot']" class="chat-agent-icon"></fa-icon>
             }
-            <span>{{ chat.firstName + " " + chat.lastName }}</span>
+            <span>{{ displayName(chat) }}</span>
+            @if (chat.isChannel) {
+            <fa-icon [icon]="['fas', 'tag']" class="channel-tag"></fa-icon>
+            }
           </div>
           <div class="chat-last-message">{{ chat.lastMessage?.content ?? 'بدون پیام' }}</div>
         </div>
         <div class="chat-meta">
-          @if (chat.messageCount > 0) {
-          <div class="unread-count">{{ chat.messageCount }}</div>
+          @if (chat.updatedAt) {
+          <div class="chat-time">{{ chat.updatedAt | date: 'short-time' }}</div>
+          }
+          @if (chat.messageCount && chat.messageCount > 0) {
+          <div class="unread-count">{{ chat.messageCount > 99 ? '99+' : chat.messageCount }}</div>
           }
         </div>
       </div>
       }
+      <div class="empty-state" *ngIf="mainService.chatItems.length === 0">
+        <div class="empty-illustration">
+          <fa-icon [icon]="['fas', 'comments']" class="empty-icon"></fa-icon>
+        </div>
+        <p class="empty-title">گفتگویی ندارید</p>
+        <p class="empty-subtitle">روی آیکون پلاچ یا دستیار هوشمند بزنید تا شروع کنید</p>
+      </div>
     </div>
   </div>
   }
 
-  <div class="contacts-button-container" (click)="mainService.showContacts()">
-    <fa-icon [icon]="['fas', 'user-plus']" class="show-contacts"></fa-icon>
+  <div class="new-chat-button" title="ساخت گفتگو جدید" (click)="mainService.openCreateChat()">
+    <fa-icon [icon]="['fas', 'plus']"></fa-icon>
   </div>
 </div>

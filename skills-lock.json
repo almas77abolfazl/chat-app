@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "skills": {
+    "angular-material-developer": {
+      "source": "mofirojean/angular-ui-skills",
+      "sourceType": "github",
+      "skillPath": "skills/angular-material-developer/SKILL.md",
+      "computedHash": "e9ce8a80f7cfe7ade9cd509d72b128c0ea85eb578d7585e573c40d67008e02f8"
+    },
+    "ng-zorro-developer": {
+      "source": "mofirojean/angular-ui-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ng-zorro-developer/SKILL.md",
+      "computedHash": "33aedbd8c0177e5fa0e76c0b747075902a80ef08833ab6b46ba59a21daa44ae1"
+    },
+    "primeng-developer": {
+      "source": "mofirojean/angular-ui-skills",
+      "sourceType": "github",
+      "skillPath": "skills/primeng-developer/SKILL.md",
+      "computedHash": "19b782b85ea06aadfc96a2c21a0e5eb65e7e1b0fded72c822acc5e957ae53147"
+    },
+    "spartan-ng-developer": {
+      "source": "mofirojean/angular-ui-skills",
+      "sourceType": "github",
+      "skillPath": "skills/spartan-ng-developer/SKILL.md",
+      "computedHash": "bd31677c5c71f7be5695dd5437861ea2f5dc5566b05e425404adfffdc68fd902"
+    },
+    "ui-craft": {
+      "source": "mofirojean/angular-ui-skills",
+      "sourceType": "github",
+      "skillPath": "skills/ui-craft/SKILL.md",
+      "computedHash": "d24c4ff0ca7eec1294898bcfa6d20d249d66608c082081b4a03bbb80a8b29427"
+    }
+  }
+}

@@ -1,6 +1,11 @@
 .dialog-title {
   text-align: center;
-  font-weight: 700;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  background: linear-gradient(135deg, var(--color-text), var(--color-primary));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .profile-container {
@@ -11,7 +16,7 @@
 
   .profile-header {
     text-align: center;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
 
     .profile-picture {
       width: 7rem;
@@ -19,7 +24,8 @@
       margin: 0 auto;
       border-radius: var(--radius-full);
       overflow: hidden;
-      border: 3px solid var(--color-primary-soft);
+      border: 4px solid color-mix(in srgb, var(--color-surface-solid) 70%, transparent);
+      box-shadow: var(--shadow-lg);
 
       img {
         width: 100%;
@@ -38,9 +44,16 @@
       display: flex;
       justify-content: space-between;
       gap: 1rem;
-      padding: 0.6rem 0.9rem;
-      background: var(--color-bg);
-      border-radius: var(--radius-md);
+      padding: 0.65rem 0.95rem;
+      background: var(--color-surface-solid);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--color-border);
+      box-shadow: var(--shadow-xs);
+      transition: border-color var(--transition);
+
+      &:hover {
+        border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+      }
 
       .profile-label {
         font-size: 0.8rem;
@@ -51,6 +64,7 @@
       .profile-value {
         font-size: 0.9rem;
         font-weight: 600;
+        color: var(--color-text);
       }
     }
   }
