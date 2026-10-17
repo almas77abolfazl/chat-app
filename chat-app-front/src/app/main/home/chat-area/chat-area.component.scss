@@ -6,6 +6,7 @@
   direction: rtl;
   font-family: "Shabnam", "Helvetica Neue", sans-serif;
   overflow: hidden;
+  touch-action: manipulation;
 
   .chat-header {
     display: flex;
@@ -336,7 +337,8 @@
     display: flex;
     align-items: flex-end;
     gap: 0.5rem;
-    padding: 0.65rem 1rem;
+    padding: 0.65rem max(1rem, env(safe-area-inset-right)) 0.65rem max(1rem, env(safe-area-inset-left));
+    padding-bottom: max(0.65rem, env(safe-area-inset-bottom));
     background: var(--color-surface-glass);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
@@ -511,8 +513,8 @@
 
 .scroll-bottom-btn {
   position: fixed;
-  inset-block-end: 9rem;
-  inset-inline-end: 1rem;
+  inset-block-end: max(9rem, env(safe-area-inset-bottom) + 6rem);
+  inset-inline-end: env(safe-area-inset-right, 1rem);
   width: 2.6rem;
   height: 2.6rem;
   border-radius: var(--radius-full);
