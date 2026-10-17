@@ -8,6 +8,7 @@ import { IUser } from 'src/user/interfaces/user.interface';
 import { AgentService } from 'src/agent/agent.service';
 import { BotService } from 'src/agent/bot/bot.service';
 import { ChatService } from 'src/chat/chat.service';
+import { UserService } from 'src/user/user.service';
 
 const MAX_MESSAGE_LENGTH = 2000;
 const MAX_AGENT_CONTENT_LENGTH = 4000;
@@ -24,6 +25,7 @@ export class MessageGateway {
     private agentService: AgentService,
     private botService: BotService,
     private chatService: ChatService,
+    private userService: UserService,
   ) {}
 
   afterInit() {
@@ -45,13 +47,20 @@ export class MessageGateway {
       }
       client.data.user = user;
       client.join(user._id.toString());
-      this.server.to(user._id.toString()).emit('connected', { userId: user._id });
+
+      await this.userService.updateOnlineStatus(user._id as string, true);
+
+      this.server.to(user._id.toString()).emit('connected', { userId: user._id, isOnline: true });
     } catch (error) {
       client.disconnect();
     }
   }
 
   handleDisconnect(client: Socket) {
+    const user = client.data.user as IUser;
+    if (user) {
+      this.userService.updateOnlineStatus(user._id as string, false).catch(() => {});
+    }
     console.log(`Client disconnected: ${client.id}`);
   }
 

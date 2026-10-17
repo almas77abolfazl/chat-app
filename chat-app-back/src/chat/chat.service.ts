@@ -11,7 +11,7 @@ export class ChatService {
     const userObjectId = new Types.ObjectId(userId);
     const chats = await this.chatModel
       .find({ participants: userObjectId })
-      .populate<{ participants: any[] }>('participants', 'firstName lastName profilePicture status')
+      .populate<{ participants: any[] }>('participants', 'firstName lastName profilePicture status isOnline lastSeen')
       .populate('lastMessage', 'content sender createdAt')
       .sort({ updatedAt: -1 })
       .exec();

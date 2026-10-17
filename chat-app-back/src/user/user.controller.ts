@@ -42,4 +42,10 @@ export class UserController {
   async search(@Param('query') query: string, @Req() request: RequestWithUser) {
     return this.userService.findUsersByQuery(query, request.user._id as string);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/status')
+  async getUserStatus(@Param('id') id: string) {
+    return this.userService.getUserStatus(id);
+  }
 }

@@ -38,6 +38,12 @@ export class User {
 
   @Prop({ default: new Date() })
   createdAt: Date;
+
+  @Prop({ default: false })
+  isOnline: boolean;
+
+  @Prop()
+  lastSeen: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

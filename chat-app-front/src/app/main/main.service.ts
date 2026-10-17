@@ -71,22 +71,24 @@ export class MainService {
     const peer = chat.otherParticipant;
     const isDirect = !chat.isGroup && !chat.isChannel;
     const avatar = chat.avatar || peer?.profilePicture || null;
-    return {
-      _id: chat.chatId,
-      peerId: isDirect ? peer?._id : undefined,
-      firstName: isDirect ? peer?.firstName : undefined,
-      lastName: isDirect ? peer?.lastName : undefined,
-      name: chat.name || null,
-      avatar: avatar ? `${environment.uploadUrl}/${avatar}` : null,
-      isGroup: chat.isGroup,
-      isChannel: chat.isChannel,
-      isOwner: chat.ownerId === this.authService.getUserId(),
-      ownerId: chat.ownerId,
-      participants: chat.participants,
-      lastMessage: chat.lastMessage,
-      messageCount: chat.unreadCount,
-      updatedAt: chat.updatedAt,
-    } as ChatListItem;
+      return {
+        _id: chat.chatId,
+        peerId: isDirect ? peer?._id : undefined,
+        firstName: isDirect ? peer?.firstName : undefined,
+        lastName: isDirect ? peer?.lastName : undefined,
+        name: chat.name || null,
+        avatar: avatar ? `${environment.uploadUrl}/${avatar}` : null,
+        isGroup: chat.isGroup,
+        isChannel: chat.isChannel,
+        isOwner: chat.ownerId === this.authService.getUserId(),
+        ownerId: chat.ownerId,
+        participants: chat.participants,
+        lastMessage: chat.lastMessage,
+        messageCount: chat.unreadCount,
+        updatedAt: chat.updatedAt,
+        isOnline: isDirect ? peer?.isOnline : undefined,
+        lastSeen: isDirect ? peer?.lastSeen : undefined,
+      } as ChatListItem;
   }
 
   private async resolveAvatar(item: ChatListItem): Promise<string> {

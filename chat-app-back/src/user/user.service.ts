@@ -60,10 +60,31 @@ export class UserService {
         $or: [{ username: { $regex: searchRegex } }, { firstName: { $regex: searchRegex } }, { lastName: { $regex: searchRegex } }],
         $and: [{ _id: { $ne: userId } }],
       })
-      .select('firstName lastName username status _id profilePicture')
+      .select('firstName lastName username status _id profilePicture isOnline lastSeen')
       .limit(limit)
       .exec();
     return users;
+  }
+
+  async updateOnlineStatus(userId: string, isOnline: boolean): Promise<IUser | null> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) return null;
+    user.isOnline = isOnline;
+    if (!isOnline) {
+      user.lastSeen = new Date();
+    }
+    await user.save();
+    return user;
+  }
+
+  async getUserStatus(userId: string): Promise<{ userId: string; isOnline: boolean; lastSeen?: Date } | null> {
+    const user = await this.userModel.findById(userId).select('isOnline lastSeen _id').exec();
+    if (!user) return null;
+    return {
+      userId: user._id.toString(),
+      isOnline: user.isOnline,
+      lastSeen: user.lastSeen,
+    };
   }
 
   async updateProfilePicture(userId: string, filename: string): Promise<User> {
