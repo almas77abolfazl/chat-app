@@ -70,7 +70,7 @@
       <div class="message-time">
         {{ message.createdAt | date: 'shortTime' }}
         @if (ownMessage(message)) {
-        <span class="msg-status" [class.msg-read]="message.status === 'read'" [class.msg-delivered]="message.status === 'delivered'">
+        <span class="msg-status" [class.msg-sent]="message.status === 'sent'" [class.msg-delivered]="message.status === 'delivered'" [class.msg-read]="message.status === 'read'">
           @if (message.status === 'read') {
           <fa-icon [icon]="['fas', 'check-double']" size="xs"></fa-icon>
           } @else if (message.status === 'delivered') {

@@ -3,6 +3,8 @@ import { Document, Types } from 'mongoose';
 
 export type MessageDocument = Message & Document;
 
+export type MessageStatus = 'sent' | 'delivered' | 'read';
+
 @Schema()
 export class Message {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
@@ -26,8 +28,17 @@ export class Message {
   @Prop({ default: Date.now })
   createdAt: Date;
 
+  @Prop({ default: 'sent' })
+  status: MessageStatus;
+
   @Prop({ default: false })
   read: boolean;
+
+  @Prop()
+  deliveredAt: Date;
+
+  @Prop()
+  readAt: Date;
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);

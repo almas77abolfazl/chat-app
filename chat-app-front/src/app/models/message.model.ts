@@ -12,4 +12,7 @@ export interface Message {
   toolCalls?: { name: string; arguments: any }[];
   _pending?: boolean;
   status?: 'sent' | 'delivered' | 'read';
+  read?: boolean;
+  readAt?: Date;
+  deliveredAt?: Date;
 }
