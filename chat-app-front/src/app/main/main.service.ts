@@ -531,6 +531,7 @@ export class MainService {
 const messageData: Message = {
       _id: null,
       _pending: true,
+      status: 'sent',
       senderId: this.authService.getUserId(),
       sender: {
         _id: this.authService.getUserId(),
