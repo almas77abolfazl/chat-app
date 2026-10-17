@@ -38,12 +38,25 @@ export class HomeComponent implements OnDestroy {
     if (this.isMobile === false) this.mobileMenuOpen = false;
   }
 
+  @HostListener('window:orientationchange')
+  onOrientationChange() {
+    setTimeout(() => {
+      this.isMobile = window.innerWidth <= 768;
+    }, 100);
+  }
+
   toggleMobileMenu() {
     this.mobileMenuOpen = !this.mobileMenuOpen;
   }
 
   closeMobileMenu() {
     this.mobileMenuOpen = false;
+  }
+
+  goBackToChatList() {
+    if (this.isMobile) {
+      this.mainService.closeCurrentChat();
+    }
   }
 
   ngOnDestroy(): void {

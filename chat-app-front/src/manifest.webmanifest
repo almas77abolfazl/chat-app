@@ -1,0 +1,22 @@
+{
+  "name": "چت‌اپ",
+  "short_name": "چت‌اپ",
+  "description": "برنامه چت مدرن مثل تلگرام",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f5fb",
+  "theme_color": "#6366f1",
+  "orientation": "portrait",
+  "scope": "/",
+  "lang": "fa",
+  "dir": "rtl",
+  "categories": ["communication", "social"],
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon"
+    }
+  ],
+  "screenshots": []
+}

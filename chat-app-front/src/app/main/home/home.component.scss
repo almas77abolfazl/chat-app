@@ -90,8 +90,8 @@
 
     .mobile-menu-btn {
       position: fixed;
-      inset-block-start: 1rem;
-      inset-inline-start: 1rem;
+      inset-block-start: env(safe-area-inset-top, 1rem);
+      inset-inline-start: env(safe-area-inset-left, 1rem);
       z-index: 110;
       width: 2.7rem;
       height: 2.7rem;
