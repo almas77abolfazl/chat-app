@@ -57,6 +57,36 @@ export class MessageService {
     return this.hydrateMessage(populated);
   }
 
+  async markMessageDelivered(messageId: string): Promise<void> {
+    const message = await this.messageModel.findById(messageId).exec();
+    if (!message) return;
+    if (message.status === 'sent') {
+      message.status = 'delivered';
+      message.deliveredAt = new Date();
+      await message.save();
+    }
+  }
+
+  async markMessageRead(messageId: string): Promise<void> {
+    const message = await this.messageModel.findById(messageId).exec();
+    if (!message) return;
+    if (message.status !== 'read') {
+      message.status = 'read';
+      message.read = true;
+      message.readAt = new Date();
+      await message.save();
+    }
+  }
+
+  async markChatMessagesRead(chatId: string, userId: string): Promise<void> {
+    await this.messageModel
+      .updateMany(
+        { chat: new Types.ObjectId(chatId), sender: { $ne: new Types.ObjectId(userId) }, status: { $ne: 'read' } },
+        { $set: { status: 'read', read: true, readAt: new Date() } },
+      )
+      .exec();
+  }
+
   async getMessagesByChat(
     chatId: string,
     userId: string,
@@ -110,7 +140,10 @@ export class MessageService {
       },
       content: message.content,
       createdAt: message.createdAt,
+      status: message.status || 'sent',
       read: message.read,
+      deliveredAt: message.deliveredAt,
+      readAt: message.readAt,
     };
   }
 }

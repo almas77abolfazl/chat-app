@@ -247,6 +247,27 @@ textarea {
   }
 }
 
+/* ---------- Snackbar styles ---------- */
+.snackbar-success {
+  background: var(--color-success);
+  color: #ffffff;
+}
+
+.snackbar-error {
+  background: var(--color-danger);
+  color: #ffffff;
+}
+
+.snackbar-warning {
+  background: color-mix(in srgb, var(--color-danger) 80%, transparent);
+  color: #ffffff;
+}
+
+.snackbar-info {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
 /* ---------- Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   *,

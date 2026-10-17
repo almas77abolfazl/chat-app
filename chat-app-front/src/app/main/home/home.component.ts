@@ -5,6 +5,7 @@ import { SideBarComponent } from './side-bar/side-bar.component';
 import { ChatListComponent } from './chat-list/chat-list.component';
 import { ChatAreaComponent } from './chat-area/chat-area.component';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MainService } from '../main.service';
 import { SocketService } from '../socket.service';
 import { Subject, takeUntil } from 'rxjs';
@@ -12,7 +13,7 @@ import { Subject, takeUntil } from 'rxjs';
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FontAwesomeModule, SideBarComponent, ChatListComponent, ChatAreaComponent, MatDialogModule],
+  imports: [CommonModule, FontAwesomeModule, SideBarComponent, ChatListComponent, ChatAreaComponent, MatDialogModule, MatSnackBarModule],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })

@@ -48,10 +48,20 @@
     }
   }
 
-  .contacts-list {
+    .contacts-list {
     display: flex;
     flex-direction: column;
     gap: 0.1rem;
+
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--color-text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.75rem 0.9rem 0.35rem;
+      margin-top: 0.5rem;
+    }
 
     .empty {
       padding: 2rem 1rem;
@@ -82,6 +92,11 @@
         transform: translateX(-4px);
       }
 
+      &.contact-saved {
+        background: color-mix(in srgb, var(--color-primary) 4%, transparent);
+        border-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
+      }
+
       .avatar {
         width: 2.8rem;
         height: 2.8rem;
@@ -95,6 +110,13 @@
         font-size: 1rem;
         flex-shrink: 0;
         box-shadow: var(--shadow-md);
+
+        img {
+          width: 100%;
+          height: 100%;
+          border-radius: var(--radius-xl);
+          object-fit: cover;
+        }
       }
 
       .contact-info {
@@ -105,11 +127,22 @@
           font-size: 0.95rem;
           font-weight: 600;
           color: var(--color-text);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .contact-status {
           font-size: 0.78rem;
           color: var(--color-text-faint);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+
+          .status-online {
+            color: var(--color-success);
+            font-weight: 600;
+          }
         }
       }
 
@@ -122,6 +155,47 @@
 
       &:hover .select-icon {
         opacity: 1;
+      }
+    }
+
+    .btn-add,
+    .btn-remove {
+      width: 2.4rem;
+      height: 2.4rem;
+      border-radius: var(--radius-full);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: all var(--transition-fast);
+      flex-shrink: 0;
+      border: none;
+
+      fa-icon {
+        font-size: 0.9rem;
+      }
+    }
+
+    .btn-add {
+      background: color-mix(in srgb, var(--color-success) 12%, transparent);
+      color: var(--color-success);
+      border: 1px solid color-mix(in srgb, var(--color-success) 40%, transparent);
+
+      &:hover {
+        background: var(--color-success);
+        color: #ffffff;
+      }
+    }
+
+    .btn-remove {
+      background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+      color: var(--color-danger);
+      border: 1px solid color-mix(in srgb, var(--color-danger) 30%, transparent);
+
+      &:hover {
+        background: var(--color-danger);
+        color: #ffffff;
       }
     }
   }

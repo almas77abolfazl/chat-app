@@ -11,23 +11,56 @@
   </div>
 
   <div class="contacts-list">
-    @if (loading) {
-    <div class="empty">در حال جستجو...</div>
-    } @else if (results.length === 0 && query) {
-    <div class="empty">مخاطب یافت نشد</div>
-    } @else if (results.length === 0) {
-    <div class="empty">برای شروع جستجو یک نام وارد کنید</div>
+    <!-- Saved contacts -->
+    @if (contacts.length > 0) {
+    <div class="section-title">مخاطبان ذخیره شده</div>
+    @for (contact of contacts; track contact._id) {
+    <div class="contact-item contact-saved" (click)="pick(contact)">
+      <div class="avatar">
+        @if (contact.profilePicture) {
+        <img [src]="contact.profilePicture" alt="avatar" />
+        } @else {
+        {{ (contact.firstName ?? '؟').charAt(0) }}
+        }
+      </div>
+      <div class="contact-info">
+        <div class="contact-name">{{ contact.firstName }} {{ contact.lastName }}</div>
+        <div class="contact-status">
+          @if (contact.isOnline) {
+          <span class="status-online">آنلاین</span>
+          } @else {
+          آفلاین
+          }
+        </div>
+      </div>
+      <button class="btn-remove" (click)="removeContact(contact); $event.stopPropagation()">
+        <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+      </button>
+    </div>
+    }
     }
 
-    @for (contact of results; track $index) {
-    <div class="contact-item" (click)="pick(contact)">
-      <div class="avatar">{{ (contact.firstName ?? (contact.phoneNumber ?? '؟')).charAt(0) }}</div>
+    <!-- Search results -->
+    @if (query.trim()) {
+    <div class="section-title">نتایج جستجو</div>
+    @if (loading) {
+    <div class="empty">در حال جستجو...</div>
+    } @else if (results.length === 0) {
+    <div class="empty">مخاطب یافت نشد</div>
+    }
+
+    @for (contact of results; track contact._id) {
+    <div class="contact-item" (click)="addContact(contact)">
+      <div class="avatar">{{ (contact.firstName ?? '؟').charAt(0) }}</div>
       <div class="contact-info">
         <div class="contact-name">{{ contact.firstName }} {{ contact.lastName }}</div>
         <div class="contact-status">{{ contact.phoneNumber }}</div>
       </div>
-      <fa-icon [icon]="['fas', 'comment-dots']" class="select-icon"></fa-icon>
+      <button class="btn-add" (click)="addContact(contact); $event.stopPropagation()">
+        <fa-icon [icon]="['fas', 'user-plus']"></fa-icon>
+      </button>
     </div>
+    }
     }
   </div>
 </div>
