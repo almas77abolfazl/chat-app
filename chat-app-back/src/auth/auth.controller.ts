@@ -3,13 +3,15 @@ import { AuthService } from './auth.service';
 import { SendCodeDto } from './dto/send-code.dto';
 import { VerifyCodeDto } from './dto/verify-code.dto';
 import { RequestWithUser } from './interfaces/request-with-user.model';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RateLimitGuard } from './guards/rate-limit.guard';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('send-code')
+  @UseGuards(RateLimitGuard)
   async sendCode(@Body() sendCodeDto: SendCodeDto): Promise<{ sent: true }> {
     return this.authService.sendVerificationCode(sendCodeDto.phoneNumber);
   }
