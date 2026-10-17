@@ -71,20 +71,5 @@ jobs:
         run: npm run build
         working-directory: chat-app-front
 
-      # ---------- Docker stack ----------
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Start stack with Docker Compose
-        run: docker compose up -d
-        timeout-minutes: 2
-
-      - name: Wait for services to be ready
-        run: |
-          sleep 10
-          curl -f http://localhost:3000/v1 || true
-          curl -f http://localhost:5500 || true
-
-      - name: Show logs if failed
-        if: failure()
-        run: docker compose logs
+      # Note: GitHub Actions services.mongo already provides MongoDB on port 27017.
+      # No docker compose step needed to avoid port conflicts.
