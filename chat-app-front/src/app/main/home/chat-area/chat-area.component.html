@@ -44,6 +44,18 @@
   </div>
   }
 
+  @if (typingUsers.length > 0) {
+  <div class="typing-indicator">
+    <span class="typing-names">{{ typingUsers.join(', ') }}</span>
+    <span class="typing-text">در حال تایپ...</span>
+    <div class="typing-dots">
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </div>
+  </div>
+  }
+
   <div class="chat-messages" (scroll)="onScroll($event)">
     @for (message of mainService.currentChat?.messages; track $index; let last = $last) {
     <div
@@ -70,7 +82,7 @@
       <div class="message-time">
         {{ message.createdAt | date: 'shortTime' }}
         @if (ownMessage(message)) {
-        <span class="msg-status" [class.msg-read]="message.status === 'read'" [class.msg-delivered]="message.status === 'delivered'">
+        <span class="msg-status" [class.msg-sent]="message.status === 'sent'" [class.msg-delivered]="message.status === 'delivered'" [class.msg-read]="message.status === 'read'">
           @if (message.status === 'read') {
           <fa-icon [icon]="['fas', 'check-double']" size="xs"></fa-icon>
           } @else if (message.status === 'delivered') {
@@ -99,6 +111,7 @@
       #element
       class="chat-input"
       placeholder="پیام خود را بنویسید..."
+      (input)="onTyping()"
       (keydown.enter)="mainService.sendMessage(mainService.currentChat, element)"
     ></textarea>
     <div class="send-icon" title="ارسال" data-tooltip="ارسال" (click)="mainService.sendMessage(mainService.currentChat, element)">
