@@ -138,7 +138,7 @@ export class MessageGateway {
   async handleMessageRead(@MessageBody() data: { messageId: string }, @ConnectedSocket() client: Socket) {
     try {
       const user = client.data.user as IUser;
-      await this.messageService.markMessageRead(data.messageId, user._id as string);
+      await this.messageService.markMessageRead(data.messageId);
       const message = await this.messageModel.findById(data.messageId).exec();
       if (message) {
         const senderId = message.sender.toString();
