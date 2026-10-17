@@ -87,6 +87,11 @@ export class UserService {
     };
   }
 
+  async findUserByRefreshToken(refreshToken: string): Promise<IUser | null> {
+    const user = await this.userModel.findOne({ 'sessions.token': refreshToken }).exec();
+    return user ?? null;
+  }
+
   async updateProfilePicture(userId: string, filename: string): Promise<User> {
     const user = await this.userModel.findById(userId);
     if (!user) {

@@ -51,9 +51,9 @@ function handle401Error(
     refreshTokenSubject.next(null);
 
     return authService.refreshToken().pipe(
-      switchMap((res: { accessToken: string }) => {
+      switchMap((res: { access_token: string }) => {
         isRefreshing = false;
-        const token = res.accessToken;
+        const token = res.access_token;
         refreshTokenSubject.next(token);
         localStorage.setItem('auth_token', token);
         req = req.clone({ setHeaders: { Authorization: 'Bearer ' + token } });
