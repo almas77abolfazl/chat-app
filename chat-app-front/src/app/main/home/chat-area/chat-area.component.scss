@@ -234,6 +234,31 @@
 
          .message-time {
            color: var(--color-text-faint);
+           display: flex;
+           align-items: center;
+           gap: 0.35rem;
+           font-size: 0.68rem;
+           text-align: left;
+           direction: ltr;
+
+           .msg-status {
+             display: flex;
+             align-items: center;
+             font-size: 0.65rem;
+             opacity: 0.7;
+
+             fa-icon {
+               font-size: 0.65rem;
+             }
+
+             &.msg-delivered {
+               color: var(--color-primary);
+             }
+
+             &.msg-read {
+               color: var(--color-success);
+             }
+           }
          }
        }
 

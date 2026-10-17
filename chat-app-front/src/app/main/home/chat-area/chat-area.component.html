@@ -67,7 +67,20 @@
         <span class="agent-cursor"></span>
         }
       </div>
-      <div class="message-time">{{ message.createdAt | date: 'shortTime' }}</div>
+      <div class="message-time">
+        {{ message.createdAt | date: 'shortTime' }}
+        @if (ownMessage(message)) {
+        <span class="msg-status" [class.msg-read]="message.status === 'read'" [class.msg-delivered]="message.status === 'delivered'">
+          @if (message.status === 'read') {
+          <fa-icon [icon]="['fas', 'check-double']" size="xs"></fa-icon>
+          } @else if (message.status === 'delivered') {
+          <fa-icon [icon]="['fas', 'check-double']" size="xs"></fa-icon>
+          } @else {
+          <fa-icon [icon]="['fas', 'check']" size="xs"></fa-icon>
+          }
+        </span>
+        }
+      </div>
     </div>
     }
     @if (mainService.agentWorking && !mainService.agentStreamingMessage) {

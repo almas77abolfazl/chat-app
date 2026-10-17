@@ -40,6 +40,9 @@ export class AuthService {
           localStorage.setItem('user-lastName', response.lastName);
           localStorage.setItem('user-bio', response.bio || '');
           this.gotoHome();
+        } else if (this.getFirstName() && this.getLastName()) {
+          // نام قبلاً در localStorage ذخیره شده است
+          this.gotoHome();
         } else this.router.navigate(['/fill-names']);
         console.log('Verification successful');
       },

@@ -11,4 +11,5 @@ export interface Message {
   isStreaming?: boolean;
   toolCalls?: { name: string; arguments: any }[];
   _pending?: boolean;
+  status?: 'sent' | 'delivered' | 'read';
 }
