@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { JwtPayload } from './interfaces/jwt-payload,interface';
 import { User } from 'src/user/entities/user.entity';
@@ -7,6 +7,7 @@ import { VerifyCodeDto } from './dto/verify-code.dto';
 import * as crypto from 'crypto';
 import { IUser } from 'src/user/interfaces/user.interface';
 import { SmsService } from 'src/sms/sms.service';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 interface IVerificationEntry {
   code: string;
@@ -42,6 +43,7 @@ export class AuthService {
     deviceName: string,
   ): Promise<{
     access_token: string;
+    refreshToken: string;
     userId: string;
     firstName: string;
     lastName: string;
@@ -63,6 +65,7 @@ export class AuthService {
 
     return {
       access_token: accessToken,
+      refreshToken: refreshToken,
       userId: user._id as string,
       firstName: user.firstName,
       lastName: user.lastName,
@@ -83,6 +86,33 @@ export class AuthService {
     user.sessions = [];
     await this.userService.update(user._id as string, user);
     return { message: 'ok' };
+  }
+
+  async refreshToken(dto: RefreshTokenDto): Promise<{ access_token: string; refreshToken: string }> {
+    const user = await this.userService.findUserByRefreshToken(dto.refreshToken);
+    if (!user) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const session = user.sessions.find((s) => s.token === dto.refreshToken);
+    if (!session || session.expiresAt < Date.now() / 1000) {
+      throw new UnauthorizedException('Refresh token expired');
+    }
+
+    const accessToken = this.jwtService.sign({
+      phoneNumber: user.phoneNumber,
+      sub: user._id as string,
+    });
+    const newRefreshToken = this.generateRefreshToken();
+
+    session.token = newRefreshToken;
+    session.expiresAt = this.generateRefreshTokenExpiryTime();
+    await this.userService.update(user._id as string, user);
+
+    return {
+      access_token: accessToken,
+      refreshToken: newRefreshToken,
+    };
   }
 
   decodeToken(token: string) {

@@ -5,7 +5,7 @@ import { AuthService } from '../auth/auth.service';
 import { ContactsComponent } from './contacts/contacts.component';
 import { CreateChatComponent } from './create-chat/create-chat.component';
 import { HttpRequestService } from '../helpers/http-request.service';
-import { BehaviorSubject, firstValueFrom, map, Observable, take, tap } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, map, Observable, of, take, tap, catchError } from 'rxjs';
 import { ChatListItem, ChatParticipant } from '../models/chat-list-item.model';
 import { SocketService } from './socket.service';
 import { HttpParams } from '@angular/common/http';
@@ -593,7 +593,8 @@ const messageData: Message = {
             this.cacheService.setItem('avatars', { id: userId, avatar: res.avatar });
           }
         }),
-        map((res) => (res?.avatar ? 'data:image/jpeg;base64,' + res.avatar : 'default_profile.jpg'))
+        map((res) => (res?.avatar ? 'data:image/jpeg;base64,' + res.avatar : 'default_profile.jpg')),
+        catchError(() => of('default_profile.jpg'))
       )
     );
   }

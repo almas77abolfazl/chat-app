@@ -35,6 +35,9 @@ export class AuthService {
       next: (response) => {
         localStorage.setItem('auth_token', response.access_token);
         localStorage.setItem('user-id', response.userId);
+        if (response.refreshToken) {
+          localStorage.setItem('refresh_token', response.refreshToken);
+        }
         const firstName = response.firstName || '';
         const lastName = response.lastName || '';
         if (firstName && lastName) {
@@ -70,6 +73,15 @@ export class AuthService {
       });
   }
 
+  public refreshToken(): Observable<any> {
+    const refreshToken = this.getRefreshToken();
+    return this.httpRequestService.post('auth/refresh', { refreshToken });
+  }
+
+  public getRefreshToken(): string {
+    return localStorage.getItem('refresh_token') || '';
+  }
+
   public gotoHome() {
     this.router.navigate(['/home']);
   }
@@ -82,12 +94,6 @@ export class AuthService {
     const token = this.getAuthToken();
     const userId = this.getUserId();
     return !!token && !!userId;
-  }
-
-  public refreshToken(): Observable<any> {
-    const refreshTokenUrl = 'auth/refreshToken';
-    const headers = { _id: this.getUserId() };
-    return this.httpRequestService.post(refreshTokenUrl, {}, headers);
   }
 
   private loggingOut = false;
