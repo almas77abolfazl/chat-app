@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MainService } from '../../main.service';
 import { FormsModule } from '@angular/forms';
@@ -7,70 +8,56 @@ import { ChatListItem } from '../../../models/chat-list-item.model';
 
 @Component({
   selector: 'app-chat-list',
-  imports: [FontAwesomeModule, FormsModule],
+  imports: [CommonModule, FontAwesomeModule, FormsModule],
   templateUrl: './chat-list.component.html',
   styleUrl: './chat-list.component.scss',
 })
 export class ChatListComponent {
-  searchQuery: string = '';
+  searchQuery = '';
   searchResults: any[] = [];
-  searchSubject: Subject<string> = new Subject();
+  private searchSubject = new Subject<string>();
+
   constructor(public mainService: MainService) {
     this.mainService.getChatList();
-    this.searchSubject.pipe(debounceTime(300)).subscribe((query) => {
-      this.performSearch(query);
-    });
+    this.searchSubject.pipe(debounceTime(300)).subscribe((query) => this.performSearch(query));
   }
 
   onSearchChange(query: string) {
     this.searchSubject.next(query);
   }
 
-  // متد برای جستجو از طریق API
   performSearch(query: string) {
-    if (query.trim() === '') {
+    if (!query.trim()) {
       this.searchResults = [];
       return;
     }
-
     this.mainService
       .search(query)
       .pipe(take(1))
       .subscribe(
-        (results: any) => {
-          this.searchResults = results;
+        (results: any[]) => {
+          this.searchResults = (results || []).filter((r) => r._id !== this.mainService.authService.getUserId());
         },
-        (error) => {
-          console.error('Search error:', error);
+        () => {
+          this.searchResults = [];
         }
       );
   }
 
-  selectChat(user: ChatListItem) {
-    let chatItem = this.mainService.chatItems.find((x) => x._id === user._id);
-    if (!chatItem) {
-      chatItem = {
-        _id: user._id,
-        lastMessage: null,
-        messageCount: 0,
-        messages: [],
-        firstName: user.firstName,
-        lastName: user.lastName,
-      };
-      this.mainService.chatItems.unshift(chatItem);
-      this.mainService.getAvatar(user._id).then((avatar) => (chatItem.avatar = avatar));
-    }
+  async selectSearchResult(user: any) {
+    this.searchResults = [];
+    this.searchQuery = '';
+    const chatItem = await this.mainService.startDirectChat(user);
+    this.mainService.openChat(chatItem);
+  }
 
-    this.mainService.currentChat = chatItem;
-    this.mainService
-      .loadMessages()
-      .pipe(take(1))
-      .subscribe(() => {
-        chatItem.messageCount = 0;
-        setTimeout(() => {
-          const messagesDiv = document.querySelector('.chat-messages');
-          messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        }, 500);
-      });
+  openChat(chat: ChatListItem) {
+    this.mainService.openChat(chat);
+  }
+
+  displayName(chat: ChatListItem): string {
+    if (chat.isGroup || chat.isChannel) return chat.name || '';
+    if (chat.firstName || chat.lastName) return `${chat.firstName || ''} ${chat.lastName || ''}`.trim();
+    return '';
   }
 }

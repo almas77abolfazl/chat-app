@@ -1,16 +1,32 @@
 <div class="contacts-page">
   <div class="header">
     <div class="title">مخاطبان</div>
+    <input
+      type="text"
+      class="search-input"
+      placeholder="جستجو بر اساس نام یا شماره موبایل..."
+      [(ngModel)]="query"
+      (ngModelChange)="onSearch($event)"
+    />
   </div>
+
   <div class="contacts-list">
-    @for (contact of contacts; track $index) {
-    <div class="contact-item">
-      <div class="avatar">{{ contact.name.charAt(0) }}</div>
+    @if (loading) {
+    <div class="empty">در حال جستجو...</div>
+    } @else if (results.length === 0 && query) {
+    <div class="empty">مخاطب یافت نشد</div>
+    } @else if (results.length === 0) {
+    <div class="empty">برای شروع جستجو یک نام وارد کنید</div>
+    }
+
+    @for (contact of results; track $index) {
+    <div class="contact-item" (click)="pick(contact)">
+      <div class="avatar">{{ (contact.firstName ?? (contact.phoneNumber ?? '؟')).charAt(0) }}</div>
       <div class="contact-info">
-        <div class="contact-name">{{ contact.name }}</div>
-        <div class="contact-status">{{ contact.status }}</div>
+        <div class="contact-name">{{ contact.firstName }} {{ contact.lastName }}</div>
+        <div class="contact-status">{{ contact.phoneNumber }}</div>
       </div>
-      <fa-icon [icon]="['fas', 'check-circle']" class="select-icon"></fa-icon>
+      <fa-icon [icon]="['fas', 'comment-dots']" class="select-icon"></fa-icon>
     </div>
     }
   </div>

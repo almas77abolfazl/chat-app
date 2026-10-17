@@ -2,13 +2,14 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: var(--color-surface);
-  border-inline-start: 1px solid var(--color-border);
+  background: transparent;
   direction: rtl;
+  padding: 1rem 0.75rem;
+  gap: 0.25rem;
 
   .sidebar-header {
-    padding: 1.25rem 0.75rem;
-    border-bottom: 1px solid var(--color-border);
+    padding: 0.5rem 0.5rem 1rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
 
     .sidebar-brand {
       display: flex;
@@ -17,10 +18,13 @@
       padding: 0 0.5rem 1rem;
       font-weight: 800;
       font-size: 1.1rem;
-      color: var(--color-primary);
+      color: var(--color-text);
+      letter-spacing: -0.01em;
 
       fa-icon {
-        font-size: 1.4rem;
+        font-size: 1.5rem;
+        color: var(--color-primary);
+        filter: drop-shadow(0 0 6px color-mix(in srgb, var(--color-primary) 50%, transparent));
       }
     }
 
@@ -29,70 +33,97 @@
       align-items: center;
       gap: 0.75rem;
       padding: 0.7rem 0.75rem;
-      margin-bottom: 0.25rem;
+      margin-bottom: 0.2rem;
       border-radius: var(--radius-md);
       font-size: 0.95rem;
       font-weight: 500;
       color: var(--color-text-secondary);
       cursor: pointer;
-      transition: background var(--transition), color var(--transition);
+      position: relative;
+      transition: background var(--transition), color var(--transition), transform var(--transition-fast);
+      overflow: hidden;
 
       fa-icon {
         font-size: 1.1rem;
         color: var(--color-text-faint);
-        transition: color var(--transition);
+        transition: color var(--transition), transform var(--transition-fast);
       }
 
       &:hover {
-        background: var(--color-bg);
+        background: color-mix(in srgb, var(--color-primary) 8%, transparent);
         color: var(--color-text);
+        transform: translateX(-2px);
+
+        fa-icon {
+          color: var(--color-primary);
+          transform: scale(1.1);
+        }
       }
 
       &.agent-item {
         color: var(--color-agent);
-        background: var(--color-agent-soft);
+        background: linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--color-agent) 16%, transparent),
+          color-mix(in srgb, var(--color-agent) 6%, transparent)
+        );
+        border: 1px solid color-mix(in srgb, var(--color-agent) 22%, transparent);
+        box-shadow: var(--shadow-glow-agent);
 
         fa-icon {
           color: var(--color-agent);
+        }
+
+        &:hover {
+          background: linear-gradient(
+            135deg,
+            color-mix(in srgb, var(--color-agent) 24%, transparent),
+            color-mix(in srgb, var(--color-agent) 10%, transparent)
+          );
+          box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-agent) 40%, transparent), var(--shadow-glow-agent);
+        }
+      }
+
+      &.active {
+        background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+        color: var(--color-primary-dark);
+        border-inline-start: 3px solid var(--color-primary);
+        font-weight: 600;
+
+        fa-icon {
+          color: var(--color-primary);
         }
       }
     }
   }
 
+  .nav-section {
+    margin-top: 0.5rem;
+    padding-inline: 0.25rem;
+
+    .nav-title {
+      padding: 0.5rem 0.75rem 0.25rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--color-text-faint);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+  }
+
   .sidebar-footer {
     margin-top: auto;
-    padding: 0.75rem;
-    border-top: 1px solid var(--color-border);
-
-    .divider {
-      display: none;
-    }
+    padding: 0.75rem 0.25rem 0.25rem;
+    border-top: 1px dashed color-mix(in srgb, var(--color-border) 70%, transparent);
 
     .menu-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.7rem 0.75rem;
-      border-radius: var(--radius-md);
-      font-size: 0.95rem;
-      font-weight: 500;
-      color: var(--color-text-secondary);
-      cursor: pointer;
-      transition: background var(--transition), color var(--transition);
-
-      fa-icon {
-        font-size: 1.1rem;
-        color: var(--color-text-faint);
-        transition: color var(--transition);
-      }
-
       &:hover {
-        background: var(--color-bg);
+        background: color-mix(in srgb, var(--color-primary) 8%, transparent);
         color: var(--color-text);
       }
 
       &.logout-item:hover {
-        background: #fdeeee;
+        background: color-mix(in srgb, var(--color-danger) 14%, transparent);
         color: var(--color-danger);
 
         fa-icon {
@@ -103,24 +134,22 @@
   }
 
   @media (max-width: 60rem) {
-    flex-basis: auto;
-
     .sidebar-header {
-      padding: 1rem 0.4rem;
+      padding: 0.75rem 0.25rem 0.75rem;
+    }
 
-      .sidebar-brand span,
-      .menu-item span {
-        display: none;
-      }
+    .sidebar-brand span,
+    .menu-item span {
+      display: none;
+    }
 
-      .menu-item {
-        justify-content: center;
-        padding: 0.7rem;
-      }
+    .menu-item {
+      justify-content: center;
+      padding: 0.7rem;
     }
 
     .sidebar-footer {
-      padding: 0.4rem;
+      padding: 0.4rem 0.25rem 0.25rem;
 
       .menu-item {
         justify-content: center;

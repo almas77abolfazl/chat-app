@@ -3,26 +3,30 @@ import { EditProfileComponent } from './edit-profile/edit-profile.component';
 import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../auth/auth.service';
 import { ContactsComponent } from './contacts/contacts.component';
+import { CreateChatComponent } from './create-chat/create-chat.component';
 import { HttpRequestService } from '../helpers/http-request.service';
 import { firstValueFrom, map, Observable, take, tap } from 'rxjs';
-import { ChatListItem } from '../models/chat-list-item.model';
+import { ChatListItem, ChatParticipant } from '../models/chat-list-item.model';
 import { SocketService } from './socket.service';
 import { HttpParams } from '@angular/common/http';
 import { Message } from '../models/message.model';
 import { CacheService } from '../helpers/cache.service';
+import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class MainService {
   currentChat: ChatListItem = null;
   chatItems: ChatListItem[] = [];
-  currentPage: number;
-  totalPages: number;
+  chatFilter: 'all' | 'groups' | 'channels' = 'all';
+  currentPage: number = 1;
+  totalPages: number = 1;
 
   file: any;
   pictureSrc = 'default_profile.jpg';
 
   agentConfigured = false;
   botUserId: string | null = null;
+  botChatId: string | null = null;
   botFirstName = 'دستیار';
   botLastName = 'هوشمند';
   agentWorking = false;
@@ -42,42 +46,244 @@ export class MainService {
     });
   }
 
+  /** Returns a chat list item for the current user, keyed by Chat._id. */
+  getChatList() {
+    this.httpRequestService
+      .get('chat/list')
+      .pipe(take(1))
+      .subscribe(
+        (response: any[]) => {
+          this.chatItems = (response || []).map((chat) => this.mapChatItem(chat));
+          this.chatItems.forEach(async (item) => {
+            item.avatar = await this.resolveAvatar(item);
+            if (await this.isAgentChat(item)) {
+              item.avatar = 'default_profile.jpg';
+            }
+          });
+        },
+        (error) => console.error('Error loading chat list:', error)
+      );
+  }
+
+  private mapChatItem(chat: any): ChatListItem {
+    const peer = chat.otherParticipant;
+    const isDirect = !chat.isGroup && !chat.isChannel;
+    const avatar = chat.avatar || peer?.profilePicture || null;
+    return {
+      _id: chat.chatId,
+      peerId: isDirect ? peer?._id : undefined,
+      firstName: isDirect ? peer?.firstName : undefined,
+      lastName: isDirect ? peer?.lastName : undefined,
+      name: chat.name || null,
+      avatar: avatar ? `${environment.uploadUrl}/${avatar}` : null,
+      isGroup: chat.isGroup,
+      isChannel: chat.isChannel,
+      isOwner: chat.ownerId === this.authService.getUserId(),
+      ownerId: chat.ownerId,
+      participants: chat.participants,
+      lastMessage: chat.lastMessage,
+      messageCount: chat.unreadCount,
+      updatedAt: chat.updatedAt,
+    } as ChatListItem;
+  }
+
+  private async resolveAvatar(item: ChatListItem): Promise<string> {
+    if (item.avatar) return item.avatar;
+    if (item.isGroup || item.isChannel) {
+      return item.isChannel ? 'default_channel.jpg' : 'default_group.jpg';
+    }
+    const peerId = item.peerId;
+    if (!peerId) return 'default_profile.jpg';
+    const avatar = await this.getAvatar(peerId);
+    return avatar;
+  }
+
+  isAgentChat(chat: ChatListItem): boolean {
+    if (!this.botUserId || !chat) return false;
+    return !chat.isGroup && !chat.isChannel && chat.peerId === this.botUserId;
+  }
+
+  /** 1:1 from a peer (search result). */
+  async startDirectChat(peer: any): Promise<ChatListItem> {
+    const res: any = await firstValueFrom(
+      this.httpRequestService
+        .post('chat', { type: 'direct', peerId: peer._id })
+        .pipe(take(1))
+    );
+    const chatItem = this.findChatById(res.chatId || res._id);
+    if (!chatItem) {
+      const item: ChatListItem = this.mapChatItem({
+        chatId: res.chatId || res._id,
+        isGroup: false,
+        isChannel: false,
+        otherParticipant: { _id: peer._id, firstName: peer.firstName, lastName: peer.lastName, profilePicture: peer.profilePicture },
+        participants: [{ _id: peer._id }],
+        lastMessage: null,
+      });
+      this.chatItems.unshift(item);
+      return item;
+    }
+    return chatItem;
+  }
+
+  async createGroup(name: string, memberIds: string[]): Promise<ChatListItem> {
+    const res: any = await firstValueFrom(
+      this.httpRequestService.post('chat', { type: 'group', name, memberIds }).pipe(take(1))
+    );
+    const item = this.mapChatItem({
+      chatId: res.chatId || res._id,
+      isGroup: true,
+      isChannel: false,
+      name: res.name,
+      ownerId: res.owner,
+      participants: (res.participants || []).map((p: any) => ({ _id: p })),
+      lastMessage: null,
+    });
+    this.refreshItem(item);
+    return item;
+  }
+
+  async createChannel(name: string): Promise<ChatListItem> {
+    const res: any = await firstValueFrom(
+      this.httpRequestService.post('chat', { type: 'channel', name }).pipe(take(1))
+    );
+    const item = this.mapChatItem({
+      chatId: res.chatId || res._id,
+      isGroup: false,
+      isChannel: true,
+      name: res.name,
+      ownerId: res.owner,
+      participants: (res.participants || []).map((p: any) => ({ _id: p })),
+      lastMessage: null,
+    });
+    this.refreshItem(item);
+    return item;
+  }
+
+  private refreshItem(item: ChatListItem) {
+    const existing = this.findChatById(item._id as string);
+    if (existing) {
+      Object.assign(existing, item);
+    } else {
+      this.chatItems.unshift(item);
+    }
+  }
+
+  findChatById(chatId: string): ChatListItem | undefined {
+    return this.chatItems.find((x) => x._id === chatId);
+  }
+
+  visibleChats(): ChatListItem[] {
+    if (this.chatFilter === 'groups') return this.chatItems.filter((c) => c.isGroup);
+    if (this.chatFilter === 'channels') return this.chatItems.filter((c) => c.isChannel);
+    return this.chatItems;
+  }
+
+  setChatFilter(filter: 'all' | 'groups' | 'channels') {
+    this.chatFilter = filter;
+  }
+
+  openChat(chatItem: ChatListItem) {
+    this.currentChat = chatItem;
+    this.chatItems.forEach((item) => {
+      if (item._id === chatItem._id) item.messageCount = 0;
+    });
+    this.loadMessages().pipe(take(1)).subscribe();
+  }
+
+  openAgentChat() {
+    if (!this.botUserId) return this.loadAgentStatus();
+    this.ensureBotChat().then(() => {
+      const chatItem = this.findChatById(this.botChatId);
+      if (!chatItem) return;
+      this.openChat(chatItem);
+    });
+  }
+
+  private async ensureBotChat(): Promise<void> {
+    const existing = this.findChatById(this.botChatId);
+    if (existing) return;
+    try {
+      const res: any = await firstValueFrom(
+        this.httpRequestService
+          .post('chat', { type: 'direct', peerId: this.botUserId })
+          .pipe(take(1))
+      );
+      this.botChatId = res.chatId || res._id;
+      const item: ChatListItem = {
+        _id: this.botChatId,
+        peerId: this.botUserId,
+        firstName: this.botFirstName,
+        lastName: this.botLastName,
+        lastMessage: null,
+        messageCount: 0,
+        messages: [],
+        avatar: 'default_profile.jpg',
+      };
+      this.chatItems.unshift(item);
+      this.getChatList();
+    } catch (e) {
+      console.error('Could not open agent chat', e);
+    }
+  }
+
   listenToMessages() {
     if (this.messagesSubscription) return;
     this.messagesSubscription = this.socketService
       .receiveMessages()
-      .subscribe(async (message: { sender: string; msg: Message }) => {
-        const senderId = message.msg.sender;
-        const avatar = await this.getAvatar(senderId);
-        const chatItem = this.chatItems.find((x) => x._id === message.sender);
-        if (chatItem) {
-          message.msg.avatar = avatar;
-          message.msg.sender = {
-            _id: senderId,
-            firstName: chatItem.firstName,
-            lastName: chatItem.lastName,
-          };
-
-          chatItem.messages.push(message.msg);
-          chatItem.lastMessage = message.msg;
-          ++chatItem.messageCount;
-          if (this.currentChat?._id === message.sender) {
-            setTimeout(() => {
-              const messagesDiv = document.querySelector('.chat-messages');
-              messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            }, 200);
-          }
-        } else this.getChatList();
+      .subscribe((payload: { chatId: string; message: Message }) => {
+        const chatItem = this.findChatById(payload.chatId);
+        if (!chatItem) {
+          this.getChatList();
+          return;
+        }
+        const msg = payload.message;
+        if (msg.sender) {
+          const sender = typeof msg.sender === 'object' ? msg.sender : { _id: msg.senderId };
+          msg.sender = sender;
+          msg.senderId = sender?._id?.toString();
+        }
+        chatItem.messages = chatItem.messages || [];
+        // Replace the optimistic pending message (same content, no _id) with the
+        // server-persisted one so we don't render the message twice.
+        const pendingIdx = chatItem.messages.findIndex(
+          (m) => m._pending === true && m.content === msg.content && m.senderId === msg.senderId
+        );
+        if (pendingIdx !== -1) {
+          chatItem.messages.splice(pendingIdx, 1);
+        }
+        chatItem.messages.push(msg);
+        chatItem.lastMessage = msg;
+        chatItem.updatedAt = new Date(msg.createdAt);
+        if (this.currentChat?._id === chatItem._id) {
+          chatItem.messageCount = 0;
+          this.scrollChatToBottom();
+        } else {
+          chatItem.messageCount = (chatItem.messageCount || 0) + 1;
+        }
       });
+
+    this.socketService.on('messageSent', (payload: { chatId: string; message: Message }) => {
+      const chatItem = this.findChatById(payload.chatId);
+      if (!chatItem) return;
+      const msg = payload.message;
+      chatItem.messages = chatItem.messages || [];
+      // Drop the optimistic duplicate first, then add the real message.
+      const pendingIdx = chatItem.messages.findIndex(
+        (m) => m._pending === true && m.content === msg.content && m.senderId === msg.senderId
+      );
+      if (pendingIdx !== -1) chatItem.messages.splice(pendingIdx, 1);
+      const exists = chatItem.messages.some((m) => m._id === msg._id);
+      if (!exists) {
+        chatItem.messages.push(msg);
+        chatItem.lastMessage = msg;
+      }
+    });
   }
 
   stopListening() {
     this.messagesSubscription?.unsubscribe();
     this.messagesSubscription = null;
-  }
-
-  isAgentChat(chat: any): boolean {
-    return !!chat && !!this.botUserId && chat._id === this.botUserId;
   }
 
   loadAgentStatus() {
@@ -98,127 +304,151 @@ export class MainService {
       });
   }
 
-  openAgentChat() {
-    if (!this.botUserId) this.loadAgentStatus();
-    const existing = this.chatItems.find((x) => x._id === this.botUserId);
-    const chatItem: ChatListItem = existing ?? {
-      _id: this.botUserId,
-      firstName: this.botFirstName,
-      lastName: this.botLastName,
-      lastMessage: null,
-      messageCount: 0,
-      messages: [],
-      avatar: 'default_profile.jpg',
+  listenToAgentEvents() {
+    const emit = (type: string, data: any) => {
+      const event: any = { type, data };
+      this.handleAgentEvent(event);
     };
-    if (!existing) this.chatItems.unshift(chatItem);
-    this.currentChat = chatItem;
-    this.loadMessages().pipe(take(1)).subscribe();
+    this.socketService.onAgentEvent('agentStart', () => emit('start', {}));
+    this.socketService.onAgentEvent('agentChunk', (data: { chunk: string }) => emit('chunk', data));
+    this.socketService.onAgentEvent('agentToolCall', (data: { name: string; arguments: any }) => emit('toolCall', data));
+    this.socketService.onAgentEvent('agentToolResult', (data: any) => emit('toolResult', data));
+    this.socketService.onAgentEvent('agentDone', () => emit('done', {}));
+    this.socketService.onAgentEvent('agentSaved', (data: { messageId: string; chatId: string }) => emit('saved', data));
+    this.socketService.onAgentEvent('agentNotice', (data: { message: string }) => emit('notice', data));
+    this.socketService.onAgentEvent('agentError', (data: { message: string }) => emit('error', data));
   }
 
-  listenToAgentEvents() {
-    this.socketService.onAgentEvent('agentStart', () => {
-      this.agentWorking = true;
-      const streaming: Message = {
-        _id: null,
-        content: '',
-        sender: {
-          _id: this.botUserId,
-          firstName: this.botFirstName,
-          lastName: this.botLastName,
-        },
-        receiver: this.authService.getUserId(),
-        avatar: 'default_profile.jpg',
-        createdAt: new Date(),
-        isStreaming: true,
-        toolCalls: [],
-      } as any;
-      this.agentStreamingMessage = streaming;
-      this.currentChat?.messages.push(streaming);
-    });
+  private handleAgentEvent(event: any) {
+    const userId = this.authService.getUserId();
+    switch (event.type) {
+      case 'start':
+        this.agentWorking = true;
+        this.agentStreamingMessage = {
+          _id: null,
+          content: '',
+          sender: { _id: this.botUserId, firstName: this.botFirstName, lastName: this.botLastName },
+          receiver: userId,
+          avatar: 'default_profile.jpg',
+          createdAt: new Date(),
+          isStreaming: true,
+          toolCalls: [],
+        } as Message;
+        this.ensureBotChatId();
+        if (this.botChatId) {
+          const chatItem = this.findChatById(this.botChatId);
+          chatItem?.messages?.push(this.agentStreamingMessage as any);
+          if (!chatItem) this.getChatList();
+        }
+        break;
+      case 'chunk':
+        if (this.agentStreamingMessage) {
+          this.agentStreamingMessage.content += event.data.chunk;
+          this.scrollChatToBottom();
+        }
+        break;
+      case 'toolCall':
+        if (this.agentStreamingMessage) {
+          (this.agentStreamingMessage as any).toolCalls.push({
+            name: event.data.name,
+            arguments: event.data.arguments,
+          });
+          this.scrollChatToBottom();
+        }
+        break;
+      case 'saved':
+        if (this.agentStreamingMessage) {
+          this.agentStreamingMessage._id = event.data.messageId;
+          (this.agentStreamingMessage as any).isStreaming = false;
+          const chatItem = this.findChatById(this.botChatId);
+          if (chatItem) chatItem.lastMessage = this.agentStreamingMessage;
+        }
+        this.agentStreamingMessage = null;
+        this.agentWorking = false;
+        this.scrollChatToBottom();
+        break;
+      case 'error':
+        if (this.agentStreamingMessage) {
+          this.agentStreamingMessage.content = event.data.message || 'خطا در دستیار هوشمند';
+          (this.agentStreamingMessage as any).isStreaming = false;
+        }
+        this.agentStreamingMessage = null;
+        this.agentWorking = false;
+        break;
+      case 'done':
+        this.agentWorking = false;
+        break;
+    }
+  }
 
-    this.socketService.onAgentEvent('agentChunk', (data: { chunk: string }) => {
-      if (!this.agentStreamingMessage) return;
-      this.agentStreamingMessage.content += data.chunk;
-      this.scrollChatToBottom();
-    });
-
-    this.socketService.onAgentEvent('agentToolCall', (data: { name: string; arguments: any }) => {
-      if (!this.agentStreamingMessage) return;
-      (this.agentStreamingMessage as any).toolCalls.push({
-        name: data.name,
-        arguments: data.arguments,
-      });
-    });
-
-    this.socketService.onAgentEvent('agentNotice', (data: { message: string }) => {
-      if (this.agentStreamingMessage) {
-        this.agentStreamingMessage.content = data.message;
-      }
-    });
-
-    this.socketService.onAgentEvent('agentSaved', (data: { messageId: string }) => {
-      if (this.agentStreamingMessage) {
-        this.agentStreamingMessage._id = data.messageId;
-        (this.agentStreamingMessage as any).isStreaming = false;
-        const chatItem = this.chatItems.find((x) => x._id === this.botUserId);
-        if (chatItem) chatItem.lastMessage = this.agentStreamingMessage;
-      }
-      this.agentStreamingMessage = null;
-      this.agentWorking = false;
-      this.scrollChatToBottom();
-    });
-
-    this.socketService.onAgentEvent('agentError', (data: { message: string }) => {
-      if (this.agentStreamingMessage) {
-        this.agentStreamingMessage.content = data.message || 'خطا در دستیار هوشمند';
-        (this.agentStreamingMessage as any).isStreaming = false;
-      }
-      this.agentStreamingMessage = null;
-      this.agentWorking = false;
-    });
+  private ensureBotChatId() {
+    if (!this.botChatId) {
+      const chatItem = this.chatItems.find(
+        (x) => !x.isGroup && !x.isChannel && x.peerId === this.botUserId
+      );
+      if (chatItem) this.botChatId = chatItem._id;
+    }
   }
 
   sendAgentMessage(content: string) {
     if (!content?.trim()) return;
-    const chatItem = this.chatItems.find((x) => x._id === this.botUserId);
+    this.ensureBotChatId();
+    if (!this.botChatId) {
+      this.openAgentChat();
+      return;
+    }
+    const chatItem = this.findChatById(this.botChatId);
+    if (!chatItem) return;
+    this.currentChat = chatItem;
     const userMessage: Message = {
       _id: null,
-      sender: {
-        _id: this.authService.getUserId(),
-        firstName: this.authService.getFirstName(),
-        lastName: this.authService.getLastName(),
-      },
+      sender: { _id: this.authService.getUserId(), firstName: this.authService.getFirstName(), lastName: this.authService.getLastName() },
       receiver: this.botUserId,
       content: content.trim(),
       avatar: this.pictureSrc,
       createdAt: new Date(),
     };
-    chatItem?.messages.push(userMessage);
-    if (chatItem) chatItem.lastMessage = userMessage;
-    this.socketService.sendAgentMessage({ content: content.trim() });
+    chatItem.messages = chatItem.messages || [];
+    chatItem.messages.push(userMessage);
+    chatItem.lastMessage = userMessage;
+    this.socketService.sendAgentMessage({ content: content.trim(), chatId: this.botChatId });
     this.scrollChatToBottom();
+  }
+
+  private saveAvatar() {
+    if (!this.file) return;
+    const formData = new FormData();
+    formData.append('avatar', this.file);
+    this.httpRequestService
+      .post('user/upload-avatar', formData)
+      .pipe(take(1))
+      .subscribe({
+        next: (res: any) => {
+          if (res?.avatar) {
+            this.pictureSrc = `${environment.uploadUrl}/${res.avatar}`;
+            localStorage.setItem('user-avatar', this.pictureSrc);
+          }
+        },
+        error: (err) => console.error('Error saving avatar:', err),
+      });
   }
 
   agentQuickAction(action: 'summarize' | 'tasks' | 'reply') {
     const chat = this.currentChat;
     const withName = chat ? `${chat.firstName ?? ''} ${chat.lastName ?? ''}`.trim() : '';
+    const groupName = chat?.name;
+    const subject = withName || groupName || 'این گفتگو';
     const prompts = {
-      summarize: withName
-        ? `گفتگو من با ${withName} را خلاصه کن`
-        : 'گفتگوهای اخیر من را خلاصه کن',
-      tasks: withName
-        ? `از پیام‌های اخیر من با ${withName} تسک‌های عملیاتی استخراج کن`
-        : 'از پیام‌های اخیرم تسک‌های عملیاتی استخراج کن',
-      reply: withName
-        ? `برای آخرین پیام ${withName} یک پیشنهاد پاسخ کوتاه بنویس`
-        : 'برای آخرین پیام‌هایم یک پیشنهاد پاسخ کوتاه بنویس',
+      summarize: `گفتگو من در "${subject}" را خلاصه کن`,
+      tasks: `از پیام‌های "${subject}" تسک‌های عملیاتی استخراج کن`,
+      reply: `برای آخرین پیام "${subject}" یک پیشنهاد پاسخ کوتاه بنویس`,
     };
     this.sendAgentMessage(prompts[action]);
   }
 
   private scrollChatToBottom() {
     setTimeout(() => {
-      const messagesDiv = document.querySelector('.chat-messages');
+      const messagesDiv = document.querySelector('.chat-messages') as HTMLElement | null;
       if (messagesDiv) messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }, 50);
   }
@@ -262,147 +492,89 @@ export class MainService {
       });
   }
 
-  showContacts() {
-    const dialogRef = this.dialog.open(ContactsComponent, {
-      width: '300px',
-      data: {},
-    });
+  openCreateChat(): void {
+    this.dialog.open(CreateChatComponent, { width: '420px', panelClass: 'rtl-dialog' });
+  }
 
+  showContacts() {
+    const dialogRef = this.dialog.open(ContactsComponent, { width: '360px', panelClass: 'rtl-dialog' });
     dialogRef
       .afterClosed()
       .pipe(take(1))
-      .subscribe((result) => {
-        if (result) {
-          console.log('Profile updated:', result);
-          // اینجا می‌توانید اطلاعات جدید را ذخیره کنید یا صفحه را به‌روزرسانی کنید
-        }
+      .subscribe((result: any) => {
+        if (result?.startChat) this.startDirectChat(result.startChat).then((item) => this.openChat(item));
       });
+  }
+
+  closeCurrentChat() {
+    this.currentChat = null;
+    this.agentStreamingMessage = null;
+    this.agentWorking = false;
   }
 
   logout() {
     this.authService.logout();
   }
 
-  search(query: string) {
+  search(query: string): Observable<any[]> {
     return this.httpRequestService.get('search?query=' + encodeURIComponent(query));
   }
 
   sendMessage(currentChat: ChatListItem, input: HTMLTextAreaElement) {
-    const content = input.value;
-    if (!content?.trim()) return;
+    const content = input.value?.trim();
+    if (!content) return;
 
-    if (this.isAgentChat(currentChat)) {
+    if (this.isAgentChatSync(currentChat)) {
       input.value = '';
       this.sendAgentMessage(content);
       return;
     }
 
-    const messageData: Message = {
+const messageData: Message = {
+      _id: null,
+      _pending: true,
       sender: {
         _id: this.authService.getUserId(),
         firstName: this.authService.getFirstName(),
         lastName: this.authService.getLastName(),
       },
-      receiver: currentChat._id,
-      content: input.value,
+      receiver: currentChat.peerId,
+      content,
       avatar: this.pictureSrc,
       createdAt: new Date(),
-      _id: null,
     };
-    this.socketService.sendMessage(messageData);
+    const chatId = currentChat._id as string;
+    this.socketService.sendMessage({ chatId, content });
 
-    this.currentChat.messages.push(messageData);
+    currentChat.messages = currentChat.messages || [];
+    currentChat.messages.push(messageData);
+    currentChat.lastMessage = messageData;
     input.value = '';
-    const chatItem = this.chatItems.find((x) => x._id === currentChat._id);
-    if (!chatItem) {
-      this.chatItems.unshift({
-        _id: currentChat._id,
-        firstName: currentChat.firstName,
-        lastName: currentChat.lastName,
-        lastMessage: messageData,
-        messages: [messageData],
-      });
-    }
-    setTimeout(() => {
-      const messagesDiv = document.querySelector('.chat-messages');
-      messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }, 100);
+    this.refreshItem(currentChat);
+    this.scrollChatToBottom();
   }
 
-  getMessages(receiverId: string, page: number = 1, limit: number = 20): Observable<any> {
-    const params = new HttpParams().set('receiverId', receiverId).set('page', page.toString()).set('limit', limit.toString());
-
-    return this.httpRequestService.get('message', null, params).pipe(
-      take(1),
-      tap((res) => {
-        // this.cacheService.setItem('messages', {
-        //   id: receiverId,
-        //   messages: res.messages,
-        //   timestamp: Date.now(),
-        // });
-      })
-    );
+  getMessages(chatId: string, page: number = 1, limit: number = 20): Observable<any> {
+    const params = new HttpParams().set('chatId', chatId).set('page', String(page)).set('limit', String(limit));
+    return this.httpRequestService.get('message', null, params).pipe(take(1));
   }
 
   loadMessages(page: number = 1) {
-    return this.getMessages(this.currentChat._id, page).pipe(
+    return this.getMessages(this.currentChat._id as string, page).pipe(
       tap((response: { messages: Message[]; totalMessages: number; currentPage: number; totalPages: number }) => {
-        const existIds = this.currentChat.messages.map((x) => x._id);
-        const newMessages = response.messages.filter((x) => !existIds.includes(x._id));
-        // بک‌اند جدیدترین‌ها را اول می‌دهد؛ برای نمایش کرونولوژیک برمی‌گردانیم
+        if (!this.currentChat) return;
+        const existIds = new Set((this.currentChat.messages || []).map((x) => x._id));
+        const newMessages = response.messages.filter((x) => !existIds.has(x._id));
         const ordered = [...newMessages].reverse();
         if (response.currentPage <= 1) {
-          this.currentChat.messages = [...this.currentChat.messages, ...ordered];
+          this.currentChat.messages = ordered;
         } else {
           this.currentChat.messages = [...ordered, ...this.currentChat.messages];
         }
-        this.currentChat.messages.forEach(async (msg) => {
-          const senderId = typeof msg.sender === 'string' ? msg.sender : msg.sender?._id;
-          if (!senderId) return;
-          msg.avatar = await this.getAvatar(senderId);
-        });
         this.currentPage = response.currentPage;
         this.totalPages = response.totalPages;
       })
     );
-  }
-
-  getChatList() {
-    this.httpRequestService
-      .get('chat/list')
-      .pipe(take(1))
-      .subscribe(
-        (response) => {
-          this.chatItems = response || [];
-          this.chatItems.forEach(async (item) => {
-            item.avatar = 'default_profile.jpg';
-            const avatar = await this.getAvatar(item._id);
-            item.avatar = avatar;
-          });
-        },
-        (error) => {
-          console.error('Error loading chat list:', error);
-        }
-      );
-  }
-
-  saveAvatar() {
-    if (this.file) {
-      const formData = new FormData();
-      formData.append('avatar', this.file);
-
-      this.httpRequestService
-        .post('user/upload-avatar', formData)
-        .pipe(take(1))
-        .subscribe({
-          next: (response: any) => {
-            console.log('Profile picture uploaded successfully:', response);
-          },
-          error: (err) => {
-            console.error('Error uploading profile picture:', err);
-          },
-        });
-    }
   }
 
   async getAvatar(userId: string): Promise<string> {
@@ -413,14 +585,15 @@ export class MainService {
         take(1),
         tap((res) => {
           if (res.avatar) {
-            this.cacheService.setItem('avatars', {
-              id: userId,
-              avatar: res.avatar,
-            });
+            this.cacheService.setItem('avatars', { id: userId, avatar: res.avatar });
           }
         }),
         map((res) => (res?.avatar ? 'data:image/jpeg;base64,' + res.avatar : 'default_profile.jpg'))
       )
     );
+  }
+
+  isAgentChatSync(chat: ChatListItem): boolean {
+    return !!chat && !!this.botUserId && !chat.isGroup && !chat.isChannel && chat.peerId === this.botUserId;
   }
 }

@@ -85,26 +85,27 @@ export class AuthService {
     return this.httpRequestService.post(refreshTokenUrl, {}, headers);
   }
 
+  private loggingOut = false;
+
+  public clearSession(): void {
+    if (this.loggingOut) return;
+    this.loggingOut = true;
+    this.gotoLogin();
+    this.cacheService.clearCache();
+    localStorage.clear();
+    sessionStorage.clear();
+  }
+
   public logout(): void {
-    const logoutUrl = 'auth/logout';
+    if (this.loggingOut) return;
     const headers = { _id: this.getUserId() };
     this.httpRequestService
-      .post(logoutUrl, { phoneNumber: this.getPhoneNumber() }, headers)
+      .post('auth/logout', { phoneNumber: this.getPhoneNumber() }, headers)
       .pipe(take(1))
-      .subscribe(
-        (x: any) => {
-          this.gotoLogin();
-          this.cacheService.clearCache();
-          localStorage.clear();
-          sessionStorage.clear();
-        },
-        (err) => {
-          this.gotoLogin();
-          this.cacheService.clearCache();
-          localStorage.clear();
-          sessionStorage.clear();
-        }
-      );
+      .subscribe({
+        next: () => this.clearSession(),
+        error: () => this.clearSession(),
+      });
   }
 
   public getAuthToken(): string {

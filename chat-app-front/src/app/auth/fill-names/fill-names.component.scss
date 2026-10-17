@@ -5,8 +5,8 @@
   min-height: 100vh;
   padding: 1.5rem;
   background:
-    radial-gradient(60rem 30rem at 80% -10%, rgba(139, 92, 246, 0.14), transparent),
-    radial-gradient(50rem 26rem at 10% 110%, rgba(91, 92, 226, 0.16), transparent),
+    radial-gradient(60rem 30rem at 80% -10%, color-mix(in srgb, var(--color-agent) 14%, transparent), transparent),
+    radial-gradient(50rem 26rem at 10% 110%, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent),
     var(--color-bg);
   direction: rtl;
 
@@ -33,9 +33,14 @@
 
     h2 {
       font-size: 1.25rem;
-      font-weight: 700;
+      font-weight: 800;
       margin: 0 0 0.5rem;
       text-align: center;
+      letter-spacing: -0.01em;
+      background: linear-gradient(135deg, var(--color-text), var(--color-primary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
     }
 
     .card-subtitle {
@@ -46,7 +51,7 @@
     }
 
     .error-message {
-      background: #fdeeee;
+      background: var(--color-danger-soft);
       color: var(--color-danger);
       border-radius: var(--radius-md);
       padding: 0.65rem 1rem;
@@ -93,8 +98,8 @@
         border-radius: var(--radius-full);
         font-size: 0.95rem;
         font-weight: 600;
-        background: linear-gradient(135deg, var(--color-primary), #7b7ce8);
-        color: #fff;
+        background: linear-gradient(135deg, var(--color-primary), var(--color-primary-gradient-end));
+        color: var(--color-on-primary);
       }
     }
   }

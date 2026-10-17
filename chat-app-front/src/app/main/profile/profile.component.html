@@ -17,9 +17,9 @@
       <span class="profile-value">{{ data?.lastName }}</span>
     </div>
 
-    <div class="profile-row">
-      <span class="profile-label">وضعیت</span>
-      <span class="profile-value">{{ data?.status ?? 'آنلاین' }}</span>
+    <div class="profile-row" *ngIf="data?.isGroup || data?.isChannel">
+      <span class="profile-label">شرکت‌کنندگان</span>
+      <span class="profile-value">{{ (data?.participants?.length ?? 0) + ' نفر' }}</span>
     </div>
   </div>
   <div mat-dialog-actions class="profile-footer"></div>

@@ -1,4 +1,4 @@
-<div class="home-container">
+<div class="home-container" [class.chat-open]="mainService.currentChat">
   <app-side-bar class="side-bar"></app-side-bar>
   <app-chat-list class="chat-list"></app-chat-list>
   <app-chat-area class="chat-area"></app-chat-area>
