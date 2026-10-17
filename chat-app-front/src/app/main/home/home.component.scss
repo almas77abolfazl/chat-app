@@ -60,12 +60,17 @@
   }
 
   @media (max-width: 768px) {
+    /* Telegram-like mobile: single column, sidebar hidden by default */
     app-side-bar {
-      flex: 0 0 4.5rem;
+      flex: 0 0 0;
+      width: 0;
+      display: none;
     }
 
     app-chat-list {
-      flex: 0 0 280px;
+      flex: 1 1 100%;
+      width: 100%;
+      min-width: 0;
     }
 
     &.chat-open {
@@ -81,6 +86,38 @@
       app-chat-area {
         display: none;
       }
+    }
+
+    .mobile-menu-btn {
+      position: fixed;
+      inset-block-start: 1rem;
+      inset-inline-start: 1rem;
+      z-index: 110;
+      width: 2.7rem;
+      height: 2.7rem;
+      border-radius: var(--radius-full);
+      background: var(--color-surface-solid);
+      border: 1px solid var(--color-border);
+      color: var(--color-text);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow-md);
+      font-size: 1rem;
+    }
+
+    .mobile-menu-btn:hover {
+      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+      color: var(--color-primary-dark);
+    }
+
+    .mobile-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 99;
+      background: rgba(26, 27, 46, 0.35);
+      backdrop-filter: blur(4px);
     }
   }
 }

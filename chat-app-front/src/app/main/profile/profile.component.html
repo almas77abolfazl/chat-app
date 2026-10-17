@@ -1,44 +1,96 @@
-<h2 class="dialog-title" mat-dialog-title>پروفایل</h2>
-<div mat-dialog-content class="profile-container">
-  <div class="profile-header">
-    <div class="profile-picture">
-      @if (data?.isGroup || data?.isChannel) {
-      <fa-icon
-        [icon]="['fas', data?.isChannel ? 'broadcast-tower' : 'users']"
-        class="avatar-initials"
-      ></fa-icon>
-      } @else if (data?.avatar) {
-      <img [src]="data.avatar" alt="Profile Picture" />
-      } @else {
-      <div class="avatar-initials">{{ initials(data) }}</div>
+<div class="profile-sheet" [class.sheet-mobile]="isMobile">
+  <!-- Cover header -->
+  <header class="profile-cover" [style.background]="coverColor">
+    <div class="cover-glow"></div>
+
+    <div class="cover-actions">
+      <button class="icon-btn close-btn" (click)="dialogRef.close()" aria-label="بستن">
+        <fa-icon [icon]="['fas', 'times']"></fa-icon>
+      </button>
+      <button class="icon-btn more-btn" (click)="editProfile()" aria-label="ویرایش">
+        <fa-icon [icon]="['fas', 'pencil-alt']"></fa-icon>
+      </button>
+    </div>
+
+    <!-- Overlapping avatar -->
+    <div class="avatar-wrap">
+      <div class="avatar" [style.background]="isMobile ? undefined : coverColor">
+        @if (data?.isGroup || data?.isChannel) {
+        <fa-icon [icon]="['fas', data?.isChannel ? 'broadcast-tower' : 'users']" class="avatar-icon"></fa-icon>
+        } @else if (data?.avatar) {
+        <img [src]="data.avatar" alt="Avatar" />
+        } @else {
+        <span class="avatar-initials">{{ initials(data) }}</span>
+        }
+      </div>
+    </div>
+  </header>
+
+  <div class="profile-body">
+    <div class="identity">
+      <h1 class="profile-name">{{ displayName(data) }}</h1>
+      <p class="profile-subtitle">{{ subtitle(data) }}</p>
+      @if (!isGroup && !isChannel) {
+      <p class="profile-status">در حال حاضر فعال است</p>
       }
     </div>
-    <h3 class="profile-name">{{ displayName(data) }}</h3>
-    <p class="profile-subtitle">{{ subtitle(data) }}</p>
+
+    <div class="actions">
+      <button class="btn primary" (click)="openChat()" aria-label="ارسال پیام">
+        <fa-icon [icon]="['fas', 'paper-plane']"></fa-icon>
+        <span>پیام</span>
+      </button>
+      <button class="btn ghost" (click)="dialogRef.close()" aria-label="تماس صوتی">
+        <fa-icon [icon]="['fas', 'phone-alt']"></fa-icon>
+      </button>
+      <button class="btn ghost" (click)="dialogRef.close()" aria-label="تماس ویدیویی">
+        <fa-icon [icon]="['fas', 'video']"></fa-icon>
+      </button>
+    </div>
+
+    <!-- Info section -->
+    <section class="section">
+      <div class="section-title">درباره</div>
+      <div class="info-row">
+        <span class="info-label">نام کاربری</span>
+        <span class="info-value">{{ data?.firstName ?? '' }} {{ data?.lastName ?? '' }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">نوع گفتگو</span>
+        <span class="info-value">{{ subtitle(data) }}</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">آخرین فعالیت</span>
+        <span class="info-value">{{ data?.updatedAt | date: 'short' }}</span>
+      </div>
+    </section>
+
+    <!-- Members section for groups/channels -->
+    <section class="section" *ngIf="isGroup || isChannel">
+      <div class="section-header">
+        <div class="section-title">اعضاء</div>
+        <span class="members-count">{{ membersCount(data) }} نفر</span>
+      </div>
+      <div class="members-list">
+        <div class="member-item" *ngFor="let p of (data?.participants || [])">
+          <div class="member-avatar">
+            @if (p.profilePicture) {
+            <img [src]="p.profilePicture" alt="Member" />
+            } @else {
+            <span class="avatar-initials">{{ memberInitials(p) }}</span>
+            }
+          </div>
+          <span class="member-name">{{ p.firstName }} {{ p.lastName }}</span>
+        </div>
+      </div>
+    </section>
+
+    <div class="spacer"></div>
   </div>
 
-  <div class="profile-form">
-    <div class="profile-row">
-      <span class="profile-label">نام</span>
-      <span class="profile-value">{{ data?.firstName ?? '—' }}</span>
-    </div>
-
-    <div class="profile-row">
-      <span class="profile-label">نام خانوادگی</span>
-      <span class="profile-value">{{ data?.lastName ?? '—' }}</span>
-    </div>
-
-    <div class="profile-row" *ngIf="data?.isGroup || data?.isChannel">
-      <span class="profile-label">شرکت‌کنندگان</span>
-      <span class="profile-value">{{ (data?.participants?.length ?? 0) + ' نفر' }}</span>
-      <fa-icon [icon]="['fas', 'users']" class="profile-icon"></fa-icon>
-    </div>
-  </div>
-
-  <div mat-dialog-actions class="profile-actions">
-    <button mat-button class="btn btn-ghost btn-icon" (click)="editProfile()" aria-label="ویرایش پروفایل">
-      <fa-icon [icon]="['fas', 'pencil-alt']"></fa-icon>
+  <footer class="profile-footer">
+    <button class="btn ghost-text" (click)="dialogRef.close()" aria-label="بستن">
+      بستن
     </button>
-    <button mat-button class="btn btn-primary" (click)="dialogRef.close()">بستن</button>
-  </div>
+  </footer>
 </div>
