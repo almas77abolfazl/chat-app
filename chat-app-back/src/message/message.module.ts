@@ -8,12 +8,14 @@ import { MessageGateway } from './message.gateway';
 import { AuthModule } from 'src/auth/auth.module';
 import { ChatSchema } from 'src/chat/entities/chat.entity';
 import { AgentModule } from 'src/agent/agent.module';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
   imports: [
     AuthModule,
     AgentModule,
     ChatModule,
+    UserModule,
     MongooseModule.forFeature([{ name: 'Message', schema: MessageSchema }]),
     MongooseModule.forFeature([{ name: 'Chat', schema: ChatSchema }]),
   ],
