@@ -184,6 +184,8 @@ export class MainService {
   }
 
   openChat(chatItem: ChatListItem) {
+    // gleichen Chat nicht zweimal laden (schützt vor Doppelklick / Race)
+    if (this.currentChat?._id === chatItem._id) return;
     this.currentChat = chatItem;
     this.chatItems.forEach((item) => {
       if (item._id === chatItem._id) item.messageCount = 0;

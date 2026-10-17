@@ -77,6 +77,10 @@
     }
   </div>
 
+  <button class="scroll-bottom-btn" [class.show]="showScrollBottom" (click)="scrollToBottom()" aria-label="رفتن به آخرین پیام">
+    <fa-icon [icon]="['fas', 'chevron-down']"></fa-icon>
+  </button>
+
   <div class="chat-input-container">
     <textarea
       #element
