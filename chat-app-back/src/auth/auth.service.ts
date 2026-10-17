@@ -6,6 +6,7 @@ import { JwtService } from '@nestjs/jwt';
 import { VerifyCodeDto } from './dto/verify-code.dto';
 import * as crypto from 'crypto';
 import { IUser } from 'src/user/interfaces/user.interface';
+import { SmsService } from 'src/sms/sms.service';
 
 interface IVerificationEntry {
   code: string;
@@ -20,6 +21,7 @@ export class AuthService {
   constructor(
     public userService: UserService,
     private jwtService: JwtService,
+    private smsService: SmsService,
   ) {}
 
   async sendVerificationCode(phoneNumber: string): Promise<{ sent: true }> {
@@ -30,8 +32,7 @@ export class AuthService {
       code,
       expiresAt: Date.now() / 1000 + this.verificationCodeTtlSeconds,
     });
-    // TODO: connect a real SMS provider here. The code is intentionally NOT returned.
-    console.log(`Verification code for ${phoneNumber}: ${code}`);
+    await this.smsService.sendVerificationCode(phoneNumber, code);
 
     return { sent: true };
   }
