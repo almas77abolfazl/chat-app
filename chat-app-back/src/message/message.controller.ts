@@ -28,7 +28,7 @@ export class MessageController {
   @Post('read')
   @UseGuards(JwtAuthGuard)
   async markRead(@Req() request: RequestWithUser, @Body() body: { messageId: string }) {
-    return this.messageService.markMessageRead(body.messageId, request.user._id as string);
+    return this.messageService.markMessageRead(body.messageId);
   }
 
   @Post('chat-read')

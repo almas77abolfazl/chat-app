@@ -67,7 +67,7 @@ export class MessageService {
     }
   }
 
-  async markMessageRead(messageId: string, _userId: string): Promise<void> {
+  async markMessageRead(messageId: string): Promise<void> {
     const message = await this.messageModel.findById(messageId).exec();
     if (!message) return;
     if (message.status !== 'read') {
