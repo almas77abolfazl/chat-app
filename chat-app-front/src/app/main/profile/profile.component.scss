@@ -1,7 +1,8 @@
 .dialog-title {
   text-align: center;
   font-weight: 800;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.25rem;
   background: linear-gradient(135deg, var(--color-text), var(--color-primary));
   -webkit-background-clip: text;
   background-clip: text;
@@ -12,26 +13,58 @@
   direction: rtl;
   display: flex;
   flex-direction: column;
-  min-width: 18rem;
+  min-width: 20rem;
+  max-width: 26rem;
 
   .profile-header {
     text-align: center;
     margin-bottom: 1.5rem;
+    position: relative;
 
     .profile-picture {
-      width: 7rem;
-      height: 7rem;
-      margin: 0 auto;
+      width: 8rem;
+      height: 8rem;
+      margin: 0 auto 0.75rem;
       border-radius: var(--radius-full);
       overflow: hidden;
       border: 4px solid color-mix(in srgb, var(--color-surface-solid) 70%, transparent);
       box-shadow: var(--shadow-lg);
+      position: relative;
+      background: var(--color-bg);
 
       img {
         width: 100%;
         height: 100%;
         object-fit: cover;
       }
+
+      .avatar-initials {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        place-items: center;
+        color: var(--color-on-primary);
+        font-weight: 800;
+        font-size: 1.5rem;
+        letter-spacing: 0.02em;
+        box-shadow: var(--shadow-sm);
+      }
+    }
+
+    .profile-name {
+      margin: 0 0 0.25rem;
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: var(--color-text);
+    }
+
+    .profile-subtitle {
+      margin: 0;
+      font-size: 0.85rem;
+      color: var(--color-text-secondary);
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
     }
   }
 
@@ -42,30 +75,98 @@
 
     .profile-row {
       display: flex;
+      align-items: center;
       justify-content: space-between;
       gap: 1rem;
-      padding: 0.65rem 0.95rem;
+      padding: 0.7rem 0.95rem;
       background: var(--color-surface-solid);
       border-radius: var(--radius-lg);
       border: 1px solid var(--color-border);
       box-shadow: var(--shadow-xs);
-      transition: border-color var(--transition);
+      transition: border-color var(--transition), box-shadow var(--transition);
 
       &:hover {
         border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+        box-shadow: var(--shadow-sm);
       }
 
       .profile-label {
         font-size: 0.8rem;
         font-weight: 600;
         color: var(--color-text-secondary);
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        white-space: nowrap;
       }
 
       .profile-value {
-        font-size: 0.9rem;
+        font-size: 0.92rem;
         font-weight: 600;
         color: var(--color-text);
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
+
+      .profile-icon {
+        font-size: 0.9rem;
+        color: var(--color-text-faint);
+        margin-inline-start: 0.5rem;
+      }
+    }
+  }
+
+  .profile-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+
+    .btn {
+      flex: 1;
+      border: none;
+      border-radius: var(--radius-full);
+      padding: 0.7rem 1rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform var(--transition), box-shadow var(--transition),
+        filter var(--transition);
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-gradient-end));
+      color: var(--color-on-primary);
+      box-shadow: var(--shadow-md);
+
+      &:hover:not(:disabled) {
+        box-shadow: var(--shadow-glow-primary);
+        transform: translateY(-1px);
+      }
+    }
+
+    .btn-ghost {
+      background: var(--color-bg);
+      color: var(--color-text-secondary);
+      border: 1px solid var(--color-border);
+
+      &:hover {
+        background: var(--color-surface-container);
+        color: var(--color-text);
+        border-color: var(--color-border-strong);
+      }
+    }
+
+    .btn-icon {
+      width: 2.6rem;
+      height: 2.6rem;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex: 0 0 auto;
     }
   }
 

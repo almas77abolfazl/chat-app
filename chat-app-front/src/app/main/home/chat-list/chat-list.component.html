@@ -44,8 +44,12 @@
         <div class="chat-avatar">
           @if (chat.isGroup || chat.isChannel) {
           <fa-icon [icon]="['fas', chat.isChannel ? 'broadcast-tower' : 'users']" class="group-icon"></fa-icon>
+          } @else if (chat.avatar) {
+          <img [src]="chat.avatar" alt="Avatar" />
           } @else {
-          <img [src]="chat.avatar || 'default_profile.jpg'" alt="Avatar" />
+          <div class="chat-avatar-initials" [style.background]="avatarBg(chat)">
+            {{ initials(chat) }}
+          </div>
           }
           @if (mainService.isAgentChat(chat)) {
           <span class="agent-dot"></span>

@@ -192,21 +192,22 @@ textarea {
   &[data-tooltip]:focus-visible::after {
     content: attr(data-tooltip);
     position: absolute;
-    z-index: 50;
+    z-index: 1000;
     bottom: calc(100% + 8px);
     left: 50%;
     transform: translateX(-50%) translateY(-4px);
-    padding: 0.35rem 0.6rem;
+    padding: 0.35rem 0.65rem;
     font-size: 0.72rem;
     font-weight: 600;
-    color: var(--color-on-surface);
-    background: #1a1b2e;
+    color: #ffffff;
+    background: rgba(26, 27, 46, 0.92);
     border-radius: var(--radius-sm);
     white-space: nowrap;
     pointer-events: none;
     opacity: 0;
     transition: opacity var(--transition-fast), transform var(--transition-fast);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-xl);
+    border: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
   }
   &[data-tooltip]:hover::after,
   &[data-tooltip]:focus-visible::after {

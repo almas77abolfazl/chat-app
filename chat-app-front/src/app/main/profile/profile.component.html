@@ -2,25 +2,43 @@
 <div mat-dialog-content class="profile-container">
   <div class="profile-header">
     <div class="profile-picture">
-      <img [src]="data?.avatar" alt="Profile Picture" />
+      @if (data?.isGroup || data?.isChannel) {
+      <fa-icon
+        [icon]="['fas', data?.isChannel ? 'broadcast-tower' : 'users']"
+        class="avatar-initials"
+      ></fa-icon>
+      } @else if (data?.avatar) {
+      <img [src]="data.avatar" alt="Profile Picture" />
+      } @else {
+      <div class="avatar-initials">{{ initials(data) }}</div>
+      }
     </div>
+    <h3 class="profile-name">{{ displayName(data) }}</h3>
+    <p class="profile-subtitle">{{ subtitle(data) }}</p>
   </div>
 
   <div class="profile-form">
     <div class="profile-row">
       <span class="profile-label">نام</span>
-      <span class="profile-value">{{ data?.firstName }}</span>
+      <span class="profile-value">{{ data?.firstName ?? '—' }}</span>
     </div>
 
     <div class="profile-row">
       <span class="profile-label">نام خانوادگی</span>
-      <span class="profile-value">{{ data?.lastName }}</span>
+      <span class="profile-value">{{ data?.lastName ?? '—' }}</span>
     </div>
 
     <div class="profile-row" *ngIf="data?.isGroup || data?.isChannel">
       <span class="profile-label">شرکت‌کنندگان</span>
       <span class="profile-value">{{ (data?.participants?.length ?? 0) + ' نفر' }}</span>
+      <fa-icon [icon]="['fas', 'users']" class="profile-icon"></fa-icon>
     </div>
   </div>
-  <div mat-dialog-actions class="profile-footer"></div>
+
+  <div mat-dialog-actions class="profile-actions">
+    <button mat-button class="btn btn-ghost btn-icon" (click)="editProfile()" aria-label="ویرایش پروفایل">
+      <fa-icon [icon]="['fas', 'pencil-alt']"></fa-icon>
+    </button>
+    <button mat-button class="btn btn-primary" (click)="dialogRef.close()">بستن</button>
+  </div>
 </div>
