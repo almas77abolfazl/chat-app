@@ -155,6 +155,46 @@ export class MessageGateway {
     }
   }
 
+  @SubscribeMessage('typingStart')
+  async handleTypingStart(@MessageBody() data: { chatId: string }, @ConnectedSocket() client: Socket) {
+    try {
+      const user = client.data.user as IUser;
+      const participantIds = await this.chatService.getParticipantIds(data.chatId);
+      for (const pid of participantIds) {
+        if (pid !== user._id.toString()) {
+          this.server.to(pid).emit('typingStatus', {
+            chatId: data.chatId,
+            userId: user._id.toString(),
+            userName: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
+            isTyping: true,
+          });
+        }
+      }
+    } catch (error) {
+      client.emit('messageError', { message: error?.message ?? 'Failed to send typing status' });
+    }
+  }
+
+  @SubscribeMessage('typingStop')
+  async handleTypingStop(@MessageBody() data: { chatId: string }, @ConnectedSocket() client: Socket) {
+    try {
+      const user = client.data.user as IUser;
+      const participantIds = await this.chatService.getParticipantIds(data.chatId);
+      for (const pid of participantIds) {
+        if (pid !== user._id.toString()) {
+          this.server.to(pid).emit('typingStatus', {
+            chatId: data.chatId,
+            userId: user._id.toString(),
+            userName: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
+            isTyping: false,
+          });
+        }
+      }
+    } catch (error) {
+      client.emit('messageError', { message: error?.message ?? 'Failed to send typing status' });
+    }
+  }
+
   @SubscribeMessage('agentMessage')
   async handleAgentMessage(@MessageBody() messageData: any, @ConnectedSocket() client: Socket) {
     try {
