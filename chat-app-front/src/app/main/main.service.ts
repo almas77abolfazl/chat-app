@@ -12,6 +12,7 @@ import { HttpParams } from '@angular/common/http';
 import { Message } from '../models/message.model';
 import { CacheService } from '../helpers/cache.service';
 import { environment } from '../../environments/environment';
+import { SnackbarService } from '../helpers/snackbar/snackbar.service';
 
 @Injectable({ providedIn: 'root' })
 export class MainService {
@@ -44,7 +45,8 @@ export class MainService {
     public httpRequestService: HttpRequestService,
     private dialog: MatDialog,
     private socketService: SocketService,
-    private cacheService: CacheService
+    private cacheService: CacheService,
+    private snackbar: SnackbarService
   ) {
     this.getAvatar(authService.getUserId()).then((avatar: string) => {
       if (avatar) this.pictureSrc = avatar;
@@ -66,7 +68,7 @@ export class MainService {
             }
           });
         },
-        (error) => console.error('Error loading chat list:', error)
+        (error) => this.snackbar.error('خطا در بارگذاری لیست چت', 5000)
       );
   }
 
@@ -234,6 +236,7 @@ export class MainService {
       this.getChatList();
     } catch (e) {
       console.error('Could not open agent chat', e);
+      this.snackbar.error('خطا در باز کردن چت دستیار', 3000);
     }
   }
 
@@ -507,7 +510,7 @@ export class MainService {
             localStorage.setItem('user-avatar', this.pictureSrc);
           }
         },
-        error: (err) => console.error('Error saving avatar:', err),
+        error: (err) => this.snackbar.error('خطا در ذخیره آواتار', 3000),
       });
   }
 
@@ -563,7 +566,7 @@ export class MainService {
               localStorage.setItem('user-lastName', result.lastName || '');
               localStorage.setItem('user-bio', result.bio || '');
             },
-            error: (err) => console.error('Error updating profile:', err),
+            error: (err) => this.snackbar.error('خطا در به‌روزرسانی پروفایل', 3000),
           });
 
         if (this.file) this.saveAvatar();
