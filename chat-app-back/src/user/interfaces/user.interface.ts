@@ -13,4 +13,6 @@ export interface IUser extends Document {
   contacts: string[];
   sessions: ISession[];
   createdAt: Date;
+  isOnline: boolean;
+  lastSeen: Date;
 }

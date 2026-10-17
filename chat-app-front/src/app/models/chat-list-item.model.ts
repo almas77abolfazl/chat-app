@@ -6,6 +6,8 @@ export interface ChatParticipant {
   lastName?: string;
   profilePicture?: string;
   status?: string;
+  isOnline?: boolean;
+  lastSeen?: Date;
 }
 
 export interface ChatListItem {
@@ -24,4 +26,6 @@ export interface ChatListItem {
   updatedAt?: Date;
   messages?: Message[];
   messageCount?: number;
+  isOnline?: boolean;     // for 1:1 chats: peer's online status
+  lastSeen?: Date;        // for 1:1 chats: peer's last seen timestamp
 }
