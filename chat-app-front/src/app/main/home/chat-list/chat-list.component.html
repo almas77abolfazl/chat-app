@@ -51,7 +51,9 @@
             {{ initials(chat) }}
           </div>
           }
-          @if (mainService.isAgentChat(chat)) {
+          @if (chat.isOnline) {
+          <span class="online-dot"></span>
+          } @else if (mainService.isAgentChat(chat)) {
           <span class="agent-dot"></span>
           }
         </div>
@@ -68,7 +70,12 @@
           <div class="chat-last-message">{{ chat.lastMessage?.content ?? 'بدون پیام' }}</div>
         </div>
         <div class="chat-meta">
-          @if (chat.updatedAt) {
+          @if (chat.isOnline) {
+          <div class="chat-status-online">آنلاین</div>
+          } @else if (chat.lastSeen) {
+          <div class="chat-status-offline">آخرین seen: {{ chat.lastSeen | date:'short' }}</div>
+          }
+          @if (chat.updatedAt && !chat.isOnline && !chat.lastSeen) {
           <div class="chat-time">{{ chat.updatedAt | date: 'short-time' }}</div>
           }
           @if (chat.messageCount && chat.messageCount > 0) {

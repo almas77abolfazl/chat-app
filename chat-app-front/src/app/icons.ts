@@ -1,6 +1,8 @@
 import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
 import {
   faArchive,
+  faArrowLeft,
+  faBroadcastTower,
   faBriefcase,
   faCamera,
   faCheckCircle,
@@ -9,17 +11,22 @@ import {
   faKey,
   faNewspaper,
   faPaperPlane,
+  faPlus,
   faRobot,
   faSearch,
   faSignOutAlt,
+  faTag,
   faUserCircle,
   faUserFriends,
   faUserPlus,
+  faUsers,
 } from '@fortawesome/free-solid-svg-icons';
 
 export function registerAppIcons(library: FaIconLibrary): void {
   library.addIcons(
     faArchive,
+    faArrowLeft,
+    faBroadcastTower,
     faBriefcase,
     faCamera,
     faCheckCircle,
@@ -28,11 +35,14 @@ export function registerAppIcons(library: FaIconLibrary): void {
     faKey,
     faNewspaper,
     faPaperPlane,
+    faPlus,
     faRobot,
     faSearch,
     faSignOutAlt,
+    faTag,
     faUserCircle,
     faUserFriends,
     faUserPlus,
+    faUsers,
   );
 }

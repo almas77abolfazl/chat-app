@@ -35,9 +35,11 @@ export class AuthService {
       next: (response) => {
         localStorage.setItem('auth_token', response.access_token);
         localStorage.setItem('user-id', response.userId);
-        if (response.firstName && response.lastName) {
-          localStorage.setItem('user-firstName', response.firstName);
-          localStorage.setItem('user-lastName', response.lastName);
+        const firstName = response.firstName || '';
+        const lastName = response.lastName || '';
+        if (firstName && lastName) {
+          localStorage.setItem('user-firstName', firstName);
+          localStorage.setItem('user-lastName', lastName);
           localStorage.setItem('user-bio', response.bio || '');
           this.gotoHome();
         } else if (this.getFirstName() && this.getLastName()) {
