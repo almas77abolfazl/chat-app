@@ -18,6 +18,7 @@ import { ChatListItem } from '../../../models/chat-list-item.model';
 })
 export class ChatAreaComponent {
   constructor(public mainService: MainService, private dialog: MatDialog) {}
+  showScrollBottom = false;
 
   ownId(): string {
     return this.mainService.authService.getUserId();
@@ -70,6 +71,11 @@ export class ChatAreaComponent {
   onScroll(event?: Event) {
     const el = event?.target as HTMLElement;
     if (!el || !this.mainService.currentChat) return;
+
+    // دکمه ورود به آخرین پیام را فقط وقتی نشان بده که کاربر به بالا اسکرول کرده
+    const atBottom = el.scrollHeight - el.scrollTop <= el.clientHeight + 8;
+    this.showScrollBottom = !atBottom;
+
     if (el.scrollTop > 50) return;
 
     if (this.mainService.currentPage < this.mainService.totalPages) {
@@ -81,6 +87,14 @@ export class ChatAreaComponent {
           if (el) el.scrollTop = el.scrollHeight - previousHeight;
         });
     }
+  }
+
+  scrollToBottom() {
+    const el = document.querySelector('.chat-messages') as HTMLElement;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+    }
+    this.showScrollBottom = false;
   }
 
   goBack() {
