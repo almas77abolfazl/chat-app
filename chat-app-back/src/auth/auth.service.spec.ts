@@ -1,8 +1,15 @@
+jest.mock('@nestjs/axios', () => ({
+  HttpService: jest.fn().mockImplementation(() => ({
+    post: jest.fn(),
+  })),
+}));
+
 import { Test } from '@nestjs/testing';
 import { BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { UserService } from 'src/user/user.service';
+import { SmsService } from 'src/sms/sms.service';
 
 describe('AuthService', () => {
   let authService: AuthService;
@@ -37,7 +44,12 @@ describe('AuthService', () => {
     };
 
     const moduleRef = await Test.createTestingModule({
-      providers: [AuthService, { provide: UserService, useValue: userService }, { provide: JwtService, useValue: jwtService }],
+      providers: [
+        AuthService,
+        { provide: UserService, useValue: userService },
+        { provide: JwtService, useValue: jwtService },
+        { provide: SmsService, useValue: { sendVerificationCode: jest.fn().mockResolvedValue({ success: true }) } },
+      ],
     }).compile();
 
     authService = moduleRef.get(AuthService);
