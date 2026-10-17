@@ -68,17 +68,30 @@
         transform: scale(1.03);
       }
 
-       .chat-avatar {
-        width: 100%;
-        height: 100%;
-        border-radius: var(--radius-xl);
-        object-fit: cover;
-      }
+         .chat-avatar {
+          width: 100%;
+          height: 100%;
+          border-radius: var(--radius-xl);
+          object-fit: cover;
+        }
 
-       .chat-avatar-icon {
-        font-size: 1.45rem;
-        color: var(--color-on-primary);
-      }
+        .chat-avatar-initials {
+          width: 100%;
+          height: 100%;
+          border-radius: var(--radius-xl);
+          display: grid;
+          place-items: center;
+          color: var(--color-on-primary);
+          font-weight: 800;
+          font-size: 1.15rem;
+          letter-spacing: 0.02em;
+          box-shadow: var(--shadow-sm);
+        }
+
+         .chat-avatar-icon {
+          font-size: 1.45rem;
+          color: var(--color-on-primary);
+        }
     }
 
     .chat-name-block {

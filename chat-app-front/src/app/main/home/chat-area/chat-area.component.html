@@ -8,8 +8,12 @@
         @if (mainService.currentChat?.isGroup || mainService.currentChat?.isChannel) {
         <fa-icon [icon]="['fas', mainService.currentChat?.isChannel ? 'broadcast-tower' : 'users']"
           class="chat-avatar chat-avatar-icon"></fa-icon>
+        } @else if (mainService.currentChat?.avatar) {
+        <img [src]="mainService.currentChat.avatar" alt="Avatar" class="chat-avatar" />
         } @else {
-        <img [src]="mainService.currentChat?.avatar || 'default_profile.jpg'" alt="Avatar" class="chat-avatar" />
+        <div class="chat-avatar chat-avatar-initials" [style.background]="avatarBg(mainService.currentChat)">
+          {{ initials(mainService.currentChat) }}
+        </div>
         }
       </div>
       <div class="chat-name-block">

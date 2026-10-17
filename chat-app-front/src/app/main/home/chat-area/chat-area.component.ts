@@ -50,6 +50,23 @@ export class ChatAreaComponent {
     return '';
   }
 
+  avatarBg(chat: ChatListItem): string {
+    if (!chat) return '#6366f1';
+    const hue = chat._id ? Number(String(chat._id).charCodeAt(0)) % 60 + 240 : 264;
+    return `linear-gradient(135deg, hsl(${hue} 70% 55%), hsl(${(hue - 10) % 360} 65% 50%))`;
+  }
+
+  initials(chat: ChatListItem): string {
+    if (!chat) return '?';
+    if (chat.isGroup || chat.isChannel) return '';
+    const first = (chat.firstName ?? '').trim();
+    const last = (chat.lastName ?? '').trim();
+    if (first && last) return `${first.charAt(0)}${last.charAt(0)}`;
+    if (first) return first.charAt(0);
+    if (last) return last.charAt(0);
+    return '?';
+  }
+
   onScroll(event?: Event) {
     const el = event?.target as HTMLElement;
     if (!el || !this.mainService.currentChat) return;

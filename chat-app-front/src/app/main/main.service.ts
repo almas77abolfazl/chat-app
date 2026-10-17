@@ -244,11 +244,9 @@ export class MainService {
           msg.senderId = sender?._id?.toString();
         }
         chatItem.messages = chatItem.messages || [];
-        // Replace the optimistic pending message (same content, no _id) with the
-        // server-persisted one so we don't render the message twice.
-        const pendingIdx = chatItem.messages.findIndex(
-          (m) => m._pending === true && m.content === msg.content && m.senderId === msg.senderId
-        );
+        // Replace the first optimistic pending message with the server-persisted one
+        // so the user's own sent message isn't rendered twice.
+        const pendingIdx = chatItem.messages.findIndex((m) => m._pending === true);
         if (pendingIdx !== -1) {
           chatItem.messages.splice(pendingIdx, 1);
         }
@@ -269,9 +267,7 @@ export class MainService {
       const msg = payload.message;
       chatItem.messages = chatItem.messages || [];
       // Drop the optimistic duplicate first, then add the real message.
-      const pendingIdx = chatItem.messages.findIndex(
-        (m) => m._pending === true && m.content === msg.content && m.senderId === msg.senderId
-      );
+      const pendingIdx = chatItem.messages.findIndex((m) => m._pending === true);
       if (pendingIdx !== -1) chatItem.messages.splice(pendingIdx, 1);
       const exists = chatItem.messages.some((m) => m._id === msg._id);
       if (!exists) {
@@ -533,6 +529,7 @@ export class MainService {
 const messageData: Message = {
       _id: null,
       _pending: true,
+      senderId: this.authService.getUserId(),
       sender: {
         _id: this.authService.getUserId(),
         firstName: this.authService.getFirstName(),
