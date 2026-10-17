@@ -9,6 +9,9 @@ import { AgentService } from 'src/agent/agent.service';
 import { BotService } from 'src/agent/bot/bot.service';
 import { ChatService } from 'src/chat/chat.service';
 import { UserService } from 'src/user/user.service';
+import { Message, MessageDocument } from './entities/message.entity';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
 
 const MAX_MESSAGE_LENGTH = 2000;
 const MAX_AGENT_CONTENT_LENGTH = 4000;
@@ -20,6 +23,7 @@ export class MessageGateway {
   server: Server;
 
   constructor(
+    @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
     private messageService: MessageService,
     private authService: AuthService,
     private agentService: AgentService,
@@ -106,6 +110,88 @@ export class MessageGateway {
       client.emit('messageError', {
         message: error?.message ?? 'Failed to send message',
       });
+    }
+  }
+
+  @SubscribeMessage('messageDelivered')
+  async handleMessageDelivered(@MessageBody() data: { messageId: string }, @ConnectedSocket() client: Socket) {
+    try {
+      const user = client.data.user as IUser;
+      await this.messageService.markMessageDelivered(data.messageId);
+      const message = await this.messageModel.findById(data.messageId).exec();
+      if (message) {
+        const senderId = message.sender.toString();
+        if (senderId !== user._id.toString()) {
+          this.server.to(senderId).emit('messageStatusUpdated', {
+            messageId: data.messageId,
+            status: 'delivered',
+            userId: user._id.toString(),
+          });
+        }
+      }
+    } catch (error) {
+      client.emit('messageError', { message: error?.message ?? 'Failed to mark delivered' });
+    }
+  }
+
+  @SubscribeMessage('messageRead')
+  async handleMessageRead(@MessageBody() data: { messageId: string }, @ConnectedSocket() client: Socket) {
+    try {
+      const user = client.data.user as IUser;
+      await this.messageService.markMessageRead(data.messageId);
+      const message = await this.messageModel.findById(data.messageId).exec();
+      if (message) {
+        const senderId = message.sender.toString();
+        if (senderId !== user._id.toString()) {
+          this.server.to(senderId).emit('messageStatusUpdated', {
+            messageId: data.messageId,
+            status: 'read',
+            userId: user._id.toString(),
+          });
+        }
+      }
+    } catch (error) {
+      client.emit('messageError', { message: error?.message ?? 'Failed to mark read' });
+    }
+  }
+
+  @SubscribeMessage('typingStart')
+  async handleTypingStart(@MessageBody() data: { chatId: string }, @ConnectedSocket() client: Socket) {
+    try {
+      const user = client.data.user as IUser;
+      const participantIds = await this.chatService.getParticipantIds(data.chatId);
+      for (const pid of participantIds) {
+        if (pid !== user._id.toString()) {
+          this.server.to(pid).emit('typingStatus', {
+            chatId: data.chatId,
+            userId: user._id.toString(),
+            userName: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
+            isTyping: true,
+          });
+        }
+      }
+    } catch (error) {
+      client.emit('messageError', { message: error?.message ?? 'Failed to send typing status' });
+    }
+  }
+
+  @SubscribeMessage('typingStop')
+  async handleTypingStop(@MessageBody() data: { chatId: string }, @ConnectedSocket() client: Socket) {
+    try {
+      const user = client.data.user as IUser;
+      const participantIds = await this.chatService.getParticipantIds(data.chatId);
+      for (const pid of participantIds) {
+        if (pid !== user._id.toString()) {
+          this.server.to(pid).emit('typingStatus', {
+            chatId: data.chatId,
+            userId: user._id.toString(),
+            userName: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
+            isTyping: false,
+          });
+        }
+      }
+    } catch (error) {
+      client.emit('messageError', { message: error?.message ?? 'Failed to send typing status' });
     }
   }
 
