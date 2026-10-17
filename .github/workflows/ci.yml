@@ -1,0 +1,90 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # ---------- Backend ----------
+      - name: Setup Node.js (Backend)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: chat-app-back/package-lock.json
+
+      - name: Install Backend dependencies
+        run: npm install
+        working-directory: chat-app-back
+
+      - name: Run Backend lint
+        run: npm run lint
+        working-directory: chat-app-back
+
+      - name: Run Backend tests
+        run: npm test
+        working-directory: chat-app-back
+        env:
+          MONGO_URI: mongodb://localhost:27017/chat-app-test
+          JWT_SECRET: test-secret
+          JWT_EXPIRES_IN: 60m
+          LLM_API_KEY: ''
+          AGENT_ENABLED: 'false'
+
+      - name: Build Backend
+        run: npm run build
+        working-directory: chat-app-back
+
+      # ---------- Frontend ----------
+      - name: Setup Node.js (Frontend)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: chat-app-front/package-lock.json
+
+      - name: Install Frontend dependencies
+        run: npm install
+        working-directory: chat-app-front
+
+      - name: Build Frontend
+        run: npm run build
+        working-directory: chat-app-front
+
+      # ---------- Docker stack ----------
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Start stack with Docker Compose
+        run: docker compose up -d
+        timeout-minutes: 2
+
+      - name: Wait for services to be ready
+        run: |
+          sleep 10
+          curl -f http://localhost:3000/v1 || true
+          curl -f http://localhost:5500 || true
+
+      - name: Show logs if failed
+        if: failure()
+        run: docker compose logs

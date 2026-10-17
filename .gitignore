@@ -45,3 +45,14 @@
 # Temporary files
 *tmp/
 *temp/
+
+# Uploaded files (avatars, media) - should not be committed to git
+chat-app-back/uploads/
+*.jpg
+*.png
+*.jpeg
+*.gif
+*.webp
+*.mp4
+*.mp3
+*.webm
