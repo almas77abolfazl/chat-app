@@ -1,5 +1,17 @@
 <div class="home-container" [class.chat-open]="mainService.currentChat">
-  <app-side-bar class="side-bar"></app-side-bar>
-  <app-chat-list class="chat-list"></app-chat-list>
+  <app-side-bar class="side-bar" [class.mobile-open]="mobileMenuOpen" (close)="closeMobileMenu()"></app-side-bar>
+
+  <button
+    class="mobile-menu-btn"
+    *ngIf="!mainService.currentChat && isMobile"
+    (click)="toggleMobileMenu()"
+    aria-label="منو"
+  >
+    <fa-icon [icon]="['fas', 'bars']"></fa-icon>
+  </button>
+
+  <div class="mobile-overlay" *ngIf="mobileMenuOpen && isMobile" (click)="closeMobileMenu()"></div>
+
+  <app-chat-list class="chat-list" (selectChat)="closeMobileMenu()"></app-chat-list>
   <app-chat-area class="chat-area"></app-chat-area>
 </div>

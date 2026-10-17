@@ -1,5 +1,10 @@
-<div class="sidebar">
+<div class="sidebar" (close)="close.emit()">
   <div class="sidebar-header">
+    @if (mobileOpen) {
+    <button class="icon-btn close-btn" (click)="close.emit()" aria-label="بستن منو">
+      <fa-icon [icon]="['fas', 'times']"></fa-icon>
+    </button>
+    }
     <div class="sidebar-brand">
       <fa-icon [icon]="['fas', 'comments']"></fa-icon>
       <span>چت‌اپ</span>

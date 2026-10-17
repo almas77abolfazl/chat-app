@@ -5,7 +5,7 @@ import { AuthService } from '../auth/auth.service';
 import { ContactsComponent } from './contacts/contacts.component';
 import { CreateChatComponent } from './create-chat/create-chat.component';
 import { HttpRequestService } from '../helpers/http-request.service';
-import { firstValueFrom, map, Observable, take, tap } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, map, Observable, take, tap } from 'rxjs';
 import { ChatListItem, ChatParticipant } from '../models/chat-list-item.model';
 import { SocketService } from './socket.service';
 import { HttpParams } from '@angular/common/http';
@@ -20,6 +20,8 @@ export class MainService {
   chatFilter: 'all' | 'groups' | 'channels' = 'all';
   currentPage: number = 1;
   totalPages: number = 1;
+  private chatOpenedSubject = new BehaviorSubject<void>(null);
+  chatOpened$ = this.chatOpenedSubject.asObservable();
 
   file: any;
   pictureSrc = 'default_profile.jpg';
@@ -187,6 +189,7 @@ export class MainService {
     // gleichen Chat nicht zweimal laden (schützt vor Doppelklick / Race)
     if (this.currentChat?._id === chatItem._id) return;
     this.currentChat = chatItem;
+    this.chatOpenedSubject.next();
     this.chatItems.forEach((item) => {
       if (item._id === chatItem._id) item.messageCount = 0;
     });

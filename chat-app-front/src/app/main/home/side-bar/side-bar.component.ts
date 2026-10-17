@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MainService } from '../../main.service';
 @Component({
@@ -9,6 +9,8 @@ import { MainService } from '../../main.service';
   styleUrl: './side-bar.component.scss',
 })
 export class SideBarComponent {
+  @Input() mobileOpen = false;
+  @Output() close = new EventEmitter<void>();
   customItems: { icon: string; title: string; id: string }[] = [];
   navItems = [
     { icon: 'comment-dots', title: 'چت‌ها', id: 'all' },
@@ -21,5 +23,6 @@ export class SideBarComponent {
   selectNav(id: string) {
     if (id === 'contacts') this.mainService.showContacts();
     else this.mainService.setChatFilter(id as any);
+    if (this.mobileOpen) this.close.emit();
   }
 }
