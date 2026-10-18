@@ -1,0 +1,97 @@
+{
+  "chat": {
+    "title": "Chats",
+    "noChat": "No chat selected",
+    "selectOrStart": "Select a chat or try smart assistant",
+    "empty": "You have no chats",
+    "newChat": "New chat",
+    "lastMessage": "No messages yet",
+    "startChat": "Start chat"
+  },
+  "contacts": {
+    "title": "Contacts",
+    "saved": "Saved contacts",
+    "search": "Search by name or mobile number...",
+    "searchResults": "Search results",
+    "noResults": "No contacts found",
+    "searching": "Searching...",
+    "addNew": "Add new contact",
+    "offline": "Offline",
+    "noContacts": "No saved contacts",
+    "phoneNumber": "Phone number",
+    "firstName": "First name",
+    "lastName": "Last name"
+  },
+  "groups": "Groups",
+  "channels": "Channels",
+  "new": "New",
+  "members": "members",
+  "publicChannel": "Public Channel",
+  "online": "Online",
+  "chatWithContact": "Start chatting with contact",
+  "actions": {
+    "edit": "Edit",
+    "delete": "Delete",
+    "reaction": "Reaction",
+    "cancel": "Cancel",
+    "save": "Save",
+    "confirmDelete": "Are you sure you want to delete this message?",
+    "edited": "Edited",
+    "noMessages": "No messages"
+  },
+  "profile": {
+    "editProfile": "Edit Profile",
+    "viewProfile": "View Profile",
+    "about": "About",
+    "username": "Username",
+    "chatType": "Chat Type",
+    "lastActivity": "Last activity",
+    "members": "Members",
+    "message": "Send message",
+    "call": "Voice call",
+    "videoCall": "Video call",
+    "close": "Close",
+    "activeNow": "Active now",
+    "directChat": "Direct chat"
+  },
+  "agent": {
+    "title": "Smart Assistant",
+    "disabled": "Smart assistant is disabled. Set LLM_API_KEY to enable.",
+    "summarize": "Summarize chat",
+    "extractTasks": "Extract tasks",
+    "replySuggest": "Reply suggestion",
+    "typing": "Assistant is responding"
+  },
+  "sidebar": {
+    "brand": "ChatApp",
+    "smartAssistant": "Smart Assistant",
+    "chats": "Chats",
+    "profile": "Profile",
+    "logout": "Logout",
+    "theme": "Theme",
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode",
+    "language": "Language"
+  },
+  "search": {
+    "placeholder": "Search...",
+    "noResults": "No results found"
+  },
+  "status": {
+    "online": "Online",
+    "offline": "Offline",
+    "lastSeen": "Last seen"
+  },
+  "messages": {
+    "typing": "typing...",
+    "read": "Read",
+    "delivered": "Delivered",
+    "sent": "Sent",
+    "pending": "Sending..."
+  },
+  "theme": {
+    "lightMode": "Light mode",
+    "darkMode": "Dark mode",
+    "toggle": "Toggle theme"
+  }
+}

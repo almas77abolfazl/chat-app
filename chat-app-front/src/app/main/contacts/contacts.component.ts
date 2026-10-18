@@ -8,6 +8,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { debounceTime, Subject, take } from 'rxjs';
 import { MainService } from '../main.service';
 import { MatIconModule } from '@angular/material/icon';
+import { I18nPipe } from '../../helpers/i18n.pipe';
 
 interface ContactUser {
   _id: string;
@@ -24,7 +25,7 @@ interface ContactUser {
 @Component({
   selector: 'app-contacts',
   standalone: true,
-  imports: [CommonModule, FontAwesomeModule, FormsModule, MatInputModule, MatButtonModule, MatIconModule],
+  imports: [CommonModule, FontAwesomeModule, FormsModule, MatInputModule, MatButtonModule, MatIconModule, I18nPipe],
   templateUrl: './contacts.component.html',
   styleUrl: './contacts.component.scss',
 })

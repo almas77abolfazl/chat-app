@@ -1,10 +1,10 @@
 <div class="chat-list-container">
   <div class="chat-list-header">
-    <div class="chat-list-title">گفتگوهای شما</div>
+    <div class="chat-list-title">{{ 'chat.title' | i18n }}</div>
     <div class="search-container">
       <input
         type="text"
-        placeholder="جستجو یا شروع گفتگو..."
+        [placeholder]="'search.placeholder' | i18n"
         class="search-input"
         [(ngModel)]="searchQuery"
         (ngModelChange)="onSearchChange($event)"
@@ -16,7 +16,7 @@
   @if (searchResults.length > 0) {
   <div class="chat-list">
     <div class="search-results">
-      <div class="search-results-title">نتایج جستجو</div>
+      <div class="search-results-title">{{ 'search.searchResults' | i18n }}</div>
       @for (result of searchResults; track $index) {
       <div class="search-result-item" (click)="selectSearchResult(result)">
         <div class="result-avatar">
@@ -24,7 +24,7 @@
         </div>
         <div class="chat-info">
           <div class="result-name">{{ result.firstName }} {{ result.lastName }}</div>
-          <div class="result-type">شروع گفتگو</div>
+          <div class="result-type">{{ 'chat.startChat' | i18n }}</div>
         </div>
         <fa-icon [icon]="['fas', 'arrow-left']" class="result-arrow"></fa-icon>
       </div>
@@ -44,9 +44,9 @@
         <div class="chat-avatar">
           @if (chat.isGroup || chat.isChannel) {
           <fa-icon [icon]="['fas', chat.isChannel ? 'broadcast-tower' : 'users']" class="group-icon"></fa-icon>
-        } @else if (chat.avatar && !avatarBroken(chat._id)) {
-        <img [src]="chat.avatar" alt="Avatar" (error)="markAvatarBroken(chat._id)" />
-        } @else {
+          } @else if (chat.avatar && !avatarBroken(chat._id)) {
+          <img [src]="chat.avatar" alt="Avatar" (error)="markAvatarBroken(chat._id)" />
+          } @else {
           <div class="chat-avatar-initials" [style.background]="avatarBg(chat)">
             {{ initials(chat) }}
           </div>
@@ -67,11 +67,11 @@
             <fa-icon [icon]="['fas', 'tag']" class="channel-tag"></fa-icon>
             }
           </div>
-          <div class="chat-last-message">{{ chat.lastMessage?.content ?? 'بدون پیام' }}</div>
+          <div class="chat-last-message">{{ chat.lastMessage?.content ?? ('chat.noMessages' | i18n) }}</div>
         </div>
         <div class="chat-meta">
           @if (chat.isOnline) {
-          <div class="chat-status-online">آنلاین</div>
+          <div class="chat-status-online">{{ 'status.online' | i18n }}</div>
           } @else if (chat.lastSeen) {
           <div class="chat-status-offline">آخرین seen: {{ chat.lastSeen | date:'short' }}</div>
           }
@@ -88,14 +88,14 @@
         <div class="empty-illustration">
           <fa-icon [icon]="['fas', 'comments']" class="empty-icon"></fa-icon>
         </div>
-        <p class="empty-title">گفتگویی ندارید</p>
-        <p class="empty-subtitle">روی آیکون پلاچ یا دستیار هوشمند بزنید تا شروع کنید</p>
+        <p class="empty-title">{{ 'chat.empty' | i18n }}</p>
+        <p class="empty-subtitle">{{ 'chat.selectOrStart' | i18n }}</p>
       </div>
     </div>
   </div>
   }
 
-  <div class="new-chat-button" title="ساخت گفتگو جدید" (click)="mainService.openCreateChat()">
+  <div class="new-chat-button" [attr.title]="'chat.newChat' | i18n" (click)="mainService.openCreateChat()">
     <fa-icon [icon]="['fas', 'plus']"></fa-icon>
   </div>
 </div>

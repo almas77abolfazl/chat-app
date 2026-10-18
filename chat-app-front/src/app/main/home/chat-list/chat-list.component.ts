@@ -5,10 +5,11 @@ import { MainService } from '../../main.service';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, Subject, take } from 'rxjs';
 import { ChatListItem } from '../../../models/chat-list-item.model';
+import { I18nPipe } from '../../../helpers/i18n.pipe';
 
 @Component({
   selector: 'app-chat-list',
-  imports: [CommonModule, FontAwesomeModule, FormsModule],
+  imports: [CommonModule, FontAwesomeModule, FormsModule, I18nPipe],
   templateUrl: './chat-list.component.html',
   styleUrl: './chat-list.component.scss',
 })

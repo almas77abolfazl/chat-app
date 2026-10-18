@@ -9,6 +9,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
 import { registerAppIcons } from './icons';
 import { ThemeService } from './helpers/theme.service';
+import { TranslationService } from './helpers/translation.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -17,6 +18,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimationsAsync(),
     ThemeService,
+    TranslationService,
     {
       provide: APP_INITIALIZER,
       useFactory: (library: FaIconLibrary) => () => registerAppIcons(library),
@@ -27,6 +29,15 @@ export const appConfig: ApplicationConfig = {
       provide: APP_INITIALIZER,
       useFactory: (theme: ThemeService) => () => theme.setTheme(theme.theme),
       deps: [ThemeService],
+      multi: true,
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: (translation: TranslationService) => () => {
+        if (!translation.currentLang) return Promise.resolve();
+        return translation.loadLanguage(translation.currentLang);
+      },
+      deps: [TranslationService],
       multi: true,
     },
   ],

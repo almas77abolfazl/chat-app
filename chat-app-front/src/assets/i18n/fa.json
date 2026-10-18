@@ -1,0 +1,97 @@
+{
+  "chat": {
+    "title": "گفتگوها",
+    "noChat": "گفتگویی انتخاب نشده",
+    "selectOrStart": "یک گفتگو انتخاب کنید یا دستیار هوشمند را امتحان کنید",
+    "empty": "گفتگویی ندارید",
+    "newChat": "گفتگو جدید",
+    "lastMessage": "بدون پیام",
+    "startChat": "شروع گفتگو"
+  },
+  "contacts": {
+    "title": "مخاطبان",
+    "saved": "مخاطبان ذخیره شده",
+    "search": "جستجو بر اساس نام یا شماره موبایل...",
+    "searchResults": "نتایج جستجو",
+    "noResults": "مخاطب یافت نشد",
+    "searching": "در حال جستجو...",
+    "addNew": "اضافه کردن مخاطب جدید",
+    "offline": "آفلاین",
+    "noContacts": "مخاطبی ذخیره نکرده‌اید",
+    "phoneNumber": "شماره موبایل",
+    "firstName": "نام",
+    "lastName": "نام خانوادگی"
+  },
+  "groups": "گروه‌ها",
+  "channels": "کانال‌ها",
+  "new": "جدید",
+  "members": "عضو",
+  "publicChannel": "کانال عمومی",
+  "online": "آنلاین",
+  "chatWithContact": "شروع گفتگو با مخاطب",
+  "actions": {
+    "edit": "ویرایش",
+    "delete": "حذف",
+    "reaction": "واکنش",
+    "cancel": "لغو",
+    "save": "ذخیره",
+    "confirmDelete": "آیا از حذف این پیام اطمینان دارید؟",
+    "edited": "ویرایش شده",
+    "noMessages": "بدون پیام"
+  },
+  "profile": {
+    "editProfile": "ویرایش پروفایل",
+    "viewProfile": "نمایش پروفایل",
+    "about": "درباره",
+    "username": "نام کاربری",
+    "chatType": "نوع گفتگو",
+    "lastActivity": "آخرین فعالیت",
+    "members": "اعضاء",
+    "message": "ارسال پیام",
+    "call": "تماس صوتی",
+    "videoCall": "تماس ویدیویی",
+    "close": "بستن",
+    "activeNow": "در حال حاضر فعال است",
+    "directChat": "مکالمه مستقیم"
+  },
+  "agent": {
+    "title": "دستیار هوشمند",
+    "disabled": "دستیار هوشمند غیرفعال است. برای فعال‌سازی کلید LLM_API_KEY را تنظیم کنید.",
+    "summarize": "خلاصه گفتگو",
+    "extractTasks": "استخراج تسک",
+    "replySuggest": "پیشنهاد پاسخ",
+    "typing": "دستیار در حال پاسخ‌گویی"
+  },
+  "sidebar": {
+    "brand": "چت‌اپ",
+    "smartAssistant": "دستیار هوشمند",
+    "chats": "چت‌ها",
+    "profile": "پروفایل",
+    "logout": "خروج",
+    "theme": "تم",
+    "lightMode": "حالت روشن",
+    "darkMode": "حالت تیره",
+    "language": "زبان"
+  },
+  "search": {
+    "placeholder": "جستجو...",
+    "noResults": "نتیجه‌ای یافت نشد"
+  },
+  "status": {
+    "online": "آنلاین",
+    "offline": "آفلاین",
+    "lastSeen": "آخرین حضور"
+  },
+  "messages": {
+    "typing": "در حال تایپ...",
+    "read": "خوانده شده",
+    "delivered": "تحویل داده شده",
+    "sent": "ارسال شده",
+    "pending": "در حال ارسال..."
+  },
+  "theme": {
+    "lightMode": "حالت روشن",
+    "darkMode": "حالت تیره",
+    "toggle": "تغییر حالت نمایش"
+  }
+}

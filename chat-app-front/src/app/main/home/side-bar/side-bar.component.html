@@ -1,49 +1,53 @@
 <div class="sidebar" (close)="close.emit()">
   <div class="sidebar-header">
     @if (mobileOpen) {
-    <button class="icon-btn close-btn" (click)="close.emit()" aria-label="بستن منو">
+    <button class="icon-btn close-btn" (click)="close.emit()" [attr.aria-label]="'actions.close' | i18n">
       <fa-icon [icon]="['fas', 'times']"></fa-icon>
     </button>
     }
     <div class="sidebar-brand">
       <fa-icon [icon]="['fas', 'comments']"></fa-icon>
-      <span>چت‌اپ</span>
+      <span>{{ 'sidebar.brand' | i18n }}</span>
     </div>
 
-    <div class="menu-item agent-item" (click)="mainService.openAgentChat()" data-tooltip="دستیار هوشمند" data-tooltip-placement="left">
+    <div class="menu-item agent-item" (click)="mainService.openAgentChat()" [attr.data-tooltip]="'agent.title' | i18n" data-tooltip-placement="left">
       <fa-icon [icon]="['fas', 'robot']"></fa-icon>
-      <span>دستیار هوشمند</span>
+      <span>{{ 'agent.title' | i18n }}</span>
     </div>
 
     <div class="nav-section">
-      <div class="nav-title">گفتگوها</div>
+      <div class="nav-title">{{ 'chat.title' | i18n }}</div>
       @for (item of navItems; track $index) {
       <div
         class="menu-item"
         [class.active]="mainService.chatFilter === item.id"
         (click)="selectNav(item.id)"
-        [attr.data-tooltip]="item.title"
+        [attr.data-tooltip]="item.titleKey | i18n"
         data-tooltip-placement="left"
       >
         <fa-icon [icon]="['fas', item.icon]"></fa-icon>
-        <span>{{ item.title }}</span>
+        <span>{{ item.titleKey | i18n }}</span>
       </div>
       }
     </div>
   </div>
 
    <div class="sidebar-footer">
-    <div class="menu-item theme-toggle-item" (click)="toggleTheme()" data-tooltip="حالت نمایش" data-tooltip-placement="left">
+    <div class="menu-item theme-toggle-item" (click)="toggleTheme()" [attr.data-tooltip]="'theme.toggle' | i18n" data-tooltip-placement="left">
       <fa-icon [icon]="['fas', themeService.theme === 'dark' ? 'sun' : 'moon']"></fa-icon>
-      <span>{{ themeService.theme === 'dark' ? 'روشن' : 'تیره' }}</span>
+      <span>{{ themeService.theme === 'dark' ? ('theme.lightMode' | i18n) : ('theme.darkMode' | i18n) }}</span>
     </div>
-    <div class="menu-item" (click)="mainService.openEditProfileModal()" data-tooltip="پروفایل" data-tooltip-placement="left">
+    <div class="menu-item language-toggle-item" (click)="toggleLanguage()" [attr.data-tooltip]="'sidebar.language' | i18n" data-tooltip-placement="left">
+      <fa-icon [icon]="['fas', translationService.isRTL ? 'language' : 'earth']"></fa-icon>
+      <span>{{ translationService.isRTL ? 'فارسی' : 'English' }}</span>
+    </div>
+    <div class="menu-item" (click)="mainService.openEditProfileModal()" [attr.data-tooltip]="'sidebar.profile' | i18n" data-tooltip-placement="left">
       <fa-icon [icon]="['fas', 'user-circle']"></fa-icon>
-      <span>پروفایل</span>
+      <span>{{ 'sidebar.profile' | i18n }}</span>
     </div>
-    <div class="menu-item logout-item" (click)="mainService.logout()" data-tooltip="خروج" data-tooltip-placement="left">
+    <div class="menu-item logout-item" (click)="mainService.logout()" [attr.data-tooltip]="'sidebar.logout' | i18n" data-tooltip-placement="left">
       <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
-      <span>خروج</span>
+      <span>{{ 'sidebar.logout' | i18n }}</span>
     </div>
   </div>
 </div>

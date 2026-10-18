@@ -1,15 +1,15 @@
 <div class="contacts-page">
   <div class="header">
     <div class="header-row">
-      <div class="title">مخاطبان</div>
-      <button class="new-contact-btn" (click)="showNewContactForm = true" title="اضافه کردن مخاطب جدید">
+      <div class="title">{{ 'contacts.title' | i18n }}</div>
+      <button class="new-contact-btn" (click)="showNewContactForm = true" [attr.title]="'contacts.addNew' | i18n">
         <fa-icon [icon]="['fas', 'user-plus']"></fa-icon>
       </button>
     </div>
     <input
       type="text"
       class="search-input"
-      placeholder="جستجو بر اساس نام یا شماره موبایل..."
+      [placeholder]="'contacts.search' | i18n"
       [(ngModel)]="query"
       (ngModelChange)="onSearch($event)"
     />
@@ -20,26 +20,26 @@
     <input
       type="text"
       class="form-control"
-      placeholder="نام"
+      [placeholder]="'contacts.firstName' | i18n"
       [(ngModel)]="newContactFirstName"
     />
     <input
       type="text"
       class="form-control"
-      placeholder="نام خانوادگی"
+      [placeholder]="'contacts.lastName' | i18n"
       [(ngModel)]="newContactLastName"
     />
     <input
       type="text"
       class="form-control"
-      placeholder="شماره موبایل"
+      [placeholder]="'contacts.phoneNumber' | i18n"
       [(ngModel)]="newContactPhone"
     />
     <div class="form-actions">
-      <button class="btn btn-secondary" (click)="cancelNewContact()">لغو</button>
+      <button class="btn btn-secondary" (click)="cancelNewContact()">{{ 'actions.cancel' | i18n }}</button>
       <button class="btn btn-primary" [disabled]="!newContactPhone.trim()" (click)="addNewContact()">
         <fa-icon [icon]="['fas', 'check']"></fa-icon>
-        افزودن
+        {{ 'actions.save' | i18n }}
       </button>
     </div>
   </div>
@@ -48,7 +48,7 @@
   <div class="contacts-list">
     <!-- Saved contacts -->
     @if (contacts.length > 0) {
-    <div class="section-title">مخاطبان ذخیره شده</div>
+    <div class="section-title">{{ 'contacts.saved' | i18n }}</div>
     @for (contact of contacts; track contact._id) {
     <div class="contact-item contact-saved" (click)="pick(contact)">
       <div class="avatar">
@@ -62,11 +62,11 @@
         <div class="contact-name">{{ contact.firstName }} {{ contact.lastName }}</div>
         <div class="contact-status">
           @if (contact.isOnline) {
-          <span class="status-online">آنلاین</span>
+          <span class="status-online">{{ 'status.online' | i18n }}</span>
           } @else if (contact.lastSeen) {
-          آخرین حضور {{ contact.lastSeen | date: 'short' }}
+          {{ 'status.lastSeen' | i18n }}: {{ contact.lastSeen | date: 'short' }}
           } @else {
-          آفلاین
+          {{ 'status.offline' | i18n }}
           }
         </div>
       </div>
@@ -80,17 +80,17 @@
     @if (contacts.length === 0 && !showNewContactForm) {
     <div class="empty">
       <fa-icon [icon]="['fas', 'user-group']" class="empty-icon"></fa-icon>
-      <p>مخاطبی ذخیره نکرده‌اید</p>
+      <p>{{ 'contacts.noContacts' | i18n }}</p>
     </div>
     }
 
     <!-- Search results -->
     @if (query.trim()) {
-    <div class="section-title">نتایج جستجو</div>
+    <div class="section-title">{{ 'search.searchResults' | i18n }}</div>
     @if (loading) {
-    <div class="empty">در حال جستجو...</div>
+    <div class="empty">{{ 'contacts.searching' | i18n }}</div>
     } @else if (results.length === 0) {
-    <div class="empty">مخاطب یافت نشد</div>
+    <div class="empty">{{ 'search.noResults' | i18n }}</div>
     }
 
     @for (contact of results; track contact._id) {
