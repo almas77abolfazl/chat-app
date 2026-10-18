@@ -13,7 +13,6 @@ import {
 import { GroupService } from './group.service';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { AddMemberDto } from './dto/create-group.dto';
-import { LeaveGroupDto } from './dto/create-group.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RequestWithUser } from 'src/auth/interfaces/request-with-user.model';
 
@@ -55,7 +54,7 @@ export class GroupController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')
-  async getGroup(@Param('id') id: string, @Req() request: RequestWithUser) {
+  async getGroup(@Param('id') id: string) {
     const group = await this.groupService.findById(id);
     if (!group) throw new NotFoundException('Group not found');
     return group;
