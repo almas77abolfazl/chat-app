@@ -237,4 +237,48 @@ export class MessageGateway {
       });
     }
   }
+
+  @SubscribeMessage('messageEdit')
+  async handleMessageEdit(@MessageBody() data: { messageId: string; content: string }, @ConnectedSocket() client: Socket) {
+    try {
+      const user = client.data.user as IUser;
+      const updated = await this.messageService.editMessage(data.messageId, user._id as string, data.content);
+      const message = await this.messageModel.findById(data.messageId).exec();
+      if (message) {
+        const chatId = message.chat.toString();
+        const participantIds = await this.chatService.getParticipantIds(chatId);
+        for (const pid of participantIds) {
+          if (pid === user._id.toString()) {
+            client.emit('messageEdited', { messageId: data.messageId, message: updated });
+          } else {
+            this.server.to(pid).emit('messageEdited', { messageId: data.messageId, message: updated });
+          }
+        }
+      }
+    } catch (error) {
+      client.emit('messageError', { message: error?.message ?? 'Failed to edit message' });
+    }
+  }
+
+  @SubscribeMessage('messageDelete')
+  async handleMessageDelete(@MessageBody() data: { messageId: string }, @ConnectedSocket() client: Socket) {
+    try {
+      const user = client.data.user as IUser;
+      const message = await this.messageModel.findById(data.messageId).exec();
+      if (message) {
+        const chatId = message.chat.toString();
+        await this.messageService.deleteMessage(data.messageId, user._id as string);
+        const participantIds = await this.chatService.getParticipantIds(chatId);
+        for (const pid of participantIds) {
+          if (pid === user._id.toString()) {
+            client.emit('messageDeleted', { messageId: data.messageId });
+          } else {
+            this.server.to(pid).emit('messageDeleted', { messageId: data.messageId });
+          }
+        }
+      }
+    } catch (error) {
+      client.emit('messageError', { message: error?.message ?? 'Failed to delete message' });
+    }
+  }
 }

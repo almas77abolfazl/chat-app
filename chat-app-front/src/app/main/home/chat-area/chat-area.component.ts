@@ -6,6 +6,7 @@ import { take, takeUntil } from 'rxjs';
 import { Subscription } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { FormsModule } from '@angular/forms';
 import { ProfileComponent } from '../../profile/profile.component';
 import { Message } from '../../../models/message.model';
 import { ChatListItem } from '../../../models/chat-list-item.model';
@@ -14,7 +15,7 @@ import { Subject } from 'rxjs';
 @Component({
   selector: 'app-chat-area',
   standalone: true,
-  imports: [FontAwesomeModule, DatePipe, NgClass, MatButtonModule],
+  imports: [FontAwesomeModule, DatePipe, NgClass, MatButtonModule, FormsModule],
   templateUrl: './chat-area.component.html',
   styleUrl: './chat-area.component.scss',
 })
@@ -24,6 +25,8 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private typingSubscription: Subscription;
   typingUsers: string[] = [];
+  editMessageId: string | null = null;
+  editContent = '';
 
   ngOnInit() {
     // Mark messages as read when chat is opened
@@ -156,5 +159,45 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
 
   trackByIdx(index: number, _item: any): number {
     return index;
+  }
+
+  isEditing(messageId: string): boolean {
+    return this.editMessageId === messageId;
+  }
+
+  startEdit(message: Message) {
+    if (!this.ownMessage(message) || message.isDeleted) return;
+    this.editMessageId = message._id;
+    this.editContent = message.content;
+  }
+
+  cancelEdit() {
+    this.editMessageId = null;
+    this.editContent = '';
+  }
+
+  saveEdit() {
+    if (!this.editMessageId || !this.editContent.trim()) {
+      this.cancelEdit();
+      return;
+    }
+    this.mainService.editMessage(this.editMessageId, this.editContent.trim()).pipe(take(1)).subscribe({
+      next: () => {
+        this.cancelEdit();
+      },
+      error: () => {
+        this.cancelEdit();
+      },
+    });
+  }
+
+  deleteMessage(message: Message) {
+    if (!this.ownMessage(message)) return;
+    if (confirm('آیا از حذف این پیام اطمینان دارید؟')) {
+      this.mainService.deleteMessage(message._id).pipe(take(1)).subscribe({
+        next: () => {},
+        error: () => {},
+      });
+    }
   }
 }
