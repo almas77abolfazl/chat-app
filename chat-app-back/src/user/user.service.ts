@@ -111,14 +111,14 @@ export class UserService {
     return user;
   }
 
-  async getUserAvatar(userId: string): Promise<string> {
+  async getUserAvatar(userId: string): Promise<string | null> {
     const user = await this.userModel.findById(userId);
     if (!user || !user.profilePicture) {
-      throw new NotFoundException('Avatar not found');
+      return null;
     }
     const path = `./uploads/avatars/${user.profilePicture}`;
     if (!fs.existsSync(path)) {
-      throw new NotFoundException('Avatar file not found');
+      return null;
     }
     return fs.readFileSync(path).toString('base64');
   }

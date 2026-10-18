@@ -1,16 +1,15 @@
-import { Component, OnDestroy, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MainService } from '../../main.service';
 import { DatePipe, NgClass } from '@angular/common';
 import { take, takeUntil } from 'rxjs';
-import { Subscription } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 import { ProfileComponent } from '../../profile/profile.component';
 import { Message } from '../../../models/message.model';
 import { ChatListItem } from '../../../models/chat-list-item.model';
-import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-chat-area',
@@ -19,7 +18,7 @@ import { Subject } from 'rxjs';
   templateUrl: './chat-area.component.html',
   styleUrl: './chat-area.component.scss',
 })
-export class ChatAreaComponent implements OnInit, OnDestroy {
+export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   constructor(public mainService: MainService, private dialog: MatDialog) {}
   showScrollBottom = false;
   private destroy$ = new Subject<void>();
@@ -27,19 +26,36 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
   typingUsers: string[] = [];
   editMessageId: string | null = null;
   editContent = '';
+  brokenAvatars = new Set<string>();
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  @ViewChild('chatMessages') chatMessages!: ElementRef<HTMLElement>;
   userReactions: Map<string, string> = new Map();
 
   ngOnInit() {
-    // Mark messages as read when chat is opened
     this.mainService.chatOpened$.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.markCurrentChatMessagesRead();
+    });
+
+    this.mainService.messagesLoaded$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.scrollToBottom();
     });
 
     this.typingSubscription = this.mainService.typingUsers$.subscribe((typingMap) => {
       const chatId = this.mainService.currentChat?._id;
       this.typingUsers = chatId ? typingMap.get(chatId) || [] : [];
     });
+  }
+
+  ngAfterViewInit() {
+    this.scrollToBottom();
+  }
+
+  scrollToBottom() {
+    const el = this.chatMessages?.nativeElement;
+    if (el) {
+      el.scrollTop = el.scrollHeight;
+      this.showScrollBottom = false;
+    }
   }
 
   ngOnDestroy() {
@@ -96,6 +112,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
       const count = (chat.participants || []).length;
       return `${count} عضو`;
     }
+    if (chat?.isOnline) return 'آنلاین';
     return '';
   }
 
@@ -116,6 +133,14 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
     return '?';
   }
 
+  avatarBroken(chatId: string): boolean {
+    return this.brokenAvatars.has(chatId);
+  }
+
+  markAvatarBroken(chatId: string): void {
+    this.brokenAvatars.add(chatId);
+  }
+
   onScroll(event?: Event) {
     const el = event?.target as HTMLElement;
     if (!el || !this.mainService.currentChat) return;
@@ -127,21 +152,20 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
 
     if (this.mainService.currentPage < this.mainService.totalPages) {
       const previousHeight = el.scrollHeight;
+      const currentScrollTop = el.scrollTop;
       this.mainService
         .loadMessages(this.mainService.currentPage + 1)
         .pipe(take(1))
-        .subscribe(() => {
-          if (el) el.scrollTop = el.scrollHeight - previousHeight;
+        .subscribe({
+          next: () => {
+            requestAnimationFrame(() => {
+              const diff = el.scrollHeight - previousHeight;
+              el.scrollTop = currentScrollTop + diff;
+            });
+          },
+          error: () => {},
         });
     }
-  }
-
-  scrollToBottom() {
-    const el = document.querySelector('.chat-messages') as HTMLElement;
-    if (el) {
-      el.scrollTop = el.scrollHeight;
-    }
-    this.showScrollBottom = false;
   }
 
   goBack() {
@@ -152,6 +176,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
     const dialogRef = this.dialog.open(ProfileComponent, {
       width: '500px',
       data: this.mainService.currentChat,
+      panelClass: 'rtl-dialog',
     });
     dialogRef
       .afterClosed()
@@ -208,7 +233,6 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
     const currentEmoji = this.userReactions.get(messageId);
 
     if (currentEmoji === emoji) {
-      // Remove reaction
       this.mainService.removeReaction(messageId).pipe(take(1)).subscribe({
         next: () => {
           this.userReactions.delete(messageId);
@@ -216,7 +240,6 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
         error: () => {},
       });
     } else {
-      // Add/change reaction
       this.mainService.addReaction(messageId, emoji).pipe(take(1)).subscribe({
         next: () => {
           this.userReactions.set(messageId, emoji);
@@ -238,15 +261,11 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
     const chatId = this.mainService.currentChat?._id;
     if (!chatId) return;
 
-    // Reset input to allow same file selection
     input.value = '';
 
     this.mainService.sendMedia(chatId, file).pipe(take(1)).subscribe({
-      next: (res) => {
-        console.log('Media sent:', res);
-      },
+      next: (res) => {},
       error: (err) => {
-        console.error('Media send error:', err);
         this.mainService.snackbar.error('خطا در ارسال فایل', 3000);
       },
     });
