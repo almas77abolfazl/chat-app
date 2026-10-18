@@ -325,6 +325,42 @@ export class MainService {
       }
     });
 
+    this.socketService.on('messageEdited', (payload: { messageId: string; message: Message }) => {
+      this.chatItems.forEach((chatItem) => {
+        chatItem.messages = chatItem.messages || [];
+        const idx = chatItem.messages.findIndex((m) => m._id === payload.messageId);
+        if (idx !== -1) {
+          chatItem.messages[idx] = payload.message;
+          if (this.currentChat?._id === chatItem._id) {
+            this.currentChat.messages = this.currentChat.messages || [];
+            const cIdx = this.currentChat.messages.findIndex((m) => m._id === payload.messageId);
+            if (cIdx !== -1) {
+              this.currentChat.messages[cIdx] = payload.message;
+            }
+          }
+        }
+      });
+    });
+
+    this.socketService.on('messageDeleted', (payload: { messageId: string }) => {
+      this.chatItems.forEach((chatItem) => {
+        chatItem.messages = chatItem.messages || [];
+        const idx = chatItem.messages.findIndex((m) => m._id === payload.messageId);
+        if (idx !== -1) {
+          chatItem.messages[idx].isDeleted = true;
+          chatItem.messages[idx].content = 'این پیام حذف شد';
+          if (this.currentChat?._id === chatItem._id) {
+            this.currentChat.messages = this.currentChat.messages || [];
+            const cIdx = this.currentChat.messages.findIndex((m) => m._id === payload.messageId);
+            if (cIdx !== -1) {
+              this.currentChat.messages[cIdx].isDeleted = true;
+              this.currentChat.messages[cIdx].content = 'این پیام حذف شد';
+            }
+          }
+        }
+      });
+    });
+
     this.socketService.on('typingStatus', (payload: { chatId: string; userId: string; userName: string; isTyping: boolean }) => {
       const current = new Map<string, string[]>(this.typingUsersSubject.value as Iterable<readonly [string, string[]]>);
       const chatUsers: string[] = current.get(payload.chatId) || [];
@@ -611,6 +647,14 @@ export class MainService {
 
   removeContact(contactId: string): Observable<any> {
     return this.httpRequestService.delete('user/contacts', contactId);
+  }
+
+  editMessage(messageId: string, content: string): Observable<any> {
+    return this.httpRequestService.put('message', messageId, { content });
+  }
+
+  deleteMessage(messageId: string): Observable<any> {
+    return this.httpRequestService.delete('message', messageId);
   }
 
   sendMessage(currentChat: ChatListItem, input: HTMLTextAreaElement) {

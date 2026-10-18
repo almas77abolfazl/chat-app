@@ -39,6 +39,15 @@ export class Message {
 
   @Prop()
   readAt: Date;
+
+  @Prop()
+  editedAt: Date;
+
+  @Prop()
+  deletedAt: Date;
+
+  @Prop({ default: false })
+  isDeleted: boolean;
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);

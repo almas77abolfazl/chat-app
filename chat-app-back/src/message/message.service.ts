@@ -87,6 +87,35 @@ export class MessageService {
       .exec();
   }
 
+  async editMessage(messageId: string, userId: string, newContent: string): Promise<any> {
+    const message = await this.messageModel.findById(messageId).exec();
+    if (!message) throw new NotFoundException('Message not found');
+    if (message.sender.toString() !== userId) {
+      throw new ForbiddenException('You can only edit your own messages');
+    }
+    if (message.isDeleted) {
+      throw new ForbiddenException('Cannot edit a deleted message');
+    }
+    message.content = newContent.trim();
+    message.editedAt = new Date();
+    await message.save();
+
+    const populated = await this.messageModel.findById(message._id).populate('sender', 'firstName lastName profilePicture').exec();
+    return this.hydrateMessage(populated);
+  }
+
+  async deleteMessage(messageId: string, userId: string): Promise<void> {
+    const message = await this.messageModel.findById(messageId).exec();
+    if (!message) throw new NotFoundException('Message not found');
+    if (message.sender.toString() !== userId) {
+      throw new ForbiddenException('You can only delete your own messages');
+    }
+    message.isDeleted = true;
+    message.deletedAt = new Date();
+    message.content = 'این پیام حذف شد';
+    await message.save();
+  }
+
   async getMessagesByChat(
     chatId: string,
     userId: string,
@@ -144,6 +173,9 @@ export class MessageService {
       read: message.read,
       deliveredAt: message.deliveredAt,
       readAt: message.readAt,
+      editedAt: message.editedAt,
+      deletedAt: message.deletedAt,
+      isDeleted: message.isDeleted,
     };
   }
 }

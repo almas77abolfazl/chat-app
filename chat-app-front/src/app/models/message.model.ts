@@ -15,4 +15,7 @@ export interface Message {
   read?: boolean;
   readAt?: Date;
   deliveredAt?: Date;
+  editedAt?: Date;
+  deletedAt?: Date;
+  isDeleted?: boolean;
 }

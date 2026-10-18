@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Query, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query, Req, UseGuards, Put, Delete, Param } from '@nestjs/common';
 import { MessageService } from './message.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RequestWithUser } from 'src/auth/interfaces/request-with-user.model';
@@ -35,5 +35,21 @@ export class MessageController {
   @UseGuards(JwtAuthGuard)
   async markChatRead(@Req() request: RequestWithUser, @Body() body: { chatId: string }) {
     return this.messageService.markChatMessagesRead(body.chatId, request.user._id as string);
+  }
+
+  @Put(':messageId')
+  @UseGuards(JwtAuthGuard)
+  async editMessage(
+    @Req() request: RequestWithUser,
+    @Param('messageId') messageId: string,
+    @Body() body: { content: string },
+  ) {
+    return this.messageService.editMessage(messageId, request.user._id as string, body.content);
+  }
+
+  @Delete(':messageId')
+  @UseGuards(JwtAuthGuard)
+  async deleteMessage(@Req() request: RequestWithUser, @Param('messageId') messageId: string) {
+    return this.messageService.deleteMessage(messageId, request.user._id as string);
   }
 }

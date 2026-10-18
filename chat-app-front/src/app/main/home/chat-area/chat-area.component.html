@@ -73,12 +73,43 @@
       @if (mainService.currentChat?.isGroup && !ownMessage(message)) {
       <div class="message-sender">{{ senderName(message) }}</div>
       }
+      @if (ownMessage(message) && !isEditing(message._id)) {
+      <div class="message-actions">
+        <button class="msg-action edit-btn" (click)="startEdit(message)" title="ویرایش">
+          <fa-icon [icon]="['fas', 'pen']" size="xs"></fa-icon>
+        </button>
+        <button class="msg-action delete-btn" (click)="deleteMessage(message)" title="حذف">
+          <fa-icon [icon]="['fas', 'trash']" size="xs"></fa-icon>
+        </button>
+      </div>
+      }
+      @if (isEditing(message._id)) {
+      <div class="edit-input-wrapper">
+        <textarea
+          class="edit-input"
+          [(ngModel)]="editContent"
+          (keydown.enter)="saveEdit()"
+        ></textarea>
+        <div class="edit-actions">
+          <button class="edit-cancel" (click)="cancelEdit()">لغو</button>
+          <button class="edit-save app-button" (click)="saveEdit()">ذخیره</button>
+        </div>
+      </div>
+      } @else {
       <div class="message-content">
+        @if (message.isDeleted) {
+        <span class="deleted-msg">این پیام حذف شد</span>
+        } @else {
         {{ message.content }}
         @if (message.isStreaming) {
         <span class="agent-cursor"></span>
         }
+        @if (message.editedAt) {
+        <span class="edit-badge">ویرایش شده</span>
+        }
+        }
       </div>
+      }
       <div class="message-time">
         {{ message.createdAt | date: 'shortTime' }}
         @if (ownMessage(message)) {
