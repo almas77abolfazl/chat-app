@@ -377,39 +377,91 @@
           }
         }
 
-        .message-actions {
-          position: absolute;
-          inset-block-start: 0.2rem;
-          inset-inline-end: 0.2rem;
+    .message-actions {
+      position: absolute;
+      inset-block-start: 0.2rem;
+      inset-inline-end: 0.2rem;
+      display: flex;
+      gap: 0.25rem;
+      opacity: 0;
+      transition: opacity var(--transition-fast);
+    }
+
+    .sent:hover .message-actions,
+    .received:hover .message-actions {
+      opacity: 1;
+    }
+
+    .msg-action {
+      width: 2rem;
+      height: 2rem;
+      border-radius: var(--radius-full);
+      border: none;
+      background: rgba(26, 27, 46, 0.06);
+      color: var(--color-text-secondary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: all var(--transition-fast);
+    }
+
+    .msg-action:hover {
+      background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+      color: var(--color-danger);
+    }
+          margin-top: 0.35rem;
+          background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+          border: 1px solid color-mix(in srgb, var(--color-primary) 24%, transparent);
+          border-radius: var(--radius-md);
+          padding: 0.5rem;
+        }
+
+        .edit-input {
+          width: 100%;
+          resize: vertical;
+          min-height: 2.5rem;
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-sm);
+          background: var(--color-surface-solid);
+          font-family: inherit;
+          font-size: 0.9rem;
+          color: var(--color-text);
+          padding: 0.5rem 0.75rem;
+          outline: none;
+          transition: border var(--transition-fast);
+        }
+
+        .edit-input:focus {
+          border-color: var(--color-primary);
+        }
+
+        .edit-actions {
           display: flex;
-          gap: 0.25rem;
-          opacity: 0;
-          transition: opacity var(--transition-fast);
+          justify-content: flex-end;
+          gap: 0.5rem;
+          margin-top: 0.5rem;
         }
 
-        .sent:hover .message-actions,
-        .received:hover .message-actions {
-          opacity: 1;
-        }
-
-        .msg-action {
-          width: 2rem;
-          height: 2rem;
-          border-radius: var(--radius-full);
+        .edit-cancel {
+          background: none;
           border: none;
-          background: rgba(26, 27, 46, 0.06);
           color: var(--color-text-secondary);
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
+          font-family: inherit;
+          font-size: 0.85rem;
           cursor: pointer;
-          font-size: 0.8rem;
-          transition: all var(--transition-fast);
+          padding: 0.25rem 0.75rem;
+          border-radius: var(--radius-md);
+          transition: background var(--transition-fast);
         }
 
-        .msg-action:hover {
-          background: color-mix(in srgb, var(--color-danger) 10%, transparent);
-          color: var(--color-danger);
+        .edit-cancel:hover {
+          background: rgba(26, 27, 46, 0.06);
+        }
+
+        .edit-save {
+          width: auto;
         }
 
         .edit-input-wrapper {
@@ -465,93 +517,9 @@
         .edit-save {
           width: auto;
         }
-
-    .deleted-msg {
       color: var(--color-text-faint);
       font-style: italic;
       font-size: 0.85rem;
-    }
-
-    .reactions-bar {
-      display: flex;
-      gap: 0.4rem;
-      padding: 0.35rem 0.5rem;
-      margin-top: 0.25rem;
-      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-      border-radius: var(--radius-full);
-      border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
-      font-size: 0.75rem;
-    }
-
-    .reaction-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.2rem;
-      padding: 0.15rem 0.45rem;
-      border-radius: var(--radius-full);
-      background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-      border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      font-size: 0.7rem;
-    }
-
-    .reaction-item:hover {
-      background: color-mix(in srgb, var(--color-primary) 20%, transparent);
-      transform: translateY(-1px);
-    }
-
-    .reaction-emoji {
-      font-size: 0.85rem;
-    }
-
-    .reaction-count {
-      font-weight: 700;
-      font-size: 0.7rem;
-    }
-
-    .reaction-user-you {
-      font-size: 0.6rem;
-      background: var(--color-primary);
-      color: #ffffff;
-      padding: 0.05rem 0.2rem;
-      border-radius: var(--radius-full);
-      margin-inline-start: 0.2rem;
-    }
-
-    .reaction-btn {
-      width: 2rem;
-      height: 2rem;
-      border-radius: var(--radius-full);
-      border: none;
-      background: rgba(26, 27, 46, 0.06);
-      color: var(--color-text-secondary);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 0.8rem;
-      transition: all var(--transition-fast);
-    }
-
-    .reaction-btn:hover {
-      background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-      color: var(--color-primary-dark);
-    }
-
-    .msg-actions-group {
-      display: flex;
-      gap: 0.2rem;
-      position: absolute;
-      inset-block-start: 0.2rem;
-      inset-inline-end: 0.2rem;
-      opacity: 0;
-      transition: opacity var(--transition-fast);
-    }
-
-    .sent:hover .msg-actions-group,
-    .received:hover .msg-actions-group {
-      opacity: 1;
     }
 
   .chat-input-container {
@@ -764,5 +732,4 @@
   }
 }
 }
-}
-}
+
