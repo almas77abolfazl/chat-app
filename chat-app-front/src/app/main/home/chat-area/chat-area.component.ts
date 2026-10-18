@@ -3,6 +3,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MainService } from '../../main.service';
 import { DatePipe, NgClass } from '@angular/common';
 import { take, takeUntil } from 'rxjs';
+import { Subscription } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { ProfileComponent } from '../../profile/profile.component';
@@ -21,17 +22,32 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
   constructor(public mainService: MainService, private dialog: MatDialog) {}
   showScrollBottom = false;
   private destroy$ = new Subject<void>();
+  private typingSubscription: Subscription;
+  typingUsers: string[] = [];
 
   ngOnInit() {
     // Mark messages as read when chat is opened
     this.mainService.chatOpened$.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.markCurrentChatMessagesRead();
     });
+
+    this.typingSubscription = this.mainService.typingUsers$.subscribe((typingMap) => {
+      const chatId = this.mainService.currentChat?._id;
+      this.typingUsers = chatId ? typingMap.get(chatId) || [] : [];
+    });
   }
 
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
+    this.typingSubscription?.unsubscribe();
+  }
+
+  onTyping() {
+    const chatId = this.mainService.currentChat?._id;
+    if (chatId) {
+      this.mainService.sendTypingStart(chatId);
+    }
   }
 
   private markCurrentChatMessagesRead() {
@@ -99,7 +115,6 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
     const el = event?.target as HTMLElement;
     if (!el || !this.mainService.currentChat) return;
 
-    // دکمه ورود به آخرین پیام را فقط وقتی نشان بده که کاربر به بالا اسکرول کرده
     const atBottom = el.scrollHeight - el.scrollTop <= el.clientHeight + 8;
     this.showScrollBottom = !atBottom;
 
