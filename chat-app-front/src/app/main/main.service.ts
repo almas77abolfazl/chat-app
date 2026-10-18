@@ -38,8 +38,8 @@ export class MainService {
 
   constructor(
     public authService: AuthService,
+    public httpRequestService: HttpRequestService,
     private dialog: MatDialog,
-    private httpRequestService: HttpRequestService,
     private socketService: SocketService,
     private cacheService: CacheService
   ) {
@@ -266,6 +266,11 @@ export class MainService {
         } else {
           chatItem.messageCount = (chatItem.messageCount || 0) + 1;
         }
+
+        // Mark received message as delivered (if not own message)
+        if (msg.senderId !== this.authService.getUserId() && msg.status !== 'delivered') {
+          this.socketService.emit('messageDelivered', { messageId: msg._id });
+        }
       });
 
     this.socketService.on('messageSent', (payload: { chatId: string; message: Message }) => {
@@ -280,6 +285,37 @@ export class MainService {
       if (!exists) {
         chatItem.messages.push(msg);
         chatItem.lastMessage = msg;
+      }
+    });
+
+    this.socketService.on('messageStatusUpdated', (payload: { messageId: string; status: string; userId: string }) => {
+      // Update message status in all chats that contain this message
+      this.chatItems.forEach((chatItem) => {
+        chatItem.messages = chatItem.messages || [];
+        const msg = chatItem.messages.find((m) => m._id === payload.messageId);
+        if (msg) {
+          msg.status = payload.status as 'sent' | 'delivered' | 'read';
+          if (payload.status === 'read') {
+            msg.read = true;
+            msg.readAt = new Date();
+          } else if (payload.status === 'delivered') {
+            msg.deliveredAt = new Date();
+          }
+        }
+      });
+      // Also update currentChat if separate
+      if (this.currentChat) {
+        this.currentChat.messages = this.currentChat.messages || [];
+        const msg = this.currentChat.messages.find((m) => m._id === payload.messageId);
+        if (msg) {
+          msg.status = payload.status as 'sent' | 'delivered' | 'read';
+          if (payload.status === 'read') {
+            msg.read = true;
+            msg.readAt = new Date();
+          } else if (payload.status === 'delivered') {
+            msg.deliveredAt = new Date();
+          }
+        }
       }
     });
   }

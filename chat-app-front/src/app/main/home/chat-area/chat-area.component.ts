@@ -1,13 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MainService } from '../../main.service';
 import { DatePipe, NgClass } from '@angular/common';
-import { take } from 'rxjs';
+import { take, takeUntil } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { ProfileComponent } from '../../profile/profile.component';
 import { Message } from '../../../models/message.model';
 import { ChatListItem } from '../../../models/chat-list-item.model';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-chat-area',
@@ -16,9 +17,35 @@ import { ChatListItem } from '../../../models/chat-list-item.model';
   templateUrl: './chat-area.component.html',
   styleUrl: './chat-area.component.scss',
 })
-export class ChatAreaComponent {
+export class ChatAreaComponent implements OnInit, OnDestroy {
   constructor(public mainService: MainService, private dialog: MatDialog) {}
   showScrollBottom = false;
+  private destroy$ = new Subject<void>();
+
+  ngOnInit() {
+    // Mark messages as read when chat is opened
+    this.mainService.chatOpened$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.markCurrentChatMessagesRead();
+    });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private markCurrentChatMessagesRead() {
+    const chatId = this.mainService.currentChat?._id;
+    if (!chatId) return;
+
+    this.mainService.httpRequestService
+      .post(`message/chat-read`, { chatId })
+      .pipe(take(1))
+      .subscribe({
+        next: () => {},
+        error: () => {},
+      });
+  }
 
   ownId(): string {
     return this.mainService.authService.getUserId();

@@ -256,9 +256,13 @@
                color: var(--color-primary);
              }
 
-             &.msg-read {
-               color: var(--color-success);
-             }
+              &.msg-read {
+                color: var(--color-success);
+              }
+
+              &.msg-sent {
+                color: var(--color-text-faint);
+              }
            }
          }
        }
