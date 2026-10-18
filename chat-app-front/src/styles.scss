@@ -268,6 +268,140 @@ textarea {
   color: #ffffff;
 }
 
+/* ---------- Media messages (Telegram-like) ---------- */
+.msg-image,
+.msg-video {
+  max-width: 40%;
+  max-height: 30rem;
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+  display: block;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+}
+
+.msg-image.sent,
+.msg-video.sent {
+  align-self: flex-end;
+}
+
+.msg-voice,
+.msg-file {
+  max-width: 40%;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.9rem;
+  background: var(--color-surface-glass);
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+  cursor: pointer;
+  box-shadow: var(--shadow-xs);
+}
+
+.msg-voice.sent,
+.msg-file.sent {
+  align-self: flex-end;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-gradient-end));
+  color: var(--color-on-primary);
+}
+
+.msg-voice.sent .voice-duration,
+.msg-file.sent .file-name,
+.msg-file.sent .file-size {
+  color: var(--color-on-primary);
+}
+
+.voice-icon,
+.file-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.voice-audio {
+  width: 10rem;
+  margin-inline-start: 0.4rem;
+}
+
+.voice-duration {
+  font-size: 0.78rem;
+  font-weight: 600;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.file-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.file-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 0.15rem;
+}
+
+.file-size {
+  font-size: 0.72rem;
+  opacity: 0.8;
+}
+
+.file-download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: var(--radius-full);
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.file-download:hover {
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+}
+
+.msg-file.sent .file-download {
+  color: var(--color-on-primary);
+}
+
+.deleted-msg {
+  color: var(--color-text-faint);
+  font-style: italic;
+  font-size: 0.85rem;
+}
+
+.attach-label {
+  width: 2.7rem;
+  height: 2.7rem;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-solid);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.attach-label:hover {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary-dark);
+  border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
+}
+
+.attach-icon {
+  pointer-events: none;
+}
+
 /* ---------- Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   *,
