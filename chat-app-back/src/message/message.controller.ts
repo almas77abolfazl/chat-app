@@ -1,7 +1,23 @@
-import { Controller, Get, Post, Body, Query, Req, UseGuards, Put, Delete, Param } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Query,
+  Req,
+  UseGuards,
+  Put,
+  Delete,
+  Param,
+  UploadedFile,
+  UseInterceptors,
+  BadRequestException,
+} from '@nestjs/common';
 import { MessageService } from './message.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RequestWithUser } from 'src/auth/interfaces/request-with-user.model';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { mediaMulterOptions } from 'src/helpers/media-upload';
 
 @Controller('message')
 export class MessageController {
@@ -51,5 +67,36 @@ export class MessageController {
   @UseGuards(JwtAuthGuard)
   async deleteMessage(@Req() request: RequestWithUser, @Param('messageId') messageId: string) {
     return this.messageService.deleteMessage(messageId, request.user._id as string);
+  }
+
+  @Post('media')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('file', mediaMulterOptions))
+  async uploadMedia(
+    @Req() request: RequestWithUser,
+    @UploadedFile() file: Express.Multer.File,
+    @Body('chatId') chatId: string,
+    @Body('content') content: string = '',
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded!');
+    }
+    if (!chatId) {
+      throw new BadRequestException('chatId is required');
+    }
+
+    const fileUrl = `/uploads/media/${file.filename}`;
+    return this.messageService.saveMessageToChat(chatId, request.user._id as string, content, {
+      mediaType: file.mimetype.startsWith('image/')
+        ? 'image'
+        : file.mimetype.startsWith('video/')
+        ? 'video'
+        : file.mimetype.startsWith('audio/')
+        ? 'voice'
+        : 'file',
+      fileUrl,
+      fileName: file.originalname,
+      fileSize: file.size,
+    });
   }
 }

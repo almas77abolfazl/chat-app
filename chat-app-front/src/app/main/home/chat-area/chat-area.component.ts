@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MainService } from '../../main.service';
 import { DatePipe, NgClass } from '@angular/common';
@@ -27,6 +27,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
   typingUsers: string[] = [];
   editMessageId: string | null = null;
   editContent = '';
+  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
 
   ngOnInit() {
     // Mark messages as read when chat is opened
@@ -199,5 +200,36 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
         error: () => {},
       });
     }
+  }
+
+  onFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+
+    const file = input.files[0];
+    const chatId = this.mainService.currentChat?._id;
+    if (!chatId) return;
+
+    // Reset input to allow same file selection
+    input.value = '';
+
+    this.mainService.sendMedia(chatId, file).pipe(take(1)).subscribe({
+      next: (res) => {
+        console.log('Media sent:', res);
+      },
+      error: (err) => {
+        console.error('Media send error:', err);
+        this.mainService.snackbar.error('خطا در ارسال فایل', 3000);
+      },
+    });
+  }
+
+  formatFileSize(bytes: number): string {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const dm = 3;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   }
 }

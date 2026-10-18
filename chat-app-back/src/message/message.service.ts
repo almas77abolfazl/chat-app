@@ -17,7 +17,12 @@ export class MessageService {
     return chat;
   }
 
-  async saveMessageToChat(chatId: string, senderId: string, content: string): Promise<any> {
+  async saveMessageToChat(
+    chatId: string,
+    senderId: string,
+    content: string,
+    media?: { mediaType: string; fileUrl: string; fileName: string; fileSize: number },
+  ): Promise<any> {
     const chat = await this.findChatForMessage(chatId);
     const senderObjectId = new Types.ObjectId(senderId);
 
@@ -36,8 +41,12 @@ export class MessageService {
       sender: senderObjectId,
       receiver: receiver ?? undefined,
       chat: chat._id,
-      content,
+      content: content || '',
       read: false,
+      mediaType: media?.mediaType || null,
+      fileUrl: media?.fileUrl || null,
+      fileName: media?.fileName || null,
+      fileSize: media?.fileSize || null,
     });
 
     chat.messages.push(message._id as unknown as Types.ObjectId);
@@ -176,6 +185,10 @@ export class MessageService {
       editedAt: message.editedAt,
       deletedAt: message.deletedAt,
       isDeleted: message.isDeleted,
+      mediaType: message.mediaType,
+      fileUrl: message.fileUrl,
+      fileName: message.fileName,
+      fileSize: message.fileSize,
     };
   }
 }

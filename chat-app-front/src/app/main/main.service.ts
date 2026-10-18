@@ -46,7 +46,7 @@ export class MainService {
     private dialog: MatDialog,
     private socketService: SocketService,
     private cacheService: CacheService,
-    private snackbar: SnackbarService
+    public snackbar: SnackbarService
   ) {
     this.getAvatar(authService.getUserId()).then((avatar: string) => {
       if (avatar) this.pictureSrc = avatar;
@@ -655,6 +655,14 @@ export class MainService {
 
   deleteMessage(messageId: string): Observable<any> {
     return this.httpRequestService.delete('message', messageId);
+  }
+
+  sendMedia(chatId: string, file: File, content: string = ''): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('chatId', chatId);
+    formData.append('content', content);
+    return this.httpRequestService.postFile('message/media', formData);
   }
 
   sendMessage(currentChat: ChatListItem, input: HTMLTextAreaElement) {

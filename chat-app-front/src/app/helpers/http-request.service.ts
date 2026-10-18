@@ -42,4 +42,9 @@ export class HttpRequestService {
     headers = headers ?? new HttpHeaders();
     return this.http.delete(`${this.ROOT_URL}/${uri}/${id}`, { headers });
   }
+
+  public postFile(uri: string, formData: FormData, headers?: HttpHeaders): Observable<any> {
+    // Do not set Content-Type for FormData; browser sets multipart boundary automatically
+    return this.http.post(`${this.ROOT_URL}/${uri}`, formData, { headers });
+  }
 }
