@@ -42,89 +42,96 @@
   .close-btn {
     padding: 0.5rem 0.5rem 1rem;
     border-bottom: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  }
 
-    .sidebar-brand {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      padding: 0 0.5rem 1rem;
-      font-weight: 800;
+  .sidebar-header {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0 0.5rem 1rem;
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--color-text);
+    letter-spacing: -0.01em;
+
+    fa-icon {
+      font-size: 1.5rem;
+      color: var(--color-primary);
+      filter: drop-shadow(0 0 6px color-mix(in srgb, var(--color-primary) 50%, transparent));
+    }
+  }
+
+  .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 0.75rem;
+    margin-bottom: 0.2rem;
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    position: relative;
+    transition: background var(--transition), color var(--transition),
+      transform var(--transition-fast);
+    overflow: hidden;
+
+    fa-icon {
       font-size: 1.1rem;
+      color: var(--color-text-faint);
+      transition: color var(--transition), transform var(--transition-fast);
+    }
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
       color: var(--color-text);
-      letter-spacing: -0.01em;
+      transform: translateX(-2px);
 
       fa-icon {
-        font-size: 1.5rem;
         color: var(--color-primary);
-        filter: drop-shadow(0 0 6px color-mix(in srgb, var(--color-primary) 50%, transparent));
+        transform: scale(1.1);
       }
     }
 
-    .menu-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.7rem 0.75rem;
-      margin-bottom: 0.2rem;
-      border-radius: var(--radius-md);
-      font-size: 0.95rem;
-      font-weight: 500;
-      color: var(--color-text-secondary);
-      cursor: pointer;
-      position: relative;
-      transition: background var(--transition), color var(--transition), transform var(--transition-fast);
-      overflow: hidden;
+    &.agent-item {
+      color: var(--color-agent);
+      background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--color-agent) 16%, transparent),
+        color-mix(in srb, var(--color-agent) 6%, transparent)
+      );
+      border: 1px solid color-mix(in srgb, var(--color-agent) 22%, transparent);
+      box-shadow: var(--shadow-glow-agent);
 
       fa-icon {
-        font-size: 1.1rem;
-        color: var(--color-text-faint);
-        transition: color var(--transition), transform var(--transition-fast);
+        color: var(--color-agent);
       }
 
       &:hover {
-        background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-        color: var(--color-text);
-        transform: translateX(-2px);
-
-        fa-icon {
-          color: var(--color-primary);
-          transform: scale(1.1);
-        }
-      }
-
-      &.agent-item {
-        color: var(--color-agent);
         background: linear-gradient(
           135deg,
-          color-mix(in srgb, var(--color-agent) 16%, transparent),
-          color-mix(in srgb, var(--color-agent) 6%, transparent)
+          color-mix(in srgb, var(--color-agent) 24%, transparent),
+          color-mix(in srgb, var(--color-agent) 10%, transparent)
         );
-        border: 1px solid color-mix(in srgb, var(--color-agent) 22%, transparent);
-        box-shadow: var(--shadow-glow-agent);
-
-        fa-icon {
-          color: var(--color-agent);
-        }
-
-        &:hover {
-          background: linear-gradient(
-            135deg,
-            color-mix(in srgb, var(--color-agent) 24%, transparent),
-            color-mix(in srgb, var(--color-agent) 10%, transparent)
-          );
-          box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-agent) 40%, transparent), var(--shadow-glow-agent);
-        }
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-agent) 40%, transparent), var(--shadow-glow-agent);
       }
+    }
 
-      &.active {
-        background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-        color: var(--color-primary-dark);
-        border-inline-start: 3px solid var(--color-primary);
-        font-weight: 600;
+    &.active {
+      background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+      color: var(--color-primary-dark);
+      border-inline-start: 3px solid var(--color-primary);
+      font-weight: 600;
 
-        fa-icon {
-          color: var(--color-primary);
-        }
+      fa-icon {
+        color: var(--color-primary);
       }
     }
   }

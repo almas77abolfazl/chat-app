@@ -32,7 +32,7 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id/avatar')
-  async getUserAvatar(@Param('id') id: string): Promise<{ avatar: string }> {
+  async getUserAvatar(@Param('id') id: string): Promise<{ avatar: string | null }> {
     const avatar = await this.userService.getUserAvatar(id);
     return { avatar };
   }

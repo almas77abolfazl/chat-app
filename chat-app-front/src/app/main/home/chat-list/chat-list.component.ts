@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MainService } from '../../main.service';
@@ -13,8 +13,10 @@ import { ChatListItem } from '../../../models/chat-list-item.model';
   styleUrl: './chat-list.component.scss',
 })
 export class ChatListComponent {
+  @Output() selectChat = new EventEmitter<void>();
   searchQuery = '';
   searchResults: any[] = [];
+  brokenAvatars = new Set<string>();
   private searchSubject = new Subject<string>();
 
   constructor(public mainService: MainService) {
@@ -49,10 +51,12 @@ export class ChatListComponent {
     this.searchQuery = '';
     const chatItem = await this.mainService.startDirectChat(user);
     this.mainService.openChat(chatItem);
+    this.selectChat.emit();
   }
 
   openChat(chat: ChatListItem) {
     this.mainService.openChat(chat);
+    this.selectChat.emit();
   }
 
   displayName(chat: ChatListItem): string {
@@ -76,5 +80,13 @@ export class ChatListComponent {
     if (first) return first.charAt(0);
     if (last) return last.charAt(0);
     return '?';
+  }
+
+  avatarBroken(chatId: string): boolean {
+    return this.brokenAvatars.has(chatId);
+  }
+
+  markAvatarBroken(chatId: string): void {
+    this.brokenAvatars.add(chatId);
   }
 }

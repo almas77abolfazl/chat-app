@@ -29,6 +29,9 @@ export const authInterceptor: HttpInterceptorFn = (
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401) return handle401Error(req, next, authService);
+      if (error.status === 404 && req.url.includes('/avatar')) {
+        return throwError(() => new Error(error.message));
+      }
       console.error('Request failed:', error.message);
       return throwError(() => new Error(error.message));
     })

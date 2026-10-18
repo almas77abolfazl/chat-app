@@ -18,6 +18,25 @@ $light-theme: mat.define-theme((
   @include mat.icon-theme($light-theme);
 }
 
+.rtl-dialog .mat-dialog-container {
+  direction: rtl;
+  text-align: right;
+
+  .mat-dialog-title {
+    text-align: center;
+    font-weight: 800;
+  }
+}
+
+.mat-mdc-dialog-panel {
+  border-radius: var(--radius-xl);
+}
+
+.mat-mdc-dialog-container .mdc-dialog__surface {
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+}
+
 @font-face {
   font-family: "Shabnam";
   src: url("/Shabnam.ttf") format("truetype");

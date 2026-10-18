@@ -1,11 +1,11 @@
-import { Injectable } from '@angular/core';
+import { Inject, Injectable, NgZone } from '@angular/core';
 import { EditProfileComponent } from './edit-profile/edit-profile.component';
 import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../auth/auth.service';
 import { ContactsComponent } from './contacts/contacts.component';
 import { CreateChatComponent } from './create-chat/create-chat.component';
 import { HttpRequestService } from '../helpers/http-request.service';
-import { BehaviorSubject, firstValueFrom, map, Observable, of, take, tap, catchError } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, map, Observable, of, Subject, take, tap, catchError } from 'rxjs';
 import { ChatListItem, ChatParticipant } from '../models/chat-list-item.model';
 import { SocketService } from './socket.service';
 import { HttpParams } from '@angular/common/http';
@@ -21,11 +21,14 @@ export class MainService {
   chatFilter: 'all' | 'groups' | 'channels' = 'all';
   currentPage: number = 1;
   totalPages: number = 1;
+  loadingMessages = false;
   private chatOpenedSubject = new BehaviorSubject<void>(null);
   chatOpened$ = this.chatOpenedSubject.asObservable();
+  private messagesLoadedSubject = new Subject<void>();
+  messagesLoaded$ = this.messagesLoadedSubject.asObservable();
 
   file: any;
-  pictureSrc = 'default_profile.jpg';
+  pictureSrc = '';
 
   agentConfigured = false;
   botUserId: string | null = null;
@@ -36,7 +39,7 @@ export class MainService {
   agentStreamingMessage: Message = null;
 
   private messagesSubscription: any;
-  private typingTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+  private typingTimeouts = new Map<string, ReturnType<typeof setTimeout>>;
   private typingUsersSubject = new BehaviorSubject<Map<string, string[]>>(new Map());
   typingUsers$ = this.typingUsersSubject.asObservable();
 
@@ -46,7 +49,8 @@ export class MainService {
     private dialog: MatDialog,
     private socketService: SocketService,
     private cacheService: CacheService,
-    public snackbar: SnackbarService
+    public snackbar: SnackbarService,
+    private zone: NgZone
   ) {
     this.getAvatar(authService.getUserId()).then((avatar: string) => {
       if (avatar) this.pictureSrc = avatar;
@@ -64,7 +68,7 @@ export class MainService {
           this.chatItems.forEach(async (item) => {
             item.avatar = await this.resolveAvatar(item);
             if (await this.isAgentChat(item)) {
-              item.avatar = 'default_profile.jpg';
+              item.avatar = null;
             }
           });
         },
@@ -96,15 +100,15 @@ export class MainService {
       } as ChatListItem;
   }
 
-  private async resolveAvatar(item: ChatListItem): Promise<string> {
+  private async resolveAvatar(item: ChatListItem): Promise<string | null> {
     if (item.avatar) return item.avatar;
     if (item.isGroup || item.isChannel) {
-      return item.isChannel ? 'default_channel.jpg' : 'default_group.jpg';
+      return null;
     }
     const peerId = item.peerId;
-    if (!peerId) return 'default_profile.jpg';
+    if (!peerId) return null;
     const avatar = await this.getAvatar(peerId);
-    return avatar;
+    return avatar || null;
   }
 
   isAgentChat(chat: ChatListItem): boolean {
@@ -193,14 +197,25 @@ export class MainService {
   }
 
   openChat(chatItem: ChatListItem) {
-    // gleichen Chat nicht zweimal laden (schützt vor Doppelklick / Race)
     if (this.currentChat?._id === chatItem._id) return;
     this.currentChat = chatItem;
+    this.currentPage = 1;
+    this.totalPages = 1;
     this.chatOpenedSubject.next();
     this.chatItems.forEach((item) => {
       if (item._id === chatItem._id) item.messageCount = 0;
     });
-    this.loadMessages().pipe(take(1)).subscribe();
+    this.loadingMessages = true;
+    this.loadMessages().pipe(take(1)).subscribe({
+      next: () => {
+        this.loadingMessages = false;
+        this.messagesLoadedSubject.next();
+        this.scrollChatToBottom();
+      },
+      error: () => {
+        this.loadingMessages = false;
+      },
+    });
   }
 
   openAgentChat() {
@@ -230,7 +245,7 @@ export class MainService {
         lastMessage: null,
         messageCount: 0,
         messages: [],
-        avatar: 'default_profile.jpg',
+        avatar: null,
       };
       this.chatItems.unshift(item);
       this.getChatList();
@@ -245,152 +260,160 @@ export class MainService {
     this.messagesSubscription = this.socketService
       .receiveMessages()
       .subscribe((payload: { chatId: string; message: Message }) => {
-        const chatItem = this.findChatById(payload.chatId);
-        if (!chatItem) {
-          this.getChatList();
-          return;
-        }
-        const msg = payload.message;
-        if (msg.sender) {
-          const sender = typeof msg.sender === 'object' ? msg.sender : { _id: msg.senderId };
-          msg.sender = sender;
-          msg.senderId = sender?._id?.toString();
-        }
-        chatItem.messages = chatItem.messages || [];
-        // Replace the first optimistic pending message with the server-persisted one
-        // so the user's own sent message isn't rendered twice.
-        const pendingIdx = chatItem.messages.findIndex((m) => m._pending === true);
-        if (pendingIdx !== -1) {
-          chatItem.messages.splice(pendingIdx, 1);
-        }
-        chatItem.messages.push(msg);
-        chatItem.lastMessage = msg;
-        chatItem.updatedAt = new Date(msg.createdAt);
-        if (this.currentChat?._id === chatItem._id) {
-          chatItem.messageCount = 0;
-          this.scrollChatToBottom();
-        } else {
-          chatItem.messageCount = (chatItem.messageCount || 0) + 1;
-        }
+        this.zone.run(() => {
+          const chatItem = this.findChatById(payload.chatId);
+          if (!chatItem) {
+            this.getChatList();
+            return;
+          }
+          const msg = payload.message;
+          if (msg.sender) {
+            const sender = typeof msg.sender === 'object' ? msg.sender : { _id: msg.senderId };
+            msg.sender = sender;
+            msg.senderId = sender?._id?.toString();
+          }
+          chatItem.messages = chatItem.messages || [];
+          const pendingIdx = chatItem.messages.findIndex((m) => m._pending === true);
+          if (pendingIdx !== -1) {
+            chatItem.messages.splice(pendingIdx, 1);
+          }
+          chatItem.messages.push(msg);
+          chatItem.lastMessage = msg;
+          chatItem.updatedAt = new Date(msg.createdAt);
+          if (this.currentChat?._id === chatItem._id) {
+            chatItem.messageCount = 0;
+            this.scrollChatToBottom();
+          } else {
+            chatItem.messageCount = (chatItem.messageCount || 0) + 1;
+          }
 
-        // Mark received message as delivered (if not own message)
-        if (msg.senderId !== this.authService.getUserId() && msg.status !== 'delivered') {
-          this.socketService.emit('messageDelivered', { messageId: msg._id });
-        }
+          if (msg.senderId !== this.authService.getUserId() && msg.status !== 'delivered') {
+            this.socketService.emit('messageDelivered', { messageId: msg._id });
+          }
+        });
       });
 
     this.socketService.on('messageSent', (payload: { chatId: string; message: Message }) => {
-      const chatItem = this.findChatById(payload.chatId);
-      if (!chatItem) return;
-      const msg = payload.message;
-      chatItem.messages = chatItem.messages || [];
-      // Drop the optimistic duplicate first, then add the real message.
-      const pendingIdx = chatItem.messages.findIndex((m) => m._pending === true);
-      if (pendingIdx !== -1) chatItem.messages.splice(pendingIdx, 1);
-      const exists = chatItem.messages.some((m) => m._id === msg._id);
-      if (!exists) {
-        chatItem.messages.push(msg);
-        chatItem.lastMessage = msg;
-      }
+      this.zone.run(() => {
+        const chatItem = this.findChatById(payload.chatId);
+        if (!chatItem) return;
+        const msg = payload.message;
+        chatItem.messages = chatItem.messages || [];
+        const pendingIdx = chatItem.messages.findIndex((m) => m._pending === true);
+        if (pendingIdx !== -1) chatItem.messages.splice(pendingIdx, 1);
+        const exists = chatItem.messages.some((m) => m._id === msg._id);
+        if (!exists) {
+          chatItem.messages.push(msg);
+          chatItem.lastMessage = msg;
+        }
+      });
     });
 
     this.socketService.on('messageStatusUpdated', (payload: { messageId: string; status: string; userId: string }) => {
-      // Update message status in all chats that contain this message
-      this.chatItems.forEach((chatItem) => {
-        chatItem.messages = chatItem.messages || [];
-        const msg = chatItem.messages.find((m) => m._id === payload.messageId);
-        if (msg) {
-          msg.status = payload.status as 'sent' | 'delivered' | 'read';
-          if (payload.status === 'read') {
-            msg.read = true;
-            msg.readAt = new Date();
-          } else if (payload.status === 'delivered') {
-            msg.deliveredAt = new Date();
+      this.zone.run(() => {
+        this.chatItems.forEach((chatItem) => {
+          chatItem.messages = chatItem.messages || [];
+          const msg = chatItem.messages.find((m) => m._id === payload.messageId);
+          if (msg) {
+            msg.status = payload.status as 'sent' | 'delivered' | 'read';
+            if (payload.status === 'read') {
+              msg.read = true;
+              msg.readAt = new Date();
+            } else if (payload.status === 'delivered') {
+              msg.deliveredAt = new Date();
+            }
           }
-        }
-      });
-      // Also update currentChat if separate
-      if (this.currentChat) {
-        this.currentChat.messages = this.currentChat.messages || [];
-        const msg = this.currentChat.messages.find((m) => m._id === payload.messageId);
-        if (msg) {
-          msg.status = payload.status as 'sent' | 'delivered' | 'read';
-          if (payload.status === 'read') {
-            msg.read = true;
-            msg.readAt = new Date();
-          } else if (payload.status === 'delivered') {
-            msg.deliveredAt = new Date();
-          }
-        }
-      }
-    });
-
-    this.socketService.on('messageEdited', (payload: { messageId: string; message: Message }) => {
-      this.chatItems.forEach((chatItem) => {
-        chatItem.messages = chatItem.messages || [];
-        const idx = chatItem.messages.findIndex((m) => m._id === payload.messageId);
-        if (idx !== -1) {
-          chatItem.messages[idx] = payload.message;
-          if (this.currentChat?._id === chatItem._id) {
-            this.currentChat.messages = this.currentChat.messages || [];
-            const cIdx = this.currentChat.messages.findIndex((m) => m._id === payload.messageId);
-            if (cIdx !== -1) {
-              this.currentChat.messages[cIdx] = payload.message;
+        });
+        if (this.currentChat) {
+          this.currentChat.messages = this.currentChat.messages || [];
+          const msg = this.currentChat.messages.find((m) => m._id === payload.messageId);
+          if (msg) {
+            msg.status = payload.status as 'sent' | 'delivered' | 'read';
+            if (payload.status === 'read') {
+              msg.read = true;
+              msg.readAt = new Date();
+            } else if (payload.status === 'delivered') {
+              msg.deliveredAt = new Date();
             }
           }
         }
+      });
+    });
+
+    this.socketService.on('messageEdited', (payload: { messageId: string; message: Message }) => {
+      this.zone.run(() => {
+        this.chatItems.forEach((chatItem) => {
+          chatItem.messages = chatItem.messages || [];
+          const idx = chatItem.messages.findIndex((m) => m._id === payload.messageId);
+          if (idx !== -1) {
+            chatItem.messages[idx] = payload.message;
+            if (this.currentChat?._id === chatItem._id) {
+              this.currentChat.messages = this.currentChat.messages || [];
+              const cIdx = this.currentChat.messages.findIndex((m) => m._id === payload.messageId);
+              if (cIdx !== -1) {
+                this.currentChat.messages[cIdx] = payload.message;
+              }
+            }
+          }
+        });
       });
     });
 
     this.socketService.on('messageDeleted', (payload: { messageId: string }) => {
-      this.chatItems.forEach((chatItem) => {
-        chatItem.messages = chatItem.messages || [];
-        const idx = chatItem.messages.findIndex((m) => m._id === payload.messageId);
-        if (idx !== -1) {
-          chatItem.messages[idx].isDeleted = true;
-          chatItem.messages[idx].content = 'این پیام حذف شد';
-          if (this.currentChat?._id === chatItem._id) {
-            this.currentChat.messages = this.currentChat.messages || [];
-            const cIdx = this.currentChat.messages.findIndex((m) => m._id === payload.messageId);
-            if (cIdx !== -1) {
-              this.currentChat.messages[cIdx].isDeleted = true;
-              this.currentChat.messages[cIdx].content = 'این پیام حذف شد';
+      this.zone.run(() => {
+        this.chatItems.forEach((chatItem) => {
+          chatItem.messages = chatItem.messages || [];
+          const idx = chatItem.messages.findIndex((m) => m._id === payload.messageId);
+          if (idx !== -1) {
+            chatItem.messages[idx].isDeleted = true;
+            chatItem.messages[idx].content = 'این پیام حذف شد';
+            if (this.currentChat?._id === chatItem._id) {
+              this.currentChat.messages = this.currentChat.messages || [];
+              const cIdx = this.currentChat.messages.findIndex((m) => m._id === payload.messageId);
+              if (cIdx !== -1) {
+                this.currentChat.messages[cIdx].isDeleted = true;
+                this.currentChat.messages[cIdx].content = 'این پیام حذف شد';
+              }
             }
           }
-        }
+        });
       });
     });
 
     this.socketService.on('messageReactionUpdated', (payload: { messageId: string; reactions: any[] }) => {
-      this.chatItems.forEach((chatItem) => {
-        chatItem.messages = chatItem.messages || [];
-        const msg = chatItem.messages.find((m) => m._id === payload.messageId);
-        if (msg) {
-          msg.reactions = payload.reactions;
-          if (this.currentChat?._id === chatItem._id) {
-            this.currentChat.messages = this.currentChat.messages || [];
-            const cIdx = this.currentChat.messages.findIndex((m) => m._id === payload.messageId);
-            if (cIdx !== -1) {
-              this.currentChat.messages[cIdx].reactions = payload.reactions;
+      this.zone.run(() => {
+        this.chatItems.forEach((chatItem) => {
+          chatItem.messages = chatItem.messages || [];
+          const msg = chatItem.messages.find((m) => m._id === payload.messageId);
+          if (msg) {
+            msg.reactions = payload.reactions;
+            if (this.currentChat?._id === chatItem._id) {
+              this.currentChat.messages = this.currentChat.messages || [];
+              const cIdx = this.currentChat.messages.findIndex((m) => m._id === payload.messageId);
+              if (cIdx !== -1) {
+                this.currentChat.messages[cIdx].reactions = payload.reactions;
+              }
             }
           }
-        }
+        });
       });
     });
 
     this.socketService.on('typingStatus', (payload: { chatId: string; userId: string; userName: string; isTyping: boolean }) => {
-      const current = new Map<string, string[]>(this.typingUsersSubject.value as Iterable<readonly [string, string[]]>);
-      const chatUsers: string[] = current.get(payload.chatId) || [];
-      if (payload.isTyping) {
-        if (!chatUsers.includes(payload.userId)) {
-          chatUsers.push(payload.userId);
+      this.zone.run(() => {
+        const current = new Map<string, string[]>(this.typingUsersSubject.value as Iterable<readonly [string, string[]]>);
+        const chatUsers: string[] = current.get(payload.chatId) || [];
+        if (payload.isTyping) {
+          if (!chatUsers.includes(payload.userId)) {
+            chatUsers.push(payload.userId);
+          }
+        } else {
+          const idx = chatUsers.indexOf(payload.userId);
+          if (idx !== -1) chatUsers.splice(idx, 1);
         }
-      } else {
-        const idx = chatUsers.indexOf(payload.userId);
-        if (idx !== -1) chatUsers.splice(idx, 1);
-      }
-      current.set(payload.chatId, chatUsers);
-      this.typingUsersSubject.next(current);
+        current.set(payload.chatId, chatUsers);
+        this.typingUsersSubject.next(current);
+      });
     });
   }
 
@@ -454,65 +477,67 @@ export class MainService {
   }
 
   private handleAgentEvent(event: any) {
-    const userId = this.authService.getUserId();
-    switch (event.type) {
-      case 'start':
-        this.agentWorking = true;
-        this.agentStreamingMessage = {
-          _id: null,
-          content: '',
-          sender: { _id: this.botUserId, firstName: this.botFirstName, lastName: this.botLastName },
-          receiver: userId,
-          avatar: 'default_profile.jpg',
-          createdAt: new Date(),
-          isStreaming: true,
-          toolCalls: [],
-        } as Message;
-        this.ensureBotChatId();
-        if (this.botChatId) {
-          const chatItem = this.findChatById(this.botChatId);
-          chatItem?.messages?.push(this.agentStreamingMessage as any);
-          if (!chatItem) this.getChatList();
-        }
-        break;
-      case 'chunk':
-        if (this.agentStreamingMessage) {
-          this.agentStreamingMessage.content += event.data.chunk;
+    this.zone.run(() => {
+      const userId = this.authService.getUserId();
+      switch (event.type) {
+        case 'start':
+          this.agentWorking = true;
+          this.agentStreamingMessage = {
+            _id: null,
+            content: '',
+            sender: { _id: this.botUserId, firstName: this.botFirstName, lastName: this.botLastName },
+            receiver: userId,
+            avatar: null,
+            createdAt: new Date(),
+            isStreaming: true,
+            toolCalls: [],
+          } as Message;
+          this.ensureBotChatId();
+          if (this.botChatId) {
+            const chatItem = this.findChatById(this.botChatId);
+            chatItem?.messages?.push(this.agentStreamingMessage as any);
+            if (!chatItem) this.getChatList();
+          }
+          break;
+        case 'chunk':
+          if (this.agentStreamingMessage) {
+            this.agentStreamingMessage.content += event.data.chunk;
+            this.scrollChatToBottom();
+          }
+          break;
+        case 'toolCall':
+          if (this.agentStreamingMessage) {
+            (this.agentStreamingMessage as any).toolCalls.push({
+              name: event.data.name,
+              arguments: event.data.arguments,
+            });
+            this.scrollChatToBottom();
+          }
+          break;
+        case 'saved':
+          if (this.agentStreamingMessage) {
+            this.agentStreamingMessage._id = event.data.messageId;
+            (this.agentStreamingMessage as any).isStreaming = false;
+            const chatItem = this.findChatById(this.botChatId);
+            if (chatItem) chatItem.lastMessage = this.agentStreamingMessage;
+          }
+          this.agentStreamingMessage = null;
+          this.agentWorking = false;
           this.scrollChatToBottom();
-        }
-        break;
-      case 'toolCall':
-        if (this.agentStreamingMessage) {
-          (this.agentStreamingMessage as any).toolCalls.push({
-            name: event.data.name,
-            arguments: event.data.arguments,
-          });
-          this.scrollChatToBottom();
-        }
-        break;
-      case 'saved':
-        if (this.agentStreamingMessage) {
-          this.agentStreamingMessage._id = event.data.messageId;
-          (this.agentStreamingMessage as any).isStreaming = false;
-          const chatItem = this.findChatById(this.botChatId);
-          if (chatItem) chatItem.lastMessage = this.agentStreamingMessage;
-        }
-        this.agentStreamingMessage = null;
-        this.agentWorking = false;
-        this.scrollChatToBottom();
-        break;
-      case 'error':
-        if (this.agentStreamingMessage) {
-          this.agentStreamingMessage.content = event.data.message || 'خطا در دستیار هوشمند';
-          (this.agentStreamingMessage as any).isStreaming = false;
-        }
-        this.agentStreamingMessage = null;
-        this.agentWorking = false;
-        break;
-      case 'done':
-        this.agentWorking = false;
-        break;
-    }
+          break;
+        case 'error':
+          if (this.agentStreamingMessage) {
+            this.agentStreamingMessage.content = event.data.message || 'خطا در دستیار هوشمند';
+            (this.agentStreamingMessage as any).isStreaming = false;
+          }
+          this.agentStreamingMessage = null;
+          this.agentWorking = false;
+          break;
+        case 'done':
+          this.agentWorking = false;
+          break;
+      }
+    });
   }
 
   private ensureBotChatId() {
@@ -583,8 +608,10 @@ export class MainService {
   private scrollChatToBottom() {
     setTimeout(() => {
       const messagesDiv = document.querySelector('.chat-messages') as HTMLElement | null;
-      if (messagesDiv) messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }, 50);
+      if (messagesDiv) {
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+    }, 100);
   }
 
   openEditProfileModal(): void {
@@ -745,15 +772,19 @@ const messageData: Message = {
         if (response.currentPage <= 1) {
           this.currentChat.messages = ordered;
         } else {
-          this.currentChat.messages = [...ordered, ...this.currentChat.messages];
+          this.currentChat.messages = [...ordered, ...(this.currentChat.messages || [])];
         }
         this.currentPage = response.currentPage;
         this.totalPages = response.totalPages;
+        if (response.currentPage <= 1) {
+          this.messagesLoadedSubject.next();
+        }
       })
     );
   }
 
-  async getAvatar(userId: string): Promise<string> {
+  async getAvatar(userId: string): Promise<string | null> {
+    if (!userId) return null;
     const avatar = await this.cacheService.getItem('avatars', userId);
     if (avatar?.avatar) return 'data:image/jpeg;base64,' + avatar.avatar;
     return firstValueFrom(
@@ -764,8 +795,8 @@ const messageData: Message = {
             this.cacheService.setItem('avatars', { id: userId, avatar: res.avatar });
           }
         }),
-        map((res) => (res?.avatar ? 'data:image/jpeg;base64,' + res.avatar : 'default_profile.jpg')),
-        catchError(() => of('default_profile.jpg'))
+        map((res) => (res?.avatar ? 'data:image/jpeg;base64,' + res.avatar : null)),
+        catchError(() => of(null))
       )
     );
   }

@@ -8,22 +8,23 @@
   flex-direction: row-reverse;
   height: 100%;
   overflow: hidden;
-  background:
-    radial-gradient(42rem 28rem at 12% -8%, color-mix(in srgb, var(--color-agent) 12%, transparent), transparent 60%),
-    radial-gradient(38rem 24rem at 96% 104%, color-mix(in srgb, var(--color-primary) 14%, transparent), transparent 60%),
-    linear-gradient(180deg, var(--color-bg) 0%, var(--color-bg-deep) 100%);
   position: relative;
+
+  background:
+    radial-gradient(42rem 28rem at 12% -8%, color-mix(in srgb, var(--color-agent) 10%, transparent), transparent 60%),
+    radial-gradient(38rem 24rem at 96% 104%, color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 60%),
+    linear-gradient(180deg, var(--color-bg) 0%, var(--color-bg-deep) 100%);
 
   &::before {
     content: '';
     position: absolute;
     inset: 0;
     background-image:
-      linear-gradient(color-mix(in srgb, var(--color-border) 40%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in srgb, var(--color-border) 40%, transparent) 1px, transparent 1px);
+      linear-gradient(color-mix(in srgb, var(--color-border) 30%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--color-border) 30%, transparent) 1px, transparent 1px);
     background-size: 34px 34px;
-    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 100%);
-    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 100%);
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 100%);
     pointer-events: none;
     z-index: 0;
   }
@@ -50,17 +51,17 @@
     background: linear-gradient(180deg, var(--color-surface-container-high), var(--color-surface-container));
     border-inline-end: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
     box-shadow: var(--shadow-xs);
-    transition: flex-basis var(--transition);
+    transition: flex-basis var(--transition), transform var(--transition);
   }
 
   app-chat-area {
     flex: 1;
     min-width: 0;
     height: 100%;
+    background: var(--color-surface-container);
   }
 
   @media (max-width: 768px) {
-    /* Telegram-like mobile: single column, sidebar hidden by default */
     app-side-bar {
       flex: 0 0 0;
       width: 0;
@@ -71,12 +72,21 @@
       flex: 1 1 100%;
       width: 100%;
       min-width: 0;
+      transform: translateX(0);
+      transition: transform var(--transition);
+    }
+
+    app-chat-area {
+      flex: 1 1 100%;
+      width: 100%;
+      min-width: 0;
     }
 
     &.chat-open {
       app-chat-list {
         display: none;
       }
+
       app-chat-area {
         display: block;
       }
@@ -105,11 +115,14 @@
       cursor: pointer;
       box-shadow: var(--shadow-md);
       font-size: 1rem;
+      transition: background var(--transition), color var(--transition),
+        transform var(--transition-fast);
     }
 
     .mobile-menu-btn:hover {
       background: color-mix(in srgb, var(--color-primary) 8%, transparent);
       color: var(--color-primary-dark);
+      transform: scale(1.06);
     }
 
     .mobile-overlay {
