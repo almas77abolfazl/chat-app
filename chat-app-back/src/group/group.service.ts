@@ -21,7 +21,7 @@ export class GroupService {
     return this.groupModel.findByIdAndUpdate(groupId, { $push: { members: userId }, updatedAt: new Date() }, { new: true }).exec();
   }
 
-  async findById(groupId: string): Promise<Group> {
+  async findById(groupId: string): Promise<GroupDocument | null> {
     return this.groupModel.findById(groupId).exec();
   }
 }
