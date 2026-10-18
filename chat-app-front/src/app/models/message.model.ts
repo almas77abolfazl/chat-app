@@ -22,4 +22,6 @@ export interface Message {
   fileUrl?: string;
   fileName?: string;
   fileSize?: number;
+  reactions?: { emoji: string; count: number; users: string[] }[];
+  userReactedEmoji?: string;
 }

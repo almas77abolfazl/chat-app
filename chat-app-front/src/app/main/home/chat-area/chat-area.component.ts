@@ -28,6 +28,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
   editMessageId: string | null = null;
   editContent = '';
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
+  userReactions: Map<string, string> = new Map();
 
   ngOnInit() {
     // Mark messages as read when chat is opened
@@ -200,6 +201,33 @@ export class ChatAreaComponent implements OnInit, OnDestroy {
         error: () => {},
       });
     }
+  }
+
+  toggleReaction(message: Message, emoji: string) {
+    const messageId = message._id;
+    const currentEmoji = this.userReactions.get(messageId);
+
+    if (currentEmoji === emoji) {
+      // Remove reaction
+      this.mainService.removeReaction(messageId).pipe(take(1)).subscribe({
+        next: () => {
+          this.userReactions.delete(messageId);
+        },
+        error: () => {},
+      });
+    } else {
+      // Add/change reaction
+      this.mainService.addReaction(messageId, emoji).pipe(take(1)).subscribe({
+        next: () => {
+          this.userReactions.set(messageId, emoji);
+        },
+        error: () => {},
+      });
+    }
+  }
+
+  isReactedWith(message: Message, emoji: string): boolean {
+    return this.userReactions.get(message._id) === emoji;
   }
 
   onFileSelected(event: Event) {

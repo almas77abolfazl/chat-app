@@ -361,6 +361,23 @@ export class MainService {
       });
     });
 
+    this.socketService.on('messageReactionUpdated', (payload: { messageId: string; reactions: any[] }) => {
+      this.chatItems.forEach((chatItem) => {
+        chatItem.messages = chatItem.messages || [];
+        const msg = chatItem.messages.find((m) => m._id === payload.messageId);
+        if (msg) {
+          msg.reactions = payload.reactions;
+          if (this.currentChat?._id === chatItem._id) {
+            this.currentChat.messages = this.currentChat.messages || [];
+            const cIdx = this.currentChat.messages.findIndex((m) => m._id === payload.messageId);
+            if (cIdx !== -1) {
+              this.currentChat.messages[cIdx].reactions = payload.reactions;
+            }
+          }
+        }
+      });
+    });
+
     this.socketService.on('typingStatus', (payload: { chatId: string; userId: string; userName: string; isTyping: boolean }) => {
       const current = new Map<string, string[]>(this.typingUsersSubject.value as Iterable<readonly [string, string[]]>);
       const chatUsers: string[] = current.get(payload.chatId) || [];
@@ -663,6 +680,18 @@ export class MainService {
     formData.append('chatId', chatId);
     formData.append('content', content);
     return this.httpRequestService.postFile('message/media', formData);
+  }
+
+  addReaction(messageId: string, emoji: string): Observable<any> {
+    return this.httpRequestService.post(`message/${messageId}/reaction`, { emoji });
+  }
+
+  removeReaction(messageId: string): Observable<any> {
+    return this.httpRequestService.delete(`message/${messageId}/reaction`);
+  }
+
+  getReactions(messageId: string): Observable<any> {
+    return this.httpRequestService.get(`message/${messageId}/reactions`);
   }
 
   sendMessage(currentChat: ChatListItem, input: HTMLTextAreaElement) {
