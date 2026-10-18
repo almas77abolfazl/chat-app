@@ -20,7 +20,7 @@ export class ChannelService {
     return this.channelModel.findByIdAndUpdate(channelId, { $push: { subscribers: userId }, updatedAt: new Date() }, { new: true }).exec();
   }
 
-  async findById(channelId: string): Promise<Channel> {
+  async findById(channelId: string): Promise<ChannelDocument | null> {
     return this.channelModel.findById(channelId).exec();
   }
 }
