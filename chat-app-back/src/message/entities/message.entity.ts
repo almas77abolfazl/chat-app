@@ -48,6 +48,18 @@ export class Message {
 
   @Prop({ default: false })
   isDeleted: boolean;
+
+  @Prop({ enum: ['image', 'video', 'file', 'voice'], default: null })
+  mediaType: string;
+
+  @Prop()
+  fileUrl: string;
+
+  @Prop()
+  fileName: string;
+
+  @Prop()
+  fileSize: number;
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);

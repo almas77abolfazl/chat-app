@@ -99,6 +99,27 @@
       <div class="message-content">
         @if (message.isDeleted) {
         <span class="deleted-msg">این پیام حذف شد</span>
+        } @else if (message.mediaType === 'image' && message.fileUrl) {
+        <img [src]="message.fileUrl" class="msg-image" alt="Image" />
+        } @else if (message.mediaType === 'video' && message.fileUrl) {
+        <video [src]="message.fileUrl" class="msg-video" controls preload="metadata"></video>
+        } @else if (message.mediaType === 'voice' && message.fileUrl) {
+        <div class="msg-voice">
+          <fa-icon [icon]="['fas', 'microphone']" class="voice-icon"></fa-icon>
+          <audio [src]="message.fileUrl" class="voice-audio" controls></audio>
+          <span class="voice-duration">{{ message.fileName }}</span>
+        </div>
+        } @else if (message.mediaType === 'file' && message.fileUrl) {
+        <div class="msg-file">
+          <fa-icon [icon]="['fas', 'file']" class="file-icon"></fa-icon>
+          <div class="file-info">
+            <div class="file-name">{{ message.fileName }}</div>
+            <div class="file-size">{{ formatFileSize(message.fileSize) }}</div>
+          </div>
+          <a [href]="message.fileUrl" download class="file-download">
+            <fa-icon [icon]="['fas', 'download']"></fa-icon>
+          </a>
+        </div>
         } @else {
         {{ message.content }}
         @if (message.isStreaming) {
@@ -138,6 +159,10 @@
   </button>
 
   <div class="chat-input-container">
+    <label class="attach-label" title="پیوست فایل">
+      <input type="file" #fileInput (change)="onFileSelected($event)" style="display:none" multiple />
+      <fa-icon [icon]="['fas', 'paperclip']" class="attach-icon"></fa-icon>
+    </label>
     <textarea
       #element
       class="chat-input"

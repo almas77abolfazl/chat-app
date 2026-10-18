@@ -466,21 +466,11 @@
           width: auto;
         }
 
-        .deleted-msg {
-          color: var(--color-text-faint);
-          font-style: italic;
-          font-size: 0.85rem;
-        }
-
-        .edit-badge {
-          font-size: 0.65rem;
-          background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-          color: var(--color-primary-dark);
-          padding: 0.05rem 0.35rem;
-          border-radius: var(--radius-full);
-          margin-inline-start: 0.4rem;
-          vertical-align: middle;
-        }
+    .deleted-msg {
+      color: var(--color-text-faint);
+      font-style: italic;
+      font-size: 0.85rem;
+    }
       }
     }
   }

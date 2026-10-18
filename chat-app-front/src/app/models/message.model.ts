@@ -18,4 +18,8 @@ export interface Message {
   editedAt?: Date;
   deletedAt?: Date;
   isDeleted?: boolean;
+  mediaType?: 'image' | 'video' | 'file' | 'voice';
+  fileUrl?: string;
+  fileName?: string;
+  fileSize?: number;
 }
