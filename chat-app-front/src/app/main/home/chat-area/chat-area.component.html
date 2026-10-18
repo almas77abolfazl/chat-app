@@ -83,6 +83,13 @@
         </button>
       </div>
       }
+      @if (!isEditing(message._id)) {
+      <div class="message-actions">
+        <button class="msg-action reaction-btn" (click)="toggleReaction(message, '❤️')" title="واکنش">
+          <fa-icon [icon]="['fas', 'heart']" size="xs"></fa-icon>
+        </button>
+      </div>
+      }
       @if (isEditing(message._id)) {
       <div class="edit-input-wrapper">
         <textarea
@@ -128,6 +135,19 @@
         @if (message.editedAt) {
         <span class="edit-badge">ویرایش شده</span>
         }
+        }
+      </div>
+      }
+      @if (message.reactions && message.reactions.length > 0) {
+      <div class="reactions-bar">
+        @for (reaction of message.reactions; track reaction.emoji) {
+        <div class="reaction-item" (click)="toggleReaction(message, reaction.emoji)">
+          <span class="reaction-emoji">{{ reaction.emoji }}</span>
+          <span class="reaction-count">{{ reaction.count }}</span>
+          @if (reaction.users.includes(ownId())) {
+          <span class="reaction-user-you">شما</span>
+          }
+        </div>
         }
       </div>
       }

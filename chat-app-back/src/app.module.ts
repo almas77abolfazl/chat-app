@@ -13,6 +13,7 @@ import { ErrorInterceptor } from './helpers/error.interceptor';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SearchModule } from './search/search.module';
 import { AgentModule } from './agent/agent.module';
+import { ReactionModule } from './message/reaction/reaction.module';
 import llmConfig from './config/llm.config';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
@@ -46,6 +47,7 @@ import { join } from 'path';
     ChannelModule,
     SearchModule,
     AgentModule,
+    ReactionModule,
   ],
   controllers: [AppController],
   providers: [

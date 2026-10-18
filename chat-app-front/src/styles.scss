@@ -402,6 +402,89 @@ textarea {
   pointer-events: none;
 }
 
+/* ---------- Reaction styles ---------- */
+.reactions-bar {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.35rem 0.5rem;
+  margin-top: 0.25rem;
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  border-radius: var(--radius-full);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  font-size: 0.75rem;
+}
+
+.reaction-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-full);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-size: 0.7rem;
+}
+
+.reaction-item:hover {
+  background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+  transform: translateY(-1px);
+}
+
+.reaction-emoji {
+  font-size: 0.85rem;
+}
+
+.reaction-count {
+  font-weight: 700;
+  font-size: 0.7rem;
+}
+
+.reaction-user-you {
+  font-size: 0.6rem;
+  background: var(--color-primary);
+  color: #ffffff;
+  padding: 0.05rem 0.2rem;
+  border-radius: var(--radius-full);
+  margin-inline-start: 0.2rem;
+}
+
+.reaction-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: var(--radius-full);
+  border: none;
+  background: rgba(26, 27, 46, 0.06);
+  color: var(--color-text-secondary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all var(--transition-fast);
+}
+
+.reaction-btn:hover {
+  background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+  color: var(--color-primary-dark);
+}
+
+.msg-actions-group {
+  display: flex;
+  gap: 0.2rem;
+  position: absolute;
+  inset-block-start: 0.2rem;
+  inset-inline-end: 0.2rem;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.sent:hover .msg-actions-group,
+.received:hover .msg-actions-group {
+  opacity: 1;
+}
+
 /* ---------- Reduced motion ---------- */
 @media (prefers-reduced-motion: reduce) {
   *,

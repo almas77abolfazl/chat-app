@@ -9,6 +9,7 @@ import { AgentService } from 'src/agent/agent.service';
 import { BotService } from 'src/agent/bot/bot.service';
 import { ChatService } from 'src/chat/chat.service';
 import { UserService } from 'src/user/user.service';
+import { ReactionService } from './reaction/reaction.service';
 import { Message, MessageDocument } from './entities/message.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -30,6 +31,7 @@ export class MessageGateway {
     private botService: BotService,
     private chatService: ChatService,
     private userService: UserService,
+    private reactionService: ReactionService,
   ) {}
 
   afterInit() {
@@ -279,6 +281,54 @@ export class MessageGateway {
       }
     } catch (error) {
       client.emit('messageError', { message: error?.message ?? 'Failed to delete message' });
+    }
+  }
+
+  @SubscribeMessage('messageReaction')
+  async handleMessageReaction(
+    @MessageBody() data: { messageId: string; emoji: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      const user = client.data.user as IUser;
+      const existingReactions = await this.reactionService.getReactionCounts(data.messageId);
+      const hasUserReacted = existingReactions.some((r) =>
+        r.users.includes(user._id.toString()),
+      );
+
+      if (hasUserReacted) {
+        // Remove reaction (toggle off)
+        await this.reactionService.removeReaction(data.messageId, user._id as string);
+        const updated = await this.reactionService.getReactionCounts(data.messageId);
+        const message = await this.messageModel.findById(data.messageId).exec();
+        if (message) {
+          const chatId = message.chat.toString();
+          const participantIds = await this.chatService.getParticipantIds(chatId);
+          for (const pid of participantIds) {
+            this.server.to(pid).emit('messageReactionUpdated', {
+              messageId: data.messageId,
+              reactions: updated,
+            });
+          }
+        }
+      } else {
+        // Add reaction
+        await this.reactionService.addReaction(data.messageId, user._id as string, data.emoji);
+        const updated = await this.reactionService.getReactionCounts(data.messageId);
+        const message = await this.messageModel.findById(data.messageId).exec();
+        if (message) {
+          const chatId = message.chat.toString();
+          const participantIds = await this.chatService.getParticipantIds(chatId);
+          for (const pid of participantIds) {
+            this.server.to(pid).emit('messageReactionUpdated', {
+              messageId: data.messageId,
+              reactions: updated,
+            });
+          }
+        }
+      }
+    } catch (error) {
+      client.emit('messageError', { message: error?.message ?? 'Failed to add reaction' });
     }
   }
 }
