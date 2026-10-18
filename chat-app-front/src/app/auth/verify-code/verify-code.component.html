@@ -22,5 +22,13 @@
       </div>
       <button type="button" class="form-btn app-button" (click)="verifyCode()">تأیید و ورود</button>
     </div>
+
+    <div class="resend-section">
+      @if (canResend) {
+        <button type="button" class="resend-btn" (click)="resendCode()">ارسال مجدد کد</button>
+      } @else {
+        <span class="resend-countdown">ارسال مجدد در {{ resendSeconds }} ثانیه</span>
+      }
+    </div>
   </div>
 </div>
