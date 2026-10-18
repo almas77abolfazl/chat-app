@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -14,6 +15,7 @@ interface ContactUser {
   lastName?: string;
   phoneNumber?: string;
   profilePicture?: string;
+  avatar?: string;
   status?: string;
   isOnline?: boolean;
   lastSeen?: Date;
@@ -22,7 +24,7 @@ interface ContactUser {
 @Component({
   selector: 'app-contacts',
   standalone: true,
-  imports: [FontAwesomeModule, FormsModule, MatInputModule, MatButtonModule, MatIconModule],
+  imports: [CommonModule, FontAwesomeModule, FormsModule, MatInputModule, MatButtonModule, MatIconModule],
   templateUrl: './contacts.component.html',
   styleUrl: './contacts.component.scss',
 })
@@ -33,8 +35,15 @@ export class ContactsComponent implements OnInit {
   contacts: ContactUser[] = [];
   loading = false;
   currentUserId: string;
+  showNewContactForm = false;
+  newContactFirstName = '';
+  newContactLastName = '';
+  newContactPhone = '';
 
-  constructor(public mainService: MainService, private dialogRef: MatDialogRef<ContactsComponent>) {
+  constructor(
+    public mainService: MainService,
+    private dialogRef: MatDialogRef<ContactsComponent>
+  ) {
     this.currentUserId = this.mainService.authService.getUserId();
   }
 
@@ -52,10 +61,14 @@ export class ContactsComponent implements OnInit {
           lastName: c.lastName,
           phoneNumber: c.phoneNumber,
           profilePicture: c.profilePicture,
+          avatar: null,
           status: c.status,
           isOnline: c.isOnline,
           lastSeen: c.lastSeen,
         }));
+        this.contacts.forEach(async (contact) => {
+          await this.resolveContactAvatar(contact);
+        });
       },
       error: () => {
         this.contacts = [];
@@ -92,6 +105,7 @@ export class ContactsComponent implements OnInit {
     this.mainService.addContact(user._id).pipe(take(1)).subscribe({
       next: () => {
         this.contacts.push(user);
+        this.resolveContactAvatar(user);
         this.results = this.results.filter((r) => r._id !== user._id);
       },
       error: () => {},
@@ -111,7 +125,39 @@ export class ContactsComponent implements OnInit {
     this.dialogRef.close({ startChat: user });
   }
 
+  private async resolveContactAvatar(contact: ContactUser): Promise<void> {
+    if (contact.avatar) return;
+    const avatar = await this.mainService.getAvatar(contact._id);
+    if (avatar) contact.avatar = avatar;
+  }
+
+  getAvatarUrl(contact: ContactUser): string | null {
+    return contact.profilePicture || contact.avatar || null;
+  }
+
   isContact(userId: string): boolean {
     return this.contacts.some((c) => c._id === userId);
+  }
+
+  addNewContact() {
+    if (!this.newContactPhone.trim()) return;
+    const newContact: ContactUser = {
+      _id: 'new-' + Date.now(),
+      firstName: this.newContactFirstName.trim() || undefined,
+      lastName: this.newContactLastName.trim() || undefined,
+      phoneNumber: this.newContactPhone.trim(),
+    };
+    this.addContact(newContact);
+    this.showNewContactForm = false;
+    this.newContactFirstName = '';
+    this.newContactLastName = '';
+    this.newContactPhone = '';
+  }
+
+  cancelNewContact() {
+    this.showNewContactForm = false;
+    this.newContactFirstName = '';
+    this.newContactLastName = '';
+    this.newContactPhone = '';
   }
 }
