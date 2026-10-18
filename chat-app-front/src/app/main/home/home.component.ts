@@ -8,6 +8,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MainService } from '../main.service';
 import { SocketService } from '../socket.service';
+import { ThemeService } from '../../helpers/theme.service';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
@@ -22,7 +23,11 @@ export class HomeComponent implements OnDestroy {
   isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
   private destroy$ = new Subject<void>();
 
-  constructor(socketService: SocketService, public mainService: MainService) {
+  constructor(
+    socketService: SocketService,
+    public mainService: MainService,
+    public themeService: ThemeService
+  ) {
     socketService.init();
     mainService.listenToMessages();
     mainService.loadAgentStatus();

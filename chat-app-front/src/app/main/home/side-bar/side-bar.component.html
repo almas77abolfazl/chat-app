@@ -32,7 +32,11 @@
     </div>
   </div>
 
-  <div class="sidebar-footer">
+   <div class="sidebar-footer">
+    <div class="menu-item theme-toggle-item" (click)="toggleTheme()" data-tooltip="حالت نمایش" data-tooltip-placement="left">
+      <fa-icon [icon]="['fas', themeService.theme === 'dark' ? 'sun' : 'moon']"></fa-icon>
+      <span>{{ themeService.theme === 'dark' ? 'روشن' : 'تیره' }}</span>
+    </div>
     <div class="menu-item" (click)="mainService.openEditProfileModal()" data-tooltip="پروفایل" data-tooltip-placement="left">
       <fa-icon [icon]="['fas', 'user-circle']"></fa-icon>
       <span>پروفایل</span>

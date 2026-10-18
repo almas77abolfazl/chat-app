@@ -10,12 +10,28 @@ $light-theme: mat.define-theme((
   ),
 ));
 
+$dark-theme: mat.define-theme((
+  color: (
+    primary: mat.$violet-palette,
+    tertiary: mat.$blue-palette,
+    theme-type: dark,
+  ),
+));
+
 :root {
   @include mat.button-theme($light-theme);
   @include mat.dialog-theme($light-theme);
   @include mat.form-field-theme($light-theme);
   @include mat.input-theme($light-theme);
   @include mat.icon-theme($light-theme);
+}
+
+body.theme-dark {
+  @include mat.button-color($dark-theme);
+  @include mat.dialog-color($dark-theme);
+  @include mat.form-field-color($dark-theme);
+  @include mat.input-color($dark-theme);
+  @include mat.icon-color($dark-theme);
 }
 
 .rtl-dialog .mat-dialog-container {
@@ -95,6 +111,47 @@ $light-theme: mat.define-theme((
   --transition-fast: 120ms ease;
 }
 
+body.theme-dark {
+  --color-primary: #7c3aed;
+  --color-primary-dark: #6d28d9;
+  --color-primary-soft: #f5f0ff;
+  --color-primary-glow: rgba(124, 54, 253, 0.5);
+  --color-agent: #c084fc;
+  --color-agent-dark: #a855f7;
+  --color-agent-soft: #220035;
+  --color-agent-glow: rgba(192, 132, 252, 0.4);
+  --color-bg: #0a0a1a;
+  --color-bg-deep: #050512;
+  --color-surface: rgba(25, 25, 46, 0.72);
+  --color-surface-glass: rgba(25, 25, 46, 0.72);
+  --color-surface-solid: #121222;
+  --color-text: #e5e7f0;
+  --color-text-secondary: #adb5c0;
+  --color-text-faint: #7a8290;
+  --color-border: #2a2a42;
+  --color-border-strong: #42425e;
+  --color-danger: #f87171;
+  --color-success: #34d399;
+
+  --color-surface-container: #121222;
+  --color-surface-container-high: #18182a;
+  --color-on-primary: #ffffff;
+  --color-on-surface: #e5e7f0;
+  --color-primary-gradient-end: #8b5cf6;
+  --color-message-gradient-end: #a855f7;
+  --color-danger-soft: #451414;
+  --color-scrollbar-thumb: #42425e;
+  --color-scrollbar-thumb-hover: #5a5a7a;
+
+  --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.25), 0 1px 2px -1px rgba(0, 0, 0, 0.25);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 12px 24px -4px rgba(0, 0, 0, 0.3), 0 4px 8px -4px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 24px 48px -8px rgba(0, 0, 0, 0.4), 0 8px 16px -8px rgba(0, 0, 0, 0.4);
+  --shadow-glow-primary: 0 8px 32px -4px rgba(124, 54, 253, 0.5);
+  --shadow-glow-agent: 0 8px 32px -4px rgba(192, 132, 252, 0.4);
+}
+
 * {
   box-sizing: border-box;
 }
@@ -110,6 +167,7 @@ body {
   background-color: var(--color-bg);
   color: var(--color-text);
   -webkit-font-smoothing: antialiased;
+  transition: background-color var(--transition), color var(--transition);
 }
 
 input,

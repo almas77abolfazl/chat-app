@@ -8,6 +8,7 @@ import { authInterceptor } from './auth/auth.interceptor';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 import { FaIconLibrary } from '@fortawesome/angular-fontawesome';
 import { registerAppIcons } from './icons';
+import { ThemeService } from './helpers/theme.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -15,10 +16,17 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes, withViewTransitions()),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimationsAsync(),
+    ThemeService,
     {
       provide: APP_INITIALIZER,
       useFactory: (library: FaIconLibrary) => () => registerAppIcons(library),
       deps: [FaIconLibrary],
+      multi: true,
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: (theme: ThemeService) => () => theme.setTheme(theme.theme),
+      deps: [ThemeService],
       multi: true,
     },
   ],

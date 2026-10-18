@@ -1,6 +1,7 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MainService } from '../../main.service';
+import { ThemeService } from '../../../helpers/theme.service';
 @Component({
   selector: 'app-side-bar',
   standalone: true,
@@ -18,7 +19,12 @@ export class SideBarComponent {
     { icon: 'broadcast-tower', title: 'کانال‌ها', id: 'channels' },
     { icon: 'address-book', title: 'مخاطبان', id: 'contacts' },
   ];
-  constructor(public mainService: MainService) {}
+  constructor(public mainService: MainService, public themeService: ThemeService) {}
+
+  toggleTheme() {
+    this.themeService.toggleTheme();
+    if (this.mobileOpen) this.close.emit();
+  }
 
   selectNav(id: string) {
     if (id === 'contacts') this.mainService.showContacts();
