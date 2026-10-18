@@ -1,6 +1,11 @@
 <div class="contacts-page">
   <div class="header">
-    <div class="title">مخاطبان</div>
+    <div class="header-row">
+      <div class="title">مخاطبان</div>
+      <button class="new-contact-btn" (click)="showNewContactForm = true" title="اضافه کردن مخاطب جدید">
+        <fa-icon [icon]="['fas', 'user-plus']"></fa-icon>
+      </button>
+    </div>
     <input
       type="text"
       class="search-input"
@@ -10,6 +15,36 @@
     />
   </div>
 
+  @if (showNewContactForm) {
+  <div class="new-contact-form">
+    <input
+      type="text"
+      class="form-control"
+      placeholder="نام"
+      [(ngModel)]="newContactFirstName"
+    />
+    <input
+      type="text"
+      class="form-control"
+      placeholder="نام خانوادگی"
+      [(ngModel)]="newContactLastName"
+    />
+    <input
+      type="text"
+      class="form-control"
+      placeholder="شماره موبایل"
+      [(ngModel)]="newContactPhone"
+    />
+    <div class="form-actions">
+      <button class="btn btn-secondary" (click)="cancelNewContact()">لغو</button>
+      <button class="btn btn-primary" [disabled]="!newContactPhone.trim()" (click)="addNewContact()">
+        <fa-icon [icon]="['fas', 'check']"></fa-icon>
+        افزودن
+      </button>
+    </div>
+  </div>
+  }
+
   <div class="contacts-list">
     <!-- Saved contacts -->
     @if (contacts.length > 0) {
@@ -17,10 +52,10 @@
     @for (contact of contacts; track contact._id) {
     <div class="contact-item contact-saved" (click)="pick(contact)">
       <div class="avatar">
-        @if (contact.profilePicture) {
-        <img [src]="contact.profilePicture" alt="avatar" />
+        @if (getAvatarUrl(contact)) {
+        <img [src]="getAvatarUrl(contact)" alt="avatar" />
         } @else {
-        {{ (contact.firstName ?? '؟').charAt(0) }}
+        {{ (contact.firstName ?? contact.phoneNumber ?? '؟').charAt(0) }}
         }
       </div>
       <div class="contact-info">
@@ -28,6 +63,8 @@
         <div class="contact-status">
           @if (contact.isOnline) {
           <span class="status-online">آنلاین</span>
+          } @else if (contact.lastSeen) {
+          آخرین حضور {{ contact.lastSeen | date: 'short' }}
           } @else {
           آفلاین
           }
@@ -38,6 +75,13 @@
       </button>
     </div>
     }
+    }
+
+    @if (contacts.length === 0 && !showNewContactForm) {
+    <div class="empty">
+      <fa-icon [icon]="['fas', 'user-group']" class="empty-icon"></fa-icon>
+      <p>مخاطبی ذخیره نکرده‌اید</p>
+    </div>
     }
 
     <!-- Search results -->

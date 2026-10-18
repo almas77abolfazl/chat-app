@@ -304,22 +304,36 @@
       padding: 0.55rem 0.75rem;
       border-radius: var(--radius-lg);
 
-      &.sent {
-        align-self: flex-end;
-        background: linear-gradient(135deg, var(--color-primary), var(--color-primary-gradient-end));
-        color: var(--color-on-primary);
-        box-shadow: var(--shadow-glow-primary);
-        border-radius: var(--radius-lg) var(--radius-sm) var(--radius-lg) var(--radius-lg);
-
-        .message-time {
-          color: color-mix(in srgb, var(--color-on-primary) 75%, transparent);
-        }
-
-        .agent-tool-badge {
-          background: color-mix(in srgb, var(--color-on-primary) 18%, transparent);
+       &.sent {
+          align-self: flex-end;
+          background: linear-gradient(135deg, var(--color-primary), var(--color-primary-gradient-end));
           color: var(--color-on-primary);
+          box-shadow: var(--shadow-glow-primary);
+          border-radius: var(--radius-lg) var(--radius-sm) var(--radius-lg) var(--radius-lg);
+
+          .message-content {
+            text-align: right;
+          }
+
+          .message-time {
+            text-align: left;
+            direction: ltr;
+          }
+
+          .message-actions {
+            inset-inline-end: 0.2rem;
+            inset-inline-start: auto;
+          }
+
+          .message-time {
+            color: color-mix(in srgb, var(--color-on-primary) 75%, transparent);
+          }
+
+          .agent-tool-badge {
+            background: color-mix(in srgb, var(--color-on-primary) 18%, transparent);
+            color: var(--color-on-primary);
+          }
         }
-      }
 
       &.received {
         align-self: flex-start;
@@ -435,57 +449,20 @@
         transition: all var(--transition-fast);
       }
 
-      .msg-action:hover {
+      .msg-action.edit-btn:hover {
+        background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+        color: var(--color-primary-dark);
+      }
+
+      .msg-action.delete-btn:hover {
         background: color-mix(in srgb, var(--color-danger) 10%, transparent);
         color: var(--color-danger);
       }
-    }
 
-    .reactions-bar {
-      display: flex;
-      gap: 0.4rem;
-      padding: 0.35rem 0.5rem;
-      margin-top: 0.25rem;
-      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-      border-radius: var(--radius-full);
-      border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
-      font-size: 0.75rem;
-    }
-
-    .reaction-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.2rem;
-      padding: 0.15rem 0.45rem;
-      border-radius: var(--radius-full);
-      background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-      border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
-      cursor: pointer;
-      transition: all var(--transition-fast);
-      font-size: 0.7rem;
-
-      &:hover {
-        background: color-mix(in srgb, var(--color-primary) 20%, transparent);
-        transform: translateY(-1px);
+      .msg-action.reaction-btn:hover {
+        background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+        color: var(--color-primary-dark);
       }
-    }
-
-    .reaction-emoji {
-      font-size: 0.85rem;
-    }
-
-    .reaction-count {
-      font-weight: 700;
-      font-size: 0.7rem;
-    }
-
-    .reaction-user-you {
-      font-size: 0.6rem;
-      background: var(--color-primary);
-      color: #ffffff;
-      padding: 0.05rem 0.2rem;
-      border-radius: var(--radius-full);
-      margin-inline-start: 0.2rem;
     }
 
     .msg-status {
