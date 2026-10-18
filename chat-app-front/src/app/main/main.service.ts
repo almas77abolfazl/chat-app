@@ -601,6 +601,18 @@ export class MainService {
     return this.httpRequestService.get('search?query=' + encodeURIComponent(query));
   }
 
+  getContacts(): Observable<any[]> {
+    return this.httpRequestService.get('user/contacts');
+  }
+
+  addContact(contactId: string): Observable<any> {
+    return this.httpRequestService.post(`user/contacts/${contactId}`, {});
+  }
+
+  removeContact(contactId: string): Observable<any> {
+    return this.httpRequestService.delete('user/contacts', contactId);
+  }
+
   sendMessage(currentChat: ChatListItem, input: HTMLTextAreaElement) {
     const content = input.value?.trim();
     if (!content) return;

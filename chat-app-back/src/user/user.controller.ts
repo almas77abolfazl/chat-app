@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserNamesDto } from './dto/update-user-names.dto';
 import { IUser } from './interfaces/user.interface';
@@ -47,5 +47,23 @@ export class UserController {
   @Get(':id/status')
   async getUserStatus(@Param('id') id: string) {
     return this.userService.getUserStatus(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('contacts')
+  async getContacts(@Req() request: RequestWithUser) {
+    return this.userService.getContacts(request.user._id as string);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('contacts/:contactId')
+  async addContact(@Req() request: RequestWithUser, @Param('contactId') contactId: string) {
+    return this.userService.addContact(request.user._id as string, contactId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('contacts/:contactId')
+  async removeContact(@Req() request: RequestWithUser, @Param('contactId') contactId: string) {
+    return this.userService.removeContact(request.user._id as string, contactId);
   }
 }

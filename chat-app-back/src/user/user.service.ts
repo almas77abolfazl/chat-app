@@ -123,6 +123,34 @@ export class UserService {
     return fs.readFileSync(path).toString('base64');
   }
 
+  async getContacts(userId: string): Promise<IUser[]> {
+    const user = await this.userModel.findById(userId).populate('contacts', 'firstName lastName username profilePicture status isOnline lastSeen phoneNumber').exec();
+    if (!user) return [];
+    return user.contacts as unknown as IUser[];
+  }
+
+  async addContact(userId: string, contactId: string): Promise<IUser> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    if (!user.contacts.includes(contactId as any)) {
+      user.contacts.push(contactId as any);
+      await user.save();
+    }
+    return user;
+  }
+
+  async removeContact(userId: string, contactId: string): Promise<IUser> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    user.contacts = user.contacts.filter((id) => id.toString() !== contactId);
+    await user.save();
+    return user;
+  }
+
   private async doesUserExist(phoneNumber: string): Promise<boolean> {
     const user = await this.userModel.findOne({ phoneNumber });
     return !!user;
