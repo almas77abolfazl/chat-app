@@ -16,6 +16,32 @@
     </div>
 
     <div class="nav-section">
+      <div class="nav-title" [attr.data-tooltip]="mainService.agentConfigured ? ('agent.history' | i18n) : ('agent.history' | i18n)" data-tooltip-placement="left">{{ 'agent.history' | i18n }}</div>
+      @if (mainService.agentConfigured) {
+        <div class="assistant-history-list">
+          @for (conv of agentHistory; track $any(conv.chatId)) {
+          <div
+            class="menu-item assistant-history-item"
+            [class.active]="mainService.currentChat?._id === conv.chatId"
+            (click)="openAgentHistory(conv.chatId)"
+            [attr.data-tooltip]="conv.summary | i18n"
+            data-tooltip-placement="left"
+          >
+            <fa-icon [icon]="['fas', 'clock']"></fa-icon>
+            <span class="history-summary">{{ conv.summary }}</span>
+          </div>
+          }
+          @empty {
+          <div class="no-history" (click)="mainService.openAgentChat()">
+            <fa-icon [icon]="['fas', 'comment-dots']"></fa-icon>
+            <span>{{ 'agent.startConversation' | i18n }}</span>
+          </div>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="nav-section">
       <div class="nav-title">{{ 'chat.title' | i18n }}</div>
       @for (item of navItems; track $index) {
       <div
