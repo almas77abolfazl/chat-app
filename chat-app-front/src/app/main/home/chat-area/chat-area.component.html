@@ -187,6 +187,12 @@
             <fa-icon [icon]="['fas', 'download']"></fa-icon>
           </a>
         </div>
+        } @else if (message.mediaType === 'gif' && message.fileUrl) {
+        <img [src]="message.fileUrl" class="msg-gif" alt="GIF" />
+        } @else if (message.mediaType === 'sticker' && message.fileUrl) {
+        <img [src]="message.fileUrl" class="msg-sticker" alt="Sticker" />
+        } @else if (message.mediaType === 'emoji' && message.fileUrl) {
+        <span class="msg-emoji">{{ message.fileUrl }}</span>
         } @else {
         {{ message.content }}
         @if (message.isStreaming) {
@@ -263,6 +269,9 @@
 
   <div class="chat-input-container">
     <div class="input-actions-row">
+      <button class="emoji-picker-toggle" (click)="toggleEmojiPicker(); $event.stopPropagation()" type="button" title="ایموجی">
+        <fa-icon [icon]="['fas', 'smile']" class="emoji-icon"></fa-icon>
+      </button>
       <label class="attach-label" title="پیوست فایل">
         <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none" multiple />
         <fa-icon [icon]="['fas', 'paperclip']" class="attach-icon"></fa-icon>
@@ -282,9 +291,23 @@
       (click)="mainService.sendMessage(mainService.currentChat, element)"
       [class.disabled]="!element?.value?.trim()"
     >
-      <fa-icon [icon]="['fas', 'paper-plane']"></fa-icon>
-    </div>
-  </div>
+       <fa-icon [icon]="['fas', 'paper-plane']"></fa-icon>
+     </div>
+   </div>
+   @if (showEmojiPicker) {
+   <div class="emoji-picker">
+     @for (category of emojiCategories; track category.name) {
+     <div class="emoji-category">
+       <div class="emoji-category-name">{{ category.name }}</div>
+       <div class="emoji-grid">
+         @for (emoji of category.emojis; track emoji) {
+         <button class="emoji-item" (click)="insertEmoji(emoji); $event.stopPropagation()" type="button">{{ emoji }}</button>
+         }
+       </div>
+     </div>
+     }
+   </div>
+   }
   } @else {
   <div class="empty-chat hero">
     <div class="hero-illustration">
