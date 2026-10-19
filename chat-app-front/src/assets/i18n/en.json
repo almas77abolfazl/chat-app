@@ -102,5 +102,10 @@
     "title": "Notifications",
     "enabled": "Notifications on",
     "disabled": "Notifications off"
+  },
+  "agent": {
+    "title": "Assistant",
+    "history": "Assistance",
+    "startConversation": "Start a new conversation"
   }
 }

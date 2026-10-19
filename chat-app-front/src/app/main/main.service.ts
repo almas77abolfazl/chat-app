@@ -498,6 +498,18 @@ export class MainService {
       });
   }
 
+  getAgentHistory(): Observable<any> {
+    return this.httpRequestService.get('agent/history');
+  }
+
+  openAgentHistoryChat() {
+    if (!this.botUserId) return this.loadAgentStatus();
+    this.ensureBotChat().then(() => {
+      const chatItem = this.findChatById(this.botChatId);
+      if (chatItem) this.openChat(chatItem);
+    });
+  }
+
   listenToAgentEvents() {
     const emit = (type: string, data: any) => {
       const event: any = { type, data };

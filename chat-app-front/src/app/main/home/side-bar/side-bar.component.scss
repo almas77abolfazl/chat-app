@@ -176,6 +176,32 @@
           color: var(--color-danger);
         }
       }
+
+      &.assistant-history-item {
+        font-size: 0.8rem;
+        opacity: 0.8;
+
+        &.active {
+          font-weight: 600;
+          opacity: 1;
+          background: color-mix(in srgb, var(--color-accent) 8%, transparent);
+        }
+      }
+    }
+
+    .assistant-history-list {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .no-history {
+      cursor: pointer;
+      opacity: 0.6;
+      font-size: 0.85rem;
+
+      &:hover {
+        opacity: 1;
+      }
     }
   }
 

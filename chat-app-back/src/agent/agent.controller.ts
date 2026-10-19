@@ -27,6 +27,22 @@ export class AgentController {
     };
   }
 
+  @Get('history')
+  @UseGuards(JwtAuthGuard)
+  async getHistory(@Req() request: RequestWithUser) {
+    const user = request.user;
+    const bot = await this.botService.getBot();
+    const chatId = await this.chatService.findOrCreateDirectChat(user._id as string, bot._id as string);
+    const messages = await this.messageService.getMessagesByChat(chatId.toString(), user._id as string, 1, 100);
+
+    return {
+      chatId: chatId.toString(),
+      botUserId: bot._id.toString(),
+      botName: `${bot.firstName} ${bot.lastName}`,
+      messages: messages.messages,
+    };
+  }
+
   @Post('message')
   @UseGuards(JwtAuthGuard)
   async postMessage(@Body() body: { content: string }, @Req() request: RequestWithUser) {
