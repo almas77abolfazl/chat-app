@@ -66,4 +66,16 @@ export class UserController {
   async removeContact(@Req() request: RequestWithUser, @Param('contactId') contactId: string) {
     return this.userService.removeContact(request.user._id as string, contactId);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('notifications')
+  async getNotificationSettings(@Req() request: RequestWithUser) {
+    return this.userService.getNotificationSettings(request.user._id as string);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('notifications')
+  async updateNotificationSettings(@Body() body: { enabled: boolean }, @Req() request: RequestWithUser) {
+    return this.userService.updateNotificationSettings(request.user._id as string, body.enabled);
+  }
 }

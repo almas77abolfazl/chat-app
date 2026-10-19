@@ -179,6 +179,18 @@ export class UserService {
     return user;
   }
 
+  async getNotificationSettings(userId: string): Promise<{ enabled: boolean }> {
+    const user = await this.userModel.findById(userId).select('notifications').exec();
+    if (!user) throw new NotFoundException('User not found');
+    return { enabled: user.notifications ?? true };
+  }
+
+  async updateNotificationSettings(userId: string, enabled: boolean): Promise<{ enabled: boolean }> {
+    const user = await this.userModel.findByIdAndUpdate(userId, { notifications: enabled }, { new: true }).select('notifications').exec();
+    if (!user) throw new NotFoundException('User not found');
+    return { enabled: user.notifications };
+  }
+
   private async doesUserExist(phoneNumber: string): Promise<boolean> {
     const user = await this.userModel.findOne({ phoneNumber });
     return !!user;

@@ -97,5 +97,10 @@
     "lightMode": "Light mode",
     "darkMode": "Dark mode",
     "toggle": "Toggle theme"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "enabled": "Notifications on",
+    "disabled": "Notifications off"
   }
 }

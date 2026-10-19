@@ -106,6 +106,12 @@ export class MessageGateway {
           client.emit('messageSent', { chatId, message: msg });
         } else {
           this.server.to(pid).emit('receiveMessage', { chatId, message: msg });
+          this.server.to(pid).emit('notification', {
+            chatId,
+            message: msg,
+            senderId: senderId,
+            senderName: `${sender.firstName ?? ''} ${sender.lastName ?? ''}`.trim(),
+          });
         }
       }
     } catch (error) {

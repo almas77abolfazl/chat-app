@@ -15,4 +15,5 @@ export interface IUser extends Document {
   createdAt: Date;
   isOnline: boolean;
   lastSeen: Date;
+  notifications: boolean;
 }
