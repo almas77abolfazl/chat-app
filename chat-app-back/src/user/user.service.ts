@@ -1,10 +1,12 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './entities/user.entity';
 import { Model } from 'mongoose';
 import { IUser } from './interfaces/user.interface';
 import { UpdateUserNamesDto } from './dto/update-user-names.dto';
 import * as fs from 'fs';
+import { join } from 'path';
+import { resizeAvatar } from 'src/helpers/avatar-resize';
 
 @Injectable()
 export class UserService {
@@ -93,19 +95,42 @@ export class UserService {
   }
 
   async updateProfilePicture(userId: string, filename: string): Promise<User> {
+    const logger = new Logger(UserService.name);
     const user = await this.userModel.findById(userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
+    const inputPath = join('./uploads/avatars', filename);
     const previous = user.profilePicture;
-    user.profilePicture = filename;
+
+    const avatarPath = `./uploads/avatars/${filename}`;
+    if (fs.existsSync(inputPath)) {
+      try {
+        const resizedFilename = `resized_${filename}`;
+        const outputPath = join('./uploads/avatars', resizedFilename);
+        await resizeAvatar(inputPath, outputPath);
+        if (fs.existsSync(outputPath)) {
+          fs.unlinkSync(avatarPath);
+          user.profilePicture = resizedFilename;
+        } else {
+          logger.warn('Avatar resize failed, using original');
+          user.profilePicture = filename;
+        }
+      } catch (error) {
+        logger.warn(`Avatar resize failed: ${error?.message}, using original`);
+        user.profilePicture = filename;
+      }
+    } else {
+      user.profilePicture = filename;
+    }
+
     await user.save();
 
     if (previous) {
-      const path = `./uploads/avatars/${previous}`;
-      if (fs.existsSync(path)) {
-        fs.unlinkSync(path);
+      const previousPath = `./uploads/avatars/${previous}`;
+      if (fs.existsSync(previousPath)) {
+        fs.unlinkSync(previousPath);
       }
     }
     return user;
@@ -124,7 +149,10 @@ export class UserService {
   }
 
   async getContacts(userId: string): Promise<IUser[]> {
-    const user = await this.userModel.findById(userId).populate('contacts', 'firstName lastName username profilePicture status isOnline lastSeen phoneNumber').exec();
+    const user = await this.userModel
+      .findById(userId)
+      .populate('contacts', 'firstName lastName username profilePicture status isOnline lastSeen phoneNumber')
+      .exec();
     if (!user) return [];
     return user.contacts as unknown as IUser[];
   }
