@@ -31,9 +31,11 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   brokenAvatars = new Set<string>();
   showBgSelector = false;
   showChatActions = false;
+  showEmojiPicker = false;
   bgOptions = CHAT_BACKGROUNDS;
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('chatMessages') chatMessages!: ElementRef<HTMLElement>;
+  @ViewChild('element') element!: ElementRef<HTMLTextAreaElement>;
   userReactions: Map<string, string> = new Map();
 
   ngOnInit() {
@@ -335,4 +337,28 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
       });
     }
   }
+
+  toggleEmojiPicker() {
+    this.showEmojiPicker = !this.showEmojiPicker;
+  }
+
+  insertEmoji(emoji: string) {
+    const textarea = this.element?.nativeElement as HTMLTextAreaElement | null;
+    if (textarea) {
+      const start = textarea.selectionStart || 0;
+      const end = textarea.selectionEnd || 0;
+      textarea.value = textarea.value.substring(0, start) + emoji + textarea.value.substring(end);
+      const newPos = start + emoji.length;
+      textarea.selectionStart = newPos;
+      textarea.selectionEnd = newPos;
+      this.onTyping();
+    }
+    this.showEmojiPicker = false;
+  }
+
+  emojiCategories: { name: string; emojis: string[] }[] = [
+    { name: 'Smileys', emojis: ['😀', '😊', '😎', '😍', '😂', '🥰', '😉', '😘', '😅', '😄', '😁', '😆', '😅', '🤔', '🙂', '🥹'] },
+    { name: 'Gestures', emojis: ['👍', '👎', '👏', '🙏', '👋', '🤝', '👏', '👐', '👏', '👌', '✌️', '🙏'] },
+    { name: 'Objects', emojis: ['🎉', '❤️', '🔥', '⭐', '✨', '💯', '🎯', '🎁', '🎈', '🌟', '⚡', '☀️'] },
+  ];
 }

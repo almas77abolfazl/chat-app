@@ -9,7 +9,8 @@
     "startChat": "شروع گفتگو",
     "bgSelector": "پس‌زمینه گفتگو",
     "delete": "حذف گفتگو",
-    "leave": "خروج از گروه"
+    "leave": "خروج از گروه",
+    "emojiPicker": "انتخاب ایموجی"
   },
   "contacts": {
     "title": "مخاطبان",

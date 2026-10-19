@@ -9,7 +9,8 @@
     "startChat": "Start chat",
     "bgSelector": "Chat background",
     "delete": "Delete chat",
-    "leave": "Leave group"
+    "leave": "Leave group",
+    "emojiPicker": "Emoji picker"
   },
   "contacts": {
     "title": "Contacts",

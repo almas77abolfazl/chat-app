@@ -83,13 +83,15 @@ export class MessageController {
 
     const fileUrl = `/uploads/media/${file.filename}`;
     return this.messageService.saveMessageToChat(chatId, request.user._id as string, content, {
-      mediaType: file.mimetype.startsWith('image/')
-        ? 'image'
-        : file.mimetype.startsWith('video/')
-          ? 'video'
-          : file.mimetype.startsWith('audio/')
-            ? 'voice'
-            : 'file',
+      mediaType: file.mimetype.startsWith('image/gif')
+        ? 'gif'
+        : file.mimetype.startsWith('image/')
+          ? 'image'
+          : file.mimetype.startsWith('video/')
+            ? 'video'
+            : file.mimetype.startsWith('audio/')
+              ? 'voice'
+              : 'file',
       fileUrl,
       fileName: file.originalname,
       fileSize: file.size,
