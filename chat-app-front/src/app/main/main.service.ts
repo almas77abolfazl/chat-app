@@ -309,6 +309,25 @@ export class MainService {
       });
     });
 
+    this.socketService.on('notification', (payload: { chatId: string; message: Message; senderId: string; senderName: string }) => {
+      this.zone.run(() => {
+        const isCurrentChat = this.currentChat?._id === payload.chatId;
+        if (isCurrentChat) return;
+
+        const chatItem = this.findChatById(payload.chatId);
+        if (chatItem) {
+          chatItem.messageCount = (chatItem.messageCount || 0) + 1;
+          this.refreshItem(chatItem);
+        }
+
+        const msg = payload.message;
+        const senderName = payload.senderName || 'Unknown';
+        const content = msg.content?.substring(0, 50) || (msg.mediaType ? `[${msg.mediaType}]` : 'New message');
+        const truncated = content.length >= 50 ? '...' : '';
+        this.snackbar.show(`${senderName}: ${content}${truncated}`, 'info', 5000);
+      });
+    });
+
     this.socketService.on('messageStatusUpdated', (payload: { messageId: string; status: string; userId: string }) => {
       this.zone.run(() => {
         this.chatItems.forEach((chatItem) => {
@@ -829,5 +848,13 @@ const messageData: Message = {
 
   leaveChat(chatId: string): Observable<any> {
     return this.httpRequestService.post(`chat/${chatId}/leave`, {});
+  }
+
+  getNotificationSettings(): Observable<any> {
+    return this.httpRequestService.get('user/notifications');
+  }
+
+  updateNotificationSettings(enabled: boolean): Observable<any> {
+    return this.httpRequestService.post('user/notifications', { enabled });
   }
 }

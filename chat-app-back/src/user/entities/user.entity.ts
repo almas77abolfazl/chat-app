@@ -44,6 +44,9 @@ export class User {
 
   @Prop()
   lastSeen: Date;
+
+  @Prop({ default: true })
+  notifications: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

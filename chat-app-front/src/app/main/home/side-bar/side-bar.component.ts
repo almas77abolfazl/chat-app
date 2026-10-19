@@ -4,6 +4,7 @@ import { MainService } from '../../main.service';
 import { ThemeService } from '../../../helpers/theme.service';
 import { TranslationService } from '../../../helpers/translation.service';
 import { I18nPipe } from '../../../helpers/i18n.pipe';
+import { take } from 'rxjs/operators';
 @Component({
   selector: 'app-side-bar',
   standalone: true,
@@ -21,11 +22,14 @@ export class SideBarComponent {
     { icon: 'broadcast-tower', titleKey: 'sidebar.channels', id: 'channels' },
     { icon: 'address-book', titleKey: 'contacts.title', id: 'contacts' },
   ];
+  notificationsEnabled = true;
   constructor(
     public mainService: MainService,
     public themeService: ThemeService,
     public translationService: TranslationService
-  ) {}
+  ) {
+    this.loadNotificationSettings();
+  }
 
   toggleTheme() {
     this.themeService.toggleTheme();
@@ -41,5 +45,22 @@ export class SideBarComponent {
     if (id === 'contacts') this.mainService.showContacts();
     else this.mainService.setChatFilter(id as any);
     if (this.mobileOpen) this.close.emit();
+  }
+
+  loadNotificationSettings() {
+    this.mainService.getNotificationSettings().pipe(take(1)).subscribe({
+      next: (res: any) => { this.notificationsEnabled = res.enabled ?? true; },
+      error: () => { this.notificationsEnabled = true; },
+    });
+  }
+
+  toggleNotifications() {
+    this.notificationsEnabled = !this.notificationsEnabled;
+    this.mainService.updateNotificationSettings(this.notificationsEnabled).pipe(take(1)).subscribe({
+      error: () => {
+        this.notificationsEnabled = !this.notificationsEnabled;
+        this.mainService.snackbar.error('خطا در ذخیره تنظیمات', 3000);
+      },
+    });
   }
 }

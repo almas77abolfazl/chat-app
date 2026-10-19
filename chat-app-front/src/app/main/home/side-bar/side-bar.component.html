@@ -49,5 +49,9 @@
       <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
       <span>{{ 'sidebar.logout' | i18n }}</span>
     </div>
+    <div class="menu-item notification-toggle-item" (click)="toggleNotifications()" [attr.data-tooltip]="'notifications.title' | i18n" data-tooltip-placement="left">
+      <fa-icon [icon]="['fas', notificationsEnabled ? 'bell' : 'bell-slash']"></fa-icon>
+      <span>{{ notificationsEnabled ? ('notifications.enabled' | i18n) : ('notifications.disabled' | i18n) }}</span>
+    </div>
   </div>
 </div>
