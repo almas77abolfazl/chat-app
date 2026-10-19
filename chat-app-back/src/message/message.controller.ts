@@ -55,11 +55,7 @@ export class MessageController {
 
   @Put(':messageId')
   @UseGuards(JwtAuthGuard)
-  async editMessage(
-    @Req() request: RequestWithUser,
-    @Param('messageId') messageId: string,
-    @Body() body: { content: string },
-  ) {
+  async editMessage(@Req() request: RequestWithUser, @Param('messageId') messageId: string, @Body() body: { content: string }) {
     return this.messageService.editMessage(messageId, request.user._id as string, body.content);
   }
 
@@ -90,10 +86,10 @@ export class MessageController {
       mediaType: file.mimetype.startsWith('image/')
         ? 'image'
         : file.mimetype.startsWith('video/')
-        ? 'video'
-        : file.mimetype.startsWith('audio/')
-        ? 'voice'
-        : 'file',
+          ? 'video'
+          : file.mimetype.startsWith('audio/')
+            ? 'voice'
+            : 'file',
       fileUrl,
       fileName: file.originalname,
       fileSize: file.size,

@@ -124,7 +124,10 @@ export class UserService {
   }
 
   async getContacts(userId: string): Promise<IUser[]> {
-    const user = await this.userModel.findById(userId).populate('contacts', 'firstName lastName username profilePicture status isOnline lastSeen phoneNumber').exec();
+    const user = await this.userModel
+      .findById(userId)
+      .populate('contacts', 'firstName lastName username profilePicture status isOnline lastSeen phoneNumber')
+      .exec();
     if (!user) return [];
     return user.contacts as unknown as IUser[];
   }

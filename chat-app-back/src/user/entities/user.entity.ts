@@ -47,3 +47,7 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+UserSchema.index({ phoneNumber: 1 }, { unique: true });
+UserSchema.index({ username: 1 }, { unique: true, sparse: true });
+UserSchema.index({ isOnline: 1 });

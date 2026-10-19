@@ -285,16 +285,11 @@ export class MessageGateway {
   }
 
   @SubscribeMessage('messageReaction')
-  async handleMessageReaction(
-    @MessageBody() data: { messageId: string; emoji: string },
-    @ConnectedSocket() client: Socket,
-  ) {
+  async handleMessageReaction(@MessageBody() data: { messageId: string; emoji: string }, @ConnectedSocket() client: Socket) {
     try {
       const user = client.data.user as IUser;
       const existingReactions = await this.reactionService.getReactionCounts(data.messageId);
-      const hasUserReacted = existingReactions.some((r) =>
-        r.users.includes(user._id.toString()),
-      );
+      const hasUserReacted = existingReactions.some((r) => r.users.includes(user._id.toString()));
 
       if (hasUserReacted) {
         // Remove reaction (toggle off)
