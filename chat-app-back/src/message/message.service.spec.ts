@@ -1,8 +1,14 @@
-jest.mock('mongoose', () => ({
-  ...jest.requireActual('mongoose'),
-  model: jest.fn(),
-  Schema: jest.fn(),
-}));
+jest.mock('mongoose', () => {
+  const actual = jest.requireActual('mongoose');
+  return {
+    ...actual,
+    model: jest.fn(),
+    Schema: jest.fn().mockImplementation((...args: any[]) => {
+      const schema = actual.Schema(...args);
+      return schema;
+    }),
+  };
+});
 
 import { Test } from '@nestjs/testing';
 import { getModelToken } from '@nestjs/mongoose';

@@ -37,3 +37,6 @@ export class Chat extends Document {
 }
 
 export const ChatSchema = SchemaFactory.createForClass(Chat);
+
+ChatSchema.index({ participants: 1 });
+ChatSchema.index({ updatedAt: -1 });
