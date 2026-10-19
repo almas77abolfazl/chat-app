@@ -1,14 +1,4 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Get,
-  Param,
-  UseGuards,
-  Req,
-  NotFoundException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, UseGuards, Req, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { ChannelService } from './channel.service';
 import { CreateChannelDto } from './dto/create-channel.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';

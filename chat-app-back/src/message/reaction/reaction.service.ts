@@ -37,10 +37,7 @@ export class ReactionService {
   }
 
   async getReactionCounts(messageId: string): Promise<{ emoji: string; count: number; users: string[] }[]> {
-    const reactions = await this.reactionModel
-      .find({ messageId })
-      .populate('userId', 'firstName lastName profilePicture _id')
-      .exec();
+    const reactions = await this.reactionModel.find({ messageId }).populate('userId', 'firstName lastName profilePicture _id').exec();
 
     const groups: Record<string, { count: number; users: string[] }> = {};
 
