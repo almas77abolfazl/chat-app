@@ -2,7 +2,10 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: transparent;
+  background: var(--color-surface-container);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
   direction: rtl;
   font-family: "Shabnam", "Helvetica Neue", sans-serif;
   overflow: hidden;
@@ -58,6 +61,68 @@
       display: flex;
       align-items: center;
       gap: 0.4rem;
+
+      .bg-selector-trigger {
+        font-size: 1.1rem;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        padding: 0.3rem;
+        border-radius: var(--radius-full);
+        transition: all var(--transition-fast);
+
+        &:hover {
+          background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+          color: var(--color-primary-dark);
+          transform: scale(1.1);
+        }
+      }
+
+      .bg-selector-wrap {
+        position: relative;
+
+        .bg-selector-dropdown {
+          position: absolute;
+          top: 120%;
+          inset-inline-end: 0;
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.4rem;
+          padding: 0.6rem 0.8rem;
+          background: var(--color-surface-solid);
+          border: 1px solid var(--color-border);
+          border-radius: var(--radius-lg);
+          box-shadow: var(--shadow-lg);
+          z-index: 100;
+          min-width: 140px;
+
+          .bg-option {
+            width: 32px;
+            height: 32px;
+            border-radius: var(--radius-sm);
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-gradient-end));
+            cursor: pointer;
+            position: relative;
+            border: 2px solid transparent;
+            transition: transform var(--transition-fast), border-color var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            &:hover {
+              transform: scale(1.1);
+            }
+
+            &.active {
+              border-color: var(--color-primary);
+            }
+
+            .check-icon {
+              color: var(--color-on-primary);
+              font-size: 0.7rem;
+            }
+          }
+        }
+      }
     }
 
     .chat-avatar-wrap {
