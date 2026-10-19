@@ -30,6 +30,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   editContent = '';
   brokenAvatars = new Set<string>();
   showBgSelector = false;
+  showChatActions = false;
   bgOptions = CHAT_BACKGROUNDS;
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('chatMessages') chatMessages!: ElementRef<HTMLElement>;
@@ -297,5 +298,41 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     if (bg.type === 'solid') return 'var(--color-surface-container)';
     if (bg.type === 'gradient') return 'linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-deep) 100%)';
     return 'linear-gradient(135deg, #6366f1, #8b5cf6)';
+  }
+
+  toggleChatActions() {
+    this.showChatActions = !this.showChatActions;
+  }
+
+  deleteCurrentChat() {
+    const chat = this.mainService.currentChat;
+    if (!chat) return;
+    if (confirm('آیا از حذف این گفتگو مطمئن هستید؟')) {
+      this.mainService.deleteChat(chat._id as string).pipe(take(1)).subscribe({
+        next: () => {
+          this.mainService.closeCurrentChat();
+          this.mainService.getChatList();
+        },
+        error: () => {
+          this.mainService.snackbar.error('خطا در حذف گفتگو', 3000);
+        },
+      });
+    }
+  }
+
+  leaveCurrentChat() {
+    const chat = this.mainService.currentChat;
+    if (!chat) return;
+    if (confirm('آیا از خروج از این گفتگو مطمئن هستید؟')) {
+      this.mainService.leaveChat(chat._id as string).pipe(take(1)).subscribe({
+        next: () => {
+          this.mainService.closeCurrentChat();
+          this.mainService.getChatList();
+        },
+        error: () => {
+          this.mainService.snackbar.error('خطا در خروج از گفتگو', 3000);
+        },
+      });
+    }
   }
 }

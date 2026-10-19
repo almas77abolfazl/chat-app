@@ -326,4 +326,28 @@ export class MessageGateway {
       client.emit('messageError', { message: error?.message ?? 'Failed to add reaction' });
     }
   }
+
+  @SubscribeMessage('chatDelete')
+  async handleChatDelete(@MessageBody() data: { chatId: string }, @ConnectedSocket() client: Socket) {
+    try {
+      const user = client.data.user as IUser;
+      await this.chatService.deleteChat(data.chatId, user._id as string);
+      client.join(data.chatId);
+      this.server.to(data.chatId).emit('chatDeleted', { chatId: data.chatId, userId: user._id.toString() });
+    } catch (error) {
+      client.emit('messageError', { message: error?.message ?? 'Failed to delete chat' });
+    }
+  }
+
+  @SubscribeMessage('chatLeave')
+  async handleChatLeave(@MessageBody() data: { chatId: string }, @ConnectedSocket() client: Socket) {
+    try {
+      const user = client.data.user as IUser;
+      await this.chatService.deleteChat(data.chatId, user._id as string);
+      client.join(data.chatId);
+      this.server.to(data.chatId).emit('chatLeft', { chatId: data.chatId, userId: user._id.toString() });
+    } catch (error) {
+      client.emit('messageError', { message: error?.message ?? 'Failed to leave chat' });
+    }
+  }
 }

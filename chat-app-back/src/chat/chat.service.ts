@@ -147,4 +147,33 @@ export class ChatService {
     }
     return chat;
   }
+
+  async deleteChat(chatId: string, userId: string): Promise<void> {
+    const userObjectId = new Types.ObjectId(userId);
+    const chat = await this.chatModel.findById(chatId).exec();
+    if (!chat) throw new NotFoundException('Chat not found');
+
+    if (!chat.isGroup && !chat.isChannel) {
+      if (!chat.participants.includes(userObjectId)) {
+        throw new ForbiddenException('You are not a participant of this chat');
+      }
+      chat.participants = chat.participants.filter((p) => p.toString() !== userId);
+      if (chat.participants.length === 0) {
+        await this.chatModel.deleteOne({ _id: chatId }).exec();
+      } else {
+        await chat.save();
+      }
+      return;
+    }
+
+    const userIdObj = new Types.ObjectId(userId);
+    if (!chat.participants.includes(userIdObj)) {
+      throw new ForbiddenException('You are not a participant of this chat');
+    }
+    chat.participants = chat.participants.filter((p) => p.toString() !== userId);
+    if (chat.unreadCounts) {
+      chat.unreadCounts.delete(userId);
+    }
+    await chat.save();
+  }
 }

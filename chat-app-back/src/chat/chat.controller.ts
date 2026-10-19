@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RequestWithUser } from 'src/auth/interfaces/request-with-user.model';
@@ -55,5 +55,19 @@ export class ChatController {
   @UseGuards(JwtAuthGuard)
   async subscribeChannel(@Param('id') id: string, @Req() request: RequestWithUser) {
     return this.chatService.subscribeChannel(id, request.user._id as string);
+  }
+
+  @Post(':id/leave')
+  @UseGuards(JwtAuthGuard)
+  async leaveChat(@Param('id') id: string, @Req() request: RequestWithUser) {
+    await this.chatService.deleteChat(id, request.user._id as string);
+    return { success: true };
+  }
+
+  @Delete(':id/delete')
+  @UseGuards(JwtAuthGuard)
+  async deleteChat(@Param('id') id: string, @Req() request: RequestWithUser) {
+    await this.chatService.deleteChat(id, request.user._id as string);
+    return { success: true };
   }
 }

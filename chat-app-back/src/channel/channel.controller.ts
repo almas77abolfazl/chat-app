@@ -29,12 +29,19 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Post(':id/unsubscribe')
   async unsubscribe(@Param('id') id: string, @Req() request: RequestWithUser) {
+    return this.channelService.removeSubscriber(id, request.user._id as string);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post(':id/leave')
+  async leaveChannel(@Param('id') id: string, @Req() request: RequestWithUser) {
     const channel = await this.channelService.findById(id);
     if (!channel) throw new NotFoundException('Channel not found');
     const userId = request.user._id.toString();
-    channel.subscribers = channel.subscribers.filter((s) => s.toString() !== userId);
-    await channel.save();
-    return { success: true };
+    if (channel.owner?.toString() === userId) {
+      throw new ForbiddenException('Channel owner cannot leave');
+    }
+    return this.channelService.removeSubscriber(id, userId);
   }
 
   @UseGuards(JwtAuthGuard)
