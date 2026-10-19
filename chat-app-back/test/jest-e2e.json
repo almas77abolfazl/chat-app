@@ -5,5 +5,12 @@
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
-  }
+  },
+  "moduleNameMapper": {
+    "^src/(.*)$": "<rootDir>/../src/$1"
+  },
+  "transformIgnorePatterns": [
+    "node_modules/(?!@nestjs/axios)"
+  ],
+  "setupFilesAfterEnv": ["./jest-e2e.setup.ts"]
 }

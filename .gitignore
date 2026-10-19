@@ -42,9 +42,9 @@
 # Angular specific
 *.angular/
 
-# Temporary files
-*tmp/
-*temp/
+# Build cache
+tsconfig.tsbuildinfo
+tsconfig.build.tsbuildinfo
 
 # Uploaded files (avatars, media) - should not be committed to git
 chat-app-back/uploads/
