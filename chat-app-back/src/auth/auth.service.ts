@@ -57,7 +57,7 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign({
       phoneNumber: user.phoneNumber,
-      sub: user._id as string,
+      sub: user._id.toString(),
     });
     const refreshToken = this.generateRefreshToken();
     await this.saveSessionToDatabase(user, refreshToken, deviceName);
@@ -66,7 +66,7 @@ export class AuthService {
     return {
       access_token: accessToken,
       refreshToken: refreshToken,
-      userId: user._id as string,
+      userId: user._id.toString(),
       firstName: user.firstName,
       lastName: user.lastName,
     };
@@ -84,7 +84,7 @@ export class AuthService {
   public async logout(userId: string) {
     const user = await this.userService.findById(userId);
     user.sessions = [];
-    await this.userService.update(user._id as string, user);
+    await this.userService.update(user._id.toString(), user);
     return { message: 'ok' };
   }
 
@@ -101,13 +101,13 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign({
       phoneNumber: user.phoneNumber,
-      sub: user._id as string,
+      sub: user._id.toString(),
     });
     const newRefreshToken = this.generateRefreshToken();
 
     session.token = newRefreshToken;
     session.expiresAt = this.generateRefreshTokenExpiryTime();
-    await this.userService.update(user._id as string, user);
+    await this.userService.update(user._id.toString(), user);
 
     return {
       access_token: accessToken,
@@ -142,7 +142,7 @@ export class AuthService {
     const expiresAt = this.generateRefreshTokenExpiryTime();
     if (!user.sessions) user.sessions = [];
     user.sessions.push({ token: refreshToken, expiresAt, deviceName });
-    await this.userService.update(user._id as string, user);
+    await this.userService.update(user._id.toString(), user);
   }
 
   private generateRefreshTokenExpiryTime(): number {

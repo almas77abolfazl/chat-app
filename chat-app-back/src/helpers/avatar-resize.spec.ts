@@ -24,8 +24,9 @@ jest.mock('sharp', () => {
   return { __esModule: true, default: mockFn };
 });
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const mockSharp = require('sharp').default as jest.Mock;
+/* eslint-disable @typescript-eslint/no-require-imports */
+const mockSharp: jest.Mock = require('sharp').default;
+/* eslint-enable @typescript-eslint/no-require-imports */
 
 describe('resizeAvatar', () => {
   const testDir = path.join(__dirname, 'test-fixtures');

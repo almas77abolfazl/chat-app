@@ -10,6 +10,6 @@ export class SearchController {
   @Get()
   @UseGuards(JwtAuthGuard)
   findOne(@Query() query: { query: string }, @Req() request: RequestWithUser) {
-    return this.searchService.findByQuery(query.query, request.user._id as string);
+    return this.searchService.findByQuery(query.query, request.user._id.toString());
   }
 }

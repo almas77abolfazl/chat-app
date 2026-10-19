@@ -11,7 +11,7 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Post()
   async createChannel(@Body() dto: CreateChannelDto, @Req() request: RequestWithUser) {
-    return this.channelService.createChannel(dto.name, request.user._id as string);
+    return this.channelService.createChannel(dto.name, request.user._id.toString());
   }
 
   @UseGuards(JwtAuthGuard)
@@ -29,7 +29,7 @@ export class ChannelController {
   @UseGuards(JwtAuthGuard)
   @Post(':id/unsubscribe')
   async unsubscribe(@Param('id') id: string, @Req() request: RequestWithUser) {
-    return this.channelService.removeSubscriber(id, request.user._id as string);
+    return this.channelService.removeSubscriber(id, request.user._id.toString());
   }
 
   @UseGuards(JwtAuthGuard)

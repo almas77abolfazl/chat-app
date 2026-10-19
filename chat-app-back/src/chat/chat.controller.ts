@@ -11,7 +11,7 @@ export class ChatController {
   @Get('list')
   @UseGuards(JwtAuthGuard)
   async getChatList(@Req() request: RequestWithUser) {
-    const userId = request.user._id as string;
+    const userId = request.user._id.toString();
     const chats = await this.chatService.getChatList(userId);
     return chats;
   }
@@ -19,7 +19,7 @@ export class ChatController {
   @Post()
   @UseGuards(JwtAuthGuard)
   async createChat(@Body() dto: CreateChatDto, @Req() request: RequestWithUser) {
-    const userId = request.user._id as string;
+    const userId = request.user._id.toString();
     const type = dto.type ?? 'direct';
 
     if (type === 'direct') {
@@ -39,7 +39,7 @@ export class ChatController {
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   async getChat(@Param('id') id: string, @Req() request: RequestWithUser) {
-    const chat = await this.chatService.findChat(id, request.user._id as string);
+    const chat = await this.chatService.findChat(id, request.user._id.toString());
     if (!chat) throw new Error('Chat not found');
     return chat;
   }
@@ -47,27 +47,27 @@ export class ChatController {
   @Post(':id/member')
   @UseGuards(JwtAuthGuard)
   async addMember(@Param('id') id: string, @Body() dto: ChatMemberDto, @Req() request: RequestWithUser) {
-    const userId = dto.userId ?? (request.user._id as string);
-    return this.chatService.addMember(id, userId, request.user._id as string);
+    const userId = dto.userId ?? request.user._id.toString();
+    return this.chatService.addMember(id, userId, request.user._id.toString());
   }
 
   @Post(':id/subscriber')
   @UseGuards(JwtAuthGuard)
   async subscribeChannel(@Param('id') id: string, @Req() request: RequestWithUser) {
-    return this.chatService.subscribeChannel(id, request.user._id as string);
+    return this.chatService.subscribeChannel(id, request.user._id.toString());
   }
 
   @Post(':id/leave')
   @UseGuards(JwtAuthGuard)
   async leaveChat(@Param('id') id: string, @Req() request: RequestWithUser) {
-    await this.chatService.deleteChat(id, request.user._id as string);
+    await this.chatService.deleteChat(id, request.user._id.toString());
     return { success: true };
   }
 
   @Delete(':id/delete')
   @UseGuards(JwtAuthGuard)
   async deleteChat(@Param('id') id: string, @Req() request: RequestWithUser) {
-    await this.chatService.deleteChat(id, request.user._id as string);
+    await this.chatService.deleteChat(id, request.user._id.toString());
     return { success: true };
   }
 }

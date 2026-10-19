@@ -14,14 +14,14 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Post('updateUserNames')
   async updateUserNames(@Body() dto: UpdateUserNamesDto, @Req() request: RequestWithUser): Promise<IUser> {
-    return await this.userService.updateUserNames(dto, request.user._id as string);
+    return await this.userService.updateUserNames(dto, request.user._id.toString());
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('upload-avatar')
   @UseInterceptors(FileInterceptor('avatar', multerOptions))
   async uploadAvatar(@UploadedFile() file: Express.Multer.File, @Req() request: RequestWithUser) {
-    const userId = request.user._id as string;
+    const userId = request.user._id.toString();
 
     if (!file) {
       throw new Error('No file uploaded!');
@@ -40,7 +40,7 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get('search/:query')
   async search(@Param('query') query: string, @Req() request: RequestWithUser) {
-    return this.userService.findUsersByQuery(query, request.user._id as string);
+    return this.userService.findUsersByQuery(query, request.user._id.toString());
   }
 
   @UseGuards(JwtAuthGuard)
@@ -52,30 +52,30 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Get('contacts')
   async getContacts(@Req() request: RequestWithUser) {
-    return this.userService.getContacts(request.user._id as string);
+    return this.userService.getContacts(request.user._id.toString());
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('contacts/:contactId')
   async addContact(@Req() request: RequestWithUser, @Param('contactId') contactId: string) {
-    return this.userService.addContact(request.user._id as string, contactId);
+    return this.userService.addContact(request.user._id.toString(), contactId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete('contacts/:contactId')
   async removeContact(@Req() request: RequestWithUser, @Param('contactId') contactId: string) {
-    return this.userService.removeContact(request.user._id as string, contactId);
+    return this.userService.removeContact(request.user._id.toString(), contactId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get('notifications')
   async getNotificationSettings(@Req() request: RequestWithUser) {
-    return this.userService.getNotificationSettings(request.user._id as string);
+    return this.userService.getNotificationSettings(request.user._id.toString());
   }
 
   @UseGuards(JwtAuthGuard)
   @Post('notifications')
   async updateNotificationSettings(@Body() body: { enabled: boolean }, @Req() request: RequestWithUser) {
-    return this.userService.updateNotificationSettings(request.user._id as string, body.enabled);
+    return this.userService.updateNotificationSettings(request.user._id.toString(), body.enabled);
   }
 }
