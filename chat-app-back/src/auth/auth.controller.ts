@@ -34,7 +34,7 @@ export class AuthController {
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   async logout(@Req() request: RequestWithUser) {
-    return this.authService.logout(request.user._id as string);
+    return this.authService.logout(request.user._id.toString());
   }
 
   @Post('refresh')

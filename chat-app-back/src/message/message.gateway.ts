@@ -54,10 +54,10 @@ export class MessageGateway {
       client.data.user = user;
       client.join(user._id.toString());
 
-      await this.userService.updateOnlineStatus(user._id as string, true);
+      await this.userService.updateOnlineStatus(user._id.toString(), true);
 
       this.server.to(user._id.toString()).emit('connected', { userId: user._id, isOnline: true });
-    } catch (error) {
+    } catch {
       client.disconnect();
     }
   }
@@ -65,7 +65,7 @@ export class MessageGateway {
   handleDisconnect(client: Socket) {
     const user = client.data.user as IUser;
     if (user) {
-      this.userService.updateOnlineStatus(user._id as string, false).catch(() => {});
+      this.userService.updateOnlineStatus(user._id.toString(), false).catch(() => {});
     }
     console.log(`Client disconnected: ${client.id}`);
   }
@@ -74,7 +74,7 @@ export class MessageGateway {
   async handleMessage(@MessageBody() messageData: any, @ConnectedSocket() client: Socket) {
     try {
       const sender = client.data.user as IUser;
-      const senderId = sender._id as string;
+      const senderId = sender._id.toString();
       let chatId = messageData?.chatId as string | undefined;
       const content: string = messageData?.content;
 
@@ -221,8 +221,8 @@ export class MessageGateway {
       }
 
       const bot = await this.botService.getBot();
-      const chat = await this.chatService.findOrCreateDirectChat(user._id as string, bot._id as string);
-      await this.messageService.saveMessageToChat(chat._id.toString(), user._id as string, content);
+      const chat = await this.chatService.findOrCreateDirectChat(user._id.toString(), bot._id.toString());
+      await this.messageService.saveMessageToChat(chat._id.toString(), user._id.toString(), content);
 
       client.emit('agentStart', { botUserId: bot._id });
 
@@ -236,7 +236,7 @@ export class MessageGateway {
       );
 
       if (result.text) {
-        const botMessage = await this.messageService.saveMessageToChat(chat._id.toString(), bot._id as string, result.text);
+        const botMessage = await this.messageService.saveMessageToChat(chat._id.toString(), bot._id.toString(), result.text);
         client.emit('agentSaved', { messageId: botMessage._id, chatId: chat._id.toString() });
       }
     } catch (error) {
@@ -250,7 +250,7 @@ export class MessageGateway {
   async handleMessageEdit(@MessageBody() data: { messageId: string; content: string }, @ConnectedSocket() client: Socket) {
     try {
       const user = client.data.user as IUser;
-      const updated = await this.messageService.editMessage(data.messageId, user._id as string, data.content);
+      const updated = await this.messageService.editMessage(data.messageId, user._id.toString(), data.content);
       const message = await this.messageModel.findById(data.messageId).exec();
       if (message) {
         const chatId = message.chat.toString();
@@ -275,7 +275,7 @@ export class MessageGateway {
       const message = await this.messageModel.findById(data.messageId).exec();
       if (message) {
         const chatId = message.chat.toString();
-        await this.messageService.deleteMessage(data.messageId, user._id as string);
+        await this.messageService.deleteMessage(data.messageId, user._id.toString());
         const participantIds = await this.chatService.getParticipantIds(chatId);
         for (const pid of participantIds) {
           if (pid === user._id.toString()) {
@@ -299,7 +299,7 @@ export class MessageGateway {
 
       if (hasUserReacted) {
         // Remove reaction (toggle off)
-        await this.reactionService.removeReaction(data.messageId, user._id as string);
+        await this.reactionService.removeReaction(data.messageId, user._id.toString());
         const updated = await this.reactionService.getReactionCounts(data.messageId);
         const message = await this.messageModel.findById(data.messageId).exec();
         if (message) {
@@ -314,7 +314,7 @@ export class MessageGateway {
         }
       } else {
         // Add reaction
-        await this.reactionService.addReaction(data.messageId, user._id as string, data.emoji);
+        await this.reactionService.addReaction(data.messageId, user._id.toString(), data.emoji);
         const updated = await this.reactionService.getReactionCounts(data.messageId);
         const message = await this.messageModel.findById(data.messageId).exec();
         if (message) {
@@ -337,7 +337,7 @@ export class MessageGateway {
   async handleChatDelete(@MessageBody() data: { chatId: string }, @ConnectedSocket() client: Socket) {
     try {
       const user = client.data.user as IUser;
-      await this.chatService.deleteChat(data.chatId, user._id as string);
+      await this.chatService.deleteChat(data.chatId, user._id.toString());
       client.join(data.chatId);
       this.server.to(data.chatId).emit('chatDeleted', { chatId: data.chatId, userId: user._id.toString() });
     } catch (error) {
@@ -349,7 +349,7 @@ export class MessageGateway {
   async handleChatLeave(@MessageBody() data: { chatId: string }, @ConnectedSocket() client: Socket) {
     try {
       const user = client.data.user as IUser;
-      await this.chatService.deleteChat(data.chatId, user._id as string);
+      await this.chatService.deleteChat(data.chatId, user._id.toString());
       client.join(data.chatId);
       this.server.to(data.chatId).emit('chatLeft', { chatId: data.chatId, userId: user._id.toString() });
     } catch (error) {

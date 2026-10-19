@@ -32,8 +32,8 @@ export class AgentController {
   async getHistory(@Req() request: RequestWithUser) {
     const user = request.user;
     const bot = await this.botService.getBot();
-    const chatId = await this.chatService.findOrCreateDirectChat(user._id as string, bot._id as string);
-    const messages = await this.messageService.getMessagesByChat(chatId.toString(), user._id as string, 1, 100);
+    const chatId = await this.chatService.findOrCreateDirectChat(user._id.toString(), bot._id.toString());
+    const messages = await this.messageService.getMessagesByChat(chatId.toString(), user._id.toString(), 1, 100);
 
     return {
       chatId: chatId.toString(),
@@ -53,13 +53,13 @@ export class AgentController {
       return { text: 'پیام خالی است.', toolCalls: [], messageId: null };
     }
 
-    const chat = await this.chatService.findOrCreateDirectChat(user._id as string, bot._id as string);
+    const chat = await this.chatService.findOrCreateDirectChat(user._id.toString(), bot._id.toString());
     const chatId = chat._id.toString();
 
-    await this.messageService.saveMessageToChat(chatId, user._id as string, content);
+    await this.messageService.saveMessageToChat(chatId, user._id.toString(), content);
 
     const result = await this.agentService.run(user, content);
-    const botMessage = await this.messageService.saveMessageToChat(chatId, bot._id as string, result.text);
+    const botMessage = await this.messageService.saveMessageToChat(chatId, bot._id.toString(), result.text);
 
     return {
       text: result.text,

@@ -12,7 +12,7 @@ export class GroupController {
   @UseGuards(JwtAuthGuard)
   @Post()
   async createGroup(@Body() dto: CreateGroupDto, @Req() request: RequestWithUser) {
-    return this.groupService.createGroup(dto.name, request.user._id as string, dto.members);
+    return this.groupService.createGroup(dto.name, request.user._id.toString(), dto.members);
   }
 
   @UseGuards(JwtAuthGuard)

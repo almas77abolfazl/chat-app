@@ -92,7 +92,7 @@ export class AgentTools {
   }
 
   private async getChatList(ctx: ToolContext) {
-    const chats = await this.chatService.getChatList(ctx.user._id as string);
+    const chats = await this.chatService.getChatList(ctx.user._id.toString());
     return chats.map((chat: any) => ({
       chatId: chat.chatId,
       isGroup: chat.isGroup,
@@ -106,7 +106,7 @@ export class AgentTools {
   private async getChatHistory(ctx: ToolContext, args: Record<string, any>) {
     const otherUserId = String(args.otherUserId ?? '');
     const limit = Math.min(Number(args.limit ?? 30), 100);
-    const userId = ctx.user._id as string;
+    const userId = ctx.user._id.toString();
 
     const messages = await this.messageModel
       .find({
@@ -134,7 +134,7 @@ export class AgentTools {
   private async searchMessages(ctx: ToolContext, args: Record<string, any>) {
     const query = String(args.query ?? '');
     const limit = Math.min(Number(args.limit ?? 20), 50);
-    const userId = ctx.user._id as string;
+    const userId = ctx.user._id.toString();
     const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
     const messages = await this.messageModel
