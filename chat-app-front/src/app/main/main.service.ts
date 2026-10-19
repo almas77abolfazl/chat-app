@@ -399,7 +399,7 @@ export class MainService {
       });
     });
 
-    this.socketService.on('typingStatus', (payload: { chatId: string; userId: string; userName: string; isTyping: boolean }) => {
+  this.socketService.on('typingStatus', (payload: { chatId: string; userId: string; userName: string; isTyping: boolean }) => {
       this.zone.run(() => {
         const current = new Map<string, string[]>(this.typingUsersSubject.value as Iterable<readonly [string, string[]]>);
         const chatUsers: string[] = current.get(payload.chatId) || [];
@@ -413,6 +413,24 @@ export class MainService {
         }
         current.set(payload.chatId, chatUsers);
         this.typingUsersSubject.next(current);
+      });
+    });
+
+    this.socketService.on('chatDeleted', (payload: { chatId: string; userId: string }) => {
+      this.zone.run(() => {
+        this.chatItems = this.chatItems.filter((item) => item._id !== payload.chatId);
+        if (this.currentChat?._id === payload.chatId) {
+          this.closeCurrentChat();
+        }
+      });
+    });
+
+    this.socketService.on('chatLeft', (payload: { chatId: string; userId: string }) => {
+      this.zone.run(() => {
+        this.chatItems = this.chatItems.filter((item) => item._id !== payload.chatId);
+        if (this.currentChat?._id === payload.chatId) {
+          this.closeCurrentChat();
+        }
       });
     });
   }
@@ -803,5 +821,13 @@ const messageData: Message = {
 
   isAgentChatSync(chat: ChatListItem): boolean {
     return !!chat && !!this.botUserId && !chat.isGroup && !chat.isChannel && chat.peerId === this.botUserId;
+  }
+
+  deleteChat(chatId: string): Observable<any> {
+    return this.httpRequestService.delete(`chat/${chatId}/delete`);
+  }
+
+  leaveChat(chatId: string): Observable<any> {
+    return this.httpRequestService.post(`chat/${chatId}/leave`, {});
   }
 }

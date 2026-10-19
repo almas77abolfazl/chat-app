@@ -7,7 +7,9 @@
     "newChat": "گفتگو جدید",
     "lastMessage": "بدون پیام",
     "startChat": "شروع گفتگو",
-    "bgSelector": "پس‌زمینه گفتگو"
+    "bgSelector": "پس‌زمینه گفتگو",
+    "delete": "حذف گفتگو",
+    "leave": "خروج از گروه"
   },
   "contacts": {
     "title": "مخاطبان",

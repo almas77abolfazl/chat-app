@@ -7,7 +7,9 @@
     "newChat": "New chat",
     "lastMessage": "No messages yet",
     "startChat": "Start chat",
-    "bgSelector": "Chat background"
+    "bgSelector": "Chat background",
+    "delete": "Delete chat",
+    "leave": "Leave group"
   },
   "contacts": {
     "title": "Contacts",

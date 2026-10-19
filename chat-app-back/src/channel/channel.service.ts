@@ -23,4 +23,11 @@ export class ChannelService {
   async findById(channelId: string): Promise<ChannelDocument | null> {
     return this.channelModel.findById(channelId).exec();
   }
+
+  async removeSubscriber(channelId: string, userId: string): Promise<ChannelDocument | null> {
+    return this.channelModel
+      .findByIdAndUpdate(channelId, { $pull: { subscribers: userId }, updatedAt: new Date() }, { new: true })
+      .populate('subscribers', 'firstName lastName profilePicture')
+      .exec();
+  }
 }

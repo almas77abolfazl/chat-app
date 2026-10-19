@@ -51,7 +51,22 @@
         </div>
         }
       </div>
-      <fa-icon [icon]="['fas', 'ellipsis-v']" class="chat-options-icon" title="گزینه‌ها" (click)="showProfile()"></fa-icon>
+      <fa-icon [icon]="['fas', 'ellipsis-v']" class="chat-options-icon" title="گزینه‌ها" (click)="toggleChatActions()"></fa-icon>
+      @if (showChatActions) {
+      <div class="chat-actions-dropdown" (click)="$event.stopPropagation()">
+        @if (mainService.currentChat?.isGroup || mainService.currentChat?.isChannel) {
+        <button class="chat-action-item" (click)="leaveCurrentChat(); toggleChatActions()">
+          <fa-icon [icon]="['fas', 'sign-out-alt']" class="action-icon leave-icon"></fa-icon>
+          <span>{{ 'chat.leave' | i18n }}</span>
+        </button>
+        } @else {
+        <button class="chat-action-item" (click)="deleteCurrentChat(); toggleChatActions()">
+          <fa-icon [icon]="['fas', 'trash']" class="action-icon delete-icon"></fa-icon>
+          <span>{{ 'chat.delete' | i18n }}</span>
+        </button>
+        }
+      </div>
+      }
     </div>
   </div>
 
