@@ -6,7 +6,8 @@
     "empty": "You have no chats",
     "newChat": "New chat",
     "lastMessage": "No messages yet",
-    "startChat": "Start chat"
+    "startChat": "Start chat",
+    "bgSelector": "Chat background"
   },
   "contacts": {
     "title": "Contacts",

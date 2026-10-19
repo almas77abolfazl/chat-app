@@ -10,16 +10,18 @@ import { FormsModule } from '@angular/forms';
 import { ProfileComponent } from '../../profile/profile.component';
 import { Message } from '../../../models/message.model';
 import { ChatListItem } from '../../../models/chat-list-item.model';
+import { ChatBackgroundService, ChatBackground, CHAT_BACKGROUNDS } from '../../chat-background/chat-background.service';
+import { I18nPipe } from '../../../helpers/i18n.pipe';
 
 @Component({
   selector: 'app-chat-area',
   standalone: true,
-  imports: [FontAwesomeModule, DatePipe, NgClass, MatButtonModule, FormsModule],
+  imports: [FontAwesomeModule, DatePipe, NgClass, MatButtonModule, FormsModule, I18nPipe],
   templateUrl: './chat-area.component.html',
   styleUrl: './chat-area.component.scss',
 })
 export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
-  constructor(public mainService: MainService, private dialog: MatDialog) {}
+  constructor(public mainService: MainService, private dialog: MatDialog, public chatBgService: ChatBackgroundService) {}
   showScrollBottom = false;
   private destroy$ = new Subject<void>();
   private typingSubscription: Subscription;
@@ -27,6 +29,8 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   editMessageId: string | null = null;
   editContent = '';
   brokenAvatars = new Set<string>();
+  showBgSelector = false;
+  bgOptions = CHAT_BACKGROUNDS;
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('chatMessages') chatMessages!: ElementRef<HTMLElement>;
   userReactions: Map<string, string> = new Map();
@@ -278,5 +282,20 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     const sizes = ['B', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+  }
+
+  toggleBgSelector() {
+    this.showBgSelector = !this.showBgSelector;
+  }
+
+  selectBg(bg: ChatBackground) {
+    this.chatBgService.setBackground(bg);
+    this.showBgSelector = false;
+  }
+
+  getBgPreview(bg: ChatBackground): string {
+    if (bg.type === 'solid') return 'var(--color-surface-container)';
+    if (bg.type === 'gradient') return 'linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-deep) 100%)';
+    return 'linear-gradient(135deg, #6366f1, #8b5cf6)';
   }
 }

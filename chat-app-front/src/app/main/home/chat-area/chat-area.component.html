@@ -28,10 +28,29 @@
         }
       </div>
     </div>
-    <div class="chat-header-actions">
+     <div class="chat-header-actions">
       @if (mainService.isAgentChat(mainService.currentChat)) {
       <fa-icon [icon]="['fas', 'robot']" class="chat-agent-icon" title="دستیار هوشمند"></fa-icon>
       }
+      <div class="bg-selector-wrap" (click)="toggleBgSelector()" [attr.data-tooltip]="'chat.bgSelector' | i18n" data-tooltip-placement="bottom">
+        <fa-icon [icon]="['fas', 'palette']" class="bg-selector-trigger"></fa-icon>
+        @if (showBgSelector) {
+        <div class="bg-selector-dropdown">
+          @for (bg of bgOptions; track bg.name) {
+          <div
+            class="bg-option"
+            [class.active]="chatBgService.current.name === bg.name"
+            [style.background]="getBgPreview(bg)"
+            (click)="selectBg(bg); $event.stopPropagation()"
+          >
+            @if (chatBgService.current.name === bg.name) {
+            <fa-icon [icon]="['fas', 'check']" class="check-icon"></fa-icon>
+            }
+          </div>
+          }
+        </div>
+        }
+      </div>
       <fa-icon [icon]="['fas', 'ellipsis-v']" class="chat-options-icon" title="گزینه‌ها" (click)="showProfile()"></fa-icon>
     </div>
   </div>

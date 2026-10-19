@@ -6,7 +6,8 @@
     "empty": "گفتگویی ندارید",
     "newChat": "گفتگو جدید",
     "lastMessage": "بدون پیام",
-    "startChat": "شروع گفتگو"
+    "startChat": "شروع گفتگو",
+    "bgSelector": "پس‌زمینه گفتگو"
   },
   "contacts": {
     "title": "مخاطبان",
