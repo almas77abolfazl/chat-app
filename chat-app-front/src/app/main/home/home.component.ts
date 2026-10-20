@@ -1,4 +1,4 @@
-import { Component, HostListener, OnDestroy } from '@angular/core';
+import { Component, HostListener, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { SideBarComponent } from './side-bar/side-bar.component';
@@ -26,7 +26,8 @@ export class HomeComponent implements OnDestroy {
   constructor(
     socketService: SocketService,
     public mainService: MainService,
-    public themeService: ThemeService
+    public themeService: ThemeService,
+    private cdr: ChangeDetectorRef = inject(ChangeDetectorRef)
   ) {
     socketService.init();
     mainService.listenToMessages();
@@ -35,6 +36,7 @@ export class HomeComponent implements OnDestroy {
 
     mainService.chatOpened$.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.mobileMenuOpen = false;
+      this.cdr.markForCheck();
     });
   }
 

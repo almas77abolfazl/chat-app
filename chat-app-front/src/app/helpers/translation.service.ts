@@ -11,6 +11,8 @@ export interface TranslationData {
 @Injectable({ providedIn: 'root' })
 export class TranslationService {
   private translations: TranslationData = {};
+  private translationsSubject = new BehaviorSubject<TranslationData>({});
+  translations$ = this.translationsSubject.asObservable();
   private currentLangSubject = new BehaviorSubject<Language>(this.getInitialLanguage());
   currentLang$ = this.currentLangSubject.asObservable();
   private loadingSubject = new BehaviorSubject<boolean>(true);
@@ -43,6 +45,7 @@ export class TranslationService {
         this.http.get<TranslationData>(`assets/i18n/${lang}.json`)
       );
       this.translations = res;
+      this.translationsSubject.next(res);
       this.currentLangSubject.next(lang);
       localStorage.setItem('lang', lang);
       document.documentElement.dir = this.isRTL ? 'rtl' : 'ltr';
