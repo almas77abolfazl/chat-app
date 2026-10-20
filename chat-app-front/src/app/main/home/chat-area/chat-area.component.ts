@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener } from '@angular/core';
+import { Component, OnDestroy, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener, ChangeDetectorRef, inject } from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MainService } from '../../main.service';
 import { NgClass } from '@angular/common';
@@ -29,7 +29,12 @@ export interface ContextMenuAction {
   styleUrl: './chat-area.component.scss',
 })
 export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
-  constructor(public mainService: MainService, private dialog: MatDialog, public chatBgService: ChatBackgroundService) {}
+  constructor(
+    public mainService: MainService,
+    private dialog: MatDialog,
+    public chatBgService: ChatBackgroundService,
+    private cdr: ChangeDetectorRef
+  ) {}
   showScrollBottom = false;
   private destroy$ = new Subject<void>();
   private typingSubscription: Subscription;
@@ -56,10 +61,12 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     this.mainService.chatOpened$.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.markCurrentChatMessagesRead();
       this.replyingToId = null;
+      this.cdr.markForCheck();
     });
 
     this.mainService.messagesLoaded$.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.scrollToBottom();
+      this.cdr.markForCheck();
     });
 
     this.typingSubscription = this.mainService.typingUsers$.subscribe((typingMap) => {
