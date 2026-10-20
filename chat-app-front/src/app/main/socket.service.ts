@@ -9,24 +9,53 @@ import { environment } from '../../environments/environment';
 })
 export class SocketService implements OnDestroy {
   private socket: Socket;
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
 
   constructor(private authService: AuthService) {}
 
   init(): void {
     if (this.socket?.connected) return;
 
+    const token = this.authService.getAuthToken();
+    if (!token) return;
+
     this.socket = io(environment.socketUrl, {
-      transports: ['websocket'],
-      query: {
-        token: this.authService.getAuthToken(),
-      },
+      transports: ['websocket', 'polling'],
+      query: { token },
+      reconnection: true,
+      reconnectionAttempts: this.maxReconnectAttempts,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 10000,
     });
 
     this.socket.on('connect', () => {
       console.log('Connected to WebSocket server');
+      this.reconnectAttempts = 0;
     });
-    this.socket.on('disconnect', () => {
-      console.log('Disconnected from WebSocket server');
+    this.socket.on('disconnect', (reason) => {
+      console.log('Disconnected from WebSocket server:', reason);
+      if (reason === 'io server disconnect') {
+        this.reconnectAttempts = this.maxReconnectAttempts;
+      }
+    });
+    this.socket.on('connect_error', (error) => {
+      console.error('WebSocket connection error:', error.message);
+      this.reconnectAttempts++;
+      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+        console.error('Max reconnection attempts reached');
+      }
+    });
+    this.socket.on('reconnect_attempt', (attemptNumber) => {
+      console.log('Reconnection attempt:', attemptNumber);
+    });
+    this.socket.on('reconnect', () => {
+      console.log('Reconnected to WebSocket server');
+      this.reconnectAttempts = 0;
+    });
+    this.socket.on('reconnect_failed', () => {
+      console.error('Reconnection failed');
     });
   }
 

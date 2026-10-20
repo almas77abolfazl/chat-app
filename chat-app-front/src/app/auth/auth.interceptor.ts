@@ -22,6 +22,12 @@ export const authInterceptor: HttpInterceptorFn = (
   next: HttpHandlerFn
 ): Observable<HttpEvent<any>> => {
   const authService = inject(AuthService);
+
+  // Skip auth header for asset requests (i18n JSON, etc.)
+  if (req.url.includes('/assets/')) {
+    return next(req);
+  }
+
   const token = authService.getAuthToken();
   if (token) {
     req = req.clone({ setHeaders: { authorization: 'Bearer ' + token } });
