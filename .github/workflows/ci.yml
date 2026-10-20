@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, feat/**]
   pull_request:
     branches: [main, master]
 
@@ -59,15 +59,15 @@ jobs:
       - name: Setup Node.js (Frontend)
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: chat-app-front/package-lock.json
 
       - name: Install Frontend dependencies
-        run: npm install
+        run: npm ci
         working-directory: chat-app-front
 
-      - name: Build Frontend
+      - name: Run Frontend build
         run: npm run build
         working-directory: chat-app-front
 
