@@ -31,6 +31,11 @@
                 "input": "public"
               },
               {
+                "glob": "**/*",
+                "input": "src/assets/i18n",
+                "output": "/assets/i18n/"
+              },
+              {
                 "glob": "manifest.webmanifest",
                 "input": "src",
                 "output": "/"
