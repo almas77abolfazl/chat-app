@@ -64,7 +64,7 @@ jobs:
           cache-dependency-path: chat-app-front/package-lock.json
 
       - name: Install Frontend dependencies
-        run: npm ci
+        run: npm install
         working-directory: chat-app-front
 
       - name: Run Frontend build
