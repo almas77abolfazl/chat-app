@@ -815,14 +815,16 @@ const messageData: Message = {
     return this.getMessages(this.currentChat._id as string, page).pipe(
       tap((response: { messages: Message[]; totalMessages: number; currentPage: number; totalPages: number }) => {
         if (!this.currentChat) return;
-        const existIds = new Set((this.currentChat.messages || []).map((x) => x._id));
-        const newMessages = response.messages.filter((x) => !existIds.has(x._id));
-        const ordered = [...newMessages].reverse();
+        const serverMessages = response.messages || [];
         if (response.currentPage <= 1) {
+          // Server is source of truth for first page; keep local pending messages on top
           const pending = (this.currentChat.messages || []).filter((m) => m._pending);
-          this.currentChat.messages = [...pending, ...ordered];
+          this.currentChat.messages = [...serverMessages.reverse(), ...pending];
         } else {
-          this.currentChat.messages = [...ordered, ...(this.currentChat.messages || [])];
+          // Prepend older messages from server, avoiding duplicates
+          const existingIds = new Set((this.currentChat.messages || []).map((m) => m._id));
+          const serverNew = serverMessages.filter((m) => !existingIds.has(m._id));
+          this.currentChat.messages = [...serverNew.reverse(), ...(this.currentChat.messages || [])];
         }
         this.currentPage = response.currentPage;
         this.totalPages = response.totalPages;
