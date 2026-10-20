@@ -272,7 +272,9 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
         next: () => {
           this.userReactions.set(messageId, emoji);
         },
-        error: () => {},
+        error: () => {
+          this.mainService.snackbar.error('امکان اضافه کردن reacción وجود ندارد', 3000);
+        },
       });
     }
   }
@@ -363,7 +365,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
 
     input.value = '';
 
-    this.mainService.sendMedia(chatId, file).pipe(take(1)).subscribe({
+    this.mainService.sendMedia(chatId, file, file.name).pipe(take(1)).subscribe({
       next: (res) => {},
       error: (err) => {
         this.mainService.snackbar.error('خطا در ارسال فایل', 3000);

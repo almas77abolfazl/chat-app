@@ -143,22 +143,23 @@
           .agent-dot,
           .status-dot {
             position: absolute;
-            inset-block-end: -2px;
-            inset-inline-end: -2px;
-            width: 0.9rem;
-            height: 0.9rem;
+            inset-block-end: -4px;
+            inset-inline-end: -4px;
+            width: 1.05rem;
+            height: 1.05rem;
             border-radius: var(--radius-full);
-            border: 2px solid var(--color-surface-solid);
+            border: 2.5px solid var(--color-surface-solid);
+            box-shadow: var(--shadow-md);
           }
 
           .agent-dot {
             background: var(--color-primary);
-            box-shadow: 0 0 8px color-mix(in srgb, var(--color-primary) 40%, transparent);
+            box-shadow: 0 0 10px color-mix(in srgb, var(--color-primary) 50%, transparent);
           }
 
           .online {
             background: var(--color-success);
-            box-shadow: 0 0 8px color-mix(in srgb, var(--color-success) 40%, transparent);
+            box-shadow: 0 0 10px color-mix(in srgb, var(--color-success) 50%, transparent);
           }
         }
 

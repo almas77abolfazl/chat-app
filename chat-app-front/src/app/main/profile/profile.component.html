@@ -13,7 +13,7 @@
     </div>
 
     <!-- Overlapping avatar -->
-    <div class="avatar-wrap">
+    <div class="avatar-wrap" (click)="previewAvatar()" style="cursor: pointer;">
       <div class="avatar" [style.background]="isMobile ? undefined : coverColor">
         @if (data?.isGroup || data?.isChannel) {
         <fa-icon [icon]="['fas', data?.isChannel ? 'broadcast-tower' : 'users']" class="avatar-icon"></fa-icon>
