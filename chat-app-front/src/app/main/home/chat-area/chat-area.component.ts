@@ -466,6 +466,10 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   getMediaUrl(fileUrl?: string): string {
     if (!fileUrl) return '';
     if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) return fileUrl;
+    if (fileUrl.startsWith('/uploads/')) {
+      const base = environment.apiUrl.replace('/v1', '');
+      return `${base}${fileUrl}`;
+    }
     if (fileUrl.startsWith('/')) return `${environment.uploadUrl}${fileUrl}`;
     return `${environment.uploadUrl}/${fileUrl}`;
   }
