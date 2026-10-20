@@ -199,6 +199,7 @@ export class MainService {
   openChat(chatItem: ChatListItem) {
     if (this.currentChat?._id === chatItem._id) return;
     this.currentChat = chatItem;
+    this.currentChat.messages = this.currentChat.messages || [];
     this.currentPage = 1;
     this.totalPages = 1;
     this.chatOpenedSubject.next();
