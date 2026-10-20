@@ -3,10 +3,11 @@ import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { AuthService } from '../auth.service';
+import { I18nPipe } from '../../helpers/i18n.pipe';
 
 @Component({
     selector: 'app-login',
-    imports: [RouterModule, FormsModule, FontAwesomeModule],
+    imports: [RouterModule, FormsModule, FontAwesomeModule, I18nPipe],
     templateUrl: './login.component.html',
     styleUrl: './login.component.scss'
 })

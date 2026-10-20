@@ -1,35 +1,42 @@
-<div class="user-details-container" (keyup.enter)="onSubmit()">
+<div class="fill-names-container" (keyup.enter)="onSubmit()">
+  <div class="fill-bg"></div>
   <div class="fill-names-card">
-    <div class="auth-icon">
-      <fa-icon [icon]="['fas', 'user-plus']"></fa-icon>
+    <div class="brand">
+      <div class="brand-icon">
+        <fa-icon [icon]="['fas', 'comments']"></fa-icon>
+      </div>
+      <span class="brand-name">{{ 'brand.name' | i18n }}</span>
     </div>
-    <h2>پروفایل خود را تکمیل کنید</h2>
-    <p class="card-subtitle">نام و نام خانوادگی شما به دیگران نمایش داده می‌شود</p>
+
+    <h2 class="fill-title">{{ 'profile.title' | i18n }}</h2>
+    <p class="fill-subtitle">{{ 'profile.subtitle' | i18n }}</p>
+
     <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
-    <form (ngSubmit)="onSubmit()" class="user-details-form">
-      <div class="form-group">
-        <label for="first-name">نام</label>
+
+    <form (ngSubmit)="onSubmit()" class="fill-form">
+      <div class="form-row">
         <input
           type="text"
           id="first-name"
           [(ngModel)]="firstName"
           name="firstName"
-          class="form-control"
-          placeholder="مثلاً علی"
+          class="form-input"
+          [placeholder]="'profile.firstNamePlaceholder' | i18n"
+          autocomplete="given-name"
         />
       </div>
-      <div class="form-group">
-        <label for="last-name">نام خانوادگی</label>
+      <div class="form-row">
         <input
           type="text"
           id="last-name"
           [(ngModel)]="lastName"
           name="lastName"
-          class="form-control"
-          placeholder="مثلاً احمدی"
+          class="form-input"
+          [placeholder]="'profile.lastNamePlaceholder' | i18n"
+          autocomplete="family-name"
         />
       </div>
-      <button mat-button type="submit" class="submit-button">ادامه</button>
+      <button type="submit" class="submit-btn app-button">{{ 'profile.save' | i18n }}</button>
     </form>
   </div>
 </div>

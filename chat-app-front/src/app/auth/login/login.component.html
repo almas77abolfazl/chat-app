@@ -1,21 +1,36 @@
 <div class="login-container" (keyup.enter)="sendCode()">
+  <div class="login-bg"></div>
   <div class="login-card">
     <div class="brand">
-      <fa-icon [icon]="['fas', 'comments']"></fa-icon>
-      <span>چت‌اپ</span>
+      <div class="brand-icon">
+        <fa-icon [icon]="['fas', 'comments']"></fa-icon>
+      </div>
+      <span class="brand-name">{{ 'brand.name' | i18n }}</span>
     </div>
-    <h2 class="login-title">ورود به حساب</h2>
-    <p class="login-subtitle">لطفاً شماره تلفن خود را وارد کنید</p>
-    <div class="input-group">
-      <label for="phone" class="input-label">شماره تلفن</label>
+
+    <h2 class="login-title">{{ 'login.title' | i18n }}</h2>
+    <p class="login-subtitle">{{ 'login.subtitle' | i18n }}</p>
+
+    <div class="phone-input-wrapper">
+      <span class="phone-prefix">🇮🇷 +98</span>
       <input
         [(ngModel)]="phoneNumber"
         type="tel"
         id="phone"
-        class="input-field"
-        placeholder="۰۹۱۲۳۴۵۶۷۸۹"
+        class="phone-input"
+        [placeholder]="'login.phonePlaceholder' | i18n"
+        inputmode="tel"
+        maxlength="11"
       />
     </div>
-    <button class="submit-btn app-button" (click)="sendCode()">ارسال کد تأیید</button>
+
+    <button
+      class="submit-btn app-button"
+      [class.disabled]="!phoneNumber.trim()"
+      (click)="sendCode()"
+      type="button"
+    >
+      {{ 'login.sendCode' | i18n }}
+    </button>
   </div>
 </div>

@@ -1,33 +1,93 @@
-<div class="auth-container" (keyup.enter)="verifyCode()">
-  <div class="auth-card">
-    <div class="auth-icon">
-      <fa-icon [icon]="['fas', 'key']"></fa-icon>
-    </div>
-    <h2 class="auth-title">کد تأیید را وارد کنید</h2>
-    <p class="auth-text">
-      کد ۶ رقمی ارسال‌شده به شماره <strong>{{ phoneNumber }}</strong> را وارد کنید.
-    </p>
-    <div class="auth-form">
-      <div class="form-group">
-        <label for="code" class="form-label">کد تأیید</label>
-        <input
-          [(ngModel)]="verificationCode"
-          type="text"
-          id="code"
-          class="form-input"
-          maxlength="6"
-          placeholder="------"
-          (keyup.enter)="verifyCode()"
-        />
+<div class="verify-container" (keyup.enter)="verifyCode()">
+  <div class="verify-bg"></div>
+  <div class="verify-card">
+    <div class="brand">
+      <div class="brand-icon">
+        <fa-icon [icon]="['fas', 'comments']"></fa-icon>
       </div>
-      <button type="button" class="form-btn app-button" (click)="verifyCode()">تأیید و ورود</button>
+      <span class="brand-name">{{ 'brand.name' | i18n }}</span>
     </div>
+
+    <h2 class="verify-title">{{ 'verify.title' | i18n }}</h2>
+    <p class="verify-subtitle" [innerHTML]="'verify.subtitle' | i18n:{ phone: phoneNumber }"></p>
+
+    <div class="otp-inputs">
+      <input
+        type="text"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        maxlength="1"
+        class="otp-input"
+        [value]="verificationCode[0] || ''"
+        (input)="onOtpInput($event, 0)"
+        (keydown.backspace)="onOtpBackspace($event, 0)"
+      />
+      <input
+        type="text"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        maxlength="1"
+        class="otp-input"
+        [value]="verificationCode[1] || ''"
+        (input)="onOtpInput($event, 1)"
+        (keydown.backspace)="onOtpBackspace($event, 1)"
+      />
+      <input
+        type="text"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        maxlength="1"
+        class="otp-input"
+        [value]="verificationCode[2] || ''"
+        (input)="onOtpInput($event, 2)"
+        (keydown.backspace)="onOtpBackspace($event, 2)"
+      />
+      <input
+        type="text"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        maxlength="1"
+        class="otp-input"
+        [value]="verificationCode[3] || ''"
+        (input)="onOtpInput($event, 3)"
+        (keydown.backspace)="onOtpBackspace($event, 3)"
+      />
+      <input
+        type="text"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        maxlength="1"
+        class="otp-input"
+        [value]="verificationCode[4] || ''"
+        (input)="onOtpInput($event, 4)"
+        (keydown.backspace)="onOtpBackspace($event, 4)"
+      />
+      <input
+        type="text"
+        inputmode="numeric"
+        pattern="[0-9]*"
+        maxlength="1"
+        class="otp-input"
+        [value]="verificationCode[5] || ''"
+        (input)="onOtpInput($event, 5)"
+        (keydown.backspace)="onOtpBackspace($event, 5)"
+      />
+    </div>
+
+    <button
+      type="button"
+      class="submit-btn app-button"
+      [class.disabled]="verificationCode.length < 6"
+      (click)="verifyCode()"
+    >
+      {{ 'verify.submit' | i18n }}
+    </button>
 
     <div class="resend-section">
       @if (canResend) {
-        <button type="button" class="resend-btn" (click)="resendCode()">ارسال مجدد کد</button>
+        <button type="button" class="resend-btn" (click)="resendCode()">{{ 'verify.resend' | i18n }}</button>
       } @else {
-        <span class="resend-countdown">ارسال مجدد در {{ resendSeconds }} ثانیه</span>
+        <span class="resend-countdown">{{ 'verify.resendCountdown' | i18n:{ seconds: resendSeconds } }}</span>
       }
     </div>
   </div>

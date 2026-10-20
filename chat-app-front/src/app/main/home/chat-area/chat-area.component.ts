@@ -1,7 +1,7 @@
-import { Component, OnDestroy, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnDestroy, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener } from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MainService } from '../../main.service';
-import { DatePipe, NgClass } from '@angular/common';
+import { NgClass } from '@angular/common';
 import { take, takeUntil } from 'rxjs';
 import { Subscription, Subject } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
@@ -13,10 +13,17 @@ import { ChatListItem } from '../../../models/chat-list-item.model';
 import { ChatBackgroundService, ChatBackground, CHAT_BACKGROUNDS } from '../../chat-background/chat-background.service';
 import { I18nPipe } from '../../../helpers/i18n.pipe';
 
+export interface ContextMenuAction {
+  label: string;
+  icon: string;
+  action: 'edit' | 'delete' | 'reply' | 'forward' | 'copy' | 'cancel';
+  danger?: boolean;
+}
+
 @Component({
   selector: 'app-chat-area',
   standalone: true,
-  imports: [FontAwesomeModule, DatePipe, NgClass, MatButtonModule, FormsModule, I18nPipe],
+  imports: [FontAwesomeModule, NgClass, MatButtonModule, FormsModule, I18nPipe],
   templateUrl: './chat-area.component.html',
   styleUrl: './chat-area.component.scss',
 })
@@ -32,7 +39,13 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   showBgSelector = false;
   showChatActions = false;
   showEmojiPicker = false;
+  showContextMenu = false;
+  contextMenuX = 0;
+  contextMenuY = 0;
+  contextMenuTarget: Message | null = null;
   bgOptions = CHAT_BACKGROUNDS;
+  replyingToId: string | null = null;
+  replyingToPreview = '';
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('chatMessages') chatMessages!: ElementRef<HTMLElement>;
   @ViewChild('element') element!: ElementRef<HTMLTextAreaElement>;
@@ -41,6 +54,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit() {
     this.mainService.chatOpened$.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.markCurrentChatMessagesRead();
+      this.replyingToId = null;
     });
 
     this.mainService.messagesLoaded$.pipe(takeUntil(this.destroy$)).subscribe(() => {
@@ -55,6 +69,11 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngAfterViewInit() {
     this.scrollToBottom();
+  }
+
+  @HostListener('document:click')
+  onDocumentClick() {
+    this.showContextMenu = false;
   }
 
   scrollToBottom() {
@@ -124,7 +143,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   avatarBg(chat: ChatListItem): string {
-    if (!chat) return '#6366f1';
+    if (!chat) return '#0088cc';
     const hue = chat._id ? Number(String(chat._id).charCodeAt(0)) % 60 + 240 : 264;
     return `linear-gradient(135deg, hsl(${hue} 70% 55%), hsl(${(hue - 10) % 360} 65% 50%))`;
   }
@@ -177,6 +196,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
 
   goBack() {
     this.mainService.closeCurrentChat();
+    this.replyingToId = null;
   }
 
   showProfile() {
@@ -203,6 +223,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     if (!this.ownMessage(message) || message.isDeleted) return;
     this.editMessageId = message._id;
     this.editContent = message.content;
+    this.showContextMenu = false;
   }
 
   cancelEdit() {
@@ -260,6 +281,78 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     return this.userReactions.get(message._id) === emoji;
   }
 
+  openContextMenu(event: MouseEvent, message: Message) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.contextMenuTarget = message;
+    this.contextMenuX = event.clientX;
+    this.contextMenuY = event.clientY;
+    this.showContextMenu = true;
+  }
+
+  closeContextMenu() {
+    this.showContextMenu = false;
+    this.contextMenuTarget = null;
+  }
+
+  onContextMenuAction(action: string) {
+    if (!this.contextMenuTarget) return;
+    switch (action) {
+      case 'edit':
+        this.startEdit(this.contextMenuTarget!);
+        break;
+      case 'delete':
+        this.deleteMessage(this.contextMenuTarget!);
+        break;
+      case 'reply':
+        this.replyToMessage(this.contextMenuTarget!);
+        break;
+      case 'forward':
+        this.mainService.snackbar.info('ارسال به forwarded soon', 2000);
+        break;
+      case 'copy':
+        navigator.clipboard.writeText(this.contextMenuTarget!.content || '');
+        this.mainService.snackbar.success('کپی شد', 2000);
+        break;
+    }
+    this.closeContextMenu();
+  }
+
+  replyToMessage(message: Message) {
+    this.replyingToId = message._id;
+    this.replyingToPreview = message.content?.substring(0, 60) || '';
+    const textarea = this.element?.nativeElement as HTMLTextAreaElement | null;
+    if (textarea) textarea.focus();
+  }
+
+  cancelReply() {
+    this.replyingToId = null;
+    this.replyingToPreview = '';
+  }
+
+  getMessageDate(message: Message): string {
+    const d = new Date(message.createdAt);
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays === 0) return 'امروز';
+    if (diffDays === 1) return 'دیروز';
+    if (diffDays < 7) return d.toLocaleDateString('fa-IR', { weekday: 'long' });
+    return d.toLocaleDateString('fa-IR');
+  }
+
+  isNewDay(prev: Message | undefined, curr: Message): boolean {
+    if (!prev) return true;
+    const p = new Date(prev.createdAt);
+    const c = new Date(curr.createdAt);
+    return p.toDateString() !== c.toDateString();
+  }
+
+  shouldShowDateSeparator(index: number): boolean {
+    const messages = this.mainService.currentChat?.messages || [];
+    if (index === 0) return true;
+    return this.isNewDay(messages[index - 1], messages[index]);
+  }
+
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
@@ -299,7 +392,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   getBgPreview(bg: ChatBackground): string {
     if (bg.type === 'solid') return 'var(--color-surface-container)';
     if (bg.type === 'gradient') return 'linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-deep) 100%)';
-    return 'linear-gradient(135deg, #6366f1, #8b5cf6)';
+    return 'linear-gradient(135deg, #0088cc, #0077b6)';
   }
 
   toggleChatActions() {
@@ -361,4 +454,9 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     { name: 'Gestures', emojis: ['👍', '👎', '👏', '🙏', '👋', '🤝', '👏', '👐', '👏', '👌', '✌️', '🙏'] },
     { name: 'Objects', emojis: ['🎉', '❤️', '🔥', '⭐', '✨', '💯', '🎯', '🎁', '🎈', '🌟', '⚡', '☀️'] },
   ];
+
+  getShortTime(date: Date | string): string {
+    const d = new Date(date);
+    return d.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit', hour12: false });
+  }
 }
