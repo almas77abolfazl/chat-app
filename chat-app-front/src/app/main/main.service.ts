@@ -86,7 +86,7 @@ export class MainService {
         firstName: isDirect ? peer?.firstName : undefined,
         lastName: isDirect ? peer?.lastName : undefined,
         name: chat.name || null,
-        avatar: avatar ? `${environment.uploadUrl}/${avatar}` : null,
+        avatar: this.getAvatarUrl(avatar),
         isGroup: chat.isGroup,
         isChannel: chat.isChannel,
         isOwner: chat.ownerId === this.authService.getUserId(),
@@ -819,7 +819,8 @@ const messageData: Message = {
         const newMessages = response.messages.filter((x) => !existIds.has(x._id));
         const ordered = [...newMessages].reverse();
         if (response.currentPage <= 1) {
-          this.currentChat.messages = ordered;
+          const pending = (this.currentChat.messages || []).filter((m) => m._pending);
+          this.currentChat.messages = [...pending, ...ordered];
         } else {
           this.currentChat.messages = [...ordered, ...(this.currentChat.messages || [])];
         }
@@ -848,6 +849,17 @@ const messageData: Message = {
         catchError(() => of(null))
       )
     );
+  }
+
+  getAvatarUrl(avatar?: string | null): string | null {
+    if (!avatar) return null;
+    if (avatar.startsWith('http://') || avatar.startsWith('https://') || avatar.startsWith('data:')) return avatar;
+    if (avatar.startsWith('/uploads/')) {
+      const base = environment.apiUrl.replace('/v1', '');
+      return `${base}${avatar}`;
+    }
+    if (avatar.startsWith('/')) return `${environment.uploadUrl}${avatar}`;
+    return `${environment.uploadUrl}/${avatar}`;
   }
 
   isAgentChatSync(chat: ChatListItem): boolean {

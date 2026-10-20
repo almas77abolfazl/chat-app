@@ -13,7 +13,7 @@
           class="chat-avatar chat-avatar-icon"
         ></fa-icon>
         } @else if (mainService.currentChat?.avatar && !avatarBroken(mainService.currentChat._id)) {
-        <img [src]="mainService.currentChat.avatar" alt="Avatar" class="chat-avatar"
+        <img [src]="mainService.getAvatarUrl(mainService.currentChat.avatar)" alt="Avatar" class="chat-avatar"
           (error)="markAvatarBroken(mainService.currentChat._id)" />
         } @else {
         <div class="chat-avatar chat-avatar-initials" [style.background]="avatarBg(mainService.currentChat)">

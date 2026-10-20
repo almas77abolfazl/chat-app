@@ -18,7 +18,7 @@
         @if (data?.isGroup || data?.isChannel) {
         <fa-icon [icon]="['fas', data?.isChannel ? 'broadcast-tower' : 'users']" class="avatar-icon"></fa-icon>
         } @else if (data?.avatar) {
-        <img [src]="data.avatar" alt="Avatar" />
+        <img [src]="mainService.getAvatarUrl(data.avatar)" alt="Avatar" />
         } @else {
         <span class="avatar-initials">{{ initials(data) }}</span>
         }
