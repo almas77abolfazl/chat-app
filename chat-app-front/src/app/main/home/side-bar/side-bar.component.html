@@ -5,40 +5,12 @@
       <fa-icon [icon]="['fas', 'times']"></fa-icon>
     </button>
     }
+
     <div class="sidebar-brand">
-      <fa-icon [icon]="['fas', 'comments']"></fa-icon>
+      <div class="brand-icon">
+        <fa-icon [icon]="['fas', 'comments']"></fa-icon>
+      </div>
       <span>{{ 'sidebar.brand' | i18n }}</span>
-    </div>
-
-    <div class="menu-item agent-item" (click)="mainService.openAgentChat()" [attr.data-tooltip]="'agent.title' | i18n" data-tooltip-placement="left">
-      <fa-icon [icon]="['fas', 'robot']"></fa-icon>
-      <span>{{ 'agent.title' | i18n }}</span>
-    </div>
-
-    <div class="nav-section">
-      <div class="nav-title" [attr.data-tooltip]="mainService.agentConfigured ? ('agent.history' | i18n) : ('agent.history' | i18n)" data-tooltip-placement="left">{{ 'agent.history' | i18n }}</div>
-      @if (mainService.agentConfigured) {
-        <div class="assistant-history-list">
-          @for (conv of agentHistory; track $any(conv.chatId)) {
-          <div
-            class="menu-item assistant-history-item"
-            [class.active]="mainService.currentChat?._id === conv.chatId"
-            (click)="openAgentHistory(conv.chatId)"
-            [attr.data-tooltip]="conv.summary | i18n"
-            data-tooltip-placement="left"
-          >
-            <fa-icon [icon]="['fas', 'clock']"></fa-icon>
-            <span class="history-summary">{{ conv.summary }}</span>
-          </div>
-          }
-          @empty {
-          <div class="no-history" (click)="mainService.openAgentChat()">
-            <fa-icon [icon]="['fas', 'comment-dots']"></fa-icon>
-            <span>{{ 'agent.startConversation' | i18n }}</span>
-          </div>
-          }
-        </div>
-      }
     </div>
 
     <div class="nav-section">
@@ -56,9 +28,41 @@
       </div>
       }
     </div>
+
+    @if (mainService.agentConfigured) {
+    <div class="nav-section">
+      <div class="nav-title">{{ 'agent.title' | i18n }}</div>
+      <div class="menu-item agent-item" (click)="mainService.openAgentChat()" [attr.data-tooltip]="'agent.title' | i18n" data-tooltip-placement="left">
+        <fa-icon [icon]="['fas', 'robot']"></fa-icon>
+        <span>{{ 'agent.title' | i18n }}</span>
+      </div>
+      @if (agentHistory.length > 0) {
+        <div class="assistant-history-list">
+          @for (conv of agentHistory; track $any(conv.chatId)) {
+          <div
+            class="menu-item assistant-history-item"
+            [class.active]="mainService.currentChat?._id === conv.chatId"
+            (click)="openAgentHistory(conv.chatId)"
+            [attr.data-tooltip]="conv.summary | i18n"
+            data-tooltip-placement="left"
+          >
+            <fa-icon [icon]="['fas', 'clock']"></fa-icon>
+            <span class="history-summary">{{ conv.summary }}</span>
+          </div>
+          }
+          @empty {
+          <div class="menu-item no-history" (click)="mainService.openAgentChat()">
+            <fa-icon [icon]="['fas', 'comment-dots']"></fa-icon>
+            <span>{{ 'agent.startConversation' | i18n }}</span>
+          </div>
+          }
+        </div>
+      }
+    </div>
+    }
   </div>
 
-   <div class="sidebar-footer">
+  <div class="sidebar-footer">
     <div class="menu-item theme-toggle-item" (click)="toggleTheme()" [attr.data-tooltip]="'theme.toggle' | i18n" data-tooltip-placement="left">
       <fa-icon [icon]="['fas', themeService.theme === 'dark' ? 'sun' : 'moon']"></fa-icon>
       <span>{{ themeService.theme === 'dark' ? ('theme.lightMode' | i18n) : ('theme.darkMode' | i18n) }}</span>

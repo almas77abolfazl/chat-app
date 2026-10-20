@@ -26,7 +26,7 @@
           <div class="result-name">{{ result.firstName }} {{ result.lastName }}</div>
           <div class="result-type">{{ 'chat.startChat' | i18n }}</div>
         </div>
-        <fa-icon [icon]="['fas', 'arrow-left']" class="result-arrow"></fa-icon>
+        <fa-icon [icon]="['fas', 'arrow-right']" class="result-arrow"></fa-icon>
       </div>
       }
     </div>
@@ -39,7 +39,8 @@
         class="chat-item"
         [class.active]="mainService.currentChat?._id === chat._id"
         (click)="openChat(chat)"
-        [style.animation-delay]="(i * 45) + 'ms'"
+        (contextmenu)="openChatContextMenu($event, chat)"
+        [style.animation-delay]="(i * 40) + 'ms'"
       >
         <div class="chat-avatar">
           @if (chat.isGroup || chat.isChannel) {
@@ -52,9 +53,9 @@
           </div>
           }
           @if (chat.isOnline) {
-          <span class="online-dot"></span>
+          <span class="status-dot online"></span>
           } @else if (mainService.isAgentChat(chat)) {
-          <span class="agent-dot"></span>
+          <span class="status-dot agent"></span>
           }
         </div>
         <div class="chat-info">
@@ -73,7 +74,7 @@
           @if (chat.isOnline) {
           <div class="chat-status-online">{{ 'status.online' | i18n }}</div>
           } @else if (chat.lastSeen) {
-          <div class="chat-status-offline">آخرین seen: {{ chat.lastSeen | date:'short' }}</div>
+          <div class="chat-status-offline">{{ 'status.lastSeen' | i18n }}: {{ chat.lastSeen | date:'short' }}</div>
           }
           @if (chat.updatedAt && !chat.isOnline && !chat.lastSeen) {
           <div class="chat-time">{{ chat.updatedAt | date: 'short-time' }}</div>
@@ -99,3 +100,19 @@
     <fa-icon [icon]="['fas', 'plus']"></fa-icon>
   </div>
 </div>
+
+@if (showChatContextMenu && chatContextMenuTarget) {
+<div class="context-menu" [style.left.px]="chatContextMenuX" [style.top.px]="chatContextMenuY" (click)="$event.stopPropagation()">
+  @if (chatContextMenuTarget?.isGroup || chatContextMenuTarget?.isChannel) {
+  <button class="context-menu-item" (click)="onChatContextMenuAction('leave')">
+    <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
+    <span>{{ 'chat.leave' | i18n }}</span>
+  </button>
+  } @else {
+  <button class="context-menu-item danger" (click)="onChatContextMenuAction('delete')">
+    <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+    <span>{{ 'chat.delete' | i18n }}</span>
+  </button>
+  }
+</div>
+}

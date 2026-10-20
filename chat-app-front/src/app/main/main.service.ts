@@ -86,7 +86,7 @@ export class MainService {
         firstName: isDirect ? peer?.firstName : undefined,
         lastName: isDirect ? peer?.lastName : undefined,
         name: chat.name || null,
-        avatar: avatar ? `${environment.uploadUrl}/${avatar}` : null,
+        avatar: this.getAvatarUrl(avatar),
         isGroup: chat.isGroup,
         isChannel: chat.isChannel,
         isOwner: chat.ownerId === this.authService.getUserId(),
@@ -199,6 +199,7 @@ export class MainService {
   openChat(chatItem: ChatListItem) {
     if (this.currentChat?._id === chatItem._id) return;
     this.currentChat = chatItem;
+    this.currentChat.messages = this.currentChat.messages || [];
     this.currentPage = 1;
     this.totalPages = 1;
     this.chatOpenedSubject.next();
@@ -815,13 +816,16 @@ const messageData: Message = {
     return this.getMessages(this.currentChat._id as string, page).pipe(
       tap((response: { messages: Message[]; totalMessages: number; currentPage: number; totalPages: number }) => {
         if (!this.currentChat) return;
-        const existIds = new Set((this.currentChat.messages || []).map((x) => x._id));
-        const newMessages = response.messages.filter((x) => !existIds.has(x._id));
-        const ordered = [...newMessages].reverse();
+        const serverMessages = response.messages || [];
         if (response.currentPage <= 1) {
-          this.currentChat.messages = ordered;
+          // Server is source of truth for first page; keep local pending messages on top
+          const pending = (this.currentChat.messages || []).filter((m) => m._pending);
+          this.currentChat.messages = [...serverMessages.reverse(), ...pending];
         } else {
-          this.currentChat.messages = [...ordered, ...(this.currentChat.messages || [])];
+          // Prepend older messages from server, avoiding duplicates
+          const existingIds = new Set((this.currentChat.messages || []).map((m) => m._id));
+          const serverNew = serverMessages.filter((m) => !existingIds.has(m._id));
+          this.currentChat.messages = [...serverNew.reverse(), ...(this.currentChat.messages || [])];
         }
         this.currentPage = response.currentPage;
         this.totalPages = response.totalPages;
@@ -848,6 +852,17 @@ const messageData: Message = {
         catchError(() => of(null))
       )
     );
+  }
+
+  getAvatarUrl(avatar?: string | null): string | null {
+    if (!avatar) return null;
+    if (avatar.startsWith('http://') || avatar.startsWith('https://') || avatar.startsWith('data:')) return avatar;
+    if (avatar.startsWith('/uploads/')) {
+      const base = environment.apiUrl.replace('/v1', '');
+      return `${base}${avatar}`;
+    }
+    if (avatar.startsWith('/')) return `${environment.uploadUrl}${avatar}`;
+    return `${environment.uploadUrl}/${avatar}`;
   }
 
   isAgentChatSync(chat: ChatListItem): boolean {

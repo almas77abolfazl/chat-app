@@ -103,4 +103,9 @@ export class ProfileComponent {
       this.mainService.openChat(this.data);
     }
   }
+
+  previewAvatar(): void {
+    if (!this.data?.avatar) return;
+    window.open(this.data.avatar, '_blank');
+  }
 }

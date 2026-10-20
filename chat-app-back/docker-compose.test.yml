@@ -1,0 +1,10 @@
+version: '3.8'
+
+services:
+  mongo-test:
+    image: mongo:7
+    container_name: chat-app-mongo-test
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_DATABASE: chat-app-test

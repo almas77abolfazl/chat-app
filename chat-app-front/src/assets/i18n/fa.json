@@ -37,6 +37,7 @@
     "edit": "ویرایش",
     "delete": "حذف",
     "reaction": "واکنش",
+    "reply": "پاسخ",
     "cancel": "لغو",
     "save": "ذخیره",
     "confirmDelete": "آیا از حذف این پیام اطمینان دارید؟",
@@ -56,7 +57,12 @@
     "videoCall": "تماس ویدیویی",
     "close": "بستن",
     "activeNow": "در حال حاضر فعال است",
-    "directChat": "مکالمه مستقیم"
+    "directChat": "مکالمه مستقیم",
+    "title": "پروفایل شما",
+    "subtitle": "نام و نام خانوادگی شما به دیگران نمایش داده می‌شود",
+    "firstNamePlaceholder": "نام",
+    "lastNamePlaceholder": "نام خانوادگی",
+    "save": "ذخیره"
   },
   "agent": {
     "title": "دستیار هوشمند",
@@ -65,6 +71,22 @@
     "extractTasks": "استخراج تسک",
     "replySuggest": "پیشنهاد پاسخ",
     "typing": "دستیار در حال پاسخ‌گویی"
+  },
+  "brand": {
+    "name": "چت‌اپ"
+  },
+  "login": {
+    "title": "ورود به حساب",
+    "subtitle": "لطفاً شماره تلفن خود را وارد کنید تا کد تأیید دریافت کنید.",
+    "phonePlaceholder": "۰۹۱۲۳۴۵۶۷۸۹",
+    "sendCode": "ارسال کد تأیید"
+  },
+  "verify": {
+    "title": "کد تأیید",
+    "subtitle": "کد ۶ رقمی ارسال‌شده به <strong>{phone}</strong> را وارد کنید.",
+    "submit": "تأیید و ورود",
+    "resend": "ارسال مجدد کد",
+    "resendCountdown": "ارسال مجدد در {seconds} ثانیه"
   },
   "sidebar": {
     "brand": "چت‌اپ",

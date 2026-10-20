@@ -11,8 +11,8 @@
   position: relative;
 
   background:
-    radial-gradient(42rem 28rem at 12% -8%, color-mix(in srgb, var(--color-agent) 10%, transparent), transparent 60%),
-    radial-gradient(38rem 24rem at 96% 104%, color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 60%),
+    radial-gradient(45rem 30rem at 10% -10%, color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 60%),
+    radial-gradient(40rem 26rem at 98% 106%, color-mix(in srgb, var(--color-primary) 6%, transparent), transparent 60%),
     linear-gradient(180deg, var(--color-bg) 0%, var(--color-bg-deep) 100%);
 
   &::before {
@@ -20,11 +20,11 @@
     position: absolute;
     inset: 0;
     background-image:
-      linear-gradient(color-mix(in srgb, var(--color-border) 30%, transparent) 1px, transparent 1px),
-        linear-gradient(90deg, color-mix(in srgb, var(--color-border) 30%, transparent) 1px, transparent 1px);
-    background-size: 34px 34px;
-    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 100%);
-    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 100%);
+      linear-gradient(color-mix(in srgb, var(--color-border) 20%, transparent) 1px, transparent 1px),
+        linear-gradient(90deg, color-mix(in srgb, var(--color-border) 20%, transparent) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse 70% 50% at 50% 0%, #000 20%, transparent 100%);
+    -webkit-mask-image: radial-gradient(ellipse 70% 50% at 50% 0%, #000 20%, transparent 100%);
     pointer-events: none;
     z-index: 0;
   }
@@ -35,21 +35,21 @@
   }
 
   app-side-bar {
-    flex: 0 0 250px;
+    flex: 0 0 260px;
     height: 100%;
     background: var(--color-surface-glass);
-    backdrop-filter: blur(16px) saturate(150%);
-    -webkit-backdrop-filter: blur(16px) saturate(150%);
-    border-inline-start: 1px solid color-mix(in srgb, var(--color-surface) 60%, transparent);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-inline-start: 1px solid color-mix(in srgb, var(--color-surface) 50%, transparent);
     box-shadow: var(--shadow-sm);
     transition: flex-basis var(--transition), flex-grow var(--transition);
   }
 
   app-chat-list {
-    flex: 0 0 360px;
+    flex: 0 0 380px;
     height: 100%;
-    background: linear-gradient(180deg, var(--color-surface-container-high), var(--color-surface-container));
-    border-inline-end: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+    background: var(--color-surface-container);
+    border-inline-end: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
     box-shadow: var(--shadow-xs);
     transition: flex-basis var(--transition), transform var(--transition);
   }
@@ -58,7 +58,34 @@
     flex: 1;
     min-width: 0;
     height: 100%;
-    background: var(--color-surface-container);
+    background: var(--color-surface-container-high);
+  }
+
+  .theme-toggle-btn {
+    position: fixed;
+    inset-block-start: env(safe-area-inset-top, 1rem);
+    inset-inline-end: env(safe-area-inset-right, 1rem);
+    z-index: 105;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-full);
+    background: var(--color-surface-solid);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--shadow-md);
+    font-size: 0.95rem;
+    transition: background var(--transition), color var(--transition), transform var(--transition-fast), box-shadow var(--transition-fast);
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+      color: var(--color-primary-dark);
+      transform: scale(1.06);
+      box-shadow: var(--shadow-lg);
+    }
   }
 
   @media (max-width: 768px) {
@@ -99,7 +126,7 @@
     }
 
     .theme-toggle-btn {
-      display: none;
+      inset-inline-end: env(safe-area-inset-right, 1rem);
     }
 
     .mobile-menu-btn {
@@ -107,8 +134,8 @@
       inset-block-start: env(safe-area-inset-top, 1rem);
       inset-inline-start: env(safe-area-inset-left, 1rem);
       z-index: 110;
-      width: 2.7rem;
-      height: 2.7rem;
+      width: 2.75rem;
+      height: 2.75rem;
       border-radius: var(--radius-full);
       background: var(--color-surface-solid);
       border: 1px solid var(--color-border);
@@ -119,49 +146,20 @@
       cursor: pointer;
       box-shadow: var(--shadow-md);
       font-size: 1rem;
-      transition: background var(--transition), color var(--transition),
-        transform var(--transition-fast);
+      transition: background var(--transition), color var(--transition), transform var(--transition-fast);
     }
 
     .mobile-menu-btn:hover {
-      background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+      background: color-mix(in srgb, var(--color-primary) 10%, transparent);
       color: var(--color-primary-dark);
       transform: scale(1.06);
-    }
-
-    .theme-toggle-btn {
-      position: fixed;
-      inset-block-start: env(safe-area-inset-top, 1rem);
-      inset-inline-end: env(safe-area-inset-right, 1rem);
-      z-index: 105;
-      width: 2.6rem;
-      height: 2.6rem;
-      border-radius: var(--radius-full);
-      background: var(--color-surface-solid);
-      border: 1px solid var(--color-border);
-      color: var(--color-text-secondary);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: var(--shadow-md);
-      font-size: 0.95rem;
-      transition: background var(--transition), color var(--transition),
-        transform var(--transition-fast), box-shadow var(--transition-fast);
-
-      &:hover {
-        background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-        color: var(--color-primary-dark);
-        transform: scale(1.06);
-        box-shadow: var(--shadow-lg);
-      }
     }
 
     .mobile-overlay {
       position: fixed;
       inset: 0;
       z-index: 99;
-      background: rgba(26, 27, 46, 0.35);
+      background: rgba(0, 0, 0, 0.35);
       backdrop-filter: blur(4px);
     }
   }

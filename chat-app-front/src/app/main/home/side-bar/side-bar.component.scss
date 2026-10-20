@@ -3,7 +3,6 @@
   flex-direction: column;
   height: 100vh;
   background: transparent;
-  direction: rtl;
   padding: 1rem 0.75rem;
   gap: 0.25rem;
 
@@ -15,9 +14,9 @@
     width: 75vw;
     max-width: 320px;
     background: var(--color-surface-glass);
-    backdrop-filter: blur(16px) saturate(150%);
-    -webkit-backdrop-filter: blur(16px) saturate(150%);
-    border-inline-end: 1px solid color-mix(in srgb, var(--color-surface) 60%, transparent);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-inline-end: 1px solid color-mix(in srgb, var(--color-surface) 50%, transparent);
     box-shadow: var(--shadow-xl);
     transform: translateX(100%);
     transition: transform var(--transition);
@@ -25,12 +24,12 @@
   }
 
   @media (min-width: 769px) {
-    flex: 0 0 250px;
-    width: 250px;
+    flex: 0 0 260px;
+    width: 260px;
     background: var(--color-surface-glass);
-    backdrop-filter: blur(16px) saturate(150%);
-    -webkit-backdrop-filter: blur(16px) saturate(150%);
-    border-inline-start: 1px solid color-mix(in srgb, var(--color-surface) 60%, transparent);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border-inline-start: 1px solid color-mix(in srgb, var(--color-surface) 50%, transparent);
     box-shadow: var(--shadow-sm);
   }
 
@@ -41,7 +40,7 @@
 
   .close-btn {
     padding: 0.5rem 0.5rem 1rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
   }
 
   .sidebar-header {
@@ -53,17 +52,24 @@
   .sidebar-brand {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
-    padding: 0 0.5rem 1rem;
+    gap: 0.75rem;
+    padding: 0 0.5rem 1.25rem;
     font-weight: 800;
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     color: var(--color-text);
     letter-spacing: -0.01em;
 
-    fa-icon {
-      font-size: 1.5rem;
-      color: var(--color-primary);
-      filter: drop-shadow(0 0 6px color-mix(in srgb, var(--color-primary) 50%, transparent));
+    .brand-icon {
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+      color: var(--color-text-on-primary);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      box-shadow: var(--shadow-glow-primary);
     }
   }
 
@@ -72,16 +78,16 @@
     align-items: center;
     gap: 0.75rem;
     padding: 0.7rem 0.75rem;
-    margin-bottom: 0.2rem;
-    border-radius: var(--radius-md);
+    margin-bottom: 0.15rem;
+    border-radius: var(--radius-lg);
     font-size: 0.95rem;
     font-weight: 500;
     color: var(--color-text-secondary);
     cursor: pointer;
     position: relative;
-    transition: background var(--transition), color var(--transition),
-      transform var(--transition-fast);
+    transition: background var(--transition), color var(--transition), transform var(--transition-fast);
     overflow: hidden;
+    border: 1px solid transparent;
 
     fa-icon {
       font-size: 1.1rem;
@@ -100,30 +106,6 @@
       }
     }
 
-    &.agent-item {
-      color: var(--color-agent);
-      background: linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--color-agent) 16%, transparent),
-        color-mix(in srb, var(--color-agent) 6%, transparent)
-      );
-      border: 1px solid color-mix(in srgb, var(--color-agent) 22%, transparent);
-      box-shadow: var(--shadow-glow-agent);
-
-      fa-icon {
-        color: var(--color-agent);
-      }
-
-      &:hover {
-        background: linear-gradient(
-          135deg,
-          color-mix(in srgb, var(--color-agent) 24%, transparent),
-          color-mix(in srgb, var(--color-agent) 10%, transparent)
-        );
-        box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-agent) 40%, transparent), var(--shadow-glow-agent);
-      }
-    }
-
     &.active {
       background: color-mix(in srgb, var(--color-primary) 12%, transparent);
       color: var(--color-primary-dark);
@@ -132,6 +114,57 @@
 
       fa-icon {
         color: var(--color-primary);
+      }
+    }
+
+    &.agent-item {
+      color: var(--color-primary);
+      background: linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--color-primary) 14%, transparent),
+        color-mix(in srgb, var(--color-primary) 6%, transparent)
+      );
+      border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+      box-shadow: var(--shadow-glow-primary);
+
+      fa-icon {
+        color: var(--color-primary);
+      }
+
+      &:hover {
+        background: linear-gradient(
+          135deg,
+          color-mix(in srgb, var(--color-primary) 20%, transparent),
+          color-mix(in srgb, var(--color-primary) 10%, transparent)
+        );
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-primary) 35%, transparent), var(--shadow-glow-primary);
+      }
+    }
+
+    &.assistant-history-item {
+      font-size: 0.85rem;
+      opacity: 0.85;
+      padding: 0.55rem 0.75rem;
+
+      &.active {
+        font-weight: 600;
+        opacity: 1;
+        background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+      }
+
+      .history-summary {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+    }
+
+    &.no-history {
+      opacity: 0.6;
+      font-size: 0.85rem;
+
+      &:hover {
+        opacity: 1;
       }
     }
   }
@@ -153,9 +186,9 @@
   .sidebar-footer {
     margin-top: auto;
     padding: 0.75rem 0.25rem 0.25rem;
-    border-top: 1px dashed color-mix(in srgb, var(--color-border) 70%, transparent);
+    border-top: 1px dashed color-mix(in srgb, var(--color-border) 60%, transparent);
 
-     .theme-toggle-item,
+    .theme-toggle-item,
     .language-toggle-item,
     .notification-toggle-item {
       border-bottom: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
@@ -174,17 +207,6 @@
 
         fa-icon {
           color: var(--color-danger);
-        }
-      }
-
-      &.assistant-history-item {
-        font-size: 0.8rem;
-        opacity: 0.8;
-
-        &.active {
-          font-weight: 600;
-          opacity: 1;
-          background: color-mix(in srgb, var(--color-accent) 8%, transparent);
         }
       }
     }

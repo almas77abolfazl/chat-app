@@ -6,10 +6,11 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { AuthService } from '../auth.service';
 import { interval, Subscription } from 'rxjs';
 import { SnackbarService } from '../../helpers/snackbar/snackbar.service';
+import { I18nPipe } from '../../helpers/i18n.pipe';
 
 @Component({
     selector: 'app-verify-code',
-    imports: [RouterModule, FormsModule, FontAwesomeModule, MatSnackBarModule],
+    imports: [RouterModule, FormsModule, FontAwesomeModule, MatSnackBarModule, I18nPipe],
     templateUrl: './verify-code.component.html',
     styleUrl: './verify-code.component.scss'
 })
@@ -27,12 +28,36 @@ export class VerifyCodeComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Start resend timer automatically when component loads
     this.startResendTimer();
   }
 
   verifyCode() {
     this.authService.verifyCode(this.verificationCode, this.phoneNumber);
+  }
+
+  onOtpInput(event: Event, index: number) {
+    const input = event.target as HTMLInputElement;
+    const value = input.value;
+    if (value.length === 1 && /^\d$/.test(value)) {
+      this.verificationCode = this.verificationCode.substring(0, index) + value + this.verificationCode.substring(index + 1);
+      if (index < 5) {
+        const nextInput = (event.target as HTMLElement).parentElement?.children[index + 1] as HTMLInputElement;
+        if (nextInput) nextInput.focus();
+      }
+    } else if (value.length === 0) {
+      this.verificationCode = this.verificationCode.substring(0, index) + this.verificationCode.substring(index + 1);
+    }
+  }
+
+  onOtpBackspace(event: Event, index: number) {
+    if (index > 0) {
+      const prevInput = (event.target as HTMLElement).parentElement?.children[index - 1] as HTMLInputElement;
+      if (prevInput) {
+        prevInput.focus();
+        prevInput.select();
+      }
+      this.verificationCode = this.verificationCode.substring(0, index - 1) + this.verificationCode.substring(index);
+    }
   }
 
   startResendTimer() {

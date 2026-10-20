@@ -4,92 +4,131 @@
   align-items: center;
   min-height: 100vh;
   padding: 1.5rem;
-  background:
-    radial-gradient(60rem 30rem at 80% -10%, color-mix(in srgb, var(--color-agent) 14%, transparent), transparent),
-    radial-gradient(50rem 26rem at 10% 110%, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent),
-    var(--color-bg);
-  direction: rtl;
+  background: var(--color-bg);
+  transition: background var(--transition);
+  position: relative;
+  overflow: hidden;
+
+  .login-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background:
+      radial-gradient(60rem 40rem at 10% -10%, color-mix(in srgb, var(--color-primary) 10%, transparent), transparent 60%),
+      radial-gradient(50rem 34rem at 100% 100%, color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 60%);
+    pointer-events: none;
+  }
 
   .login-card {
+    position: relative;
+    z-index: 1;
     width: 100%;
-    max-width: 25rem;
-    background: var(--color-surface);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
-    padding: 2.25rem 2rem;
+    max-width: 400px;
+    background: var(--color-surface-glass);
+    backdrop-filter: blur(24px) saturate(200%);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    border: 1px solid color-mix(in srgb, var(--color-surface) 40%, transparent);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--shadow-xl);
+    padding: 3rem 2rem;
     text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    animation: fade-in-item var(--transition-spring) ease both;
 
     .brand {
-      display: inline-flex;
+      display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      margin-bottom: 1.5rem;
-      font-size: 1.35rem;
-      font-weight: 800;
-      color: var(--color-primary);
+      gap: 0.75rem;
 
-      fa-icon {
-        font-size: 2rem;
+      .brand-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 4.5rem;
+        height: 4.5rem;
+        border-radius: var(--radius-full);
+        background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+        color: var(--color-text-on-primary);
+        font-size: 2.25rem;
+        box-shadow: var(--shadow-glow-primary);
+      }
+
+      .brand-name {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--color-text);
+        letter-spacing: -0.01em;
       }
     }
 
     .login-title {
-      font-size: 1.35rem;
+      font-size: 1.75rem;
       font-weight: 800;
-      margin: 0 0 0.5rem;
+      margin: 0;
       letter-spacing: -0.02em;
-      background: linear-gradient(135deg, var(--color-text), var(--color-primary));
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--color-text);
     }
 
     .login-subtitle {
-      font-size: 0.9rem;
+      font-size: 0.95rem;
       color: var(--color-text-secondary);
-      margin: 0 0 1.75rem;
+      margin: 0;
+      line-height: 1.6;
     }
 
-    .input-group {
-      text-align: start;
-      margin-bottom: 1.5rem;
+    .phone-input-wrapper {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-full);
+      background: var(--color-bg);
+      overflow: hidden;
+      transition: border var(--transition), box-shadow var(--transition), background var(--transition);
 
-      .input-label {
-        display: block;
-        font-size: 0.85rem;
-        font-weight: 600;
-        color: var(--color-text-secondary);
-        margin-bottom: 0.5rem;
+      &:focus-within {
+        border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 18%, transparent);
       }
 
-      .input-field {
-        width: 100%;
-        padding: 0.8rem 1rem;
-        border: 1px solid var(--color-border);
-        border-radius: var(--radius-md);
-        background: var(--color-bg);
+      .phone-prefix {
+        padding: 0 1rem;
+        font-size: 0.95rem;
+        color: var(--color-text-secondary);
+        white-space: nowrap;
+      }
+
+      .phone-input {
+        flex: 1;
+        border: none;
+        background: transparent;
+        font-family: "Shabnam", "Helvetica Neue", sans-serif;
         font-size: 1rem;
-        letter-spacing: 0.05em;
+        color: var(--color-text);
+        padding: 0.85rem 1rem;
         outline: none;
-        transition: border var(--transition), background var(--transition),
-          box-shadow var(--transition);
+        width: 100%;
 
         &::placeholder {
           color: var(--color-text-faint);
-          letter-spacing: normal;
-        }
-
-        &:focus {
-          background: var(--color-surface);
-          border-color: var(--color-primary);
-          box-shadow: 0 0 0 3px var(--color-primary-soft);
         }
       }
     }
 
     .submit-btn {
       width: 100%;
+      padding: 0.9rem 1.25rem;
+      font-size: 1rem;
+      font-weight: 700;
+      border-radius: var(--radius-full);
+      margin-top: 0.5rem;
+
+      &.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
     }
   }
 }

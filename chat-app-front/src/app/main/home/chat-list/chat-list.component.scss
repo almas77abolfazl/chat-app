@@ -3,15 +3,14 @@
   flex-direction: column;
   height: 100%;
   background: transparent;
-  direction: rtl;
   position: relative;
   overflow: hidden;
 
   .chat-list-header {
     padding: 1.15rem 1.25rem 1rem;
     background: var(--color-surface-glass);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
     position: relative;
     z-index: 2;
@@ -21,10 +20,7 @@
       font-size: 1.4rem;
       font-weight: 800;
       letter-spacing: -0.02em;
-      background: linear-gradient(135deg, var(--color-text), var(--color-primary));
-      -webkit-background-clip: text;
-      background-clip: text;
-      -webkit-text-fill-color: transparent;
+      color: var(--color-text);
     }
 
     .search-container {
@@ -35,12 +31,11 @@
         padding: 0.7rem 2.6rem 0.7rem 1rem;
         border: 1px solid var(--color-border);
         border-radius: var(--radius-full);
-        background: var(--color-surface);
+        background: var(--color-surface-solid);
         font-size: 0.9rem;
         color: var(--color-text);
         outline: none;
-        transition: border var(--transition), background var(--transition),
-          box-shadow var(--transition);
+        transition: border var(--transition), background var(--transition), box-shadow var(--transition);
 
         &::placeholder {
           color: var(--color-text-faint);
@@ -89,8 +84,7 @@
         cursor: pointer;
         border: 1px solid transparent;
         background: transparent;
-        transition: background var(--transition), border-color var(--transition),
-          transform var(--transition-fast);
+        transition: background var(--transition), border-color var(--transition), transform var(--transition-fast);
         animation: fade-in-item var(--transition) ease both;
         overflow: hidden;
 
@@ -117,7 +111,7 @@
           height: 3rem;
           border-radius: var(--radius-xl);
           overflow: hidden;
-          background: linear-gradient(135deg, var(--color-primary), var(--color-primary-gradient-end));
+          background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
           box-shadow: var(--shadow-sm);
           display: flex;
           align-items: center;
@@ -135,34 +129,37 @@
             height: 100%;
             display: grid;
             place-items: center;
-            color: var(--color-on-primary);
+            color: var(--color-text-on-primary);
             font-weight: 800;
             font-size: 1rem;
             letter-spacing: 0.02em;
           }
 
-          .agent-dot {
-            position: absolute;
-            inset-block-end: -2px;
-            inset-inline-end: -2px;
-            width: 0.9rem;
-            height: 0.9rem;
-            border-radius: var(--radius-full);
-            background: var(--color-agent);
-            border: 2px solid var(--color-surface-solid);
-            box-shadow: 0 0 8px color-mix(in srgb, var(--color-agent) 40%, transparent);
+          .group-icon {
+            font-size: 1.5rem;
+            color: var(--color-text-on-primary);
           }
 
-          .online-dot {
+          .agent-dot,
+          .status-dot {
             position: absolute;
-            inset-block-end: -2px;
-            inset-inline-end: -2px;
-            width: 0.9rem;
-            height: 0.9rem;
+            inset-block-end: -4px;
+            inset-inline-end: -4px;
+            width: 1.05rem;
+            height: 1.05rem;
             border-radius: var(--radius-full);
+            border: 2.5px solid var(--color-surface-solid);
+            box-shadow: var(--shadow-md);
+          }
+
+          .agent-dot {
+            background: var(--color-primary);
+            box-shadow: 0 0 10px color-mix(in srgb, var(--color-primary) 50%, transparent);
+          }
+
+          .online {
             background: var(--color-success);
-            border: 2px solid var(--color-surface-solid);
-            box-shadow: 0 0 8px color-mix(in srgb, var(--color-success) 40%, transparent);
+            box-shadow: 0 0 10px color-mix(in srgb, var(--color-success) 50%, transparent);
           }
         }
 
@@ -222,7 +219,7 @@
             align-items: center;
             justify-content: center;
             background: var(--color-primary);
-            color: var(--color-on-primary);
+            color: var(--color-text-on-primary);
             font-size: 0.7rem;
             font-weight: 700;
             border-radius: var(--radius-full);
@@ -263,8 +260,8 @@
           width: 2.6rem;
           height: 2.6rem;
           border-radius: var(--radius-xl);
-          background: linear-gradient(135deg, var(--color-primary), var(--color-agent));
-          color: var(--color-on-primary);
+          background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+          color: var(--color-text-on-primary);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -349,11 +346,11 @@
       width: 3rem;
       height: 3rem;
       border-radius: var(--radius-full);
-      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-gradient-end));
+      background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--color-on-primary);
+      color: var(--color-text-on-primary);
       font-size: 1.1rem;
       cursor: pointer;
       box-shadow: var(--shadow-lg);
@@ -372,12 +369,8 @@
   }
 
   @keyframes float {
-    0%, 100% {
-      transform: translateY(0);
-    }
-    50% {
-      transform: translateY(-12px);
-    }
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
   }
 
   @keyframes fade-in-item {

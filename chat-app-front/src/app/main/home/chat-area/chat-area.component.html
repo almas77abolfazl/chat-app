@@ -13,12 +13,15 @@
           class="chat-avatar chat-avatar-icon"
         ></fa-icon>
         } @else if (mainService.currentChat?.avatar && !avatarBroken(mainService.currentChat._id)) {
-        <img [src]="mainService.currentChat.avatar" alt="Avatar" class="chat-avatar"
+        <img [src]="mainService.getAvatarUrl(mainService.currentChat.avatar)" alt="Avatar" class="chat-avatar"
           (error)="markAvatarBroken(mainService.currentChat._id)" />
         } @else {
         <div class="chat-avatar chat-avatar-initials" [style.background]="avatarBg(mainService.currentChat)">
           {{ initials(mainService.currentChat) }}
         </div>
+        }
+        @if (mainService.currentChat?.isOnline) {
+        <span class="status-dot online"></span>
         }
       </div>
       <div class="chat-name-block">
@@ -97,7 +100,7 @@
   @if (typingUsers.length > 0) {
   <div class="typing-indicator">
     <span class="typing-names">{{ typingUsers.join(', ') }}</span>
-    <span class="typing-text">در حال تایپ...</span>
+    <span class="typing-text">{{ 'messages.typing' | i18n }}</span>
     <div class="typing-dots">
       <span class="dot"></span>
       <span class="dot"></span>
@@ -123,11 +126,17 @@
     </div>
     }
 
-    @for (message of mainService.currentChat?.messages; track message._id; let last = $last) {
+    @for (message of mainService.currentChat?.messages; track message._id; let i = $index) {
+    @if (i === 0 || shouldShowDateSeparator(i)) {
+    <div class="date-separator">
+      <span>{{ getMessageDate(message) }}</span>
+    </div>
+    }
     <div
       class="message"
       [ngClass]="{ 'sent': ownMessage(message), 'received': !ownMessage(message) }"
       [style.animation-delay]="($index * 30) + 'ms'"
+      (contextmenu)="openContextMenu($event, message)"
     >
       @if (message.toolCalls?.length) {
       <div class="agent-tools">
@@ -139,17 +148,26 @@
       @if (mainService.currentChat?.isGroup && !ownMessage(message)) {
       <div class="message-sender">{{ senderName(message) }}</div>
       }
+      @if (replyingToId === message._id) {
+      <div class="reply-preview">
+        <fa-icon [icon]="['fas', 'reply']" class="reply-icon"></fa-icon>
+        <span class="reply-text">{{ replyingToPreview }}</span>
+        <button class="reply-cancel" (click)="cancelReply(); $event.stopPropagation()">
+          <fa-icon [icon]="['fas', 'times']"></fa-icon>
+        </button>
+      </div>
+      }
       @if (!isEditing(message._id)) {
       <div class="message-actions">
         @if (ownMessage(message)) {
-        <button class="msg-action edit-btn" (click)="startEdit(message)" title="ویرایش">
+        <button class="msg-action edit-btn" (click)="startEdit(message); $event.stopPropagation()" title="ویرایش">
           <fa-icon [icon]="['fas', 'pen']" size="xs"></fa-icon>
         </button>
-        <button class="msg-action delete-btn" (click)="deleteMessage(message)" title="حذف">
+        <button class="msg-action delete-btn" (click)="deleteMessage(message); $event.stopPropagation()" title="حذف">
           <fa-icon [icon]="['fas', 'trash']" size="xs"></fa-icon>
         </button>
         }
-        <button class="msg-action reaction-btn" (click)="toggleReaction(message, '❤️')" title="واکنش">
+        <button class="msg-action reaction-btn" (click)="toggleReaction(message, '❤️'); $event.stopPropagation()" title="واکنش">
           <fa-icon [icon]="['fas', 'heart']" size="xs"></fa-icon>
         </button>
       </div>
@@ -167,13 +185,13 @@
         @if (message.isDeleted) {
         <span class="deleted-msg">این پیام حذف شد</span>
         } @else if (message.mediaType === 'image' && message.fileUrl) {
-        <img [src]="message.fileUrl" class="msg-image" alt="Image" />
+        <img [src]="getMediaUrl(message.fileUrl)" class="msg-image" alt="Image" />
         } @else if (message.mediaType === 'video' && message.fileUrl) {
-        <video [src]="message.fileUrl" class="msg-video" controls preload="metadata"></video>
+        <video [src]="getMediaUrl(message.fileUrl)" class="msg-video" controls preload="metadata"></video>
         } @else if (message.mediaType === 'voice' && message.fileUrl) {
         <div class="msg-voice">
           <fa-icon [icon]="['fas', 'microphone']" class="voice-icon"></fa-icon>
-          <audio [src]="message.fileUrl" class="voice-audio" controls></audio>
+          <audio [src]="getMediaUrl(message.fileUrl)" class="voice-audio" controls></audio>
           <span class="voice-duration">{{ message.fileName }}</span>
         </div>
         } @else if (message.mediaType === 'file' && message.fileUrl) {
@@ -183,14 +201,14 @@
             <div class="file-name">{{ message.fileName }}</div>
             <div class="file-size">{{ formatFileSize(message.fileSize) }}</div>
           </div>
-          <a [href]="message.fileUrl" download class="file-download">
+          <a [href]="getMediaUrl(message.fileUrl)" download class="file-download">
             <fa-icon [icon]="['fas', 'download']"></fa-icon>
           </a>
         </div>
         } @else if (message.mediaType === 'gif' && message.fileUrl) {
-        <img [src]="message.fileUrl" class="msg-gif" alt="GIF" />
+        <img [src]="getMediaUrl(message.fileUrl)" class="msg-gif" alt="GIF" />
         } @else if (message.mediaType === 'sticker' && message.fileUrl) {
-        <img [src]="message.fileUrl" class="msg-sticker" alt="Sticker" />
+        <img [src]="getMediaUrl(message.fileUrl)" class="msg-sticker" alt="Sticker" />
         } @else if (message.mediaType === 'emoji' && message.fileUrl) {
         <span class="msg-emoji">{{ message.fileUrl }}</span>
         } @else {
@@ -207,7 +225,7 @@
       @if (message.reactions && message.reactions.length > 0) {
       <div class="reactions-bar">
         @for (reaction of message.reactions; track reaction.emoji) {
-        <div class="reaction-item" (click)="toggleReaction(message, reaction.emoji)">
+        <div class="reaction-item" (click)="toggleReaction(message, reaction.emoji); $event.stopPropagation()">
           <span class="reaction-emoji">{{ reaction.emoji }}</span>
           <span class="reaction-count">{{ reaction.count }}</span>
           @if (reaction.users.includes(ownId())) {
@@ -218,7 +236,7 @@
       </div>
       }
       <div class="message-time">
-        {{ message.createdAt | date: 'shortTime' }}
+        {{ getShortTime(message.createdAt) }}
         @if (ownMessage(message)) {
         <span class="msg-status"
           [class.msg-sent]="message.status === 'sent'"
@@ -268,31 +286,42 @@
   </button>
 
   <div class="chat-input-container">
-    <div class="input-actions-row">
-      <button class="emoji-picker-toggle" (click)="toggleEmojiPicker(); $event.stopPropagation()" type="button" title="ایموجی">
-        <fa-icon [icon]="['fas', 'smile']" class="emoji-icon"></fa-icon>
+    @if (replyingToId) {
+    <div class="reply-bar">
+      <span class="reply-label">{{ 'actions.reply' | i18n }}</span>
+      <span class="reply-preview-text">{{ replyingToPreview }}</span>
+      <button class="reply-cancel-btn" (click)="cancelReply()">
+        <fa-icon [icon]="['fas', 'times']"></fa-icon>
       </button>
-      <label class="attach-label" title="پیوست فایل">
-        <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none" multiple />
-        <fa-icon [icon]="['fas', 'paperclip']" class="attach-icon"></fa-icon>
-      </label>
     </div>
-    <textarea
-      #element
-      class="chat-input"
-      placeholder="پیام خود را بنویسید..."
-      (input)="onTyping()"
-      (keydown.enter)="mainService.sendMessage(mainService.currentChat, element)"
-      rows="1"
-    ></textarea>
-    <div
-      class="send-icon"
-      title="ارسال"
-      (click)="mainService.sendMessage(mainService.currentChat, element)"
-      [class.disabled]="!element?.value?.trim()"
-    >
-       <fa-icon [icon]="['fas', 'paper-plane']"></fa-icon>
-     </div>
+    }
+    <div class="input-row">
+      <div class="input-actions">
+        <button class="emoji-picker-toggle" (click)="toggleEmojiPicker(); $event.stopPropagation()" type="button" title="ایموجی">
+          <fa-icon [icon]="['fas', 'smile']" class="emoji-icon"></fa-icon>
+        </button>
+        <label class="attach-label" title="پیوست فایل">
+          <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none" multiple />
+          <fa-icon [icon]="['fas', 'paperclip']" class="attach-icon"></fa-icon>
+        </label>
+      </div>
+      <textarea
+        #element
+        class="chat-input"
+        placeholder="پیام خود را بنویسید..."
+        (input)="onTyping()"
+        (keydown.enter)="mainService.sendMessage(mainService.currentChat, element)"
+        rows="1"
+      ></textarea>
+      <div
+        class="send-icon"
+        title="ارسال"
+        (click)="mainService.sendMessage(mainService.currentChat, element)"
+        [class.disabled]="!element?.value?.trim()"
+      >
+         <fa-icon [icon]="['fas', 'paper-plane']"></fa-icon>
+      </div>
+    </div>
    </div>
    @if (showEmojiPicker) {
    <div class="emoji-picker">
@@ -315,6 +344,29 @@
     </div>
     <h2 class="hero-title">گفتگویی در حال حاضر نیست</h2>
     <p class="hero-subtitle">یک گفتگو را انتخاب کنید یا دستیار هوشمند را امتحان کنید</p>
+  </div>
+  }
+
+  @if (showContextMenu && contextMenuTarget) {
+  <div class="context-menu" [style.left.px]="contextMenuX" [style.top.px]="contextMenuY" (click)="$event.stopPropagation()">
+    <button class="context-menu-item" (click)="onContextMenuAction('reply')">
+      <fa-icon [icon]="['fas', 'reply']"></fa-icon>
+      <span>پاسخ</span>
+    </button>
+    @if (ownMessage(contextMenuTarget)) {
+    <button class="context-menu-item" (click)="onContextMenuAction('edit')">
+      <fa-icon [icon]="['fas', 'pen']"></fa-icon>
+      <span>ویرایش</span>
+    </button>
+    <button class="context-menu-item danger" (click)="onContextMenuAction('delete')">
+      <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+      <span>حذف</span>
+    </button>
+    }
+    <button class="context-menu-item" (click)="onContextMenuAction('copy')">
+      <fa-icon [icon]="['fas', 'copy']"></fa-icon>
+      <span>کپی</span>
+    </button>
   </div>
   }
 </div>
