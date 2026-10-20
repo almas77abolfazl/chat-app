@@ -12,6 +12,7 @@ import { Message } from '../../../models/message.model';
 import { ChatListItem } from '../../../models/chat-list-item.model';
 import { ChatBackgroundService, ChatBackground, CHAT_BACKGROUNDS } from '../../chat-background/chat-background.service';
 import { I18nPipe } from '../../../helpers/i18n.pipe';
+import { environment } from '../../../../environments/environment';
 
 export interface ContextMenuAction {
   label: string;
@@ -460,5 +461,12 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   getShortTime(date: Date | string): string {
     const d = new Date(date);
     return d.toLocaleTimeString('fa-IR', { hour: '2-digit', minute: '2-digit', hour12: false });
+  }
+
+  getMediaUrl(fileUrl?: string): string {
+    if (!fileUrl) return '';
+    if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) return fileUrl;
+    if (fileUrl.startsWith('/')) return `${environment.uploadUrl}${fileUrl}`;
+    return `${environment.uploadUrl}/${fileUrl}`;
   }
 }
