@@ -19,6 +19,40 @@
     pointer-events: none;
   }
 
+  
+  .login-top-bar {
+    position: absolute;
+    top: 1.5rem;
+    inset-inline-end: 1.5rem;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    .top-bar-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.85rem;
+      border-radius: var(--radius-full);
+      background: var(--color-surface-glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid color-mix(in srgb, var(--color-surface) 40%, transparent);
+      color: var(--color-text);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+
+      &:hover {
+        background: var(--color-surface-hover);
+        color: var(--color-primary);
+        border-color: color-mix(in srgb, var(--color-primary) 30%, transparent);
+      }
+    }
+  }
+
   .login-card {
     position: relative;
     z-index: 1;

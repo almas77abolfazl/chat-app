@@ -4,10 +4,10 @@
     <div class="cover-glow"></div>
 
     <div class="cover-actions">
-      <button class="icon-btn close-btn" (click)="dialogRef.close()" aria-label="بستن">
+      <button class="icon-btn close-btn" (click)="dialogRef.close()" [attr.aria-label]="'actions.close' | i18n">
         <fa-icon [icon]="['fas', 'times']"></fa-icon>
       </button>
-      <button class="icon-btn more-btn" (click)="editProfile()" aria-label="ویرایش">
+      <button class="icon-btn more-btn" (click)="editProfile()" [attr.aria-label]="'actions.edit' | i18n">
         <fa-icon [icon]="['fas', 'pencil-alt']"></fa-icon>
       </button>
     </div>
@@ -31,36 +31,36 @@
       <h1 class="profile-name">{{ displayName(data) }}</h1>
       <p class="profile-subtitle">{{ subtitle(data) }}</p>
       @if (!isGroup && !isChannel) {
-      <p class="profile-status">در حال حاضر فعال است</p>
+      <p class="profile-status">{{ 'profile.activeNow' | i18n }}</p>
       }
     </div>
 
     <div class="actions">
-      <button class="btn primary" (click)="openChat()" aria-label="ارسال پیام">
+      <button class="btn primary" (click)="openChat()" [attr.aria-label]="'profile.message' | i18n">
         <fa-icon [icon]="['fas', 'paper-plane']"></fa-icon>
-        <span>پیام</span>
+        <span>{{ 'profile.message' | i18n }}</span>
       </button>
-      <button class="btn ghost" (click)="dialogRef.close()" aria-label="تماس صوتی">
+      <button class="btn ghost" (click)="dialogRef.close()" [attr.aria-label]="'profile.call' | i18n">
         <fa-icon [icon]="['fas', 'phone-alt']"></fa-icon>
       </button>
-      <button class="btn ghost" (click)="dialogRef.close()" aria-label="تماس ویدیویی">
+      <button class="btn ghost" (click)="dialogRef.close()" [attr.aria-label]="'profile.videoCall' | i18n">
         <fa-icon [icon]="['fas', 'video']"></fa-icon>
       </button>
     </div>
 
     <!-- Info section -->
     <section class="section">
-      <div class="section-title">درباره</div>
+      <div class="section-title">{{ 'profile.about' | i18n }}</div>
       <div class="info-row">
-        <span class="info-label">نام کاربری</span>
+        <span class="info-label">{{ 'profile.username' | i18n }}</span>
         <span class="info-value">{{ data?.firstName ?? '' }} {{ data?.lastName ?? '' }}</span>
       </div>
       <div class="info-row">
-        <span class="info-label">نوع گفتگو</span>
+        <span class="info-label">{{ 'profile.chatType' | i18n }}</span>
         <span class="info-value">{{ subtitle(data) }}</span>
       </div>
       <div class="info-row">
-        <span class="info-label">آخرین فعالیت</span>
+        <span class="info-label">{{ 'profile.lastActivity' | i18n }}</span>
         <span class="info-value">{{ data?.updatedAt | date: 'short' }}</span>
       </div>
     </section>
@@ -68,8 +68,8 @@
     <!-- Members section for groups/channels -->
     <section class="section" *ngIf="isGroup || isChannel">
       <div class="section-header">
-        <div class="section-title">اعضاء</div>
-        <span class="members-count">{{ membersCount(data) }} نفر</span>
+        <div class="section-title">{{ 'profile.members' | i18n }}</div>
+        <span class="members-count">{{ 'profile.membersCount' | i18n: { count: membersCount(data) } }}</span>
       </div>
       <div class="members-list">
         <div class="member-item" *ngFor="let p of (data?.participants || [])">
@@ -89,8 +89,8 @@
   </div>
 
   <footer class="profile-footer">
-    <button class="btn ghost-text" (click)="dialogRef.close()" aria-label="بستن">
-      بستن
+    <button class="btn ghost-text" (click)="dialogRef.close()" [attr.aria-label]="'actions.close' | i18n">
+      {{ 'actions.close' | i18n }}
     </button>
   </footer>
 </div>

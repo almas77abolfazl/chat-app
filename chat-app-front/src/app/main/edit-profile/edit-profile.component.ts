@@ -3,10 +3,11 @@ import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { I18nPipe } from '../../helpers/i18n.pipe';
 
 @Component({
   selector: 'app-edit-profile',
-  imports: [FontAwesomeModule, FormsModule, MatButtonModule],
+  imports: [FontAwesomeModule, FormsModule, MatButtonModule, I18nPipe],
   templateUrl: './edit-profile.component.html',
   styleUrls: ['./edit-profile.component.scss'],
 })

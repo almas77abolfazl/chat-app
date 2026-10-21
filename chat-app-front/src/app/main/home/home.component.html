@@ -5,7 +5,7 @@
     class="mobile-menu-btn"
     *ngIf="!mainService.currentChat && isMobile"
     (click)="toggleMobileMenu()"
-    aria-label="منو"
+    [attr.aria-label]="'chat.menu' | i18n"
   >
     <fa-icon [icon]="['fas', 'bars']"></fa-icon>
   </button>
@@ -14,8 +14,8 @@
     class="theme-toggle-btn"
     *ngIf="!isMobile"
     (click)="themeService.toggleTheme()"
-    [attr.aria-label]="themeService.theme === 'dark' ? 'حالت روشن' : 'حالت تیره'"
-    title="تغییر حالت نمایش"
+    [attr.aria-label]="themeService.theme === 'dark' ? ('theme.lightMode' | i18n) : ('theme.darkMode' | i18n)"
+    [attr.title]="'theme.toggle' | i18n"
   >
     <fa-icon [icon]="['fas', themeService.theme === 'dark' ? 'sun' : 'moon']"></fa-icon>
   </button>

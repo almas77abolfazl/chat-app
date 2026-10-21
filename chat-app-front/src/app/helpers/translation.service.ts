@@ -18,14 +18,22 @@ export class TranslationService {
   private loadingSubject = new BehaviorSubject<boolean>(true);
   loading$ = this.loadingSubject.asObservable();
 
+  private activeLoadPromise: Promise<void> | null = null;
+  private activeLoadLang: Language | null = null;
+
   constructor(private http: HttpClient) {
-    this.loadLanguage(this.currentLangSubject.value);
+    const initialLang = this.currentLangSubject.value;
+    if (typeof document !== 'undefined') {
+      document.documentElement.dir = initialLang === 'fa' ? 'rtl' : 'ltr';
+      document.documentElement.lang = initialLang;
+    }
+    this.loadLanguage(initialLang);
   }
 
   private getInitialLanguage(): Language {
-    const saved = localStorage.getItem('lang') as Language | null;
+    const saved = typeof localStorage !== 'undefined' ? (localStorage.getItem('lang') as Language | null) : null;
     if (saved === 'en' || saved === 'fa') return saved;
-    const browserLang = navigator.language || (navigator as any).userLanguage;
+    const browserLang = typeof navigator !== 'undefined' ? (navigator.language || (navigator as any).userLanguage) : null;
     if (browserLang?.startsWith('fa')) return 'fa';
     return 'en';
   }
@@ -39,22 +47,38 @@ export class TranslationService {
   }
 
   async loadLanguage(lang: Language): Promise<void> {
-    this.loadingSubject.next(true);
-    try {
-      const res = await firstValueFrom(
-        this.http.get<TranslationData>(`assets/i18n/${lang}.json`)
-      );
-      this.translations = res;
-      this.translationsSubject.next(res);
-      this.currentLangSubject.next(lang);
-      localStorage.setItem('lang', lang);
-      document.documentElement.dir = this.isRTL ? 'rtl' : 'ltr';
-      document.documentElement.lang = lang;
-    } catch (e) {
-      console.error('Failed to load translations', e);
-    } finally {
-      this.loadingSubject.next(false);
+    if (this.activeLoadPromise && this.activeLoadLang === lang) {
+      return this.activeLoadPromise;
     }
+
+    this.activeLoadLang = lang;
+    this.loadingSubject.next(true);
+
+    this.activeLoadPromise = (async () => {
+      try {
+        const res = await firstValueFrom(
+          this.http.get<TranslationData>(`assets/i18n/${lang}.json`)
+        );
+        this.translations = res;
+        this.currentLangSubject.next(lang);
+        this.translationsSubject.next(res);
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem('lang', lang);
+        }
+        if (typeof document !== 'undefined') {
+          document.documentElement.dir = lang === 'fa' ? 'rtl' : 'ltr';
+          document.documentElement.lang = lang;
+        }
+      } catch (e) {
+        console.error('Failed to load translations', e);
+      } finally {
+        this.loadingSubject.next(false);
+        this.activeLoadPromise = null;
+        this.activeLoadLang = null;
+      }
+    })();
+
+    return this.activeLoadPromise;
   }
 
   switchLanguage(): Language {
