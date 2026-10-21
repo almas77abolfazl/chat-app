@@ -2,8 +2,8 @@
   @if (mainService.currentChat) {
 
   <div class="chat-header">
-    <div class="back-button" (click)="goBack()" title="بازگشت به گفتگوها">
-      <fa-icon [icon]="['fas', 'arrow-right']"></fa-icon>
+    <div class="back-button" (click)="goBack()" [attr.title]="'chat.backToChats' | i18n">
+      <fa-icon [icon]="['fas', translationService.isRTL ? 'arrow-right' : 'arrow-left']"></fa-icon>
     </div>
     <div class="chat-header-info" (click)="showProfile()">
       <div class="chat-avatar-wrap">
@@ -33,7 +33,7 @@
     </div>
      <div class="chat-header-actions">
       @if (mainService.isAgentChat(mainService.currentChat)) {
-      <fa-icon [icon]="['fas', 'robot']" class="chat-agent-icon" title="دستیار هوشمند"></fa-icon>
+      <fa-icon [icon]="['fas', 'robot']" class="chat-agent-icon" [attr.title]="'agent.title' | i18n"></fa-icon>
       }
       <div class="bg-selector-wrap" (click)="toggleBgSelector()" [attr.data-tooltip]="'chat.bgSelector' | i18n" data-tooltip-placement="bottom">
         <fa-icon [icon]="['fas', 'palette']" class="bg-selector-trigger"></fa-icon>
@@ -54,7 +54,7 @@
         </div>
         }
       </div>
-      <fa-icon [icon]="['fas', 'ellipsis-v']" class="chat-options-icon" title="گزینه‌ها" (click)="toggleChatActions()"></fa-icon>
+      <fa-icon [icon]="['fas', 'ellipsis-v']" class="chat-options-icon" [attr.title]="'chat.options' | i18n" (click)="toggleChatActions()"></fa-icon>
       @if (showChatActions) {
       <div class="chat-actions-dropdown" (click)="$event.stopPropagation()">
         @if (mainService.currentChat?.isGroup || mainService.currentChat?.isChannel) {
@@ -76,7 +76,7 @@
   @if (mainService.isAgentChat(mainService.currentChat) && !mainService.agentConfigured) {
   <div class="agent-notice">
     <fa-icon [icon]="['fas', 'key']" class="agent-notice-icon"></fa-icon>
-    <span>دستیار هوشمند غیرفعال است. برای فعال‌سازی کلید LLM_API_KEY را تنظیم کنید.</span>
+    <span>{{ 'agent.disabled' | i18n }}</span>
   </div>
   }
 
@@ -84,15 +84,15 @@
   <div class="agent-toolbar">
     <button mat-stroked-button class="agent-action-btn" (click)="mainService.agentQuickAction('summarize')">
       <fa-icon [icon]="['fas', 'file-alt']" class="btn-icon"></fa-icon>
-      خلاصه گفتگو
+      {{ 'agent.summarize' | i18n }}
     </button>
     <button mat-stroked-button class="agent-action-btn" (click)="mainService.agentQuickAction('tasks')">
       <fa-icon [icon]="['fas', 'list-check']" class="btn-icon"></fa-icon>
-      استخراج تسک
+      {{ 'agent.extractTasks' | i18n }}
     </button>
     <button mat-stroked-button class="agent-action-btn" (click)="mainService.agentQuickAction('reply')">
       <fa-icon [icon]="['fas', 'lightbulb']" class="btn-icon"></fa-icon>
-      پیشنهاد پاسخ
+      {{ 'agent.replySuggest' | i18n }}
     </button>
   </div>
   }
@@ -160,14 +160,14 @@
       @if (!isEditing(message._id)) {
       <div class="message-actions">
         @if (ownMessage(message)) {
-        <button class="msg-action edit-btn" (click)="startEdit(message); $event.stopPropagation()" title="ویرایش">
+        <button class="msg-action edit-btn" (click)="startEdit(message); $event.stopPropagation()" [attr.title]="'actions.edit' | i18n">
           <fa-icon [icon]="['fas', 'pen']" size="xs"></fa-icon>
         </button>
-        <button class="msg-action delete-btn" (click)="deleteMessage(message); $event.stopPropagation()" title="حذف">
+        <button class="msg-action delete-btn" (click)="deleteMessage(message); $event.stopPropagation()" [attr.title]="'actions.delete' | i18n">
           <fa-icon [icon]="['fas', 'trash']" size="xs"></fa-icon>
         </button>
         }
-        <button class="msg-action reaction-btn" (click)="toggleReaction(message, '❤️'); $event.stopPropagation()" title="واکنش">
+        <button class="msg-action reaction-btn" (click)="toggleReaction(message, '❤️'); $event.stopPropagation()" [attr.title]="'actions.reaction' | i18n">
           <fa-icon [icon]="['fas', 'heart']" size="xs"></fa-icon>
         </button>
       </div>
@@ -176,14 +176,14 @@
       <div class="edit-input-wrapper">
         <textarea class="edit-input" [(ngModel)]="editContent" (keydown.enter)="saveEdit()"></textarea>
         <div class="edit-actions">
-          <button class="edit-cancel" (click)="cancelEdit()">لغو</button>
-          <button class="edit-save app-button" (click)="saveEdit()">ذخیره</button>
+          <button class="edit-cancel" (click)="cancelEdit()">{{ 'actions.cancel' | i18n }}</button>
+          <button class="edit-save app-button" (click)="saveEdit()">{{ 'actions.save' | i18n }}</button>
         </div>
       </div>
       } @else {
       <div class="message-content">
         @if (message.isDeleted) {
-        <span class="deleted-msg">این پیام حذف شد</span>
+        <span class="deleted-msg">{{ 'chat.deletedMessage' | i18n }}</span>
         } @else if (message.mediaType === 'image' && message.fileUrl) {
         <img [src]="getMediaUrl(message.fileUrl)" class="msg-image" alt="Image" />
         } @else if (message.mediaType === 'video' && message.fileUrl) {
@@ -217,7 +217,7 @@
         <span class="agent-cursor"></span>
         }
         @if (message.editedAt) {
-        <span class="edit-badge">ویرایش شده</span>
+        <span class="edit-badge">{{ 'actions.edited' | i18n }}</span>
         }
         }
       </div>
@@ -229,7 +229,7 @@
           <span class="reaction-emoji">{{ reaction.emoji }}</span>
           <span class="reaction-count">{{ reaction.count }}</span>
           @if (reaction.users.includes(ownId())) {
-          <span class="reaction-user-you">شما</span>
+          <span class="reaction-user-you">{{ 'chat.you' | i18n }}</span>
           }
         </div>
         }
@@ -259,7 +259,7 @@
     }
     @if (mainService.agentWorking && !mainService.agentStreamingMessage) {
     <div class="message received">
-      <div class="message-content agent-typing">دستیار در حال پاسخ‌گویی</div>
+      <div class="message-content agent-typing">{{ 'agent.typing' | i18n }}</div>
     </div>
     }
     @if (mainService.agentStreamingMessage) {
@@ -281,7 +281,7 @@
     }
   </div>
 
-  <button class="scroll-bottom-btn" [class.show]="showScrollBottom" (click)="scrollToBottom()" aria-label="رفتن به آخرین پیام">
+  <button class="scroll-bottom-btn" [class.show]="showScrollBottom" (click)="scrollToBottom()" [attr.aria-label]="'chat.scrollToBottom' | i18n">
     <fa-icon [icon]="['fas', 'chevron-down']"></fa-icon>
   </button>
 
@@ -297,10 +297,10 @@
     }
     <div class="input-row">
       <div class="input-actions">
-        <button class="emoji-picker-toggle" (click)="toggleEmojiPicker(); $event.stopPropagation()" type="button" title="ایموجی">
+        <button class="emoji-picker-toggle" (click)="toggleEmojiPicker(); $event.stopPropagation()" type="button" [attr.title]="'chat.emoji' | i18n">
           <fa-icon [icon]="['fas', 'smile']" class="emoji-icon"></fa-icon>
         </button>
-        <label class="attach-label" title="پیوست فایل">
+        <label class="attach-label" [attr.title]="'chat.attach' | i18n">
           <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none" multiple />
           <fa-icon [icon]="['fas', 'paperclip']" class="attach-icon"></fa-icon>
         </label>
@@ -308,14 +308,14 @@
       <textarea
         #element
         class="chat-input"
-        placeholder="پیام خود را بنویسید..."
+        [placeholder]="'chat.typeMessage' | i18n"
         (input)="onTyping()"
         (keydown.enter)="mainService.sendMessage(mainService.currentChat, element)"
         rows="1"
       ></textarea>
       <div
         class="send-icon"
-        title="ارسال"
+        [attr.title]="'chat.send' | i18n"
         (click)="mainService.sendMessage(mainService.currentChat, element)"
         [class.disabled]="!element?.value?.trim()"
       >
@@ -342,8 +342,8 @@
     <div class="hero-illustration">
       <fa-icon [icon]="['fas', 'comments']" class="hero-icon"></fa-icon>
     </div>
-    <h2 class="hero-title">گفتگویی در حال حاضر نیست</h2>
-    <p class="hero-subtitle">یک گفتگو را انتخاب کنید یا دستیار هوشمند را امتحان کنید</p>
+    <h2 class="hero-title">{{ 'chat.noChat' | i18n }}</h2>
+    <p class="hero-subtitle">{{ 'chat.selectOrStart' | i18n }}</p>
   </div>
   }
 
@@ -351,21 +351,21 @@
   <div class="context-menu" [style.left.px]="contextMenuX" [style.top.px]="contextMenuY" (click)="$event.stopPropagation()">
     <button class="context-menu-item" (click)="onContextMenuAction('reply')">
       <fa-icon [icon]="['fas', 'reply']"></fa-icon>
-      <span>پاسخ</span>
+      <span>{{ 'actions.reply' | i18n }}</span>
     </button>
     @if (ownMessage(contextMenuTarget)) {
     <button class="context-menu-item" (click)="onContextMenuAction('edit')">
       <fa-icon [icon]="['fas', 'pen']"></fa-icon>
-      <span>ویرایش</span>
+      <span>{{ 'actions.edit' | i18n }}</span>
     </button>
     <button class="context-menu-item danger" (click)="onContextMenuAction('delete')">
       <fa-icon [icon]="['fas', 'trash']"></fa-icon>
-      <span>حذف</span>
+      <span>{{ 'actions.delete' | i18n }}</span>
     </button>
     }
     <button class="context-menu-item" (click)="onContextMenuAction('copy')">
       <fa-icon [icon]="['fas', 'copy']"></fa-icon>
-      <span>کپی</span>
+      <span>{{ 'actions.copy' | i18n }}</span>
     </button>
   </div>
   }

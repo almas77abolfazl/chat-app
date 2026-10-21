@@ -6,11 +6,22 @@
     "empty": "You have no chats",
     "newChat": "New chat",
     "lastMessage": "No messages yet",
+    "noMessages": "No messages yet",
     "startChat": "Start chat",
     "bgSelector": "Chat background",
     "delete": "Delete chat",
     "leave": "Leave group",
-    "emojiPicker": "Emoji picker"
+    "emojiPicker": "Emoji picker",
+    "backToChats": "Back to chats",
+    "options": "Options",
+    "deletedMessage": "This message was deleted",
+    "typeMessage": "Write a message...",
+    "send": "Send",
+    "attach": "Attach file",
+    "emoji": "Emoji",
+    "scrollToBottom": "Scroll to latest message",
+    "you": "You",
+    "menu": "Menu"
   },
   "contacts": {
     "title": "Contacts",
@@ -40,6 +51,8 @@
     "reply": "Reply",
     "cancel": "Cancel",
     "save": "Save",
+    "close": "Close",
+    "copy": "Copy",
     "confirmDelete": "Are you sure you want to delete this message?",
     "edited": "Edited",
     "noMessages": "No messages"
@@ -58,11 +71,19 @@
     "close": "Close",
     "activeNow": "Active now",
     "directChat": "Direct chat",
+    "publicChannel": "Public Channel",
     "title": "Your profile",
     "subtitle": "Your name and last name will be shown to others",
     "firstNamePlaceholder": "First name",
     "lastNamePlaceholder": "Last name",
-    "save": "Save"
+    "save": "Save",
+    "cancel": "Cancel",
+    "aboutMe": "About me",
+    "bioPlaceholder": "A short bio about yourself",
+    "firstNameRequired": "Enter your first name",
+    "lastNameRequired": "Enter your last name",
+    "unknownUser": "Unknown user",
+    "membersCount": "{count} members"
   },
   "agent": {
     "title": "Smart Assistant",
@@ -70,7 +91,9 @@
     "summarize": "Summarize chat",
     "extractTasks": "Extract tasks",
     "replySuggest": "Reply suggestion",
-    "typing": "Assistant is responding"
+    "typing": "Assistant is responding",
+    "history": "Assistance",
+    "startConversation": "Start a new conversation"
   },
   "brand": {
     "name": "ChatApp"
@@ -92,6 +115,8 @@
     "brand": "ChatApp",
     "smartAssistant": "Smart Assistant",
     "chats": "Chats",
+    "groups": "Groups",
+    "channels": "Channels",
     "profile": "Profile",
     "logout": "Logout",
     "theme": "Theme",
@@ -101,6 +126,7 @@
   },
   "search": {
     "placeholder": "Search...",
+    "searchResults": "Search results",
     "noResults": "No results found"
   },
   "status": {
@@ -124,10 +150,5 @@
     "title": "Notifications",
     "enabled": "Notifications on",
     "disabled": "Notifications off"
-  },
-  "agent": {
-    "title": "Assistant",
-    "history": "Assistance",
-    "startConversation": "Start a new conversation"
   }
 }

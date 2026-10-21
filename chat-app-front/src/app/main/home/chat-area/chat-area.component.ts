@@ -12,6 +12,7 @@ import { Message } from '../../../models/message.model';
 import { ChatListItem } from '../../../models/chat-list-item.model';
 import { ChatBackgroundService, ChatBackground, CHAT_BACKGROUNDS } from '../../chat-background/chat-background.service';
 import { I18nPipe } from '../../../helpers/i18n.pipe';
+import { TranslationService } from '../../../helpers/translation.service';
 import { environment } from '../../../../environments/environment';
 
 export interface ContextMenuAction {
@@ -33,7 +34,8 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     public mainService: MainService,
     private dialog: MatDialog,
     public chatBgService: ChatBackgroundService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    public translationService: TranslationService
   ) {}
   showScrollBottom = false;
   private destroy$ = new Subject<void>();
@@ -141,12 +143,12 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   headerSubtitle(chat: ChatListItem): string {
-    if (chat?.isChannel) return 'کانال عمومی';
+    if (chat?.isChannel) return this.translationService.t('profile.publicChannel');
     if (chat?.isGroup) {
       const count = (chat.participants || []).length;
-      return `${count} عضو`;
+      return this.translationService.t('profile.membersCount', { count });
     }
-    if (chat?.isOnline) return 'آنلاین';
+    if (chat?.isOnline) return this.translationService.t('status.online');
     return '';
   }
 

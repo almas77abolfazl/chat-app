@@ -6,11 +6,13 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { ChatListItem } from '../../models/chat-list-item.model';
 import { EditProfileComponent } from '../edit-profile/edit-profile.component';
 import { MainService } from '../main.service';
+import { TranslationService } from '../../helpers/translation.service';
+import { I18nPipe } from '../../helpers/i18n.pipe';
 
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, MatButtonModule, MatDialogModule, FontAwesomeModule],
+  imports: [CommonModule, MatButtonModule, MatDialogModule, FontAwesomeModule, I18nPipe],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss',
 })
@@ -19,6 +21,7 @@ export class ProfileComponent {
     public dialogRef: MatDialogRef<ProfileComponent>,
     private dialog: MatDialog,
     public mainService: MainService,
+    public translationService: TranslationService,
     @Inject(MAT_DIALOG_DATA)
     public data: ChatListItem
   ) {}
@@ -58,17 +61,17 @@ export class ProfileComponent {
     if (chat.isGroup || chat.isChannel) return chat.name || '';
     if (chat.firstName || chat.lastName)
       return `${chat.firstName ?? ''} ${chat.lastName ?? ''}`.trim();
-    return 'کاربر ناشناس';
+    return this.translationService.t('profile.unknownUser');
   }
 
   subtitle(chat: ChatListItem): string {
     if (!chat) return '';
-    if (chat.isChannel) return 'کانال عمومی';
+    if (chat.isChannel) return this.translationService.t('profile.publicChannel');
     if (chat.isGroup) {
       const count = (chat.participants || []).length;
-      return `${count} عضو`;
+      return this.translationService.t('profile.membersCount', { count });
     }
-    return 'مکالمه مستقیم';
+    return this.translationService.t('profile.directChat');
   }
 
   membersCount(chat: ChatListItem): number {

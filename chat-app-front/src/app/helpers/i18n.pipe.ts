@@ -13,7 +13,7 @@ export class I18nPipe implements PipeTransform, OnDestroy {
   private langSubscription: Subscription;
 
   constructor() {
-    this.langSubscription = this.translationService.currentLang$.subscribe(() => {
+    this.langSubscription = this.translationService.translations$.subscribe(() => {
       this.cdr.markForCheck();
     });
   }

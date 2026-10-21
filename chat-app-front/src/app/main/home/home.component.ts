@@ -9,12 +9,13 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MainService } from '../main.service';
 import { SocketService } from '../socket.service';
 import { ThemeService } from '../../helpers/theme.service';
+import { I18nPipe } from '../../helpers/i18n.pipe';
 import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FontAwesomeModule, SideBarComponent, ChatListComponent, ChatAreaComponent, MatDialogModule, MatSnackBarModule],
+  imports: [CommonModule, FontAwesomeModule, SideBarComponent, ChatListComponent, ChatAreaComponent, MatDialogModule, MatSnackBarModule, I18nPipe],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
@@ -48,9 +49,7 @@ export class HomeComponent implements OnDestroy {
 
   @HostListener('window:orientationchange')
   onOrientationChange() {
-    setTimeout(() => {
-      this.isMobile = window.innerWidth <= 768;
-    }, 100);
+    this.onResize();
   }
 
   toggleMobileMenu() {
@@ -61,14 +60,7 @@ export class HomeComponent implements OnDestroy {
     this.mobileMenuOpen = false;
   }
 
-  goBackToChatList() {
-    if (this.isMobile) {
-      this.mainService.closeCurrentChat();
-    }
-  }
-
-  ngOnDestroy(): void {
-    this.mainService.stopListening();
+  ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
   }

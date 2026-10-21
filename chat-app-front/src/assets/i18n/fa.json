@@ -6,11 +6,22 @@
     "empty": "گفتگویی ندارید",
     "newChat": "گفتگو جدید",
     "lastMessage": "بدون پیام",
+    "noMessages": "بدون پیام",
     "startChat": "شروع گفتگو",
     "bgSelector": "پس‌زمینه گفتگو",
     "delete": "حذف گفتگو",
     "leave": "خروج از گروه",
-    "emojiPicker": "انتخاب ایموجی"
+    "emojiPicker": "انتخاب ایموجی",
+    "backToChats": "بازگشت به گفتگوها",
+    "options": "گزینه‌ها",
+    "deletedMessage": "این پیام حذف شد",
+    "typeMessage": "پیام خود را بنویسید...",
+    "send": "ارسال",
+    "attach": "پیوست فایل",
+    "emoji": "ایموجی",
+    "scrollToBottom": "رفتن به آخرین پیام",
+    "you": "شما",
+    "menu": "منو"
   },
   "contacts": {
     "title": "مخاطبان",
@@ -40,6 +51,8 @@
     "reply": "پاسخ",
     "cancel": "لغو",
     "save": "ذخیره",
+    "close": "بستن",
+    "copy": "کپی",
     "confirmDelete": "آیا از حذف این پیام اطمینان دارید؟",
     "edited": "ویرایش شده",
     "noMessages": "بدون پیام"
@@ -58,11 +71,19 @@
     "close": "بستن",
     "activeNow": "در حال حاضر فعال است",
     "directChat": "مکالمه مستقیم",
+    "publicChannel": "کانال عمومی",
     "title": "پروفایل شما",
     "subtitle": "نام و نام خانوادگی شما به دیگران نمایش داده می‌شود",
     "firstNamePlaceholder": "نام",
     "lastNamePlaceholder": "نام خانوادگی",
-    "save": "ذخیره"
+    "save": "ذخیره",
+    "cancel": "لغو",
+    "aboutMe": "درباره من",
+    "bioPlaceholder": "یک توضیح کوتاه درباره خودت",
+    "firstNameRequired": "نام خود را وارد کنید",
+    "lastNameRequired": "نام خانوادگی خود را وارد کنید",
+    "unknownUser": "کاربر ناشناس",
+    "membersCount": "{count} عضو"
   },
   "agent": {
     "title": "دستیار هوشمند",
@@ -70,7 +91,9 @@
     "summarize": "خلاصه گفتگو",
     "extractTasks": "استخراج تسک",
     "replySuggest": "پیشنهاد پاسخ",
-    "typing": "دستیار در حال پاسخ‌گویی"
+    "typing": "دستیار در حال پاسخ‌گویی",
+    "history": "پشتیبانی",
+    "startConversation": "شروع مکالمه جدید"
   },
   "brand": {
     "name": "چت‌اپ"
@@ -92,6 +115,8 @@
     "brand": "چت‌اپ",
     "smartAssistant": "دستیار هوشمند",
     "chats": "چت‌ها",
+    "groups": "گروه‌ها",
+    "channels": "کانال‌ها",
     "profile": "پروفایل",
     "logout": "خروج",
     "theme": "تم",
@@ -101,6 +126,7 @@
   },
   "search": {
     "placeholder": "جستجو...",
+    "searchResults": "نتایج جستجو",
     "noResults": "نتیجه‌ای یافت نشد"
   },
   "status": {
@@ -124,10 +150,5 @@
     "title": "نوتیفیکیشن",
     "enabled": "نوتیفیکیشن فعال",
     "disabled": "نوتیفیکیشن غیرفعال"
-  },
-  "agent": {
-    "title": "دستیار هوشمند",
-    "history": "پشتیبانی",
-    "startConversation": "شروع مکالمه جدید"
   }
 }

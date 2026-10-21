@@ -1,5 +1,16 @@
 <div class="login-container" (keyup.enter)="sendCode()">
   <div class="login-bg"></div>
+
+  <div class="login-top-bar">
+    <button class="top-bar-btn" (click)="translationService.switchLanguage()" [attr.aria-label]="'sidebar.language' | i18n" [attr.title]="'sidebar.language' | i18n" type="button">
+      <fa-icon [icon]="['fas', translationService.isRTL ? 'language' : 'earth']"></fa-icon>
+      <span>{{ translationService.isRTL ? 'English' : 'فارسی' }}</span>
+    </button>
+    <button class="top-bar-btn" (click)="themeService.toggleTheme()" [attr.aria-label]="'theme.toggle' | i18n" [attr.title]="'theme.toggle' | i18n" type="button">
+      <fa-icon [icon]="['fas', themeService.theme === 'dark' ? 'sun' : 'moon']"></fa-icon>
+    </button>
+  </div>
+
   <div class="login-card">
     <div class="brand">
       <div class="brand-icon">
