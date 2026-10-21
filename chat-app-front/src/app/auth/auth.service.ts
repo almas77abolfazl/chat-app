@@ -38,17 +38,19 @@ export class AuthService {
         if (response.refreshToken) {
           localStorage.setItem('refresh_token', response.refreshToken);
         }
-        const firstName = response.firstName || '';
-        const lastName = response.lastName || '';
-        if (firstName && lastName) {
+        const firstName = (response.firstName || '').trim();
+        const lastName = (response.lastName || '').trim();
+        if (firstName || lastName) {
           localStorage.setItem('user-firstName', firstName);
           localStorage.setItem('user-lastName', lastName);
           localStorage.setItem('user-bio', response.bio || '');
           this.gotoHome();
-        } else if (this.getFirstName() && this.getLastName()) {
+        } else if (this.getFirstName().trim() || this.getLastName().trim()) {
           // نام قبلاً در localStorage ذخیره شده است
           this.gotoHome();
-        } else this.router.navigate(['/fill-names']);
+        } else {
+          this.router.navigate(['/fill-names']);
+        }
         console.log('Verification successful');
       },
       error: (err) => {
@@ -142,6 +144,6 @@ export class AuthService {
   public getUserNames(): string {
     const lastName = localStorage.getItem('user-lastName') || '';
     const firstName = localStorage.getItem('user-firstName') || '';
-    return lastName + firstName;
+    return (firstName + lastName).trim();
   }
 }

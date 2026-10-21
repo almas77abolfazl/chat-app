@@ -126,7 +126,7 @@
     </div>
     }
 
-    @for (message of mainService.currentChat?.messages; track message._id; let i = $index) {
+    @for (message of mainService.currentChat?.messages; track (message._id || $index); let i = $index) {
     @if (i === 0 || shouldShowDateSeparator(i)) {
     <div class="date-separator">
       <span>{{ getMessageDate(message) }}</span>

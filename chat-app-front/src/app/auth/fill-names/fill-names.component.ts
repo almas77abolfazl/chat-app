@@ -6,10 +6,10 @@ import { AuthService } from '../auth.service';
 import { I18nPipe } from '../../helpers/i18n.pipe';
 
 @Component({
-    selector: 'app-fill-names',
-    imports: [FormsModule, NgIf, FontAwesomeModule, I18nPipe],
-    templateUrl: './fill-names.component.html',
-    styleUrl: './fill-names.component.scss'
+  selector: 'app-fill-names',
+  imports: [FormsModule, NgIf, FontAwesomeModule, I18nPipe],
+  templateUrl: './fill-names.component.html',
+  styleUrl: './fill-names.component.scss'
 })
 export class FillNamesComponent {
   firstName: string = '';
@@ -22,10 +22,12 @@ export class FillNamesComponent {
   }
 
   onSubmit(): void {
-    if (!this.firstName && !this.lastName) {
+    const first = (this.firstName || '').trim();
+    const last = (this.lastName || '').trim();
+    if (!first && !last) {
       this.errorMessage = 'لطفاً نام یا نام خانوادگی را وارد کنید.';
     } else {
-      this.auth.updateUserNames(this.firstName, this.lastName);
+      this.auth.updateUserNames(first, last);
     }
   }
 }
