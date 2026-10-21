@@ -34,7 +34,7 @@
   } @else {
   <div class="chat-list">
     <div class="chat-list-body">
-      @for (chat of mainService.visibleChats(); track $index; let i = $index) {
+      @for (chat of mainService.visibleChats(); track (chat._id || $index); let i = $index) {
       <div
         class="chat-item"
         [class.active]="mainService.currentChat?._id === chat._id"

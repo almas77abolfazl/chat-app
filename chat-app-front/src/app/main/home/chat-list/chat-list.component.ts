@@ -1,9 +1,9 @@
-import { Component, EventEmitter, Output, HostListener } from '@angular/core';
+import { Component, EventEmitter, Output, HostListener, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MainService } from '../../main.service';
 import { FormsModule } from '@angular/forms';
-import { debounceTime, Subject, take } from 'rxjs';
+import { debounceTime, Subject, take, takeUntil } from 'rxjs';
 import { ChatListItem } from '../../../models/chat-list-item.model';
 import { I18nPipe } from '../../../helpers/i18n.pipe';
 
@@ -19,20 +19,42 @@ export interface ChatContextMenuTarget {
   templateUrl: './chat-list.component.html',
   styleUrl: './chat-list.component.scss',
 })
-export class ChatListComponent {
+export class ChatListComponent implements OnInit, OnDestroy {
   @Output() selectChat = new EventEmitter<void>();
   searchQuery = '';
   searchResults: any[] = [];
   brokenAvatars = new Set<string>();
   private searchSubject = new Subject<string>();
+  private destroy$ = new Subject<void>();
   showChatContextMenu = false;
   chatContextMenuX = 0;
   chatContextMenuY = 0;
   chatContextMenuTarget: ChatListItem | null = null;
 
-  constructor(public mainService: MainService) {
+  constructor(
+    public mainService: MainService,
+    private cdr: ChangeDetectorRef
+  ) {
+    this.searchSubject
+      .pipe(debounceTime(300), takeUntil(this.destroy$))
+      .subscribe((query) => this.performSearch(query));
+  }
+
+  ngOnInit() {
     this.mainService.getChatList();
-    this.searchSubject.pipe(debounceTime(300)).subscribe((query) => this.performSearch(query));
+
+    this.mainService.chatListUpdated$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.cdr.markForCheck();
+    });
+
+    this.mainService.chatOpened$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.cdr.markForCheck();
+    });
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   @HostListener('document:click')
@@ -47,6 +69,7 @@ export class ChatListComponent {
   performSearch(query: string) {
     if (!query.trim()) {
       this.searchResults = [];
+      this.cdr.markForCheck();
       return;
     }
     this.mainService
@@ -55,9 +78,11 @@ export class ChatListComponent {
       .subscribe(
         (results: any[]) => {
           this.searchResults = (results || []).filter((r) => r._id !== this.mainService.authService.getUserId());
+          this.cdr.markForCheck();
         },
         () => {
           this.searchResults = [];
+          this.cdr.markForCheck();
         }
       );
   }
@@ -68,11 +93,13 @@ export class ChatListComponent {
     const chatItem = await this.mainService.startDirectChat(user);
     this.mainService.openChat(chatItem);
     this.selectChat.emit();
+    this.cdr.markForCheck();
   }
 
   openChat(chat: ChatListItem) {
     this.mainService.openChat(chat);
     this.selectChat.emit();
+    this.cdr.markForCheck();
   }
 
   displayName(chat: ChatListItem): string {
@@ -113,11 +140,13 @@ export class ChatListComponent {
     this.chatContextMenuX = event.clientX;
     this.chatContextMenuY = event.clientY;
     this.showChatContextMenu = true;
+    this.cdr.markForCheck();
   }
 
   closeChatContextMenu() {
     this.showChatContextMenu = false;
     this.chatContextMenuTarget = null;
+    this.cdr.markForCheck();
   }
 
   onChatContextMenuAction(action: string) {

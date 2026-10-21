@@ -24,6 +24,8 @@ export class MainService {
   loadingMessages = false;
   private chatOpenedSubject = new BehaviorSubject<void>(null);
   chatOpened$ = this.chatOpenedSubject.asObservable();
+  private chatListUpdatedSubject = new Subject<ChatListItem[]>();
+  chatListUpdated$ = this.chatListUpdatedSubject.asObservable();
   private messagesLoadedSubject = new Subject<void>();
   messagesLoaded$ = this.messagesLoadedSubject.asObservable();
 
@@ -62,26 +64,29 @@ export class MainService {
     this.httpRequestService
       .get('chat/list')
       .pipe(take(1))
-      .subscribe(
-        (response: any[]) => {
+      .subscribe({
+        next: (response: any[]) => {
           this.chatItems = (response || []).map((chat) => this.mapChatItem(chat));
+          this.chatListUpdatedSubject.next(this.chatItems);
           this.chatItems.forEach(async (item) => {
             item.avatar = await this.resolveAvatar(item);
             if (await this.isAgentChat(item)) {
               item.avatar = null;
             }
+            this.chatListUpdatedSubject.next(this.chatItems);
           });
         },
-        (error) => this.snackbar.error('خطا در بارگذاری لیست چت', 5000)
-      );
+        error: (error) => this.snackbar.error('خطا در بارگذاری لیست چت', 5000),
+      });
   }
 
   private mapChatItem(chat: any): ChatListItem {
     const peer = chat.otherParticipant;
     const isDirect = !chat.isGroup && !chat.isChannel;
     const avatar = chat.avatar || peer?.profilePicture || null;
-      return {
-        _id: chat.chatId,
+    const chatId = (chat.chatId || chat._id)?.toString();
+    return {
+      _id: chatId,
         peerId: isDirect ? peer?._id : undefined,
         firstName: isDirect ? peer?.firstName : undefined,
         lastName: isDirect ? peer?.lastName : undefined,
@@ -197,15 +202,26 @@ export class MainService {
   }
 
   openChat(chatItem: ChatListItem) {
-    if (this.currentChat?._id === chatItem._id) return;
+    if (!chatItem) return;
+    const chatId = (chatItem._id || (chatItem as any).chatId)?.toString();
+    if (!chatId) return;
+
+    if (this.currentChat?._id === chatId && (this.currentChat.messages?.length || 0) > 0 && !this.loadingMessages) {
+      this.scrollChatToBottom();
+      return;
+    }
+
     this.currentChat = chatItem;
+    this.currentChat._id = chatId;
     this.currentChat.messages = this.currentChat.messages || [];
     this.currentPage = 1;
     this.totalPages = 1;
     this.chatOpenedSubject.next();
     this.chatItems.forEach((item) => {
-      if (item._id === chatItem._id) item.messageCount = 0;
+      if (item._id === chatId) item.messageCount = 0;
     });
+    this.chatListUpdatedSubject.next(this.chatItems);
+
     this.loadingMessages = true;
     this.loadMessages().pipe(take(1)).subscribe({
       next: () => {
@@ -215,6 +231,7 @@ export class MainService {
       },
       error: () => {
         this.loadingMessages = false;
+        this.messagesLoadedSubject.next();
       },
     });
   }
@@ -283,10 +300,12 @@ export class MainService {
           chatItem.updatedAt = new Date(msg.createdAt);
           if (this.currentChat?._id === chatItem._id) {
             chatItem.messageCount = 0;
+            this.messagesLoadedSubject.next();
             this.scrollChatToBottom();
           } else {
             chatItem.messageCount = (chatItem.messageCount || 0) + 1;
           }
+          this.chatListUpdatedSubject.next(this.chatItems);
 
           if (msg.senderId !== this.authService.getUserId() && msg.status !== 'delivered') {
             this.socketService.emit('messageDelivered', { messageId: msg._id });
@@ -307,6 +326,11 @@ export class MainService {
           chatItem.messages.push(msg);
           chatItem.lastMessage = msg;
         }
+        if (this.currentChat?._id === chatItem._id) {
+          this.messagesLoadedSubject.next();
+          this.scrollChatToBottom();
+        }
+        this.chatListUpdatedSubject.next(this.chatItems);
       });
     });
 
@@ -439,6 +463,7 @@ export class MainService {
     this.socketService.on('chatDeleted', (payload: { chatId: string; userId: string }) => {
       this.zone.run(() => {
         this.chatItems = this.chatItems.filter((item) => item._id !== payload.chatId);
+        this.chatListUpdatedSubject.next(this.chatItems);
         if (this.currentChat?._id === payload.chatId) {
           this.closeCurrentChat();
         }
@@ -813,9 +838,13 @@ const messageData: Message = {
   }
 
   loadMessages(page: number = 1) {
-    return this.getMessages(this.currentChat._id as string, page).pipe(
+    const chatId = this.currentChat?._id?.toString();
+    if (!chatId) {
+      return of({ messages: [], totalMessages: 0, currentPage: 1, totalPages: 1 });
+    }
+    return this.getMessages(chatId, page).pipe(
       tap((response: { messages: Message[]; totalMessages: number; currentPage: number; totalPages: number }) => {
-        if (!this.currentChat) return;
+        if (!this.currentChat || this.currentChat._id !== chatId) return;
         const serverMessages = response.messages || [];
         if (response.currentPage <= 1) {
           // Server is source of truth for first page; keep local pending messages on top
