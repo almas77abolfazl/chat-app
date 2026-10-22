@@ -6,8 +6,9 @@
       <fa-icon [icon]="['fas', translationService.isRTL ? 'language' : 'earth']"></fa-icon>
       <span>{{ translationService.isRTL ? 'English' : 'فارسی' }}</span>
     </button>
-    <button class="top-bar-btn" (click)="themeService.toggleTheme()" [attr.aria-label]="'theme.toggle' | i18n" [attr.title]="'theme.toggle' | i18n" type="button">
+    <button class="top-bar-btn theme-toggle-btn" (click)="themeService.toggleTheme()" [attr.aria-label]="'theme.toggle' | i18n" [attr.title]="'theme.toggle' | i18n" type="button">
       <fa-icon [icon]="['fas', themeService.theme === 'dark' ? 'sun' : 'moon']"></fa-icon>
+      <span>{{ themeService.theme === 'dark' ? ('theme.lightMode' | i18n) : ('theme.darkMode' | i18n) }}</span>
     </button>
   </div>
 

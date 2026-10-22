@@ -93,6 +93,10 @@
       font-size: 1.1rem;
       color: var(--color-text-faint);
       transition: color var(--transition), transform var(--transition-fast);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.25rem;
     }
 
     &:hover {
@@ -181,6 +185,11 @@
       letter-spacing: 0.06em;
       text-transform: uppercase;
     }
+
+    .assistant-history-list {
+      max-height: 200px;
+      overflow-y: auto;
+    }
   }
 
   .sidebar-footer {
@@ -188,17 +197,15 @@
     padding: 0.75rem 0.25rem 0.25rem;
     border-top: 1px dashed color-mix(in srgb, var(--color-border) 60%, transparent);
 
-    .theme-toggle-item,
-    .language-toggle-item,
-    .notification-toggle-item {
-      border-bottom: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
-      margin-bottom: 0.3rem;
-    }
-
     .menu-item {
       &:hover {
         background: color-mix(in srgb, var(--color-primary) 8%, transparent);
         color: var(--color-text);
+      }
+
+      &.settings-item:hover fa-icon {
+        color: var(--color-primary);
+        transform: rotate(45deg);
       }
 
       &.logout-item:hover {
@@ -208,21 +215,6 @@
         fa-icon {
           color: var(--color-danger);
         }
-      }
-    }
-
-    .assistant-history-list {
-      max-height: 200px;
-      overflow-y: auto;
-    }
-
-    .no-history {
-      cursor: pointer;
-      opacity: 0.6;
-      font-size: 0.85rem;
-
-      &:hover {
-        opacity: 1;
       }
     }
   }

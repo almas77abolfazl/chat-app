@@ -1,0 +1,157 @@
+<div class="settings-modal" [attr.dir]="translationService.isRTL ? 'rtl' : 'ltr'">
+  <div class="settings-header">
+    <div class="header-title-wrap">
+      <fa-icon [icon]="['fas', 'cog']" class="header-icon"></fa-icon>
+      <h2>{{ 'settings.title' | i18n }}</h2>
+    </div>
+    <button class="close-btn" (click)="close()" [attr.aria-label]="'actions.close' | i18n">
+      <fa-icon [icon]="['fas', 'times']"></fa-icon>
+    </button>
+  </div>
+
+  <div class="settings-body">
+    <!-- User Account Card -->
+    <div class="settings-card user-account-card">
+      <div class="user-avatar-wrap">
+        @if (userAvatar) {
+        <img [src]="userAvatar" alt="Avatar" class="user-avatar" />
+        } @else {
+        <div class="user-avatar-initials">
+          {{ getUserInitials() }}
+        </div>
+        }
+      </div>
+      <div class="user-info">
+        <div class="user-name">{{ userName }}</div>
+        <div class="user-phone">{{ userPhone }}</div>
+      </div>
+      <button class="edit-profile-btn" (click)="openEditProfile()">
+        <fa-icon [icon]="['fas', 'pen']"></fa-icon>
+        <span>{{ 'settings.editProfile' | i18n }}</span>
+      </button>
+    </div>
+
+    <!-- Appearance & Theme Section -->
+    <div class="settings-section">
+      <div class="section-header">
+        <div class="section-title">{{ 'settings.appearance' | i18n }}</div>
+        <div class="section-desc">{{ 'settings.themeDesc' | i18n }}</div>
+      </div>
+
+      <div class="theme-options-grid">
+        <!-- Light Theme Card -->
+        <div
+          class="theme-card"
+          [class.active]="themeService.theme === 'light'"
+          (click)="selectTheme('light')"
+        >
+          <div class="theme-card-preview light-preview">
+            <div class="preview-bubble received-bubble"></div>
+            <div class="preview-bubble sent-bubble"></div>
+          </div>
+          <div class="theme-card-info">
+            <fa-icon [icon]="['fas', 'sun']" class="theme-icon sun-icon"></fa-icon>
+            <span class="theme-name">{{ 'settings.light' | i18n }}</span>
+            @if (themeService.theme === 'light') {
+            <fa-icon [icon]="['fas', 'check']" class="active-check"></fa-icon>
+            }
+          </div>
+        </div>
+
+        <!-- Dark Theme Card -->
+        <div
+          class="theme-card"
+          [class.active]="themeService.theme === 'dark'"
+          (click)="selectTheme('dark')"
+        >
+          <div class="theme-card-preview dark-preview">
+            <div class="preview-bubble received-bubble"></div>
+            <div class="preview-bubble sent-bubble"></div>
+          </div>
+          <div class="theme-card-info">
+            <fa-icon [icon]="['fas', 'moon']" class="theme-icon moon-icon"></fa-icon>
+            <span class="theme-name">{{ 'settings.dark' | i18n }}</span>
+            @if (themeService.theme === 'dark') {
+            <fa-icon [icon]="['fas', 'check']" class="active-check"></fa-icon>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Language Section -->
+    <div class="settings-section">
+      <div class="section-header">
+        <div class="section-title">{{ 'settings.language' | i18n }}</div>
+        <div class="section-desc">{{ 'settings.languageDesc' | i18n }}</div>
+      </div>
+
+      <div class="language-options">
+        <div
+          class="language-row"
+          [class.active]="translationService.currentLang === 'fa'"
+          (click)="selectLanguage('fa')"
+        >
+          <div class="lang-info">
+            <span class="lang-flag">🇮🇷</span>
+            <div class="lang-text">
+              <span class="lang-primary">فارسی</span>
+              <span class="lang-secondary">Persian (RTL)</span>
+            </div>
+          </div>
+          @if (translationService.currentLang === 'fa') {
+          <div class="check-badge">
+            <fa-icon [icon]="['fas', 'check']"></fa-icon>
+          </div>
+          }
+        </div>
+
+        <div
+          class="language-row"
+          [class.active]="translationService.currentLang === 'en'"
+          (click)="selectLanguage('en')"
+        >
+          <div class="lang-info">
+            <span class="lang-flag">🌐</span>
+            <div class="lang-text">
+              <span class="lang-primary">English</span>
+              <span class="lang-secondary">Left-to-Right (LTR)</span>
+            </div>
+          </div>
+          @if (translationService.currentLang === 'en') {
+          <div class="check-badge">
+            <fa-icon [icon]="['fas', 'check']"></fa-icon>
+          </div>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Notifications Section -->
+    <div class="settings-section">
+      <div class="toggle-row" (click)="toggleNotifications()">
+        <div class="toggle-info">
+          <div class="toggle-icon-wrap" [class.enabled]="notificationsEnabled">
+            <fa-icon [icon]="['fas', notificationsEnabled ? 'bell' : 'bell-slash']"></fa-icon>
+          </div>
+          <div class="toggle-text">
+            <span class="toggle-title">{{ 'settings.notifications' | i18n }}</span>
+            <span class="toggle-desc">{{ 'settings.notificationsDesc' | i18n }}</span>
+          </div>
+        </div>
+        <div class="switch-toggle" [class.on]="notificationsEnabled">
+          <span class="switch-handle"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- About Section -->
+    <div class="settings-footer-info">
+      <div class="app-brand-mini">
+        <fa-icon [icon]="['fas', 'comments']"></fa-icon>
+        <span>{{ 'brand.name' | i18n }}</span>
+      </div>
+      <div class="app-version">{{ 'settings.version' | i18n }}</div>
+    </div>
+  </div>
+</div>
