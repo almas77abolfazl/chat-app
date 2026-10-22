@@ -23,6 +23,10 @@ export class ThemeService {
     return this.themeSubject.value;
   }
 
+  get isDark(): boolean {
+    return this.theme === 'dark';
+  }
+
   toggleTheme(): Theme {
     const next: Theme = this.themeSubject.value === 'light' ? 'dark' : 'light';
     this.setTheme(next);

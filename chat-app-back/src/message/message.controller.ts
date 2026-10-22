@@ -35,6 +35,24 @@ export class MessageController {
     return this.messageService.getMessagesByChat(chatId, request.user._id.toString(), page, limit);
   }
 
+  @Get('chat/:chatId/media-summary')
+  @UseGuards(JwtAuthGuard)
+  async getChatMediaSummary(@Req() request: RequestWithUser, @Param('chatId') chatId: string) {
+    return this.messageService.getChatMediaSummary(chatId, request.user._id.toString());
+  }
+
+  @Get('chat/:chatId/media')
+  @UseGuards(JwtAuthGuard)
+  async getChatMedia(
+    @Req() request: RequestWithUser,
+    @Param('chatId') chatId: string,
+    @Query('type') type?: string,
+    @Query('page') page: number = 1,
+    @Query('limit') limit: number = 30,
+  ) {
+    return this.messageService.getChatMedia(chatId, request.user._id.toString(), type, Number(page), Number(limit));
+  }
+
   @Post('delivered')
   @UseGuards(JwtAuthGuard)
   async markDelivered(@Req() request: RequestWithUser, @Body() body: { messageId: string }) {

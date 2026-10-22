@@ -1,8 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RequestWithUser } from 'src/auth/interfaces/request-with-user.model';
 import { CreateChatDto, ChatMemberDto } from './dto/create-chat.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { multerOptions } from 'src/helpers/upload';
 
 @Controller('chat')
 export class ChatController {
@@ -42,6 +44,16 @@ export class ChatController {
     const chat = await this.chatService.findChat(id, request.user._id.toString());
     if (!chat) throw new Error('Chat not found');
     return chat;
+  }
+
+  @Post(':id/avatar')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('avatar', multerOptions))
+  async uploadChatAvatar(@Param('id') id: string, @UploadedFile() file: Express.Multer.File, @Req() request: RequestWithUser) {
+    if (!file) {
+      throw new Error('No file uploaded!');
+    }
+    return this.chatService.updateChatAvatar(id, request.user._id.toString(), file.filename);
   }
 
   @Post(':id/member')

@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -8,6 +8,24 @@ import { EditProfileComponent } from '../edit-profile/edit-profile.component';
 import { MainService } from '../main.service';
 import { TranslationService } from '../../helpers/translation.service';
 import { I18nPipe } from '../../helpers/i18n.pipe';
+import { take } from 'rxjs';
+
+export interface ProfileDialogData {
+  targetUserId?: string;
+  chat?: ChatListItem;
+  _id?: string;
+  isGroup?: boolean;
+  isChannel?: boolean;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  avatar?: string;
+  avatars?: string[];
+  participants?: any[];
+  ownerId?: string;
+  peerId?: string;
+  otherParticipant?: any;
+}
 
 @Component({
   selector: 'app-profile',
@@ -16,99 +34,360 @@ import { I18nPipe } from '../../helpers/i18n.pipe';
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss',
 })
-export class ProfileComponent {
+export class ProfileComponent implements OnInit {
+  chatData: ChatListItem | null = null;
+  targetUserId: string | null = null;
+  userProfile: any = null;
+  loadingProfile = true;
+
+  // Avatars carousel
+  avatars: string[] = [];
+  activeAvatarIndex = 0;
+  showFullscreenAvatar = false;
+  avatarLoadError = false;
+
+  // Media tabs
+  activeMediaTab: 'photos' | 'files' | 'voice' = 'photos';
+  mediaSummary = {
+    photosCount: 0,
+    videosCount: 0,
+    filesCount: 0,
+    voiceCount: 0,
+  };
+  mediaItems: any[] = [];
+  loadingMedia = false;
+
+  copiedUsername = false;
+
   constructor(
     public dialogRef: MatDialogRef<ProfileComponent>,
     private dialog: MatDialog,
     public mainService: MainService,
     public translationService: TranslationService,
     @Inject(MAT_DIALOG_DATA)
-    public data: ChatListItem
+    public data: ProfileDialogData
   ) {}
 
-  get isGroup() {
-    return !!this.data?.isGroup;
+  ngOnInit(): void {
+    this.initData();
   }
 
-  get isChannel() {
-    return !!this.data?.isChannel;
+  private initData(): void {
+    const d = this.data || {};
+    const myId = this.mainService.authService.getUserId();
+
+    if (d.chat) {
+      this.chatData = d.chat;
+    } else if (d._id && (d.isGroup || d.isChannel || d.participants)) {
+      this.chatData = d as unknown as ChatListItem;
+    }
+
+    if (d.targetUserId) {
+      this.targetUserId = d.targetUserId;
+    } else if (this.chatData && !this.chatData.isGroup && !this.chatData.isChannel) {
+      this.targetUserId = this.chatData.peerId || this.chatData.otherParticipant?._id || myId;
+    } else if (!this.chatData) {
+      this.targetUserId = myId;
+    }
+
+    if (this.isGroup || this.isChannel) {
+      this.setupGroupOrChannel();
+    } else if (this.targetUserId) {
+      this.loadUserProfile(this.targetUserId);
+    } else {
+      this.loadingProfile = false;
+    }
+
+    // Load media summary if a chatId exists
+    const chatId = this.chatData?._id;
+    if (chatId) {
+      this.loadMediaSummary(chatId);
+      this.loadMediaItems(chatId, this.activeMediaTab);
+    }
   }
 
-  get isMobile() {
-    return typeof window !== 'undefined' && window.innerWidth <= 768;
+  get isGroup(): boolean {
+    return !!this.chatData?.isGroup;
   }
 
-  get coverColor() {
-    return this.isChannel
-      ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
-      : this.isGroup
-      ? 'linear-gradient(135deg, #a855f7, #6366f1)'
-      : 'linear-gradient(135deg, #4f46e5, #6366f1)';
+  get isChannel(): boolean {
+    return !!this.chatData?.isChannel;
   }
 
-  initials(chat: ChatListItem): string {
-    if (!chat) return '?';
-    const first = (chat.firstName ?? '').trim();
-    const last = (chat.lastName ?? '').trim();
-    if (first && last) return `${first.charAt(0)}${last.charAt(0)}`;
-    if (first) return first.charAt(0);
-    if (last) return last.charAt(0);
-    return '?';
+  get isCurrentUser(): boolean {
+    const myId = this.mainService.authService.getUserId();
+    return !this.isGroup && !this.isChannel && this.targetUserId === myId;
   }
 
-  displayName(chat: ChatListItem): string {
-    if (!chat) return '';
-    if (chat.isGroup || chat.isChannel) return chat.name || '';
-    if (chat.firstName || chat.lastName)
-      return `${chat.firstName ?? ''} ${chat.lastName ?? ''}`.trim();
+  get displayName(): string {
+    if (this.isGroup || this.isChannel) {
+      return this.chatData?.name || '';
+    }
+    if (this.userProfile) {
+      const f = this.userProfile.firstName || '';
+      const l = this.userProfile.lastName || '';
+      const full = `${f} ${l}`.trim();
+      return full || this.userProfile.username || this.translationService.t('profile.unknownUser');
+    }
+    if (this.chatData) {
+      const f = this.chatData.firstName || '';
+      const l = this.chatData.lastName || '';
+      const full = `${f} ${l}`.trim();
+      return full || this.translationService.t('profile.unknownUser');
+    }
     return this.translationService.t('profile.unknownUser');
   }
 
-  subtitle(chat: ChatListItem): string {
-    if (!chat) return '';
-    if (chat.isChannel) return this.translationService.t('profile.publicChannel');
-    if (chat.isGroup) {
-      const count = (chat.participants || []).length;
-      return this.translationService.t('profile.membersCount', { count });
+  get username(): string | null {
+    return this.userProfile?.username || null;
+  }
+
+  get bio(): string | null {
+    return this.userProfile?.bio || null;
+  }
+
+  get phoneNumber(): string | null {
+    return this.userProfile?.phoneNumber || null;
+  }
+
+  get isOnline(): boolean {
+    return !!this.userProfile?.isOnline;
+  }
+
+  get lastSeen(): Date | null {
+    return this.userProfile?.lastSeen || null;
+  }
+
+  get coverColor(): string {
+    if (this.isChannel) return 'linear-gradient(135deg, #4f46e5, #7c3aed)';
+    if (this.isGroup) return 'linear-gradient(135deg, #7c3aed, #db2777)';
+    return 'linear-gradient(135deg, #2563eb, #7c3aed)';
+  }
+
+  get activeAvatarUrl(): string | null {
+    if (this.avatarLoadError || this.avatars.length === 0) return null;
+    return this.mainService.getAvatarUrl(this.avatars[this.activeAvatarIndex]);
+  }
+
+  get initials(): string {
+    const name = this.displayName.trim();
+    if (!name) return '?';
+    const parts = name.split(/\s+/);
+    if (parts.length >= 2) {
+      return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
     }
-    return this.translationService.t('profile.directChat');
+    return parts[0].charAt(0).toUpperCase();
   }
 
-  membersCount(chat: ChatListItem): number {
-    return chat?.participants?.length ?? 0;
+  get totalMediaCount(): number {
+    return (
+      (this.mediaSummary.photosCount || 0) +
+      (this.mediaSummary.videosCount || 0) +
+      (this.mediaSummary.filesCount || 0) +
+      (this.mediaSummary.voiceCount || 0)
+    );
   }
 
-  memberInitials(p: any): string {
-    if (!p) return '?';
-    const first = (p.firstName ?? '').trim();
-    const last = (p.lastName ?? '').trim();
-    if (first && last) return `${first.charAt(0)}${last.charAt(0)}`;
-    if (first) return first.charAt(0);
-    if (last) return last.charAt(0);
-    return '?';
+  private setupGroupOrChannel(): void {
+    this.loadingProfile = false;
+    const rawAvatars: string[] = [];
+    if (this.chatData?.avatars && Array.isArray(this.chatData.avatars)) {
+      rawAvatars.push(...this.chatData.avatars);
+    }
+    if (this.chatData?.avatar && !rawAvatars.includes(this.chatData.avatar)) {
+      rawAvatars.unshift(this.chatData.avatar);
+    }
+    this.avatars = Array.from(new Set(rawAvatars)).filter(Boolean);
+    this.activeAvatarIndex = 0;
+  }
+
+  private loadUserProfile(userId: string): void {
+    this.loadingProfile = true;
+    this.mainService
+      .getUserProfile(userId)
+      .pipe(take(1))
+      .subscribe({
+        next: (profile: any) => {
+          this.userProfile = profile;
+          this.loadingProfile = false;
+          const rawAvatars: string[] = [];
+          if (profile.avatars && Array.isArray(profile.avatars)) {
+            rawAvatars.push(...profile.avatars);
+          }
+          if (profile.profilePicture && !rawAvatars.includes(profile.profilePicture)) {
+            rawAvatars.unshift(profile.profilePicture);
+          }
+          this.avatars = Array.from(new Set(rawAvatars)).filter(Boolean);
+          this.activeAvatarIndex = 0;
+          this.avatarLoadError = false;
+        },
+        error: () => {
+          this.loadingProfile = false;
+        },
+      });
+  }
+
+  private loadMediaSummary(chatId: string): void {
+    this.mainService
+      .getChatMediaSummary(chatId)
+      .pipe(take(1))
+      .subscribe({
+        next: (summary: any) => {
+          this.mediaSummary = summary;
+        },
+        error: () => {},
+      });
+  }
+
+  private loadMediaItems(chatId: string, type: 'photos' | 'files' | 'voice'): void {
+    this.loadingMedia = true;
+    this.mainService
+      .getChatMedia(chatId, type, 1, 30)
+      .pipe(take(1))
+      .subscribe({
+        next: (res: any) => {
+          this.mediaItems = res?.items || [];
+          this.loadingMedia = false;
+        },
+        error: () => {
+          this.mediaItems = [];
+          this.loadingMedia = false;
+        },
+      });
+  }
+
+  switchMediaTab(tab: 'photos' | 'files' | 'voice'): void {
+    this.activeMediaTab = tab;
+    const chatId = this.chatData?._id;
+    if (chatId) {
+      this.loadMediaItems(chatId, tab);
+    }
+  }
+
+  nextAvatar(event?: Event): void {
+    if (event) event.stopPropagation();
+    if (this.avatars.length <= 1) return;
+    this.avatarLoadError = false;
+    this.activeAvatarIndex = (this.activeAvatarIndex + 1) % this.avatars.length;
+  }
+
+  prevAvatar(event?: Event): void {
+    if (event) event.stopPropagation();
+    if (this.avatars.length <= 1) return;
+    this.avatarLoadError = false;
+    this.activeAvatarIndex = (this.activeAvatarIndex - 1 + this.avatars.length) % this.avatars.length;
+  }
+
+  setAvatarIndex(idx: number, event?: Event): void {
+    if (event) event.stopPropagation();
+    this.avatarLoadError = false;
+    this.activeAvatarIndex = idx;
+  }
+
+  openFullscreenAvatar(): void {
+    if (this.activeAvatarUrl) {
+      this.showFullscreenAvatar = true;
+    }
+  }
+
+  closeFullscreenAvatar(event?: Event): void {
+    if (event) event.stopPropagation();
+    this.showFullscreenAvatar = false;
+  }
+
+  onAvatarError(): void {
+    this.avatarLoadError = true;
+  }
+
+  deleteCurrentAvatar(event: Event): void {
+    event.stopPropagation();
+    if (!this.isCurrentUser || this.avatars.length === 0) return;
+    const filename = this.avatars[this.activeAvatarIndex];
+    if (!filename) return;
+
+    this.mainService
+      .deleteAvatar(filename)
+      .pipe(take(1))
+      .subscribe({
+        next: (updatedList: string[]) => {
+          this.avatars = updatedList || [];
+          this.activeAvatarIndex = Math.max(0, Math.min(this.activeAvatarIndex, this.avatars.length - 1));
+          this.mainService.pictureSrc = this.activeAvatarUrl || '';
+          this.mainService.snackbar.success(this.translationService.t('profile.avatarDeleted'), 3000);
+        },
+        error: () => {
+          this.mainService.snackbar.error('خطا در حذف عکس', 3000);
+        },
+      });
+  }
+
+  copyUsername(): void {
+    if (!this.username) return;
+    navigator.clipboard?.writeText(`@${this.username}`);
+    this.copiedUsername = true;
+    this.mainService.snackbar.success(this.translationService.t('profile.copied'), 2000);
+    setTimeout(() => {
+      this.copiedUsername = false;
+    }, 2000);
+  }
+
+  sendMessage(): void {
+    this.dialogRef.close();
+    if (this.chatData && (this.chatData.chatId || this.chatData._id)) {
+      this.mainService.openChat(this.chatData);
+      return;
+    }
+    if (this.targetUserId) {
+      this.mainService
+        .startDirectChat({ _id: this.targetUserId, firstName: this.displayName })
+        .then((chat) => {
+          this.mainService.openChat(chat);
+        });
+    }
   }
 
   editProfile(): void {
     this.dialogRef.close();
     this.dialog.open(EditProfileComponent, {
-      width: '420px',
+      width: '440px',
+      maxWidth: '96vw',
+      panelClass: 'rtl-dialog',
       data: {
-        firstName: this.data?.firstName ?? '',
-        lastName: this.data?.lastName ?? '',
-        pictureSrc: this.data?.avatar ?? '',
+        firstName: this.userProfile?.firstName || this.mainService.authService.getFirstName() || '',
+        lastName: this.userProfile?.lastName || this.mainService.authService.getLastName() || '',
+        bio: this.userProfile?.bio || localStorage.getItem('user-bio') || '',
+        pictureSrc: this.activeAvatarUrl || this.mainService.pictureSrc || '',
       },
     });
   }
 
-  openChat() {
+  viewMemberProfile(member: any): void {
+    const memberId = member._id || member.id;
+    if (!memberId) return;
     this.dialogRef.close();
-    if (this.data?._id) {
-      this.mainService.openChat(this.data);
-    }
+    this.mainService.openUserProfileModal(memberId);
   }
 
-  previewAvatar(): void {
-    if (!this.data?.avatar) return;
-    window.open(this.data.avatar, '_blank');
+  memberInitials(p: any): string {
+    const f = (p?.firstName || '').trim();
+    const l = (p?.lastName || '').trim();
+    if (f && l) return `${f.charAt(0)}${l.charAt(0)}`.toUpperCase();
+    if (f) return f.charAt(0).toUpperCase();
+    if (l) return l.charAt(0).toUpperCase();
+    return '?';
+  }
+
+  formatBytes(bytes: number): string {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  }
+
+  openMediaFile(item: any): void {
+    if (!item?.fileUrl) return;
+    const url = this.mainService.getAvatarUrl(item.fileUrl) || item.fileUrl;
+    window.open(url, '_blank');
   }
 }

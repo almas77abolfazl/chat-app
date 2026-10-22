@@ -1,5 +1,5 @@
-<div class="profile-sheet" [class.sheet-mobile]="isMobile">
-  <!-- Cover header -->
+<div class="profile-sheet">
+  <!-- Cover Header -->
   <header class="profile-cover" [style.background]="coverColor">
     <div class="cover-glow"></div>
 
@@ -7,90 +7,303 @@
       <button class="icon-btn close-btn" (click)="dialogRef.close()" [attr.aria-label]="'actions.close' | i18n">
         <fa-icon [icon]="['fas', 'times']"></fa-icon>
       </button>
-      <button class="icon-btn more-btn" (click)="editProfile()" [attr.aria-label]="'actions.edit' | i18n">
+
+      @if (isCurrentUser) {
+      <button class="icon-btn edit-btn" (click)="editProfile()" [attr.aria-label]="'profile.editProfile' | i18n">
         <fa-icon [icon]="['fas', 'pencil-alt']"></fa-icon>
       </button>
+      }
     </div>
 
-    <!-- Overlapping avatar -->
-    <div class="avatar-wrap" (click)="previewAvatar()" style="cursor: pointer;">
-      <div class="avatar" [style.background]="isMobile ? undefined : coverColor">
-        @if (data?.isGroup || data?.isChannel) {
-        <fa-icon [icon]="['fas', data?.isChannel ? 'broadcast-tower' : 'users']" class="avatar-icon"></fa-icon>
-        } @else if (data?.avatar) {
-        <img [src]="mainService.getAvatarUrl(data.avatar)" alt="Avatar" />
+    <!-- Avatar Carousel -->
+    <div class="avatar-container">
+      <div class="avatar-card" (click)="openFullscreenAvatar()">
+        @if (activeAvatarUrl) {
+        <img [src]="activeAvatarUrl" (error)="onAvatarError()" alt="Avatar" class="avatar-img" />
+        } @else if (isGroup || isChannel) {
+        <div class="avatar-icon-wrap">
+          <fa-icon [icon]="['fas', isChannel ? 'broadcast-tower' : 'users']"></fa-icon>
+        </div>
         } @else {
-        <span class="avatar-initials">{{ initials(data) }}</span>
+        <div class="avatar-initials">{{ initials }}</div>
+        }
+
+        <!-- Carousel navigation arrows if multiple avatars -->
+        @if (avatars.length > 1) {
+        <button class="carousel-arrow prev-btn" (click)="prevAvatar($event)" [attr.aria-label]="'profile.prevPhoto' | i18n">
+          <fa-icon [icon]="['fas', 'chevron-right']"></fa-icon>
+        </button>
+        <button class="carousel-arrow next-btn" (click)="nextAvatar($event)" [attr.aria-label]="'profile.nextPhoto' | i18n">
+          <fa-icon [icon]="['fas', 'chevron-left']"></fa-icon>
+        </button>
+        <div class="carousel-counter">
+          {{ activeAvatarIndex + 1 }} / {{ avatars.length }}
+        </div>
+        }
+
+        <!-- Delete button for current user's avatar -->
+        @if (isCurrentUser && avatars.length > 0 && activeAvatarUrl) {
+        <button class="delete-avatar-btn" (click)="deleteCurrentAvatar($event)" [attr.aria-label]="'profile.deleteAvatar' | i18n" [title]="'profile.deleteAvatar' | i18n">
+          <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+        </button>
         }
       </div>
     </div>
   </header>
 
+  <!-- Profile Content Body -->
   <div class="profile-body">
-    <div class="identity">
-      <h1 class="profile-name">{{ displayName(data) }}</h1>
-      <p class="profile-subtitle">{{ subtitle(data) }}</p>
-      @if (!isGroup && !isChannel) {
-      <p class="profile-status">{{ 'profile.activeNow' | i18n }}</p>
-      }
+    <!-- User / Group Header Info -->
+    <div class="identity-header">
+      <h1 class="display-name">{{ displayName }}</h1>
+
+      <div class="status-indicator">
+        @if (isGroup) {
+        <span class="status-text">{{ 'profile.membersCount' | i18n: { count: chatData?.participants?.length || 0 } }}</span>
+        } @else if (isChannel) {
+        <span class="status-text">{{ 'profile.publicChannel' | i18n }}</span>
+        } @else if (isOnline) {
+        <span class="online-dot"></span>
+        <span class="status-text online">{{ 'status.online' | i18n }}</span>
+        } @else if (lastSeen) {
+        <span class="status-text">{{ 'profile.lastSeen' | i18n: { time: lastSeen | date: 'short' } }}</span>
+        } @else {
+        <span class="status-text">{{ 'status.offline' | i18n }}</span>
+        }
+      </div>
     </div>
 
-    <div class="actions">
-      <button class="btn primary" (click)="openChat()" [attr.aria-label]="'profile.message' | i18n">
+    <!-- Quick Action: Message Button (if not own profile) -->
+    @if (!isCurrentUser) {
+    <div class="primary-actions">
+      <button class="btn btn-primary message-action-btn" (click)="sendMessage()">
         <fa-icon [icon]="['fas', 'paper-plane']"></fa-icon>
         <span>{{ 'profile.message' | i18n }}</span>
       </button>
-      <button class="btn ghost" (click)="dialogRef.close()" [attr.aria-label]="'profile.call' | i18n">
-        <fa-icon [icon]="['fas', 'phone-alt']"></fa-icon>
-      </button>
-      <button class="btn ghost" (click)="dialogRef.close()" [attr.aria-label]="'profile.videoCall' | i18n">
-        <fa-icon [icon]="['fas', 'video']"></fa-icon>
-      </button>
     </div>
+    }
 
-    <!-- Info section -->
-    <section class="section">
-      <div class="section-title">{{ 'profile.about' | i18n }}</div>
-      <div class="info-row">
-        <span class="info-label">{{ 'profile.username' | i18n }}</span>
-        <span class="info-value">{{ data?.firstName ?? '' }} {{ data?.lastName ?? '' }}</span>
+    <!-- Info Cards Section -->
+    <section class="info-section">
+      @if (username) {
+      <div class="info-card" (click)="copyUsername()">
+        <div class="info-icon">
+          <fa-icon [icon]="['fas', 'user']"></fa-icon>
+        </div>
+        <div class="info-content">
+          <span class="info-label">{{ 'profile.username' | i18n }}</span>
+          <span class="info-value">&#64;{{ username }}</span>
+        </div>
+        <button class="copy-btn" [class.copied]="copiedUsername" [title]="'profile.copyUsername' | i18n">
+          <fa-icon [icon]="['fas', copiedUsername ? 'check' : 'copy']"></fa-icon>
+        </button>
       </div>
-      <div class="info-row">
-        <span class="info-label">{{ 'profile.chatType' | i18n }}</span>
-        <span class="info-value">{{ subtitle(data) }}</span>
+      }
+
+      @if (phoneNumber) {
+      <div class="info-card">
+        <div class="info-icon">
+          <fa-icon [icon]="['fas', 'phone-alt']"></fa-icon>
+        </div>
+        <div class="info-content">
+          <span class="info-label">{{ 'profile.phone' | i18n }}</span>
+          <span class="info-value ltr-text">{{ phoneNumber }}</span>
+        </div>
       </div>
-      <div class="info-row">
-        <span class="info-label">{{ 'profile.lastActivity' | i18n }}</span>
-        <span class="info-value">{{ data?.updatedAt | date: 'short' }}</span>
+      }
+
+      @if (bio) {
+      <div class="info-card bio-card">
+        <div class="info-icon">
+          <fa-icon [icon]="['fas', 'comment-dots']"></fa-icon>
+        </div>
+        <div class="info-content">
+          <span class="info-label">{{ 'profile.about' | i18n }}</span>
+          <p class="info-value bio-text">{{ bio }}</p>
+        </div>
       </div>
+      }
     </section>
 
-    <!-- Members section for groups/channels -->
-    <section class="section" *ngIf="isGroup || isChannel">
-      <div class="section-header">
-        <div class="section-title">{{ 'profile.members' | i18n }}</div>
-        <span class="members-count">{{ 'profile.membersCount' | i18n: { count: membersCount(data) } }}</span>
+    <!-- Telegram-style Media Summary Tabs -->
+    @if (chatData?._id) {
+    <section class="media-section">
+      <div class="section-title-row">
+        <h2 class="section-title">{{ 'profile.sharedMedia' | i18n }}</h2>
       </div>
+
+      <!-- Segmented Tab Pills -->
+      <div class="media-tabs">
+        <button
+          class="media-tab"
+          [class.active]="activeMediaTab === 'photos'"
+          (click)="switchMediaTab('photos')"
+        >
+          <fa-icon [icon]="['fas', 'image']"></fa-icon>
+          <span>{{ 'profile.photosAndVideos' | i18n }}</span>
+          @if ((mediaSummary.photosCount + mediaSummary.videosCount) > 0) {
+          <span class="tab-badge">{{ mediaSummary.photosCount + mediaSummary.videosCount }}</span>
+          }
+        </button>
+
+        <button
+          class="media-tab"
+          [class.active]="activeMediaTab === 'files'"
+          (click)="switchMediaTab('files')"
+        >
+          <fa-icon [icon]="['fas', 'file-alt']"></fa-icon>
+          <span>{{ 'profile.files' | i18n }}</span>
+          @if (mediaSummary.filesCount > 0) {
+          <span class="tab-badge">{{ mediaSummary.filesCount }}</span>
+          }
+        </button>
+
+        <button
+          class="media-tab"
+          [class.active]="activeMediaTab === 'voice'"
+          (click)="switchMediaTab('voice')"
+        >
+          <fa-icon [icon]="['fas', 'microphone']"></fa-icon>
+          <span>{{ 'profile.voice' | i18n }}</span>
+          @if (mediaSummary.voiceCount > 0) {
+          <span class="tab-badge">{{ mediaSummary.voiceCount }}</span>
+          }
+        </button>
+      </div>
+
+      <!-- Tab Content Area -->
+      <div class="media-content">
+        @if (loadingMedia) {
+        <div class="media-loading">
+          <span class="spinner"></span>
+        </div>
+        } @else if (mediaItems.length === 0) {
+        <div class="media-empty">
+          <fa-icon [icon]="['fas', activeMediaTab === 'photos' ? 'image' : activeMediaTab === 'files' ? 'file' : 'microphone']" class="empty-icon"></fa-icon>
+          <p class="empty-text">{{ 'profile.noMedia' | i18n }}</p>
+        </div>
+        } @else {
+          <!-- Photos / Videos Grid -->
+          @if (activeMediaTab === 'photos') {
+          <div class="photos-grid">
+            @for (item of mediaItems; track item._id) {
+            <div class="photo-cell" (click)="openMediaFile(item)">
+              @if (item.mediaType === 'video') {
+              <video [src]="mainService.getAvatarUrl(item.fileUrl)" preload="metadata"></video>
+              <div class="video-overlay">
+                <fa-icon [icon]="['fas', 'play']"></fa-icon>
+              </div>
+              } @else {
+              <img [src]="mainService.getAvatarUrl(item.fileUrl)" [alt]="item.fileName || 'Photo'" loading="lazy" />
+              }
+            </div>
+            }
+          </div>
+          }
+
+          <!-- Files List -->
+          @if (activeMediaTab === 'files') {
+          <div class="files-list">
+            @for (item of mediaItems; track item._id) {
+            <div class="file-item" (click)="openMediaFile(item)">
+              <div class="file-icon-box">
+                <fa-icon [icon]="['fas', 'file']"></fa-icon>
+              </div>
+              <div class="file-meta">
+                <span class="file-name" [title]="item.fileName">{{ item.fileName || 'File' }}</span>
+                <span class="file-info">{{ formatBytes(item.fileSize) }} • {{ item.createdAt | date: 'shortDate' }}</span>
+              </div>
+              <button class="download-icon-btn" [attr.aria-label]="'Download'">
+                <fa-icon [icon]="['fas', 'download']"></fa-icon>
+              </button>
+            </div>
+            }
+          </div>
+          }
+
+          <!-- Voice Messages List -->
+          @if (activeMediaTab === 'voice') {
+          <div class="voice-list">
+            @for (item of mediaItems; track item._id) {
+            <div class="voice-item" (click)="openMediaFile(item)">
+              <div class="voice-icon-box">
+                <fa-icon [icon]="['fas', 'microphone']"></fa-icon>
+              </div>
+              <div class="voice-meta">
+                <span class="voice-name">{{ 'profile.voice' | i18n }}</span>
+                <span class="voice-date">{{ item.createdAt | date: 'short' }}</span>
+              </div>
+              <audio [src]="mainService.getAvatarUrl(item.fileUrl)" controls class="voice-audio-player"></audio>
+            </div>
+            }
+          </div>
+          }
+        }
+      </div>
+    </section>
+    }
+
+    <!-- Group / Channel Members Section -->
+    @if (isGroup || isChannel) {
+    <section class="members-section">
+      <div class="section-title-row">
+        <h2 class="section-title">{{ 'profile.members' | i18n }}</h2>
+        <span class="members-count-pill">{{ chatData?.participants?.length || 0 }}</span>
+      </div>
+
       <div class="members-list">
-        <div class="member-item" *ngFor="let p of (data?.participants || [])">
+        @for (p of (chatData?.participants || []); track p._id) {
+        <div class="member-row" (click)="viewMemberProfile(p)">
           <div class="member-avatar">
             @if (p.profilePicture) {
-            <img [src]="p.profilePicture" alt="Member" />
+            <img [src]="mainService.getAvatarUrl(p.profilePicture)" alt="Member" />
             } @else {
             <span class="avatar-initials">{{ memberInitials(p) }}</span>
             }
+            @if (p.isOnline) {
+            <span class="member-online-dot"></span>
+            }
           </div>
-          <span class="member-name">{{ p.firstName }} {{ p.lastName }}</span>
+          <div class="member-info">
+            <span class="member-name">{{ p.firstName }} {{ p.lastName }}</span>
+            <span class="member-status">
+              {{ p.isOnline ? ('status.online' | i18n) : ('status.offline' | i18n) }}
+            </span>
+          </div>
+          <button class="member-action-btn">
+            <fa-icon [icon]="['fas', 'chevron-left']"></fa-icon>
+          </button>
         </div>
+        }
       </div>
     </section>
-
-    <div class="spacer"></div>
+    }
   </div>
 
-  <footer class="profile-footer">
-    <button class="btn ghost-text" (click)="dialogRef.close()" [attr.aria-label]="'actions.close' | i18n">
-      {{ 'actions.close' | i18n }}
-    </button>
-  </footer>
+  <!-- Fullscreen Avatar Zoom Modal -->
+  @if (showFullscreenAvatar && activeAvatarUrl) {
+  <div class="fullscreen-overlay" (click)="closeFullscreenAvatar($event)">
+    <div class="fullscreen-header">
+      <button class="icon-btn close-fullscreen-btn" (click)="closeFullscreenAvatar($event)">
+        <fa-icon [icon]="['fas', 'times']"></fa-icon>
+      </button>
+    </div>
+
+    <div class="fullscreen-image-wrapper" (click)="$event.stopPropagation()">
+      <img [src]="activeAvatarUrl" alt="Enlarged Avatar" class="fullscreen-img" />
+
+      @if (avatars.length > 1) {
+      <button class="carousel-arrow fullscreen-arrow prev-btn" (click)="prevAvatar($event)">
+        <fa-icon [icon]="['fas', 'chevron-right']"></fa-icon>
+      </button>
+      <button class="carousel-arrow fullscreen-arrow next-btn" (click)="nextAvatar($event)">
+        <fa-icon [icon]="['fas', 'chevron-left']"></fa-icon>
+      </button>
+      <div class="fullscreen-counter">
+        {{ activeAvatarIndex + 1 }} / {{ avatars.length }}
+      </div>
+      }
+    </div>
+  </div>
+  }
 </div>

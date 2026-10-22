@@ -359,4 +359,43 @@ describe('MessageService', () => {
       expect(result.status).toBe('sent');
     });
   });
+
+  describe('Chat Media Summary & Retrieval', () => {
+    it('returns media counts for a chat', async () => {
+      const chatId = new Types.ObjectId().toString();
+      const mockChat = {
+        _id: new Types.ObjectId(chatId),
+        participants: [senderId],
+      };
+      chatModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockChat),
+      });
+
+      messageModel.countDocuments
+        .mockResolvedValueOnce(5)  // photos
+        .mockResolvedValueOnce(2)  // videos
+        .mockResolvedValueOnce(3)  // files
+        .mockResolvedValueOnce(1); // voice
+
+      const summary = await messageService.getChatMediaSummary(chatId, senderIdValue);
+
+      expect(summary.photosCount).toBe(5);
+      expect(summary.videosCount).toBe(2);
+      expect(summary.filesCount).toBe(3);
+      expect(summary.voiceCount).toBe(1);
+    });
+
+    it('throws ForbiddenException if user is not participant in media summary', async () => {
+      const chatId = new Types.ObjectId().toString();
+      const mockChat = {
+        _id: new Types.ObjectId(chatId),
+        participants: [otherParticipant],
+      };
+      chatModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockChat),
+      });
+
+      await expect(messageService.getChatMediaSummary(chatId, senderIdValue)).rejects.toThrow(ForbiddenException);
+    });
+  });
 });

@@ -9,6 +9,7 @@ export interface IUser extends Document {
   bio: string;
   email: string;
   profilePicture: string;
+  avatars?: string[];
   status: string;
   contacts: string[];
   sessions: ISession[];

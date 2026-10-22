@@ -210,15 +210,21 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   showProfile() {
-    const dialogRef = this.dialog.open(ProfileComponent, {
-      width: '500px',
-      data: this.mainService.currentChat,
+    this.dialog.open(ProfileComponent, {
+      width: '520px',
+      maxWidth: '96vw',
+      data: {
+        chat: this.mainService.currentChat,
+      },
       panelClass: 'rtl-dialog',
     });
-    dialogRef
-      .afterClosed()
-      .pipe(take(1))
-      .subscribe(() => {});
+  }
+
+  openSenderProfile(message: Message) {
+    const senderId = message.senderId || (message.sender as any)?._id;
+    if (senderId) {
+      this.mainService.openUserProfileModal(senderId);
+    }
   }
 
   trackByIdx(index: number, _item: any): number {

@@ -88,7 +88,21 @@
     "firstNameRequired": "نام خود را وارد کنید",
     "lastNameRequired": "نام خانوادگی خود را وارد کنید",
     "unknownUser": "کاربر ناشناس",
-    "membersCount": "{count} عضو"
+    "membersCount": "{count} عضو",
+    "photosAndVideos": "عکس‌ها و ویدیوها",
+    "files": "فایل‌ها",
+    "voice": "صداها",
+    "sharedMedia": "رسانه‌های مشترک",
+    "noMedia": "هنوز رسانه‌ای ارسال نشده است",
+    "copyUsername": "کپی نام کاربری",
+    "copied": "کپی شد",
+    "phone": "شماره تماس",
+    "deleteAvatar": "حذف این عکس",
+    "avatarDeleted": "عکس پروفایل حذف شد",
+    "nextPhoto": "عکس بعدی",
+    "prevPhoto": "عکس قبلی",
+    "openPhoto": "بزرگ‌نمایی عکس",
+    "lastSeen": "آخرین بازدید {time}"
   },
   "agent": {
     "title": "دستیار هوشمند",

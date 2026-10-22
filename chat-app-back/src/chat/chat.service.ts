@@ -11,7 +11,7 @@ export class ChatService {
     const userObjectId = new Types.ObjectId(userId);
     const chats = await this.chatModel
       .find({ participants: userObjectId })
-      .populate<{ participants: any[] }>('participants', 'firstName lastName profilePicture status isOnline lastSeen')
+      .populate<{ participants: any[] }>('participants', 'firstName lastName profilePicture avatars status isOnline lastSeen')
       .populate('lastMessage', 'content sender createdAt')
       .populate('pinnedMessage', 'content sender createdAt status isDeleted')
       .sort({ updatedAt: -1 })
@@ -32,12 +32,14 @@ export class ChatService {
         isGroup: chat.isGroup,
         isChannel: chat.isChannel,
         avatar: chat.avatar || null,
+        avatars: chat.avatars || [],
         ownerId: chat.owner?.toString() || null,
         participants: chat.participants.map((p) => ({
           _id: p._id,
           firstName: p.firstName,
           lastName: p.lastName,
           profilePicture: p.profilePicture,
+          avatars: p.avatars || [],
           status: p.status,
         })),
         otherParticipant: otherParticipant
@@ -46,6 +48,7 @@ export class ChatService {
               firstName: otherParticipant.firstName,
               lastName: otherParticipant.lastName,
               profilePicture: otherParticipant.profilePicture,
+              avatars: otherParticipant.avatars || [],
               status: otherParticipant.status,
             }
           : null,
@@ -58,9 +61,13 @@ export class ChatService {
   }
 
   async findChat(chatId: string, userId: string): Promise<ChatDocument | null> {
-    const chat = await this.chatModel.findById(chatId).populate('pinnedMessage').exec();
+    const chat = await this.chatModel
+      .findById(chatId)
+      .populate('participants', 'firstName lastName profilePicture avatars status isOnline lastSeen phoneNumber')
+      .populate('pinnedMessage')
+      .exec();
     if (!chat) return null;
-    if (!chat.participants.includes(new Types.ObjectId(userId))) {
+    if (!chat.participants.some((p: any) => (p._id || p).toString() === userId)) {
       throw new ForbiddenException('You are not a member of this chat');
     }
     return chat;
@@ -128,7 +135,7 @@ export class ChatService {
       throw new ForbiddenException('Only the group admin can add members');
     }
     const userIdObj = new Types.ObjectId(userId);
-    if (!chat.participants.includes(userIdObj)) {
+    if (!chat.participants.some((p: any) => (p._id || p).toString() === userId)) {
       chat.participants.push(userIdObj);
       chat.unreadCounts ??= new Map();
       chat.unreadCounts.set(userId, 0);
@@ -142,7 +149,7 @@ export class ChatService {
     if (!chat) throw new NotFoundException('Channel not found');
     if (!chat.isChannel) throw new BadRequestException('Chat is not a channel');
     const userIdObj = new Types.ObjectId(userId);
-    if (!chat.participants.includes(userIdObj)) {
+    if (!chat.participants.some((p: any) => (p._id || p).toString() === userId)) {
       chat.participants.push(userIdObj);
       chat.unreadCounts ??= new Map();
       chat.unreadCounts.set(userId, 0);
@@ -173,16 +180,36 @@ export class ChatService {
     return chat;
   }
 
+  async updateChatAvatar(chatId: string, userId: string, filename: string): Promise<ChatDocument> {
+    const chat = await this.chatModel.findById(chatId).exec();
+    if (!chat) throw new NotFoundException('Chat not found');
+    if (!chat.isGroup && !chat.isChannel) {
+      throw new ForbiddenException('Cannot set avatar on a direct chat');
+    }
+    if (chat.owner?.toString() !== userId) {
+      throw new ForbiddenException('Only the chat owner can update avatar');
+    }
+
+    if (!chat.avatars) chat.avatars = [];
+    if (chat.avatar && !chat.avatars.includes(chat.avatar)) {
+      chat.avatars.unshift(chat.avatar);
+    }
+    chat.avatars.unshift(filename);
+    chat.avatars = Array.from(new Set(chat.avatars)).slice(0, 20);
+    chat.avatar = filename;
+    await chat.save();
+    return chat;
+  }
+
   async deleteChat(chatId: string, userId: string): Promise<void> {
-    const userObjectId = new Types.ObjectId(userId);
     const chat = await this.chatModel.findById(chatId).exec();
     if (!chat) throw new NotFoundException('Chat not found');
 
     if (!chat.isGroup && !chat.isChannel) {
-      if (!chat.participants.includes(userObjectId)) {
+      if (!chat.participants.some((p: any) => (p._id || p).toString() === userId)) {
         throw new ForbiddenException('You are not a participant of this chat');
       }
-      chat.participants = chat.participants.filter((p) => p.toString() !== userId);
+      chat.participants = chat.participants.filter((p: any) => (p._id || p).toString() !== userId);
       if (chat.participants.length === 0) {
         await this.chatModel.deleteOne({ _id: chatId }).exec();
       } else {
@@ -191,11 +218,10 @@ export class ChatService {
       return;
     }
 
-    const userIdObj = new Types.ObjectId(userId);
-    if (!chat.participants.includes(userIdObj)) {
+    if (!chat.participants.some((p: any) => (p._id || p).toString() === userId)) {
       throw new ForbiddenException('You are not a participant of this chat');
     }
-    chat.participants = chat.participants.filter((p) => p.toString() !== userId);
+    chat.participants = chat.participants.filter((p: any) => (p._id || p).toString() !== userId);
     if (chat.unreadCounts) {
       chat.unreadCounts.delete(userId);
     }

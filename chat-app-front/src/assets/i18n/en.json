@@ -88,7 +88,21 @@
     "firstNameRequired": "Enter your first name",
     "lastNameRequired": "Enter your last name",
     "unknownUser": "Unknown user",
-    "membersCount": "{count} members"
+    "membersCount": "{count} members",
+    "photosAndVideos": "Photos & Videos",
+    "files": "Files",
+    "voice": "Voice",
+    "sharedMedia": "Shared Media",
+    "noMedia": "No media shared yet",
+    "copyUsername": "Copy username",
+    "copied": "Copied",
+    "phone": "Phone",
+    "deleteAvatar": "Delete this photo",
+    "avatarDeleted": "Profile photo deleted",
+    "nextPhoto": "Next photo",
+    "prevPhoto": "Previous photo",
+    "openPhoto": "Enlarge photo",
+    "lastSeen": "Last seen {time}"
   },
   "agent": {
     "title": "Smart Assistant",

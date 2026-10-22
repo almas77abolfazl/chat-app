@@ -30,7 +30,7 @@ export class SettingsComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.userAvatar = this.mainService.pictureSrc || '';
+    this.userAvatar = this.mainService.getAvatarUrl(this.mainService.pictureSrc) || '';
     const first = this.mainService.authService.getFirstName() || '';
     const last = this.mainService.authService.getLastName() || '';
     this.userName = `${first} ${last}`.trim() || this.translationService.t('profile.unknownUser');

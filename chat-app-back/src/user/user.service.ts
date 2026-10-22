@@ -62,7 +62,7 @@ export class UserService {
         $or: [{ username: { $regex: searchRegex } }, { firstName: { $regex: searchRegex } }, { lastName: { $regex: searchRegex } }],
         $and: [{ _id: { $ne: userId } }],
       })
-      .select('firstName lastName username status _id profilePicture isOnline lastSeen')
+      .select('firstName lastName username status _id profilePicture avatars isOnline lastSeen')
       .limit(limit)
       .exec();
     return users;
@@ -102,38 +102,107 @@ export class UserService {
     }
 
     const inputPath = join('./uploads/avatars', filename);
-    const previous = user.profilePicture;
-
     const avatarPath = `./uploads/avatars/${filename}`;
+    let targetFilename = filename;
+
     if (fs.existsSync(inputPath)) {
       try {
         const resizedFilename = `resized_${filename}`;
         const outputPath = join('./uploads/avatars', resizedFilename);
         await resizeAvatar(inputPath, outputPath);
         if (fs.existsSync(outputPath)) {
-          fs.unlinkSync(avatarPath);
-          user.profilePicture = resizedFilename;
+          try {
+            fs.unlinkSync(avatarPath);
+          } catch {}
+          targetFilename = resizedFilename;
         } else {
           logger.warn('Avatar resize failed, using original');
-          user.profilePicture = filename;
+          targetFilename = filename;
         }
       } catch (error) {
         logger.warn(`Avatar resize failed: ${error?.message}, using original`);
-        user.profilePicture = filename;
+        targetFilename = filename;
       }
-    } else {
-      user.profilePicture = filename;
+    }
+
+    user.profilePicture = targetFilename;
+    user.avatars = user.avatars || [];
+    if (!user.avatars.includes(targetFilename)) {
+      user.avatars.unshift(targetFilename);
+    }
+    if (user.avatars.length > 20) {
+      const removed = user.avatars.slice(20);
+      user.avatars = user.avatars.slice(0, 20);
+      for (const oldFile of removed) {
+        const oldPath = `./uploads/avatars/${oldFile}`;
+        if (fs.existsSync(oldPath)) {
+          try {
+            fs.unlinkSync(oldPath);
+          } catch {}
+        }
+      }
     }
 
     await user.save();
-
-    if (previous) {
-      const previousPath = `./uploads/avatars/${previous}`;
-      if (fs.existsSync(previousPath)) {
-        fs.unlinkSync(previousPath);
-      }
-    }
     return user;
+  }
+
+  async getUserProfile(userId: string): Promise<any> {
+    const user = await this.userModel
+      .findById(userId)
+      .select('firstName lastName username phoneNumber bio profilePicture avatars status isOnline lastSeen createdAt')
+      .exec();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    const avatars = [...(user.avatars || [])];
+    if (user.profilePicture && !avatars.includes(user.profilePicture)) {
+      avatars.unshift(user.profilePicture);
+    }
+    return {
+      _id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      username: user.username,
+      phoneNumber: user.phoneNumber,
+      bio: user.bio,
+      profilePicture: user.profilePicture,
+      avatars,
+      status: user.status,
+      isOnline: user.isOnline,
+      lastSeen: user.lastSeen,
+      createdAt: user.createdAt,
+    };
+  }
+
+  async getUserAvatars(userId: string): Promise<string[]> {
+    const user = await this.userModel.findById(userId).select('avatars profilePicture').exec();
+    if (!user) return [];
+    const list = [...(user.avatars || [])];
+    if (user.profilePicture && !list.includes(user.profilePicture)) {
+      list.unshift(user.profilePicture);
+    }
+    return list;
+  }
+
+  async deleteAvatar(userId: string, filename: string): Promise<string[]> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) throw new NotFoundException('User not found');
+
+    user.avatars = (user.avatars || []).filter((f) => f !== filename);
+    if (user.profilePicture === filename) {
+      user.profilePicture = (user.avatars[0] || null) as any;
+    }
+    await user.save();
+
+    const filePath = `./uploads/avatars/${filename}`;
+    if (fs.existsSync(filePath)) {
+      try {
+        fs.unlinkSync(filePath);
+      } catch {}
+    }
+
+    return user.avatars;
   }
 
   async getUserAvatar(userId: string): Promise<string | null> {
@@ -151,7 +220,7 @@ export class UserService {
   async getContacts(userId: string): Promise<IUser[]> {
     const user = await this.userModel
       .findById(userId)
-      .populate('contacts', 'firstName lastName username profilePicture status isOnline lastSeen phoneNumber')
+      .populate('contacts', 'firstName lastName username profilePicture avatars status isOnline lastSeen phoneNumber')
       .exec();
     if (!user) return [];
     return user.contacts as unknown as IUser[];

@@ -174,6 +174,85 @@ export class MessageService {
     };
   }
 
+  async getChatMediaSummary(
+    chatId: string,
+    userId: string,
+  ): Promise<{
+    photosCount: number;
+    videosCount: number;
+    filesCount: number;
+    voiceCount: number;
+  }> {
+    const chat = await this.findChatForMessage(chatId);
+    if (!chat.participants.some((p) => p.toString() === userId)) {
+      throw new ForbiddenException('You are not a participant of this chat');
+    }
+
+    const [photosCount, videosCount, filesCount, voiceCount] = await Promise.all([
+      this.messageModel.countDocuments({
+        chat: new Types.ObjectId(chatId),
+        mediaType: { $in: ['image', 'gif'] },
+        isDeleted: { $ne: true },
+      }),
+      this.messageModel.countDocuments({
+        chat: new Types.ObjectId(chatId),
+        mediaType: 'video',
+        isDeleted: { $ne: true },
+      }),
+      this.messageModel.countDocuments({
+        chat: new Types.ObjectId(chatId),
+        mediaType: 'file',
+        isDeleted: { $ne: true },
+      }),
+      this.messageModel.countDocuments({
+        chat: new Types.ObjectId(chatId),
+        mediaType: 'voice',
+        isDeleted: { $ne: true },
+      }),
+    ]);
+
+    return { photosCount, videosCount, filesCount, voiceCount };
+  }
+
+  async getChatMedia(
+    chatId: string,
+    userId: string,
+    type: string = 'media',
+    page: number = 1,
+    limit: number = 30,
+  ): Promise<{ items: any[]; total: number; page: number; totalPages: number }> {
+    const chat = await this.findChatForMessage(chatId);
+    if (!chat.participants.some((p) => p.toString() === userId)) {
+      throw new ForbiddenException('You are not a participant of this chat');
+    }
+
+    const filter: any = { chat: new Types.ObjectId(chatId), isDeleted: { $ne: true } };
+    if (type === 'media' || type === 'photo' || type === 'photos') {
+      filter.mediaType = { $in: ['image', 'gif', 'video'] };
+    } else if (type === 'file' || type === 'files') {
+      filter.mediaType = 'file';
+    } else if (type === 'voice') {
+      filter.mediaType = 'voice';
+    } else if (type !== 'all') {
+      filter.mediaType = type;
+    } else {
+      filter.mediaType = { $ne: null };
+    }
+
+    const skip = (Math.max(1, page) - 1) * limit;
+    const [items, total] = await Promise.all([
+      this.messageModel.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit).populate('sender', 'firstName lastName profilePicture').exec(),
+      this.messageModel.countDocuments(filter),
+    ]);
+
+    return {
+      items: items.map((m) => this.hydrateMessage(m)),
+      total,
+      page,
+      totalPages: Math.ceil(total / limit),
+    };
+  }
+
   hydrateMessage(message: any, reactions?: any[]): any {
     if (!message) return null;
     const sender = message.sender;
