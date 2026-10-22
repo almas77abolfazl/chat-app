@@ -1,5 +1,6 @@
 import { Inject, Injectable, NgZone } from '@angular/core';
 import { EditProfileComponent } from './edit-profile/edit-profile.component';
+import { SettingsComponent } from './settings/settings.component';
 import { MatDialog } from '@angular/material/dialog';
 import { AuthService } from '../auth/auth.service';
 import { ContactsComponent } from './contacts/contacts.component';
@@ -701,6 +702,14 @@ export class MainService {
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
       }
     }, 100);
+  }
+
+  openSettingsModal(): void {
+    this.dialog.open(SettingsComponent, {
+      width: '460px',
+      maxWidth: '95vw',
+      panelClass: 'rtl-dialog',
+    });
   }
 
   openEditProfileModal(): void {

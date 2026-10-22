@@ -7,12 +7,15 @@ import { AuthService } from '../auth.service';
 import { interval, Subscription } from 'rxjs';
 import { SnackbarService } from '../../helpers/snackbar/snackbar.service';
 import { I18nPipe } from '../../helpers/i18n.pipe';
+import { TranslationService } from '../../helpers/translation.service';
+import { ThemeService } from '../../helpers/theme.service';
 
 @Component({
-    selector: 'app-verify-code',
-    imports: [RouterModule, FormsModule, FontAwesomeModule, MatSnackBarModule, I18nPipe],
-    templateUrl: './verify-code.component.html',
-    styleUrl: './verify-code.component.scss'
+  selector: 'app-verify-code',
+  standalone: true,
+  imports: [RouterModule, FormsModule, FontAwesomeModule, MatSnackBarModule, I18nPipe],
+  templateUrl: './verify-code.component.html',
+  styleUrl: './verify-code.component.scss',
 })
 export class VerifyCodeComponent implements OnInit {
   verificationCode: string = '';
@@ -21,7 +24,12 @@ export class VerifyCodeComponent implements OnInit {
   canResend = true;
   private timerSubscription: Subscription;
 
-  constructor(public authService: AuthService, private snackbar: SnackbarService) {
+  constructor(
+    public authService: AuthService,
+    private snackbar: SnackbarService,
+    public translationService: TranslationService,
+    public themeService: ThemeService
+  ) {
     if (authService.getUserId()) authService.gotoHome();
     if (!authService.getPhoneNumber()) authService.gotoLogin();
     else this.phoneNumber = authService.getPhoneNumber();
@@ -50,24 +58,25 @@ export class VerifyCodeComponent implements OnInit {
   }
 
   onOtpBackspace(event: Event, index: number) {
-    if (index > 0) {
+    const input = event.target as HTMLInputElement;
+    if (input.value === '' && index > 0) {
       const prevInput = (event.target as HTMLElement).parentElement?.children[index - 1] as HTMLInputElement;
       if (prevInput) {
         prevInput.focus();
-        prevInput.select();
+        this.verificationCode = this.verificationCode.substring(0, index - 1) + this.verificationCode.substring(index);
       }
-      this.verificationCode = this.verificationCode.substring(0, index - 1) + this.verificationCode.substring(index);
     }
   }
 
   startResendTimer() {
-    this.canResend = false;
     this.resendSeconds = 60;
+    this.canResend = false;
+    this.timerSubscription?.unsubscribe();
     this.timerSubscription = interval(1000).subscribe(() => {
       this.resendSeconds--;
       if (this.resendSeconds <= 0) {
         this.canResend = true;
-        this.timerSubscription?.unsubscribe();
+        this.timerSubscription.unsubscribe();
       }
     });
   }
@@ -76,10 +85,11 @@ export class VerifyCodeComponent implements OnInit {
     if (!this.canResend) return;
     this.authService.sendCode(this.phoneNumber);
     this.startResendTimer();
-    this.snackbar.success('کد تایید دوباره ارسال شد', 3000);
   }
 
-  ngOnDestroy() {
-    this.timerSubscription?.unsubscribe();
+  getOtpArray(): string[] {
+    const arr = this.verificationCode.split('');
+    while (arr.length < 6) arr.push('');
+    return arr;
   }
 }

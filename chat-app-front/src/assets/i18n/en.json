@@ -127,7 +127,8 @@
     "theme": "Theme",
     "lightMode": "Light mode",
     "darkMode": "Dark mode",
-    "language": "Language"
+    "language": "Language",
+    "settings": "Settings"
   },
   "search": {
     "placeholder": "Search...",
@@ -155,5 +156,23 @@
     "title": "Notifications",
     "enabled": "Notifications on",
     "disabled": "Notifications off"
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": "Appearance & Theme",
+    "theme": "Theme",
+    "themeDesc": "Select your preferred color theme",
+    "light": "Light Mode",
+    "dark": "Dark Mode",
+    "language": "Language",
+    "languageDesc": "Choose application display language",
+    "persian": "فارسی (Persian)",
+    "english": "English (US)",
+    "notifications": "Notifications",
+    "notificationsDesc": "Receive notifications for new messages",
+    "account": "Account",
+    "editProfile": "Edit Profile",
+    "about": "About ChatApp",
+    "version": "Version 1.0.0"
   }
 }

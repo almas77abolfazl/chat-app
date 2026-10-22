@@ -63,25 +63,17 @@
   </div>
 
   <div class="sidebar-footer">
-    <div class="menu-item theme-toggle-item" (click)="toggleTheme()" [attr.data-tooltip]="'theme.toggle' | i18n" data-tooltip-placement="left">
-      <fa-icon [icon]="['fas', themeService.theme === 'dark' ? 'sun' : 'moon']"></fa-icon>
-      <span>{{ themeService.theme === 'dark' ? ('theme.lightMode' | i18n) : ('theme.darkMode' | i18n) }}</span>
+    <div class="menu-item settings-item" (click)="openSettings()" [attr.data-tooltip]="'sidebar.settings' | i18n" data-tooltip-placement="left">
+      <fa-icon [icon]="['fas', 'cog']"></fa-icon>
+      <span>{{ 'sidebar.settings' | i18n }}</span>
     </div>
-    <div class="menu-item language-toggle-item" (click)="toggleLanguage()" [attr.data-tooltip]="'sidebar.language' | i18n" data-tooltip-placement="left">
-      <fa-icon [icon]="['fas', translationService.isRTL ? 'language' : 'earth']"></fa-icon>
-      <span>{{ translationService.isRTL ? 'فارسی' : 'English' }}</span>
-    </div>
-    <div class="menu-item" (click)="mainService.openEditProfileModal()" [attr.data-tooltip]="'sidebar.profile' | i18n" data-tooltip-placement="left">
+    <div class="menu-item profile-item" (click)="mainService.openEditProfileModal()" [attr.data-tooltip]="'sidebar.profile' | i18n" data-tooltip-placement="left">
       <fa-icon [icon]="['fas', 'user-circle']"></fa-icon>
       <span>{{ 'sidebar.profile' | i18n }}</span>
     </div>
     <div class="menu-item logout-item" (click)="mainService.logout()" [attr.data-tooltip]="'sidebar.logout' | i18n" data-tooltip-placement="left">
       <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
       <span>{{ 'sidebar.logout' | i18n }}</span>
-    </div>
-    <div class="menu-item notification-toggle-item" (click)="toggleNotifications()" [attr.data-tooltip]="'notifications.title' | i18n" data-tooltip-placement="left">
-      <fa-icon [icon]="['fas', notificationsEnabled ? 'bell' : 'bell-slash']"></fa-icon>
-      <span>{{ notificationsEnabled ? ('notifications.enabled' | i18n) : ('notifications.disabled' | i18n) }}</span>
     </div>
   </div>
 </div>

@@ -5,6 +5,7 @@ import { ThemeService } from '../../../helpers/theme.service';
 import { TranslationService } from '../../../helpers/translation.service';
 import { I18nPipe } from '../../../helpers/i18n.pipe';
 import { take } from 'rxjs/operators';
+
 @Component({
   selector: 'app-side-bar',
   standalone: true,
@@ -24,6 +25,7 @@ export class SideBarComponent {
   ];
   notificationsEnabled = true;
   agentHistory: { chatId: string; summary: string }[] = [];
+
   constructor(
     public mainService: MainService,
     public themeService: ThemeService,
@@ -31,6 +33,11 @@ export class SideBarComponent {
   ) {
     this.loadNotificationSettings();
     this.loadAgentHistory();
+  }
+
+  openSettings() {
+    this.mainService.openSettingsModal();
+    if (this.mobileOpen) this.close.emit();
   }
 
   toggleTheme() {
@@ -98,6 +105,5 @@ export class SideBarComponent {
     } else {
       this.mainService.openAgentHistoryChat();
     }
-    if (this.mobileOpen) this.close.emit();
   }
 }

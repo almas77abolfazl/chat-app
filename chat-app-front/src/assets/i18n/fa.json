@@ -127,7 +127,8 @@
     "theme": "پوسته",
     "lightMode": "حالت روشن",
     "darkMode": "حالت تاریک",
-    "language": "زبان"
+    "language": "زبان",
+    "settings": "تنظیمات"
   },
   "search": {
     "placeholder": "جستجو...",
@@ -155,5 +156,23 @@
     "title": "اعلان‌ها",
     "enabled": "اعلان‌ها روشن",
     "disabled": "اعلان‌ها خاموش"
+  },
+  "settings": {
+    "title": "تنظیمات",
+    "appearance": "ظاهر و پوسته",
+    "theme": "پوسته",
+    "themeDesc": "پوسته رنگی مورد علاقه خود را انتخاب کنید",
+    "light": "حالت روشن",
+    "dark": "حالت تاریک",
+    "language": "زبان",
+    "languageDesc": "زبان نمایش برنامه را انتخاب کنید",
+    "persian": "فارسی (Persian)",
+    "english": "English (US)",
+    "notifications": "اعلان‌ها",
+    "notificationsDesc": "دریافت اعلان برای پیام‌های جدید",
+    "account": "حساب کاربری",
+    "editProfile": "ویرایش نمایه",
+    "about": "درباره چت‌اپ",
+    "version": "نسخه ۱.۰.۰"
   }
 }
