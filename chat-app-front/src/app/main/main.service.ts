@@ -907,14 +907,77 @@ const messageData: Message = {
   }
 
   getAvatarUrl(avatar?: string | null): string | null {
-    if (!avatar) return null;
-    if (avatar.startsWith('http://') || avatar.startsWith('https://') || avatar.startsWith('data:')) return avatar;
-    if (avatar.startsWith('/uploads/')) {
-      const base = environment.apiUrl.replace('/v1', '');
-      return `${base}${avatar}`;
+    if (!avatar || avatar === 'undefined' || avatar === 'null') return null;
+    if (avatar.startsWith('http://') || avatar.startsWith('https://') || avatar.startsWith('data:')) {
+      return avatar;
     }
-    if (avatar.startsWith('/')) return `${environment.uploadUrl}${avatar}`;
-    return `${environment.uploadUrl}/${avatar}`;
+    const clean = avatar.replace(/^[\/\\]+/, '');
+    if (clean.startsWith('uploads/avatars/')) {
+      const base = environment.apiUrl.replace('/v1', '');
+      return `${base}/${clean}`;
+    }
+    if (clean.startsWith('uploads/')) {
+      const base = environment.apiUrl.replace('/v1', '');
+      return `${base}/${clean}`;
+    }
+    if (clean.startsWith('avatars/')) {
+      return `${environment.uploadUrl}/${clean}`;
+    }
+    return `${environment.uploadUrl}/avatars/${clean}`;
+  }
+
+  getUserProfile(userId: string): Observable<any> {
+    return this.httpRequestService.get(`user/${userId}/profile`);
+  }
+
+  getUserAvatars(userId: string): Observable<string[]> {
+    return this.httpRequestService.get(`user/${userId}/avatars`);
+  }
+
+  deleteAvatar(filename: string): Observable<any> {
+    return this.httpRequestService.delete(`user/avatar/${filename}`);
+  }
+
+  getChatMediaSummary(chatId: string): Observable<{
+    photosCount: number;
+    videosCount: number;
+    filesCount: number;
+    voiceCount: number;
+  }> {
+    return this.httpRequestService.get(`message/chat/${chatId}/media-summary`);
+  }
+
+  getChatMedia(
+    chatId: string,
+    type: string = 'media',
+    page: number = 1,
+    limit: number = 30
+  ): Observable<{
+    items: any[];
+    total: number;
+    page: number;
+    totalPages: number;
+  }> {
+    return this.httpRequestService.get(`message/chat/${chatId}/media?type=${type}&page=${page}&limit=${limit}`);
+  }
+
+  uploadChatAvatar(chatId: string, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    return this.httpRequestService.post(`chat/${chatId}/avatar`, formData);
+  }
+
+  async openUserProfileModal(userId: string, chat?: any): Promise<void> {
+    const { ProfileComponent } = await import('./profile/profile.component');
+    this.dialog.open(ProfileComponent, {
+      width: '520px',
+      maxWidth: '96vw',
+      panelClass: 'rtl-dialog',
+      data: {
+        targetUserId: userId,
+        chat: chat,
+      },
+    });
   }
 
   isAgentChatSync(chat: ChatListItem): boolean {

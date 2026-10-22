@@ -35,6 +35,16 @@ export class SideBarComponent {
     this.loadAgentHistory();
   }
 
+  openProfile() {
+    const myId = this.mainService.authService.getUserId();
+    if (myId) {
+      this.mainService.openUserProfileModal(myId);
+    } else {
+      this.mainService.openEditProfileModal();
+    }
+    if (this.mobileOpen) this.close.emit();
+  }
+
   openSettings() {
     this.mainService.openSettingsModal();
     if (this.mobileOpen) this.close.emit();

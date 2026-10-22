@@ -1259,3 +1259,13 @@
   .highlight-pinned {
     animation: highlight-pinned-pulse 2s ease-out !important;
   }
+
+.clickable-sender {
+  cursor: pointer;
+  transition: opacity var(--transition-fast), text-decoration var(--transition-fast);
+
+  &:hover {
+    text-decoration: underline;
+    opacity: 0.85;
+  }
+}

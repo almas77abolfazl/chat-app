@@ -17,6 +17,9 @@ export interface ChatListItem {
   lastName?: string;
   name?: string;          // group / channel name
   avatar?: string;        // url or 'default_profile.jpg'
+  avatars?: string[];
+  otherParticipant?: ChatParticipant;
+  chatId?: string;
   isGroup?: boolean;
   isChannel?: boolean;
   isOwner?: boolean;

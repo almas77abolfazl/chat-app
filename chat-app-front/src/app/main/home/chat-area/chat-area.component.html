@@ -164,7 +164,7 @@
       </div>
       }
       @if (mainService.currentChat?.isGroup && !ownMessage(message)) {
-      <div class="message-sender">{{ senderName(message) }}</div>
+      <div class="message-sender clickable-sender" (click)="openSenderProfile(message)">{{ senderName(message) }}</div>
       }
       @if (replyingToId === message._id) {
       <div class="reply-preview">

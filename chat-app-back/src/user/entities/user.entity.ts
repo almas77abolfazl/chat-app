@@ -1,12 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { HydratedDocument } from 'mongoose';
 import { ISession } from '../interfaces/session.interface';
 
-export type UserDocument = User & Document;
+export type UserDocument = HydratedDocument<User>;
 
 @Schema()
 export class User {
-  @Prop()
+  @Prop({ unique: true })
   username: string;
 
   @Prop({ required: true, unique: true })
@@ -27,6 +27,9 @@ export class User {
   @Prop()
   profilePicture: string;
 
+  @Prop({ type: [String], default: [] })
+  avatars?: string[];
+
   @Prop()
   status: string;
 
@@ -42,7 +45,7 @@ export class User {
   @Prop({ default: false })
   isOnline: boolean;
 
-  @Prop()
+  @Prop({ default: null })
   lastSeen: Date;
 
   @Prop({ default: true })
@@ -50,7 +53,4 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
-
-UserSchema.index({ phoneNumber: 1 }, { unique: true });
-UserSchema.index({ username: 1 }, { unique: true, sparse: true });
-UserSchema.index({ isOnline: 1 });
+UserSchema.index({ firstName: 'text', lastName: 'text', username: 'text', phoneNumber: 'text' });

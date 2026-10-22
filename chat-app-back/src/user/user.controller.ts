@@ -31,10 +31,28 @@ export class UserController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Delete('avatar/:filename')
+  async deleteAvatar(@Req() request: RequestWithUser, @Param('filename') filename: string) {
+    return this.userService.deleteAvatar(request.user._id.toString(), filename);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get(':id/avatar')
   async getUserAvatar(@Param('id') id: string): Promise<{ avatar: string | null }> {
     const avatar = await this.userService.getUserAvatar(id);
     return { avatar };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/avatars')
+  async getUserAvatars(@Param('id') id: string): Promise<string[]> {
+    return this.userService.getUserAvatars(id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/profile')
+  async getUserProfile(@Param('id') id: string) {
+    return this.userService.getUserProfile(id);
   }
 
   @UseGuards(JwtAuthGuard)

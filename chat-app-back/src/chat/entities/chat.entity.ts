@@ -23,6 +23,9 @@ export class Chat extends Document {
   @Prop({ type: String })
   avatar?: string;
 
+  @Prop({ type: [String], default: [] })
+  avatars?: string[];
+
   @Prop({ type: Types.ObjectId, ref: 'Message' })
   lastMessage: Types.ObjectId;
 

@@ -1,62 +1,62 @@
-<div class="sidebar" (close)="close.emit()">
+<div class="sidebar-container" [class.mobile-open]="mobileOpen">
   <div class="sidebar-header">
-    @if (mobileOpen) {
-    <button class="icon-btn close-btn" (click)="close.emit()" [attr.aria-label]="'actions.close' | i18n">
-      <fa-icon [icon]="['fas', 'times']"></fa-icon>
-    </button>
+    <div class="brand">
+      <fa-icon [icon]="['fas', 'paper-plane']" class="brand-icon"></fa-icon>
+      <span class="brand-text">{{ 'brand.name' | i18n }}</span>
+    </div>
+  </div>
+
+  <div class="sidebar-menu">
+    @for (item of navItems; track item.id) {
+    <div
+      class="menu-item"
+      [class.active]="mainService.chatFilter === item.id"
+      (click)="selectNav(item.id)"
+      [attr.data-tooltip]="item.titleKey | i18n"
+      data-tooltip-placement="left"
+    >
+      <fa-icon [icon]="['fas', item.icon]"></fa-icon>
+      <span>{{ item.titleKey | i18n }}</span>
+    </div>
     }
 
-    <div class="sidebar-brand">
-      <div class="brand-icon">
-        <fa-icon [icon]="['fas', 'comments']"></fa-icon>
-      </div>
-      <span>{{ 'sidebar.brand' | i18n }}</span>
+    <div
+      class="menu-item theme-item"
+      (click)="toggleTheme()"
+      [attr.data-tooltip]="(themeService.isDark ? 'sidebar.lightMode' : 'sidebar.darkMode') | i18n"
+      data-tooltip-placement="left"
+    >
+      <fa-icon [icon]="['fas', themeService.isDark ? 'sun' : 'moon']"></fa-icon>
+      <span>{{ (themeService.isDark ? 'sidebar.lightMode' : 'sidebar.darkMode') | i18n }}</span>
     </div>
 
-    <div class="nav-section">
-      <div class="nav-title">{{ 'chat.title' | i18n }}</div>
-      @for (item of navItems; track $index) {
+    <div
+      class="menu-item lang-item"
+      (click)="toggleLanguage()"
+      [attr.data-tooltip]="'sidebar.language' | i18n"
+      data-tooltip-placement="left"
+    >
+      <fa-icon [icon]="['fas', 'language']"></fa-icon>
+      <span>{{ translationService.currentLang === 'fa' ? 'English' : 'فارسی' }}</span>
+    </div>
+
+    <!-- Agent conversation history entry point -->
+    @if (mainService.agentConfigured && agentHistory.length > 0) {
+    <div class="agent-history-section">
+      <div class="agent-history-title">
+        <fa-icon [icon]="['fas', 'robot']"></fa-icon>
+        <span>{{ 'agent.history' | i18n }}</span>
+      </div>
+      @for (item of agentHistory; track item.chatId) {
       <div
-        class="menu-item"
-        [class.active]="mainService.chatFilter === item.id"
-        (click)="selectNav(item.id)"
-        [attr.data-tooltip]="item.titleKey | i18n"
+        class="menu-item agent-history-item"
+        (click)="openAgentHistory(item.chatId)"
+        [attr.data-tooltip]="item.summary"
         data-tooltip-placement="left"
       >
-        <fa-icon [icon]="['fas', item.icon]"></fa-icon>
-        <span>{{ item.titleKey | i18n }}</span>
+        <fa-icon [icon]="['fas', 'comment-dots']"></fa-icon>
+        <span class="agent-history-text">{{ item.summary }}</span>
       </div>
-      }
-    </div>
-
-    @if (mainService.agentConfigured) {
-    <div class="nav-section">
-      <div class="nav-title">{{ 'agent.title' | i18n }}</div>
-      <div class="menu-item agent-item" (click)="mainService.openAgentChat()" [attr.data-tooltip]="'agent.title' | i18n" data-tooltip-placement="left">
-        <fa-icon [icon]="['fas', 'robot']"></fa-icon>
-        <span>{{ 'agent.title' | i18n }}</span>
-      </div>
-      @if (agentHistory.length > 0) {
-        <div class="assistant-history-list">
-          @for (conv of agentHistory; track $any(conv.chatId)) {
-          <div
-            class="menu-item assistant-history-item"
-            [class.active]="mainService.currentChat?._id === conv.chatId"
-            (click)="openAgentHistory(conv.chatId)"
-            [attr.data-tooltip]="conv.summary | i18n"
-            data-tooltip-placement="left"
-          >
-            <fa-icon [icon]="['fas', 'clock']"></fa-icon>
-            <span class="history-summary">{{ conv.summary }}</span>
-          </div>
-          }
-          @empty {
-          <div class="menu-item no-history" (click)="mainService.openAgentChat()">
-            <fa-icon [icon]="['fas', 'comment-dots']"></fa-icon>
-            <span>{{ 'agent.startConversation' | i18n }}</span>
-          </div>
-          }
-        </div>
       }
     </div>
     }
@@ -67,7 +67,7 @@
       <fa-icon [icon]="['fas', 'cog']"></fa-icon>
       <span>{{ 'sidebar.settings' | i18n }}</span>
     </div>
-    <div class="menu-item profile-item" (click)="mainService.openEditProfileModal()" [attr.data-tooltip]="'sidebar.profile' | i18n" data-tooltip-placement="left">
+    <div class="menu-item profile-item" (click)="openProfile()" [attr.data-tooltip]="'sidebar.profile' | i18n" data-tooltip-placement="left">
       <fa-icon [icon]="['fas', 'user-circle']"></fa-icon>
       <span>{{ 'sidebar.profile' | i18n }}</span>
     </div>

@@ -14,7 +14,7 @@
     <div class="settings-card user-account-card">
       <div class="user-avatar-wrap">
         @if (userAvatar) {
-        <img [src]="userAvatar" alt="Avatar" class="user-avatar" />
+        <img [src]="userAvatar" (error)="userAvatar = ''" alt="Avatar" class="user-avatar" />
         } @else {
         <div class="user-avatar-initials">
           {{ getUserInitials() }}
