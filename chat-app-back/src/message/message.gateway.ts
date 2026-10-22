@@ -295,41 +295,65 @@ export class MessageGateway {
     try {
       const user = client.data.user as IUser;
       const existingReactions = await this.reactionService.getReactionCounts(data.messageId);
-      const hasUserReacted = existingReactions.some((r) => r.users.includes(user._id.toString()));
+      const userReaction = existingReactions.find((r) => r.users.includes(user._id.toString()));
 
-      if (hasUserReacted) {
+      if (userReaction && userReaction.emoji === data.emoji) {
         // Remove reaction (toggle off)
         await this.reactionService.removeReaction(data.messageId, user._id.toString());
-        const updated = await this.reactionService.getReactionCounts(data.messageId);
-        const message = await this.messageModel.findById(data.messageId).exec();
-        if (message) {
-          const chatId = message.chat.toString();
-          const participantIds = await this.chatService.getParticipantIds(chatId);
-          for (const pid of participantIds) {
-            this.server.to(pid).emit('messageReactionUpdated', {
-              messageId: data.messageId,
-              reactions: updated,
-            });
-          }
-        }
       } else {
-        // Add reaction
+        // Add or change reaction
         await this.reactionService.addReaction(data.messageId, user._id.toString(), data.emoji);
-        const updated = await this.reactionService.getReactionCounts(data.messageId);
-        const message = await this.messageModel.findById(data.messageId).exec();
-        if (message) {
-          const chatId = message.chat.toString();
-          const participantIds = await this.chatService.getParticipantIds(chatId);
-          for (const pid of participantIds) {
-            this.server.to(pid).emit('messageReactionUpdated', {
-              messageId: data.messageId,
-              reactions: updated,
-            });
-          }
+      }
+      const updated = await this.reactionService.getReactionCounts(data.messageId);
+      const message = await this.messageModel.findById(data.messageId).exec();
+      if (message) {
+        const chatId = message.chat.toString();
+        const participantIds = await this.chatService.getParticipantIds(chatId);
+        for (const pid of participantIds) {
+          this.server.to(pid).emit('messageReactionUpdated', {
+            messageId: data.messageId,
+            reactions: updated,
+          });
         }
       }
     } catch (error) {
       client.emit('messageError', { message: error?.message ?? 'Failed to add reaction' });
+    }
+  }
+
+  @SubscribeMessage('pinMessage')
+  async handlePinMessage(@MessageBody() data: { chatId: string; messageId: string }, @ConnectedSocket() client: Socket) {
+    try {
+      const user = client.data.user as IUser;
+      await this.chatService.pinMessage(data.chatId, data.messageId, user._id.toString());
+      const message = await this.messageModel.findById(data.messageId).populate('sender', 'firstName lastName profilePicture').exec();
+      const hydrated = this.messageService.hydrateMessage(message);
+      const participantIds = await this.chatService.getParticipantIds(data.chatId);
+      for (const pid of participantIds) {
+        this.server.to(pid).emit('messagePinned', {
+          chatId: data.chatId,
+          pinnedMessage: hydrated,
+        });
+      }
+    } catch (error) {
+      client.emit('messageError', { message: error?.message ?? 'Failed to pin message' });
+    }
+  }
+
+  @SubscribeMessage('unpinMessage')
+  async handleUnpinMessage(@MessageBody() data: { chatId: string }, @ConnectedSocket() client: Socket) {
+    try {
+      const user = client.data.user as IUser;
+      await this.chatService.unpinMessage(data.chatId, user._id.toString());
+      const participantIds = await this.chatService.getParticipantIds(data.chatId);
+      for (const pid of participantIds) {
+        this.server.to(pid).emit('messagePinned', {
+          chatId: data.chatId,
+          pinnedMessage: null,
+        });
+      }
+    } catch (error) {
+      client.emit('messageError', { message: error?.message ?? 'Failed to unpin message' });
     }
   }
 

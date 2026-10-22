@@ -73,6 +73,21 @@
     </div>
   </div>
 
+  @if (mainService.currentChat?.pinnedMessage) {
+  <div class="pinned-message-bar" (click)="scrollToMessage(mainService.currentChat.pinnedMessage._id)">
+    <div class="pinned-bar-icon">
+      <fa-icon [icon]="['fas', 'thumbtack']"></fa-icon>
+    </div>
+    <div class="pinned-bar-content">
+      <span class="pinned-bar-title">{{ 'chat.pinnedMessage' | i18n }}</span>
+      <span class="pinned-bar-text">{{ mainService.currentChat.pinnedMessage.content }}</span>
+    </div>
+    <button class="pinned-bar-close" (click)="unpinMessage(); $event.stopPropagation()" [attr.title]="'actions.unpin' | i18n">
+      <fa-icon [icon]="['fas', 'times']"></fa-icon>
+    </button>
+  </div>
+  }
+
   @if (mainService.isAgentChat(mainService.currentChat) && !mainService.agentConfigured) {
   <div class="agent-notice">
     <fa-icon [icon]="['fas', 'key']" class="agent-notice-icon"></fa-icon>
@@ -120,6 +135,8 @@
   }
 
   <div #chatMessages class="chat-messages" (scroll)="onScroll($event)">
+    <div class="messages-spacer"></div>
+
     @if (mainService.currentPage > 1 && mainService.totalPages > 1 && !mainService.loadingMessages) {
     <div class="load-more-trigger" title="اسکرول کنید بالا برای بارگذاری پیام‌های قدیمی">
       <fa-icon [icon]="['fas', 'chevron-up']"></fa-icon>
@@ -133,6 +150,7 @@
     </div>
     }
     <div
+      [id]="'msg-' + message._id"
       class="message"
       [ngClass]="{ 'sent': ownMessage(message), 'received': !ownMessage(message) }"
       [style.animation-delay]="($index * 30) + 'ms'"
@@ -159,7 +177,12 @@
       }
       @if (!isEditing(message._id)) {
       <div class="message-actions">
-        @if (ownMessage(message)) {
+        @if (!message.isDeleted) {
+        <button class="msg-action pin-btn" (click)="pinMessage(message); $event.stopPropagation()" [attr.title]="'actions.pin' | i18n">
+          <fa-icon [icon]="['fas', 'thumbtack']" size="xs"></fa-icon>
+        </button>
+        }
+        @if (ownMessage(message) && !message.isDeleted) {
         <button class="msg-action edit-btn" (click)="startEdit(message); $event.stopPropagation()" [attr.title]="'actions.edit' | i18n">
           <fa-icon [icon]="['fas', 'pen']" size="xs"></fa-icon>
         </button>
@@ -167,9 +190,14 @@
           <fa-icon [icon]="['fas', 'trash']" size="xs"></fa-icon>
         </button>
         }
-        <button class="msg-action reaction-btn" (click)="toggleReaction(message, '❤️'); $event.stopPropagation()" [attr.title]="'actions.reaction' | i18n">
-          <fa-icon [icon]="['fas', 'heart']" size="xs"></fa-icon>
+        @if (!message.isDeleted) {
+        <button class="msg-action reaction-btn" [class.reacted]="isReactedWith(message, '❤️')" (click)="toggleReaction(message, '❤️'); $event.stopPropagation()" title="❤️">
+          ❤️
         </button>
+        <button class="msg-action reaction-btn" [class.reacted]="isReactedWith(message, '👍')" (click)="toggleReaction(message, '👍'); $event.stopPropagation()" title="👍">
+          👍
+        </button>
+        }
       </div>
       }
       @if (isEditing(message._id)) {
@@ -225,7 +253,7 @@
       @if (message.reactions && message.reactions.length > 0) {
       <div class="reactions-bar">
         @for (reaction of message.reactions; track reaction.emoji) {
-        <div class="reaction-item" (click)="toggleReaction(message, reaction.emoji); $event.stopPropagation()">
+        <div class="reaction-item" [class.reacted]="isReactedWith(message, reaction.emoji)" (click)="toggleReaction(message, reaction.emoji); $event.stopPropagation()">
           <span class="reaction-emoji">{{ reaction.emoji }}</span>
           <span class="reaction-count">{{ reaction.count }}</span>
           @if (reaction.users.includes(ownId())) {
@@ -239,18 +267,18 @@
         {{ getShortTime(message.createdAt) }}
         @if (ownMessage(message)) {
         <span class="msg-status"
-          [class.msg-sent]="message.status === 'sent'"
-          [class.msg-delivered]="message.status === 'delivered'"
-          [class.msg-read]="message.status === 'read'"
+          [class.msg-sent]="message.status === 'sent' && !message._pending"
+          [class.msg-delivered]="message.status === 'delivered' && !message._pending"
+          [class.msg-read]="message.status === 'read' && !message._pending"
           [class.msg-pending]="message._pending">
           @if (message._pending) {
-          <fa-icon [icon]="['fas', 'clock']" size="xs"></fa-icon>
+          <fa-icon [icon]="['fas', 'clock']" size="xs" [attr.title]="'messages.pending' | i18n"></fa-icon>
           } @else if (message.status === 'read') {
-          <fa-icon [icon]="['fas', 'check-double']" size="xs"></fa-icon>
+          <fa-icon [icon]="['fas', 'check-double']" size="xs" [attr.title]="'messages.read' | i18n"></fa-icon>
           } @else if (message.status === 'delivered') {
-          <fa-icon [icon]="['fas', 'check-double']" size="xs"></fa-icon>
+          <fa-icon [icon]="['fas', 'check-double']" size="xs" [attr.title]="'messages.delivered' | i18n"></fa-icon>
           } @else {
-          <fa-icon [icon]="['fas', 'check']" size="xs"></fa-icon>
+          <fa-icon [icon]="['fas', 'check']" size="xs" [attr.title]="'messages.sent' | i18n"></fa-icon>
           }
         </span>
         }
@@ -353,6 +381,12 @@
       <fa-icon [icon]="['fas', 'reply']"></fa-icon>
       <span>{{ 'actions.reply' | i18n }}</span>
     </button>
+    @if (!contextMenuTarget.isDeleted) {
+    <button class="context-menu-item" (click)="onContextMenuAction('pin')">
+      <fa-icon [icon]="['fas', 'thumbtack']"></fa-icon>
+      <span>{{ 'actions.pin' | i18n }}</span>
+    </button>
+    }
     @if (ownMessage(contextMenuTarget)) {
     <button class="context-menu-item" (click)="onContextMenuAction('edit')">
       <fa-icon [icon]="['fas', 'pen']"></fa-icon>

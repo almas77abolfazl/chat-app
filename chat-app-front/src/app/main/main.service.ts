@@ -98,6 +98,7 @@ export class MainService {
         ownerId: chat.ownerId,
         participants: chat.participants,
         lastMessage: chat.lastMessage,
+        pinnedMessage: chat.pinnedMessage || null,
         messageCount: chat.unreadCount,
         updatedAt: chat.updatedAt,
         isOnline: isDirect ? peer?.isOnline : undefined,
@@ -443,7 +444,20 @@ export class MainService {
       });
     });
 
-  this.socketService.on('typingStatus', (payload: { chatId: string; userId: string; userName: string; isTyping: boolean }) => {
+      this.socketService.on('messagePinned', (payload: { chatId: string; pinnedMessage: Message | null }) => {
+      this.zone.run(() => {
+        const chatItem = this.findChatById(payload.chatId);
+        if (chatItem) {
+          chatItem.pinnedMessage = payload.pinnedMessage;
+        }
+        if (this.currentChat?._id === payload.chatId) {
+          this.currentChat.pinnedMessage = payload.pinnedMessage;
+        }
+        this.chatListUpdatedSubject.next(this.chatItems);
+      });
+    });
+
+    this.socketService.on('typingStatus', (payload: { chatId: string; userId: string; userName: string; isTyping: boolean }) => {
       this.zone.run(() => {
         const current = new Map<string, string[]>(this.typingUsersSubject.value as Iterable<readonly [string, string[]]>);
         const chatUsers: string[] = current.get(payload.chatId) || [];
@@ -896,6 +910,14 @@ const messageData: Message = {
 
   isAgentChatSync(chat: ChatListItem): boolean {
     return !!chat && !!this.botUserId && !chat.isGroup && !chat.isChannel && chat.peerId === this.botUserId;
+  }
+
+  pinMessage(chatId: string, messageId: string) {
+    this.socketService.emit('pinMessage', { chatId, messageId });
+  }
+
+  unpinMessage(chatId: string) {
+    this.socketService.emit('unpinMessage', { chatId });
   }
 
   deleteChat(chatId: string): Observable<any> {

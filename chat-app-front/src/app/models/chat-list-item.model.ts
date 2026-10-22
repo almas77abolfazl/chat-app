@@ -23,6 +23,7 @@ export interface ChatListItem {
   ownerId?: string;
   participants?: ChatParticipant[];
   lastMessage: Message;
+  pinnedMessage?: Message | null;
   updatedAt?: Date;
   messages?: Message[];
   messageCount?: number;
