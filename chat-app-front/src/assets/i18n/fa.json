@@ -21,6 +21,9 @@
     "emoji": "ایموجی",
     "scrollToBottom": "رفتن به آخرین پیام",
     "you": "شما",
+    "pinnedMessage": "پیام سنجاق شده",
+    "unpin": "برداشتن سنجاق",
+    "pin": "سنجاق پیام",
     "menu": "منو"
   },
   "contacts": {
@@ -53,33 +56,35 @@
     "save": "ذخیره",
     "close": "بستن",
     "copy": "کپی",
+    "pin": "سنجاق کردن",
+    "unpin": "برداشتن سنجاق",
     "confirmDelete": "آیا از حذف این پیام اطمینان دارید؟",
     "edited": "ویرایش شده",
     "noMessages": "بدون پیام"
   },
   "profile": {
-    "editProfile": "ویرایش پروفایل",
-    "viewProfile": "نمایش پروفایل",
+    "editProfile": "ویرایش نمایه",
+    "viewProfile": "مشاهده نمایه",
     "about": "درباره",
     "username": "نام کاربری",
     "chatType": "نوع گفتگو",
     "lastActivity": "آخرین فعالیت",
-    "members": "اعضاء",
+    "members": "اعضا",
     "message": "ارسال پیام",
     "call": "تماس صوتی",
-    "videoCall": "تماس ویدیویی",
+    "videoCall": "تماس تصویری",
     "close": "بستن",
-    "activeNow": "در حال حاضر فعال است",
-    "directChat": "مکالمه مستقیم",
+    "activeNow": "اکنون فعال",
+    "directChat": "گفتگوی مستقیم",
     "publicChannel": "کانال عمومی",
-    "title": "پروفایل شما",
+    "title": "نمایه کاربری",
     "subtitle": "نام و نام خانوادگی شما به دیگران نمایش داده می‌شود",
     "firstNamePlaceholder": "نام",
     "lastNamePlaceholder": "نام خانوادگی",
     "save": "ذخیره",
-    "cancel": "لغو",
+    "cancel": "انصراف",
     "aboutMe": "درباره من",
-    "bioPlaceholder": "یک توضیح کوتاه درباره خودت",
+    "bioPlaceholder": "توضیح کوتاه درباره خودتان",
     "firstNameRequired": "نام خود را وارد کنید",
     "lastNameRequired": "نام خانوادگی خود را وارد کنید",
     "unknownUser": "کاربر ناشناس",
@@ -87,55 +92,55 @@
   },
   "agent": {
     "title": "دستیار هوشمند",
-    "disabled": "دستیار هوشمند غیرفعال است. برای فعال‌سازی کلید LLM_API_KEY را تنظیم کنید.",
-    "summarize": "خلاصه گفتگو",
-    "extractTasks": "استخراج تسک",
+    "disabled": "دستیار هوشمند غیرفعال است. مقدار LLM_API_KEY را تنظیم کنید.",
+    "summarize": "خلاصه‌سازی گفتگو",
+    "extractTasks": "استخراج کارها",
     "replySuggest": "پیشنهاد پاسخ",
-    "typing": "دستیار در حال پاسخ‌گویی",
-    "history": "پشتیبانی",
-    "startConversation": "شروع مکالمه جدید"
+    "typing": "دستیار در حال پاسخگویی است",
+    "history": "راهنمایی‌ها",
+    "startConversation": "شروع گفتگوی جدید"
   },
   "brand": {
     "name": "چت‌اپ"
   },
   "login": {
-    "title": "ورود به حساب",
-    "subtitle": "لطفاً شماره تلفن خود را وارد کنید تا کد تأیید دریافت کنید.",
+    "title": "خوش آمدید",
+    "subtitle": "برای ورود یا ثبت‌نام، شماره موبایل خود را وارد کنید.",
     "phonePlaceholder": "۰۹۱۲۳۴۵۶۷۸۹",
-    "sendCode": "ارسال کد تأیید"
+    "sendCode": "ارسال کد تایید"
   },
   "verify": {
-    "title": "کد تأیید",
-    "subtitle": "کد ۶ رقمی ارسال‌شده به <strong>{phone}</strong> را وارد کنید.",
-    "submit": "تأیید و ورود",
+    "title": "کد تایید را وارد کنید",
+    "subtitle": "کد ۶ رقمی ارسال شده به شماره <strong>{phone}</strong> را وارد نمایید.",
+    "submit": "تایید و ورود",
     "resend": "ارسال مجدد کد",
-    "resendCountdown": "ارسال مجدد در {seconds} ثانیه"
+    "resendCountdown": "ارسال مجدد تا {seconds} ثانیه دیگر"
   },
   "sidebar": {
     "brand": "چت‌اپ",
     "smartAssistant": "دستیار هوشمند",
-    "chats": "چت‌ها",
+    "chats": "گفتگوها",
     "groups": "گروه‌ها",
     "channels": "کانال‌ها",
-    "profile": "پروفایل",
+    "profile": "نمایه",
     "logout": "خروج",
-    "theme": "تم",
+    "theme": "پوسته",
     "lightMode": "حالت روشن",
-    "darkMode": "حالت تیره",
+    "darkMode": "حالت تاریک",
     "language": "زبان"
   },
   "search": {
     "placeholder": "جستجو...",
     "searchResults": "نتایج جستجو",
-    "noResults": "نتیجه‌ای یافت نشد"
+    "noResults": "موردی یافت نشد"
   },
   "status": {
     "online": "آنلاین",
     "offline": "آفلاین",
-    "lastSeen": "آخرین حضور"
+    "lastSeen": "آخرین بازدید"
   },
   "messages": {
-    "typing": "در حال تایپ...",
+    "typing": "در حال نوشتن...",
     "read": "خوانده شده",
     "delivered": "تحویل داده شده",
     "sent": "ارسال شده",
@@ -143,12 +148,12 @@
   },
   "theme": {
     "lightMode": "حالت روشن",
-    "darkMode": "حالت تیره",
-    "toggle": "تغییر حالت نمایش"
+    "darkMode": "حالت تاریک",
+    "toggle": "تغییر پوسته"
   },
   "notifications": {
-    "title": "نوتیفیکیشن",
-    "enabled": "نوتیفیکیشن فعال",
-    "disabled": "نوتیفیکیشن غیرفعال"
+    "title": "اعلان‌ها",
+    "enabled": "اعلان‌ها روشن",
+    "disabled": "اعلان‌ها خاموش"
   }
 }

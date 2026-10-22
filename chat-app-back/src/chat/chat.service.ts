@@ -13,6 +13,7 @@ export class ChatService {
       .find({ participants: userObjectId })
       .populate<{ participants: any[] }>('participants', 'firstName lastName profilePicture status isOnline lastSeen')
       .populate('lastMessage', 'content sender createdAt')
+      .populate('pinnedMessage', 'content sender createdAt status isDeleted')
       .sort({ updatedAt: -1 })
       .exec();
 
@@ -49,6 +50,7 @@ export class ChatService {
             }
           : null,
         lastMessage: chat.lastMessage,
+        pinnedMessage: chat.pinnedMessage || null,
         unreadCount,
         updatedAt: chat.updatedAt,
       };
@@ -56,7 +58,7 @@ export class ChatService {
   }
 
   async findChat(chatId: string, userId: string): Promise<ChatDocument | null> {
-    const chat = await this.chatModel.findById(chatId).exec();
+    const chat = await this.chatModel.findById(chatId).populate('pinnedMessage').exec();
     if (!chat) return null;
     if (!chat.participants.includes(new Types.ObjectId(userId))) {
       throw new ForbiddenException('You are not a member of this chat');
@@ -120,6 +122,7 @@ export class ChatService {
 
   async addMember(chatId: string, userId: string, requesterId: string): Promise<ChatDocument> {
     const chat = await this.findChat(chatId, requesterId);
+    if (!chat) throw new NotFoundException('Chat not found');
     if (!chat.isGroup) throw new BadRequestException('Chat is not a group');
     if (chat.owner?.toString() !== requesterId) {
       throw new ForbiddenException('Only the group admin can add members');
@@ -145,6 +148,28 @@ export class ChatService {
       chat.unreadCounts.set(userId, 0);
       await chat.save();
     }
+    return chat;
+  }
+
+  async pinMessage(chatId: string, messageId: string, userId: string): Promise<ChatDocument> {
+    const chat = await this.findChat(chatId, userId);
+    if (!chat) throw new NotFoundException('Chat not found');
+    if (chat.isChannel && chat.owner?.toString() !== userId) {
+      throw new ForbiddenException('Only channel owner can pin messages');
+    }
+    chat.pinnedMessage = new Types.ObjectId(messageId) as any;
+    await chat.save();
+    return chat;
+  }
+
+  async unpinMessage(chatId: string, userId: string): Promise<ChatDocument> {
+    const chat = await this.findChat(chatId, userId);
+    if (!chat) throw new NotFoundException('Chat not found');
+    if (chat.isChannel && chat.owner?.toString() !== userId) {
+      throw new ForbiddenException('Only channel owner can unpin messages');
+    }
+    chat.pinnedMessage = null as any;
+    await chat.save();
     return chat;
   }
 

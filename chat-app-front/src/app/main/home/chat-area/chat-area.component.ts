@@ -18,7 +18,7 @@ import { environment } from '../../../../environments/environment';
 export interface ContextMenuAction {
   label: string;
   icon: string;
-  action: 'edit' | 'delete' | 'reply' | 'forward' | 'copy' | 'cancel';
+  action: 'edit' | 'delete' | 'reply' | 'forward' | 'copy' | 'cancel' | 'pin';
   danger?: boolean;
 }
 
@@ -266,9 +266,19 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  getUserReaction(message: Message): string | undefined {
+    const own = this.ownId();
+    const found = (message.reactions || []).find((r) => r.users?.includes(own));
+    return found?.emoji || this.userReactions.get(message._id);
+  }
+
+  isReactedWith(message: Message, emoji: string): boolean {
+    return this.getUserReaction(message) === emoji;
+  }
+
   toggleReaction(message: Message, emoji: string) {
     const messageId = message._id;
-    const currentEmoji = this.userReactions.get(messageId);
+    const currentEmoji = this.getUserReaction(message);
 
     if (currentEmoji === emoji) {
       this.mainService.removeReaction(messageId).pipe(take(1)).subscribe({
@@ -283,14 +293,33 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
           this.userReactions.set(messageId, emoji);
         },
         error: () => {
-          this.mainService.snackbar.error('امکان اضافه کردن reacción وجود ندارد', 3000);
+          this.mainService.snackbar.error('امکان ثبت واکنش وجود ندارد', 3000);
         },
       });
     }
   }
 
-  isReactedWith(message: Message, emoji: string): boolean {
-    return this.userReactions.get(message._id) === emoji;
+  pinMessage(message: Message) {
+    const chatId = this.mainService.currentChat?._id;
+    if (!chatId || !message?._id) return;
+    this.mainService.pinMessage(chatId, message._id);
+    this.closeContextMenu();
+  }
+
+  unpinMessage() {
+    const chatId = this.mainService.currentChat?._id;
+    if (!chatId) return;
+    this.mainService.unpinMessage(chatId);
+  }
+
+  scrollToMessage(messageId: string) {
+    if (!messageId) return;
+    const el = document.getElementById('msg-' + messageId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('highlight-pinned');
+      setTimeout(() => el.classList.remove('highlight-pinned'), 2000);
+    }
   }
 
   openContextMenu(event: MouseEvent, message: Message) {

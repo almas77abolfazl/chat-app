@@ -57,6 +57,18 @@ export class ChatController {
     return this.chatService.subscribeChannel(id, request.user._id.toString());
   }
 
+  @Post(':id/pin')
+  @UseGuards(JwtAuthGuard)
+  async pinMessage(@Param('id') id: string, @Body('messageId') messageId: string, @Req() request: RequestWithUser) {
+    return this.chatService.pinMessage(id, messageId, request.user._id.toString());
+  }
+
+  @Delete(':id/pin')
+  @UseGuards(JwtAuthGuard)
+  async unpinMessage(@Param('id') id: string, @Req() request: RequestWithUser) {
+    return this.chatService.unpinMessage(id, request.user._id.toString());
+  }
+
   @Post(':id/leave')
   @UseGuards(JwtAuthGuard)
   async leaveChat(@Param('id') id: string, @Req() request: RequestWithUser) {

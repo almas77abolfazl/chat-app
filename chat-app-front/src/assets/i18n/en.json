@@ -21,6 +21,9 @@
     "emoji": "Emoji",
     "scrollToBottom": "Scroll to latest message",
     "you": "You",
+    "pinnedMessage": "Pinned Message",
+    "unpin": "Unpin",
+    "pin": "Pin message",
     "menu": "Menu"
   },
   "contacts": {
@@ -53,6 +56,8 @@
     "save": "Save",
     "close": "Close",
     "copy": "Copy",
+    "pin": "Pin",
+    "unpin": "Unpin",
     "confirmDelete": "Are you sure you want to delete this message?",
     "edited": "Edited",
     "noMessages": "No messages"

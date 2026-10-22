@@ -56,3 +56,4 @@ chat-app-back/uploads/
 *.mp4
 *.mp3
 *.webm
+.kilo/

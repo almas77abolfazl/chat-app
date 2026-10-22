@@ -1,14 +1,16 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, Optional } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Message, MessageDocument } from './entities/message.entity';
 import { Chat, ChatDocument } from 'src/chat/entities/chat.entity';
+import { ReactionService } from './reaction/reaction.service';
 
 @Injectable()
 export class MessageService {
   constructor(
     @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
     @InjectModel(Chat.name) private chatModel: Model<ChatDocument>,
+    @Optional() private reactionService?: ReactionService,
   ) {}
 
   async findChatForMessage(chatId: string): Promise<ChatDocument> {
@@ -146,6 +148,16 @@ export class MessageService {
       this.messageModel.countDocuments({ chat: new Types.ObjectId(chatId) }).exec(),
     ]);
 
+    let reactionMap: Record<string, { emoji: string; count: number; users: string[] }[]> = {};
+    if (this.reactionService && messages.length > 0) {
+      try {
+        const messageIds = messages.map((m) => m._id.toString());
+        reactionMap = await this.reactionService.getReactionCountsForMessages(messageIds);
+      } catch {
+        reactionMap = {};
+      }
+    }
+
     await this.messageModel
       .updateMany({ chat: new Types.ObjectId(chatId), sender: { $ne: new Types.ObjectId(userId) }, read: false }, { $set: { read: true } })
       .exec();
@@ -155,14 +167,14 @@ export class MessageService {
       .exec();
 
     return {
-      messages: messages.map((m) => this.hydrateMessage(m)),
+      messages: messages.map((m) => this.hydrateMessage(m, reactionMap[m._id.toString()] ?? [])),
       totalMessages,
       currentPage: page,
       totalPages: Math.ceil(totalMessages / limit),
     };
   }
 
-  hydrateMessage(message: any): any {
+  hydrateMessage(message: any, reactions?: any[]): any {
     if (!message) return null;
     const sender = message.sender;
     const senderId = typeof sender === 'string' ? sender : sender?._id;
@@ -189,6 +201,7 @@ export class MessageService {
       fileUrl: message.fileUrl,
       fileName: message.fileName,
       fileSize: message.fileSize,
+      reactions: reactions ?? message.reactions ?? [],
     };
   }
 }
