@@ -372,9 +372,9 @@ describe('MessageService', () => {
       });
 
       messageModel.countDocuments
-        .mockResolvedValueOnce(5)  // photos
-        .mockResolvedValueOnce(2)  // videos
-        .mockResolvedValueOnce(3)  // files
+        .mockResolvedValueOnce(5) // photos
+        .mockResolvedValueOnce(2) // videos
+        .mockResolvedValueOnce(3) // files
         .mockResolvedValueOnce(1); // voice
 
       const summary = await messageService.getChatMediaSummary(chatId, senderIdValue);

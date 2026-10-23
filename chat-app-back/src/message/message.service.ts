@@ -23,7 +23,7 @@ export class MessageService {
     chatId: string,
     senderId: string,
     content: string,
-    media?: { mediaType: string; fileUrl: string; fileName: string; fileSize: number },
+    media?: { mediaType: string; fileUrl: string; fileName?: string; fileSize?: number },
   ): Promise<any> {
     const chat = await this.findChatForMessage(chatId);
     const senderObjectId = new Types.ObjectId(senderId);

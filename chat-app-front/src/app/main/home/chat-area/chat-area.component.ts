@@ -8,6 +8,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 import { ProfileComponent } from '../../profile/profile.component';
+import { ContentPickerComponent } from './content-picker/content-picker.component';
 import { Message } from '../../../models/message.model';
 import { ChatListItem } from '../../../models/chat-list-item.model';
 import { ChatBackgroundService, ChatBackground, CHAT_BACKGROUNDS } from '../../chat-background/chat-background.service';
@@ -25,7 +26,7 @@ export interface ContextMenuAction {
 @Component({
   selector: 'app-chat-area',
   standalone: true,
-  imports: [FontAwesomeModule, NgClass, MatButtonModule, FormsModule, I18nPipe],
+  imports: [FontAwesomeModule, NgClass, MatButtonModule, FormsModule, I18nPipe, ContentPickerComponent],
   templateUrl: './chat-area.component.html',
   styleUrl: './chat-area.component.scss',
 })
@@ -46,7 +47,9 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   brokenAvatars = new Set<string>();
   showBgSelector = false;
   showChatActions = false;
-  showEmojiPicker = false;
+  showContentPicker = false;
+  get showEmojiPicker(): boolean { return this.showContentPicker; }
+  set showEmojiPicker(v: boolean) { this.showContentPicker = v; }
   showContextMenu = false;
   contextMenuX = 0;
   contextMenuY = 0;
@@ -83,7 +86,16 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
 
   @HostListener('document:click')
   onDocumentClick() {
-    this.showContextMenu = false;
+    this.closeContextMenu();
+    this.showChatActions = false;
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey() {
+    this.closeContextMenu();
+    this.showContentPicker = false;
+    this.showBgSelector = false;
+    this.showChatActions = false;
   }
 
   scrollToBottom() {
@@ -332,9 +344,31 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     event.preventDefault();
     event.stopPropagation();
     this.contextMenuTarget = message;
-    this.contextMenuX = event.clientX;
-    this.contextMenuY = event.clientY;
+    const menuWidth = 190;
+    const menuHeight = 280;
+    this.contextMenuX = Math.max(10, Math.min(event.clientX, window.innerWidth - menuWidth - 10));
+    this.contextMenuY = Math.max(10, Math.min(event.clientY, window.innerHeight - menuHeight - 10));
     this.showContextMenu = true;
+    this.showContentPicker = false;
+  }
+
+  onChatAreaContextMenu(event: MouseEvent) {
+    event.preventDefault();
+    this.closeContextMenu();
+  }
+
+  isMessagePinned(message: Message): boolean {
+    if (!message) return false;
+    const pinned = this.mainService.currentChat?.pinnedMessage;
+    if (!pinned) return false;
+    const pinnedId = typeof pinned === 'string' ? pinned : (pinned as any)._id;
+    return pinnedId === message._id;
+  }
+
+  addContextMenuReaction(emoji: string) {
+    if (!this.contextMenuTarget) return;
+    this.toggleReaction(this.contextMenuTarget, emoji);
+    this.closeContextMenu();
   }
 
   closeContextMenu() {
@@ -347,6 +381,15 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     switch (action) {
       case 'edit':
         this.startEdit(this.contextMenuTarget!);
+        break;
+      case 'pin':
+        if (this.isMessagePinned(this.contextMenuTarget!)) {
+          this.unpinMessage();
+          this.mainService.snackbar.info(this.translationService.t('actions.unpin'), 2000);
+        } else {
+          this.pinMessage(this.contextMenuTarget!);
+          this.mainService.snackbar.success(this.translationService.t('actions.pin'), 2000);
+        }
         break;
       case 'delete':
         this.deleteMessage(this.contextMenuTarget!);
@@ -478,8 +521,17 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  toggleContentPicker() {
+    this.showContentPicker = !this.showContentPicker;
+    if (this.showContentPicker) {
+      this.closeContextMenu();
+      this.showBgSelector = false;
+      this.showChatActions = false;
+    }
+  }
+
   toggleEmojiPicker() {
-    this.showEmojiPicker = !this.showEmojiPicker;
+    this.toggleContentPicker();
   }
 
   insertEmoji(emoji: string) {
@@ -491,9 +543,43 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
       const newPos = start + emoji.length;
       textarea.selectionStart = newPos;
       textarea.selectionEnd = newPos;
+      textarea.focus();
       this.onTyping();
     }
-    this.showEmojiPicker = false;
+  }
+
+  onStickerSelected(sticker: { url: string; name: string }) {
+    if (!this.mainService.currentChat) return;
+    this.mainService.sendSticker(this.mainService.currentChat, sticker.url, sticker.name);
+    this.showContentPicker = false;
+  }
+
+  onGifSelected(gif: { url: string; caption?: string }) {
+    if (!this.mainService.currentChat) return;
+    this.mainService.sendGif(this.mainService.currentChat, gif.url, gif.caption || '');
+    this.showContentPicker = false;
+  }
+
+  onGifFileSelected(file: File) {
+    const chatId = this.mainService.currentChat?._id;
+    if (!chatId) return;
+    this.mainService.sendMedia(chatId, file, file.name).pipe(take(1)).subscribe({
+      next: (res) => {
+        if (res && this.mainService.currentChat) {
+          this.mainService.currentChat.messages = this.mainService.currentChat.messages || [];
+          if (!this.mainService.currentChat.messages.some((m) => m._id === res._id)) {
+            this.mainService.currentChat.messages.push(res);
+            this.mainService.currentChat.lastMessage = res;
+            this.mainService.refreshItem(this.mainService.currentChat);
+            this.scrollToBottom();
+          }
+        }
+      },
+      error: () => {
+        this.mainService.snackbar.error('خطا در ارسال گیف', 3000);
+      },
+    });
+    this.showContentPicker = false;
   }
 
   emojiCategories: { name: string; emojis: string[] }[] = [

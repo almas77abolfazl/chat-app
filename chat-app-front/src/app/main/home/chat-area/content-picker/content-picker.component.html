@@ -1,0 +1,191 @@
+<div class="content-picker-container" (click)="$event.stopPropagation()">
+  <!-- Header with Segmented Tabs -->
+  <div class="picker-header">
+    <div class="picker-tabs">
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab === 'emoji'"
+        (click)="setTab('emoji')"
+      >
+        <span class="tab-icon">😀</span>
+        <span class="tab-label">{{ 'chat.emoji' | i18n }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab === 'stickers'"
+        (click)="setTab('stickers')"
+      >
+        <span class="tab-icon">🧸</span>
+        <span class="tab-label">{{ 'chat.stickers' | i18n }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="tab-btn"
+        [class.active]="activeTab === 'gifs'"
+        (click)="setTab('gifs')"
+      >
+        <span class="tab-icon">🎬</span>
+        <span class="tab-label">{{ 'chat.gifs' | i18n }}</span>
+      </button>
+    </div>
+
+    <button type="button" class="close-picker-btn" (click)="close.emit()" [attr.aria-label]="'actions.close' | i18n">
+      <fa-icon [icon]="['fas', 'times']"></fa-icon>
+    </button>
+  </div>
+
+  <!-- Search Bar -->
+  <div class="picker-search-bar">
+    <fa-icon [icon]="['fas', 'search']" class="search-icon"></fa-icon>
+    <input
+      type="text"
+      class="search-input"
+      [(ngModel)]="searchQuery"
+      [placeholder]="(activeTab === 'emoji' ? 'chat.searchEmoji' : activeTab === 'stickers' ? 'chat.searchStickers' : 'chat.searchGifs') | i18n"
+    />
+    @if (searchQuery) {
+    <button type="button" class="clear-search-btn" (click)="searchQuery = ''">
+      <fa-icon [icon]="['fas', 'times']"></fa-icon>
+    </button>
+    }
+  </div>
+
+  <!-- Category / Pack Pill Bar -->
+  @if (!searchQuery) {
+  <div class="sub-categories-bar">
+    @if (activeTab === 'emoji') {
+      <button
+        type="button"
+        class="pill-btn"
+        [class.active]="selectedEmojiCategory === 'all'"
+        (click)="selectedEmojiCategory = 'all'"
+      >
+        🌟 همه
+      </button>
+      @for (cat of emojiCategories; track cat.id) {
+      <button
+        type="button"
+        class="pill-btn"
+        [class.active]="selectedEmojiCategory === cat.id"
+        (click)="selectedEmojiCategory = cat.id"
+      >
+        {{ cat.name }}
+      </button>
+      }
+    }
+
+    @if (activeTab === 'stickers') {
+      @for (pack of stickerPacks; track pack.id) {
+      <button
+        type="button"
+        class="pill-btn"
+        [class.active]="selectedStickerPack === pack.id"
+        (click)="selectedStickerPack = pack.id"
+      >
+        <span>{{ pack.icon }}</span>
+        <span>{{ pack.name }}</span>
+      </button>
+      }
+    }
+
+    @if (activeTab === 'gifs') {
+      <label class="pill-btn upload-gif-pill" [attr.title]="'chat.uploadGif' | i18n">
+        <input type="file" accept="image/gif" (change)="onCustomGifUpload($event)" style="display: none" />
+        <fa-icon [icon]="['fas', 'camera']"></fa-icon>
+        <span>{{ 'chat.uploadGif' | i18n }}</span>
+      </label>
+      @for (cat of gifCategories; track cat.id) {
+      <button
+        type="button"
+        class="pill-btn"
+        [class.active]="selectedGifCategory === cat.id"
+        (click)="selectedGifCategory = cat.id"
+      >
+        {{ cat.name }}
+      </button>
+      }
+    }
+  </div>
+  }
+
+  <!-- Scrollable Content Body -->
+  <div class="picker-body">
+    <!-- EMOJI TAB -->
+    @if (activeTab === 'emoji') {
+      @if (filteredEmojiCategories.length === 0) {
+      <div class="empty-state">
+        <fa-icon [icon]="['fas', 'smile']" class="empty-icon"></fa-icon>
+        <p>{{ 'chat.noEmojiFound' | i18n }}</p>
+      </div>
+      } @else {
+        @for (category of filteredEmojiCategories; track category.id) {
+        <div class="emoji-group">
+          <div class="group-title">{{ category.name }}</div>
+          <div class="emoji-grid">
+            @for (emoji of category.emojis; track emoji) {
+            <button
+              type="button"
+              class="emoji-btn"
+              (click)="selectEmoji(emoji, $event)"
+              [attr.title]="emoji"
+            >
+              {{ emoji }}
+            </button>
+            }
+          </div>
+        </div>
+        }
+      }
+    }
+
+    <!-- STICKERS TAB -->
+    @if (activeTab === 'stickers') {
+      @if (filteredStickers.length === 0) {
+      <div class="empty-state">
+        <fa-icon [icon]="['fas', 'tag']" class="empty-icon"></fa-icon>
+        <p>{{ 'chat.noStickersFound' | i18n }}</p>
+      </div>
+      } @else {
+      <div class="stickers-grid">
+        @for (sticker of filteredStickers; track sticker.id) {
+        <button
+          type="button"
+          class="sticker-btn"
+          (click)="selectSticker(sticker, $event)"
+          [attr.title]="sticker.name"
+        >
+          <img [src]="sticker.url" [alt]="sticker.name" class="sticker-img" loading="lazy" />
+          <span class="sticker-label">{{ sticker.name }}</span>
+        </button>
+        }
+      </div>
+      }
+    }
+
+    <!-- GIFS TAB -->
+    @if (activeTab === 'gifs') {
+      @if (filteredGifs.length === 0) {
+      <div class="empty-state">
+        <fa-icon [icon]="['fas', 'video']" class="empty-icon"></fa-icon>
+        <p>{{ 'chat.noGifsFound' | i18n }}</p>
+      </div>
+      } @else {
+      <div class="gifs-grid">
+        @for (gif of filteredGifs; track gif.id) {
+        <div class="gif-card" (click)="selectGif(gif, $event)" [attr.title]="gif.title">
+          <img [src]="gif.url" [alt]="gif.title" class="gif-img" loading="lazy" />
+          <div class="gif-overlay">
+            <span class="gif-badge">GIF</span>
+            <span class="gif-title">{{ gif.title }}</span>
+          </div>
+        </div>
+        }
+      </div>
+      }
+    }
+  </div>
+</div>
