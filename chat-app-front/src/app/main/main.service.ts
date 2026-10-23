@@ -180,7 +180,7 @@ export class MainService {
     return item;
   }
 
-  private refreshItem(item: ChatListItem) {
+  refreshItem(item: ChatListItem) {
     const existing = this.findChatById(item._id as string);
     if (existing) {
       Object.assign(existing, item);
@@ -851,6 +851,76 @@ const messageData: Message = {
     currentChat.messages.push(messageData);
     currentChat.lastMessage = messageData;
     input.value = '';
+    this.refreshItem(currentChat);
+    this.scrollChatToBottom();
+  }
+
+  sendSticker(currentChat: ChatListItem, stickerUrl: string, stickerName: string = 'Sticker') {
+    if (!currentChat) return;
+    const chatId = currentChat._id as string;
+    const media = {
+      mediaType: 'sticker',
+      fileUrl: stickerUrl,
+      fileName: stickerName,
+      fileSize: 0,
+    };
+    const messageData: Message = {
+      _id: null,
+      _pending: true,
+      status: 'sent',
+      senderId: this.authService.getUserId(),
+      sender: {
+        _id: this.authService.getUserId(),
+        firstName: this.authService.getFirstName(),
+        lastName: this.authService.getLastName(),
+      },
+      receiver: currentChat.peerId,
+      content: '',
+      avatar: this.pictureSrc,
+      mediaType: 'sticker',
+      fileUrl: stickerUrl,
+      fileName: stickerName,
+      createdAt: new Date(),
+    };
+    this.socketService.sendMessage({ chatId, content: '', media });
+    currentChat.messages = currentChat.messages || [];
+    currentChat.messages.push(messageData);
+    currentChat.lastMessage = messageData;
+    this.refreshItem(currentChat);
+    this.scrollChatToBottom();
+  }
+
+  sendGif(currentChat: ChatListItem, gifUrl: string, caption: string = '') {
+    if (!currentChat) return;
+    const chatId = currentChat._id as string;
+    const media = {
+      mediaType: 'gif',
+      fileUrl: gifUrl,
+      fileName: 'animation.gif',
+      fileSize: 0,
+    };
+    const messageData: Message = {
+      _id: null,
+      _pending: true,
+      status: 'sent',
+      senderId: this.authService.getUserId(),
+      sender: {
+        _id: this.authService.getUserId(),
+        firstName: this.authService.getFirstName(),
+        lastName: this.authService.getLastName(),
+      },
+      receiver: currentChat.peerId,
+      content: caption,
+      avatar: this.pictureSrc,
+      mediaType: 'gif',
+      fileUrl: gifUrl,
+      fileName: 'animation.gif',
+      createdAt: new Date(),
+    };
+    this.socketService.sendMessage({ chatId, content: caption, media });
+    currentChat.messages = currentChat.messages || [];
+    currentChat.messages.push(messageData);
+    currentChat.lastMessage = messageData;
     this.refreshItem(currentChat);
     this.scrollChatToBottom();
   }

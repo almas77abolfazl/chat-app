@@ -24,7 +24,17 @@
     "pinnedMessage": "پیام سنجاق شده",
     "unpin": "برداشتن سنجاق",
     "pin": "سنجاق پیام",
-    "menu": "منو"
+    "menu": "منو",
+    "stickers": "استیکرها",
+    "gifs": "گیف‌ها",
+    "searchEmoji": "جستجوی ایموجی...",
+    "searchStickers": "جستجوی استیکر...",
+    "searchGifs": "جستجوی گیف...",
+    "uploadGif": "بارگذاری گیف",
+    "trendingGifs": "گیف‌های پرطرفدار",
+    "noStickersFound": "استیکری یافت نشد",
+    "noGifsFound": "گیفی یافت نشد",
+    "noEmojiFound": "ایموجی یافت نشد"
   },
   "contacts": {
     "title": "مخاطبان",

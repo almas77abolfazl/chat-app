@@ -24,7 +24,17 @@
     "pinnedMessage": "Pinned Message",
     "unpin": "Unpin",
     "pin": "Pin message",
-    "menu": "Menu"
+    "menu": "Menu",
+    "stickers": "Stickers",
+    "gifs": "GIFs",
+    "searchEmoji": "Search emoji...",
+    "searchStickers": "Search stickers...",
+    "searchGifs": "Search GIFs...",
+    "uploadGif": "Upload GIF",
+    "trendingGifs": "Trending GIFs",
+    "noStickersFound": "No stickers found",
+    "noGifsFound": "No GIFs found",
+    "noEmojiFound": "No emoji found"
   },
   "contacts": {
     "title": "Contacts",

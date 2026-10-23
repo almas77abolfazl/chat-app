@@ -76,13 +76,14 @@ export class MessageGateway {
       const sender = client.data.user as IUser;
       const senderId = sender._id.toString();
       let chatId = messageData?.chatId as string | undefined;
-      const content: string = messageData?.content;
+      const content: string = typeof messageData?.content === 'string' ? messageData.content : '';
+      const media = messageData?.media as { mediaType: string; fileUrl: string; fileName?: string; fileSize?: number } | undefined;
 
-      if ((typeof content !== 'string' || !content.trim()) && !messageData?.receiver) {
-        client.emit('messageError', { message: 'content is required' });
+      if (!content.trim() && !media && !messageData?.receiver) {
+        client.emit('messageError', { message: 'content or media is required' });
         return;
       }
-      if (typeof content === 'string' && content.length > MAX_MESSAGE_LENGTH) {
+      if (content.length > MAX_MESSAGE_LENGTH) {
         client.emit('messageError', {
           message: `content must be at most ${MAX_MESSAGE_LENGTH} characters`,
         });
@@ -99,7 +100,7 @@ export class MessageGateway {
         return;
       }
 
-      const msg = await this.messageService.saveMessageToChat(chatId, senderId, content.trim());
+      const msg = await this.messageService.saveMessageToChat(chatId, senderId, content.trim(), media);
       const participantIds = await this.chatService.getParticipantIds(chatId);
       for (const pid of participantIds) {
         if (pid === senderId) {

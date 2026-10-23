@@ -1,4 +1,4 @@
-<div class="chat-area-container">
+<div class="chat-area-container" (contextmenu)="onChatAreaContextMenu($event)">
   @if (mainService.currentChat) {
 
   <div class="chat-header">
@@ -134,7 +134,7 @@
   </div>
   }
 
-  <div #chatMessages class="chat-messages" (scroll)="onScroll($event)">
+  <div #chatMessages class="chat-messages" (scroll)="onScroll($event)" (contextmenu)="onChatAreaContextMenu($event)">
     <div class="messages-spacer"></div>
 
     @if (mainService.currentPage > 1 && mainService.totalPages > 1 && !mainService.loadingMessages) {
@@ -325,7 +325,7 @@
     }
     <div class="input-row">
       <div class="input-actions">
-        <button class="emoji-picker-toggle" (click)="toggleEmojiPicker(); $event.stopPropagation()" type="button" [attr.title]="'chat.emoji' | i18n">
+        <button class="emoji-picker-toggle" [class.active]="showContentPicker" (click)="toggleContentPicker(); $event.stopPropagation()" type="button" [attr.title]="'chat.emoji' | i18n">
           <fa-icon [icon]="['fas', 'smile']" class="emoji-icon"></fa-icon>
         </button>
         <label class="attach-label" [attr.title]="'chat.attach' | i18n">
@@ -351,19 +351,14 @@
       </div>
     </div>
    </div>
-   @if (showEmojiPicker) {
-   <div class="emoji-picker">
-     @for (category of emojiCategories; track category.name) {
-     <div class="emoji-category">
-       <div class="emoji-category-name">{{ category.name }}</div>
-       <div class="emoji-grid">
-         @for (emoji of category.emojis; track emoji) {
-         <button class="emoji-item" (click)="insertEmoji(emoji); $event.stopPropagation()" type="button">{{ emoji }}</button>
-         }
-       </div>
-     </div>
-     }
-   </div>
+   @if (showContentPicker) {
+   <app-content-picker
+     (emojiSelect)="insertEmoji($event)"
+     (stickerSelect)="onStickerSelected($event)"
+     (gifSelect)="onGifSelected($event)"
+     (gifFileSelect)="onGifFileSelected($event)"
+     (close)="showContentPicker = false"
+   ></app-content-picker>
    }
   } @else {
   <div class="empty-chat hero">
@@ -377,30 +372,49 @@
 
   @if (showContextMenu && contextMenuTarget) {
   <div class="context-menu" [style.left.px]="contextMenuX" [style.top.px]="contextMenuY" (click)="$event.stopPropagation()">
-    <button class="context-menu-item" (click)="onContextMenuAction('reply')">
+    @if (!contextMenuTarget.isDeleted) {
+    <div class="context-reactions-bar">
+      <button type="button" class="context-reaction-btn" (click)="addContextMenuReaction('❤️'); $event.stopPropagation()">❤️</button>
+      <button type="button" class="context-reaction-btn" (click)="addContextMenuReaction('👍'); $event.stopPropagation()">👍</button>
+      <button type="button" class="context-reaction-btn" (click)="addContextMenuReaction('😂'); $event.stopPropagation()">😂</button>
+      <button type="button" class="context-reaction-btn" (click)="addContextMenuReaction('🔥'); $event.stopPropagation()">🔥</button>
+      <button type="button" class="context-reaction-btn" (click)="addContextMenuReaction('🎉'); $event.stopPropagation()">🎉</button>
+      <button type="button" class="context-reaction-btn" (click)="addContextMenuReaction('👏'); $event.stopPropagation()">👏</button>
+    </div>
+    <div class="context-menu-divider"></div>
+    }
+
+    <button type="button" class="context-menu-item" (click)="onContextMenuAction('reply')">
       <fa-icon [icon]="['fas', 'reply']"></fa-icon>
       <span>{{ 'actions.reply' | i18n }}</span>
     </button>
+
     @if (!contextMenuTarget.isDeleted) {
-    <button class="context-menu-item" (click)="onContextMenuAction('pin')">
+    <button type="button" class="context-menu-item" (click)="onContextMenuAction('pin')">
       <fa-icon [icon]="['fas', 'thumbtack']"></fa-icon>
-      <span>{{ 'actions.pin' | i18n }}</span>
+      <span>{{ (isMessagePinned(contextMenuTarget) ? 'actions.unpin' : 'actions.pin') | i18n }}</span>
     </button>
     }
-    @if (ownMessage(contextMenuTarget)) {
-    <button class="context-menu-item" (click)="onContextMenuAction('edit')">
+
+    @if (ownMessage(contextMenuTarget) && !contextMenuTarget.isDeleted && !contextMenuTarget.mediaType) {
+    <button type="button" class="context-menu-item" (click)="onContextMenuAction('edit')">
       <fa-icon [icon]="['fas', 'pen']"></fa-icon>
       <span>{{ 'actions.edit' | i18n }}</span>
     </button>
-    <button class="context-menu-item danger" (click)="onContextMenuAction('delete')">
+    }
+
+    <button type="button" class="context-menu-item" (click)="onContextMenuAction('copy')">
+      <fa-icon [icon]="['fas', 'copy']"></fa-icon>
+      <span>{{ 'actions.copy' | i18n }}</span>
+    </button>
+
+    @if (ownMessage(contextMenuTarget)) {
+    <div class="context-menu-divider"></div>
+    <button type="button" class="context-menu-item danger" (click)="onContextMenuAction('delete')">
       <fa-icon [icon]="['fas', 'trash']"></fa-icon>
       <span>{{ 'actions.delete' | i18n }}</span>
     </button>
     }
-    <button class="context-menu-item" (click)="onContextMenuAction('copy')">
-      <fa-icon [icon]="['fas', 'copy']"></fa-icon>
-      <span>{{ 'actions.copy' | i18n }}</span>
-    </button>
   </div>
   }
 </div>
