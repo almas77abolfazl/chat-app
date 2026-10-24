@@ -298,17 +298,26 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     const messageId = message._id;
     const currentEmoji = this.getUserReaction(message);
 
+    // Emit socket event for instant real-time sync with all chat participants
+    this.mainService.socketService.emit('messageReaction', { messageId, emoji });
+
     if (currentEmoji === emoji) {
       this.mainService.removeReaction(messageId).pipe(take(1)).subscribe({
-        next: () => {
+        next: (res: any) => {
           this.userReactions.delete(messageId);
+          if (Array.isArray(res)) {
+            message.reactions = res;
+          }
         },
         error: () => {},
       });
     } else {
       this.mainService.addReaction(messageId, emoji).pipe(take(1)).subscribe({
-        next: () => {
+        next: (res: any) => {
           this.userReactions.set(messageId, emoji);
+          if (Array.isArray(res)) {
+            message.reactions = res;
+          }
         },
         error: () => {
           this.mainService.snackbar.error('امکان ثبت واکنش وجود ندارد', 3000);
@@ -518,6 +527,27 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
           this.mainService.snackbar.error('خطا در خروج از گفتگو', 3000);
         },
       });
+    }
+  }
+
+  onChatInputKeyDown(event: KeyboardEvent, textarea: HTMLTextAreaElement) {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      const content = textarea.value.trim();
+      if (content && this.mainService.currentChat) {
+        this.mainService.sendMessage(this.mainService.currentChat, textarea);
+        textarea.value = '';
+        textarea.style.height = 'auto';
+      }
+    }
+  }
+
+  sendFromButton(textarea: HTMLTextAreaElement) {
+    const content = textarea.value.trim();
+    if (content && this.mainService.currentChat) {
+      this.mainService.sendMessage(this.mainService.currentChat, textarea);
+      textarea.value = '';
+      textarea.style.height = 'auto';
     }
   }
 

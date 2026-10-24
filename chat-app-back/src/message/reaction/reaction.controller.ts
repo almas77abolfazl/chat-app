@@ -10,13 +10,15 @@ export class ReactionController {
   @UseGuards(JwtAuthGuard)
   @Post(':messageId/reaction')
   async addReaction(@Param('messageId') messageId: string, @Body() body: { emoji: string }, @Req() request: RequestWithUser) {
-    return this.reactionService.addReaction(messageId, request.user._id.toString(), body.emoji);
+    await this.reactionService.addReaction(messageId, request.user._id.toString(), body.emoji);
+    return this.reactionService.getReactionCounts(messageId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':messageId/reaction')
   async removeReaction(@Param('messageId') messageId: string, @Req() request: RequestWithUser) {
-    return this.reactionService.removeReaction(messageId, request.user._id.toString());
+    await this.reactionService.removeReaction(messageId, request.user._id.toString());
+    return this.reactionService.getReactionCounts(messageId);
   }
 
   @UseGuards(JwtAuthGuard)

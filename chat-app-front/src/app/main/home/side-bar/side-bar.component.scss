@@ -1,52 +1,49 @@
+:host {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  background: transparent;
-  padding: 1rem 0.75rem;
-  gap: 0.25rem;
+  height: 100%;
+  width: 100%;
+  background: var(--color-surface);
+  padding: 1.25rem 0.75rem;
+  box-sizing: border-box;
 
   @media (max-width: 768px) {
     position: fixed;
-    inset: 0;
-    z-index: 100;
-    flex: 1 1 auto;
-    width: 75vw;
-    max-width: 320px;
+    inset-block: 0;
+    inset-inline-start: 0;
+    z-index: 200;
+    width: 280px;
     background: var(--color-surface-glass);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-inline-end: 1px solid color-mix(in srgb, var(--color-surface) 50%, transparent);
     box-shadow: var(--shadow-xl);
     transform: translateX(100%);
     transition: transform var(--transition);
     pointer-events: none;
-  }
 
-  @media (min-width: 769px) {
-    flex: 0 0 260px;
-    width: 260px;
-    background: var(--color-surface-glass);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-inline-start: 1px solid color-mix(in srgb, var(--color-surface) 50%, transparent);
-    box-shadow: var(--shadow-sm);
-  }
-
-  &.mobile-open {
-    pointer-events: auto;
-    transform: translateX(0);
-  }
-
-  .close-btn {
-    padding: 0.5rem 0.5rem 1rem;
-    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+    &.mobile-open {
+      pointer-events: auto;
+      transform: translateX(0);
+    }
   }
 
   .sidebar-header {
+    flex: 0 0 auto;
+    margin-bottom: 0.5rem;
+  }
+
+  .sidebar-menu {
+    flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-    height: 100%;
+    overflow-y: auto;
+    gap: 0.2rem;
   }
 
   .sidebar-brand {

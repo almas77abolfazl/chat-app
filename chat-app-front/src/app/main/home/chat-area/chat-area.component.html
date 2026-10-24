@@ -338,28 +338,29 @@
         class="chat-input"
         [placeholder]="'chat.typeMessage' | i18n"
         (input)="onTyping()"
-        (keydown.enter)="mainService.sendMessage(mainService.currentChat, element)"
+        (keydown)="onChatInputKeyDown($event, element)"
         rows="1"
       ></textarea>
       <div
         class="send-icon"
         [attr.title]="'chat.send' | i18n"
-        (click)="mainService.sendMessage(mainService.currentChat, element)"
+        (click)="sendFromButton(element)"
         [class.disabled]="!element?.value?.trim()"
       >
          <fa-icon [icon]="['fas', 'paper-plane']"></fa-icon>
       </div>
     </div>
+    @if (showContentPicker) {
+    <app-content-picker
+      (click)="$event.stopPropagation()"
+      (emojiSelect)="insertEmoji($event)"
+      (stickerSelect)="onStickerSelected($event)"
+      (gifSelect)="onGifSelected($event)"
+      (gifFileSelect)="onGifFileSelected($event)"
+      (close)="showContentPicker = false"
+    ></app-content-picker>
+    }
    </div>
-   @if (showContentPicker) {
-   <app-content-picker
-     (emojiSelect)="insertEmoji($event)"
-     (stickerSelect)="onStickerSelected($event)"
-     (gifSelect)="onGifSelected($event)"
-     (gifFileSelect)="onGifFileSelected($event)"
-     (close)="showContentPicker = false"
-   ></app-content-picker>
-   }
   } @else {
   <div class="empty-chat hero">
     <div class="hero-illustration">

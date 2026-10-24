@@ -1,7 +1,9 @@
-<div class="sidebar-container" [class.mobile-open]="mobileOpen">
+<div class="sidebar" [class.mobile-open]="mobileOpen">
   <div class="sidebar-header">
-    <div class="brand">
-      <fa-icon [icon]="['fas', 'paper-plane']" class="brand-icon"></fa-icon>
+    <div class="sidebar-brand">
+      <div class="brand-icon">
+        <fa-icon [icon]="['fas', 'paper-plane']"></fa-icon>
+      </div>
       <span class="brand-text">{{ 'brand.name' | i18n }}</span>
     </div>
   </div>

@@ -50,7 +50,7 @@ export class MainService {
     public authService: AuthService,
     public httpRequestService: HttpRequestService,
     private dialog: MatDialog,
-    private socketService: SocketService,
+    public socketService: SocketService,
     private cacheService: CacheService,
     public snackbar: SnackbarService,
     private zone: NgZone
