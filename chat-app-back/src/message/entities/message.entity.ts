@@ -49,7 +49,7 @@ export class Message {
   @Prop({ default: false })
   isDeleted: boolean;
 
-  @Prop({ enum: ['image', 'video', 'file', 'voice', 'sticker', 'gif', 'emoji'], default: null })
+  @Prop({ enum: ['image', 'video', 'file', 'voice', 'sticker', 'gif', 'emoji', 'system'], default: null })
   mediaType: string;
 
   @Prop()

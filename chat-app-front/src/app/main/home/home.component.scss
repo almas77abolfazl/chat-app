@@ -5,7 +5,7 @@
 
 .home-container {
   display: flex;
-  flex-direction: row-reverse;
+  flex-direction: row;
   height: 100%;
   overflow: hidden;
   position: relative;
@@ -35,18 +35,18 @@
   }
 
   app-side-bar {
-    flex: 0 0 260px;
+    flex: 0 0 250px;
     height: 100%;
     background: var(--color-surface-glass);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-inline-start: 1px solid color-mix(in srgb, var(--color-surface) 50%, transparent);
+    border-inline-end: 1px solid var(--color-border);
     box-shadow: var(--shadow-sm);
     transition: flex-basis var(--transition), flex-grow var(--transition);
   }
 
   app-chat-list {
-    flex: 0 0 380px;
+    flex: 0 0 360px;
     height: 100%;
     background: var(--color-surface-container);
     border-inline-end: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
@@ -59,33 +59,6 @@
     min-width: 0;
     height: 100%;
     background: var(--color-surface-container-high);
-  }
-
-  .theme-toggle-btn {
-    position: fixed;
-    inset-block-start: env(safe-area-inset-top, 1rem);
-    inset-inline-end: env(safe-area-inset-right, 1rem);
-    z-index: 105;
-    width: 2.75rem;
-    height: 2.75rem;
-    border-radius: var(--radius-full);
-    background: var(--color-surface-solid);
-    border: 1px solid var(--color-border);
-    color: var(--color-text-secondary);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: var(--shadow-md);
-    font-size: 0.95rem;
-    transition: background var(--transition), color var(--transition), transform var(--transition-fast), box-shadow var(--transition-fast);
-
-    &:hover {
-      background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-      color: var(--color-primary-dark);
-      transform: scale(1.06);
-      box-shadow: var(--shadow-lg);
-    }
   }
 
   @media (max-width: 768px) {

@@ -10,16 +10,6 @@
     <fa-icon [icon]="['fas', 'bars']"></fa-icon>
   </button>
 
-  <button
-    class="theme-toggle-btn"
-    *ngIf="!isMobile"
-    (click)="themeService.toggleTheme()"
-    [attr.aria-label]="themeService.theme === 'dark' ? ('theme.lightMode' | i18n) : ('theme.darkMode' | i18n)"
-    [attr.title]="'theme.toggle' | i18n"
-  >
-    <fa-icon [icon]="['fas', themeService.theme === 'dark' ? 'sun' : 'moon']"></fa-icon>
-  </button>
-
   <div class="mobile-overlay" *ngIf="mobileMenuOpen && isMobile" (click)="closeMobileMenu()"></div>
 
   <app-chat-list class="chat-list" (selectChat)="closeMobileMenu()"></app-chat-list>

@@ -18,7 +18,7 @@ export interface Message {
   editedAt?: Date;
   deletedAt?: Date;
   isDeleted?: boolean;
-  mediaType?: 'image' | 'video' | 'file' | 'voice' | 'sticker' | 'gif' | 'emoji';
+  mediaType?: 'image' | 'video' | 'file' | 'voice' | 'sticker' | 'gif' | 'emoji' | 'system';
   fileUrl?: string;
   fileName?: string;
   fileSize?: number;

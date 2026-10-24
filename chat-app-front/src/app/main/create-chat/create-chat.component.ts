@@ -1,9 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatInputModule } from '@angular/material/input';
+import { MatDialogRef } from '@angular/material/dialog';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MainService } from '../main.service';
 import { take } from 'rxjs';
@@ -13,63 +11,160 @@ type Mode = 'direct' | 'group' | 'channel';
 @Component({
   selector: 'app-create-chat',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, MatInputModule, MatDialogModule, FontAwesomeModule],
+  imports: [CommonModule, FormsModule, FontAwesomeModule],
   template: `
-    <h2 class="dialog-title" mat-dialog-title>ایجاد گفتگو</h2>
-    <mat-dialog-content class="create-chat-content">
-      <div class="mode-bar">
-        <button mat-stroked-button [color]="mode === 'direct' ? 'primary' : undefined" (click)="mode = 'direct'">
-          <fa-icon [icon]="['fas', 'user']"></fa-icon>
-          <span>چت خصوصی</span>
-        </button>
-        <button mat-stroked-button [color]="mode === 'group' ? 'primary' : undefined" (click)="mode = 'group'">
-          <fa-icon [icon]="['fas', 'users']"></fa-icon>
-          <span>گروه</span>
-        </button>
-        <button mat-stroked-button [color]="mode === 'channel' ? 'primary' : undefined" (click)="mode = 'channel'">
-          <fa-icon [icon]="['fas', 'broadcast-tower']"></fa-icon>
-          <span>کانال</span>
+    <div class="create-chat-dialog">
+      <div class="dialog-header">
+        <h2 class="dialog-title">گفتگوی جدید</h2>
+        <button class="dialog-close-btn" (click)="cancel()">
+          <fa-icon [icon]="['fas', 'times']"></fa-icon>
         </button>
       </div>
 
-      <mat-form-field class="name-field" appearance="outline">
-        <mat-label>نام {{ modeLabel }}</mat-label>
-        <input matInput placeholder="نام را وارد کنید" [(ngModel)]="name" />
-      </mat-form-field>
-
-      <div *ngIf="mode === 'group'" class="search-members">
-        <input matInput placeholder="جستجوی افراد برای افزودن..." [(ngModel)]="searchQuery" (ngModelChange)="onSearch($event)" />
-        <div class="members">
-          <div class="member" *ngFor="let m of members">
-            <span>{{ m.firstName }} {{ m.lastName }}</span>
-            <fa-icon [icon]="['fas', 'xmark']" (click)="remove(m)"></fa-icon>
-          </div>
-          <div class="result" *ngFor="let r of results" (click)="add(r)">
-            <span>{{ r.firstName }} {{ r.lastName }}</span>
-          </div>
-          <div *ngIf="results.length === 0 && searchQuery" class="empty">یافت نشد</div>
+      <div class="create-chat-content">
+        <div class="mode-pills">
+          <button type="button" class="mode-pill" [class.active]="mode === 'direct'" (click)="setMode('direct')">
+            <fa-icon [icon]="['fas', 'user']"></fa-icon>
+            <span>چت خصوصی</span>
+          </button>
+          <button type="button" class="mode-pill" [class.active]="mode === 'group'" (click)="setMode('group')">
+            <fa-icon [icon]="['fas', 'users']"></fa-icon>
+            <span>گروه جدید</span>
+          </button>
+          <button type="button" class="mode-pill" [class.active]="mode === 'channel'" (click)="setMode('channel')">
+            <fa-icon [icon]="['fas', 'broadcast-tower']"></fa-icon>
+            <span>کانال جدید</span>
+          </button>
         </div>
+
+        @if (mode === 'direct') {
+          <div class="form-group">
+            <label class="form-label">جستجوی مخاطب یا کاربر</label>
+            <div class="search-wrapper">
+              <input
+                class="custom-input with-icon"
+                placeholder="نام یا نام کاربری را جستجو کنید..."
+                [(ngModel)]="searchQuery"
+                (ngModelChange)="onSearch($event)"
+                autofocus
+              />
+              <fa-icon [icon]="['fas', 'search']" class="search-icon"></fa-icon>
+            </div>
+          </div>
+
+          <div class="users-list">
+            @for (r of results; track r._id) {
+              <div class="user-row" (click)="startDirectWith(r)">
+                <div class="user-avatar">
+                  @if (r.profilePicture) {
+                    <img [src]="r.profilePicture" [alt]="r.firstName" />
+                  } @else {
+                    <span>{{ (r.firstName?.[0] || 'U').toUpperCase() }}</span>
+                  }
+                </div>
+                <div class="user-info">
+                  <span class="user-name">{{ r.firstName }} {{ r.lastName || '' }}</span>
+                  @if (r.username) {
+                    <span class="user-username">@{{ r.username }}</span>
+                  }
+                </div>
+                <fa-icon [icon]="['fas', 'comment-dots']" class="action-icon"></fa-icon>
+              </div>
+            }
+            @if (results.length === 0 && searchQuery) {
+              <div class="empty-results">کاربری با این مشخصات یافت نشد</div>
+            } @else if (results.length === 0 && !searchQuery) {
+              <div class="empty-results">برای شروع گفتگو، نام یا نام کاربری فرد را تایپ کنید</div>
+            }
+          </div>
+        }
+
+        @if (mode === 'group') {
+          <div class="form-group">
+            <label class="form-label">نام گروه</label>
+            <input class="custom-input" placeholder="نام گروه را وارد کنید..." [(ngModel)]="name" />
+          </div>
+
+          @if (members.length > 0) {
+            <div class="selected-chips">
+              @for (m of members; track m._id) {
+                <div class="chip">
+                  <span>{{ m.firstName }} {{ m.lastName || '' }}</span>
+                  <fa-icon [icon]="['fas', 'times']" class="chip-remove" (click)="remove(m)"></fa-icon>
+                </div>
+              }
+            </div>
+          }
+
+          <div class="form-group">
+            <label class="form-label">افزودن اعضا</label>
+            <div class="search-wrapper">
+              <input
+                class="custom-input with-icon"
+                placeholder="جستجوی افراد برای افزودن به گروه..."
+                [(ngModel)]="searchQuery"
+                (ngModelChange)="onSearch($event)"
+              />
+              <fa-icon [icon]="['fas', 'search']" class="search-icon"></fa-icon>
+            </div>
+          </div>
+
+          <div class="users-list">
+            @for (r of results; track r._id) {
+              <div class="user-row" (click)="add(r)">
+                <div class="user-avatar">
+                  @if (r.profilePicture) {
+                    <img [src]="r.profilePicture" [alt]="r.firstName" />
+                  } @else {
+                    <span>{{ (r.firstName?.[0] || 'U').toUpperCase() }}</span>
+                  }
+                </div>
+                <div class="user-info">
+                  <span class="user-name">{{ r.firstName }} {{ r.lastName || '' }}</span>
+                  @if (r.username) {
+                    <span class="user-username">@{{ r.username }}</span>
+                  }
+                </div>
+                <fa-icon [icon]="['fas', 'plus']" class="action-icon"></fa-icon>
+              </div>
+            }
+          </div>
+        }
+
+        @if (mode === 'channel') {
+          <div class="form-group">
+            <label class="form-label">نام کانال</label>
+            <input class="custom-input" placeholder="نام کانال را وارد کنید..." [(ngModel)]="name" />
+          </div>
+        }
       </div>
-    </mat-dialog-content>
-    <mat-dialog-actions align="end">
-      <button mat-button (click)="cancel()">لغو</button>
-      <button mat-flat-button color="primary" [disabled]="!canCreate()" (click)="create()">ساخت</button>
-    </mat-dialog-actions>
+
+      @if (mode !== 'direct') {
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" (click)="cancel()">لغو</button>
+          <button type="button" class="btn btn-primary" [disabled]="!canCreate()" (click)="create()">
+            {{ mode === 'group' ? 'ساخت گروه' : 'ساخت کانال' }}
+          </button>
+        </div>
+      }
+    </div>
   `,
   styleUrl: './create-chat.component.scss',
 })
 export class CreateChatComponent {
-  mode: Mode = 'group';
+  mode: Mode = 'direct';
   name = '';
   searchQuery = '';
   results: any[] = [];
   members: any[] = [];
 
-  get modeLabel(): string {
-    return this.mode === 'direct' ? 'شخص' : this.mode === 'group' ? 'گروه' : 'کانال';
-  }
-
   constructor(private dialogRef: MatDialogRef<CreateChatComponent>, private mainService: MainService) {}
+
+  setMode(m: Mode) {
+    this.mode = m;
+    this.searchQuery = '';
+    this.results = [];
+  }
 
   onSearch(query: string) {
     if (!query.trim()) {
@@ -81,7 +176,8 @@ export class CreateChatComponent {
       .pipe(take(1))
       .subscribe({
         next: (res: any[]) => {
-          this.results = (res || []).filter((r) => r.username !== this.mainService.authService.getUserId());
+          const myId = this.mainService.authService.getUserId();
+          this.results = (res || []).filter((r) => r._id !== myId);
         },
         error: () => (this.results = []),
       });
@@ -89,12 +185,22 @@ export class CreateChatComponent {
 
   add(m: any) {
     if (!this.members.some((x) => x._id === m._id)) this.members.push(m);
-    this.results = [];
+    this.results = this.results.filter((x) => x._id !== m._id);
     this.searchQuery = '';
   }
 
   remove(m: any) {
     this.members = this.members.filter((x) => x._id !== m._id);
+  }
+
+  async startDirectWith(user: any) {
+    try {
+      const item = await this.mainService.startDirectChat(user);
+      this.mainService.openChat(item);
+      this.close();
+    } catch {
+      this.mainService.snackbar.error('خطا در شروع گفتگو', 3000);
+    }
   }
 
   canCreate(): boolean {
@@ -104,12 +210,20 @@ export class CreateChatComponent {
   }
 
   async create() {
-    if (this.mode === 'group') {
-      await this.mainService.createGroup(this.name, this.members.map((m) => m._id));
-    } else if (this.mode === 'channel') {
-      await this.mainService.createChannel(this.name);
+    try {
+      let item: any;
+      if (this.mode === 'group') {
+        item = await this.mainService.createGroup(this.name.trim(), this.members.map((m) => m._id));
+      } else if (this.mode === 'channel') {
+        item = await this.mainService.createChannel(this.name.trim());
+      }
+      if (item) {
+        this.mainService.openChat(item);
+      }
+      this.close();
+    } catch {
+      this.mainService.snackbar.error('خطا در ایجاد گفتگو', 3000);
     }
-    this.close();
   }
 
   cancel() {

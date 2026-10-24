@@ -12,9 +12,9 @@ export interface ChatBackground {
 export const CHAT_BACKGROUNDS: ChatBackground[] = [
   { type: 'solid', value: 'var(--color-surface-container)', name: 'solid' },
   { type: 'gradient', value: 'linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-deep) 100%)', name: 'gradient' },
-  { type: 'wallpaper', value: 'url("/chat-bg-1.jpg")', name: 'wallpaper-1' },
-  { type: 'wallpaper', value: 'url("/chat-bg-2.jpg")', name: 'wallpaper-2' },
-  { type: 'wallpaper', value: 'url("/chat-bg-3.jpg")', name: 'wallpaper-3' },
+  { type: 'gradient', value: 'linear-gradient(135deg, color-mix(in srgb, var(--color-primary) 12%, var(--color-bg)) 0%, var(--color-bg) 100%)', name: 'telegram-subtle' },
+  { type: 'gradient', value: 'radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--color-primary) 8%, transparent) 0%, transparent 70%), linear-gradient(180deg, var(--color-bg) 0%, var(--color-bg-deep) 100%)', name: 'ambient' },
+  { type: 'wallpaper', value: 'radial-gradient(ellipse at top left, color-mix(in srgb, var(--color-primary) 15%, transparent), transparent 50%), radial-gradient(ellipse at bottom right, color-mix(in srgb, #6366f1 12%, transparent), transparent 50%), var(--color-bg)', name: 'modern-mesh' },
 ];
 
 @Injectable({ providedIn: 'root' })
@@ -31,7 +31,7 @@ export class ChatBackgroundService {
     if (saved) {
       try {
         const parsed = JSON.parse(saved) as ChatBackground;
-        if (parsed.type && parsed.value) return parsed;
+        if (parsed.type && parsed.value && !parsed.value.includes('chat-bg-')) return parsed;
       } catch (e) {
         // fallback to default
       }

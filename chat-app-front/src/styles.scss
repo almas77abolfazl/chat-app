@@ -321,59 +321,68 @@ input, button, textarea, select {
 /* ---------- Tooltip system ---------- */
 [data-tooltip] {
   position: relative;
-  cursor: help;
 
-  &[data-tooltip]:hover::after,
-  &[data-tooltip]:focus-visible::after {
+  &[data-tooltip]::after {
     content: attr(data-tooltip);
     position: absolute;
     z-index: 1000;
     bottom: calc(100% + 8px);
     left: 50%;
-    transform: translateX(-50%) translateY(-4px);
+    transform: translateX(-50%) translateY(-3px);
     padding: 0.35rem 0.65rem;
     font-size: 0.72rem;
     font-weight: 600;
-    color: #ffffff;
-    background: rgba(26, 27, 46, 0.92);
-    border-radius: var(--radius-sm);
+    line-height: 1.2;
+    color: var(--color-text-on-primary, #ffffff);
+    background: color-mix(in srgb, var(--color-surface-solid) 88%, #000);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: var(--radius-md);
     white-space: nowrap;
     pointer-events: none;
     opacity: 0;
-    transition: opacity var(--transition-fast), transform var(--transition-fast);
-    box-shadow: var(--shadow-xl);
-    border: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
+    visibility: hidden;
+    transition: opacity 0.2s ease 0s, transform 0.2s ease 0s, visibility 0.2s ease 0s;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
   }
 
   &[data-tooltip]:hover::after,
   &[data-tooltip]:focus-visible::after {
     opacity: 1;
+    visibility: visible;
     transform: translateX(-50%) translateY(0);
-  }
-
-  &[data-tooltip-placement="left"]::after {
-    bottom: 50%;
-    left: auto;
-    right: calc(100% + 8px);
-    transform: translateY(50%) translateX(-4px);
-  }
-
-  &[data-tooltip-placement="left"]:hover::after,
-  &[data-tooltip-placement="left"]:focus-visible::after {
-    transform: translateY(50%) translateX(0);
+    transition-delay: 0.4s;
   }
 
   &[data-tooltip-placement="bottom"]::after {
     top: calc(100% + 8px);
     bottom: auto;
     left: 50%;
-    transform: translateX(-50%) translateY(4px);
+    transform: translateX(-50%) translateY(3px);
   }
 
   &[data-tooltip-placement="bottom"]:hover::after,
   &[data-tooltip-placement="bottom"]:focus-visible::after {
     opacity: 1;
+    visibility: visible;
     transform: translateX(-50%) translateY(0);
+  }
+
+  &[data-tooltip-placement="inline-start"]::after,
+  &[data-tooltip-placement="left"]::after {
+    top: 50%;
+    bottom: auto;
+    left: auto;
+    inset-inline-end: calc(100% + 8px);
+    transform: translateY(-50%) translateX(3px);
+  }
+
+  &[data-tooltip-placement="inline-start"]:hover::after,
+  &[data-tooltip-placement="left"]:hover::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(-50%) translateX(0);
   }
 }
 
