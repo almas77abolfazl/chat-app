@@ -34,7 +34,10 @@
     "trendingGifs": "گیف‌های پرطرفدار",
     "noStickersFound": "استیکری یافت نشد",
     "noGifsFound": "گیفی یافت نشد",
-    "noEmojiFound": "ایموجی یافت نشد"
+    "noEmojiFound": "ایموجی یافت نشد",
+    "searchInChat": "جستجو در گفتگو",
+    "savedMessages": "پیام‌های ذخیره‌شده",
+    "cloudStorage": "فضای ابری شخصی"
   },
   "contacts": {
     "title": "مخاطبان",
@@ -70,7 +73,9 @@
     "unpin": "برداشتن سنجاق",
     "confirmDelete": "آیا از حذف این پیام اطمینان دارید؟",
     "edited": "ویرایش شده",
-    "noMessages": "بدون پیام"
+    "noMessages": "بدون پیام",
+    "prev": "قبلی",
+    "next": "بعدی"
   },
   "profile": {
     "editProfile": "ویرایش نمایه",
@@ -144,6 +149,7 @@
     "brand": "چت‌اپ",
     "smartAssistant": "دستیار هوشمند",
     "chats": "گفتگوها",
+    "savedMessages": "پیام‌های ذخیره‌شده",
     "groups": "گروه‌ها",
     "channels": "کانال‌ها",
     "profile": "نمایه",
@@ -154,10 +160,18 @@
     "language": "زبان",
     "settings": "تنظیمات"
   },
+  "folders": {
+    "all": "همه",
+    "direct": "شخصی",
+    "groups": "گروه‌ها",
+    "channels": "کانال‌ها",
+    "bots": "ربات‌ها"
+  },
   "search": {
     "placeholder": "جستجو...",
     "searchResults": "نتایج جستجو",
-    "noResults": "موردی یافت نشد"
+    "noResults": "موردی یافت نشد",
+    "users": "کاربران"
   },
   "status": {
     "online": "آنلاین",

@@ -19,7 +19,7 @@ import { SnackbarService } from '../helpers/snackbar/snackbar.service';
 export class MainService {
   currentChat: ChatListItem = null;
   chatItems: ChatListItem[] = [];
-  chatFilter: 'all' | 'groups' | 'channels' = 'all';
+  chatFilter: 'all' | 'direct' | 'groups' | 'channels' | 'bots' = 'all';
   currentPage: number = 1;
   totalPages: number = 1;
   loadingMessages = false;
@@ -83,28 +83,29 @@ export class MainService {
 
   private mapChatItem(chat: any): ChatListItem {
     const peer = chat.otherParticipant;
-    const isDirect = !chat.isGroup && !chat.isChannel;
+    const isDirect = !chat.isGroup && !chat.isChannel && !chat.isSavedMessages;
     const avatar = chat.avatar || peer?.profilePicture || null;
     const chatId = (chat.chatId || chat._id)?.toString();
     return {
       _id: chatId,
-        peerId: isDirect ? peer?._id : undefined,
-        firstName: isDirect ? peer?.firstName : undefined,
-        lastName: isDirect ? peer?.lastName : undefined,
-        name: chat.name || null,
-        avatar: this.getAvatarUrl(avatar),
-        isGroup: chat.isGroup,
-        isChannel: chat.isChannel,
-        isOwner: chat.ownerId === this.authService.getUserId(),
-        ownerId: chat.ownerId,
-        participants: chat.participants,
-        lastMessage: chat.lastMessage,
-        pinnedMessage: chat.pinnedMessage || null,
-        messageCount: chat.unreadCount,
-        updatedAt: chat.updatedAt,
-        isOnline: isDirect ? peer?.isOnline : undefined,
-        lastSeen: isDirect ? peer?.lastSeen : undefined,
-      } as ChatListItem;
+      peerId: isDirect ? peer?._id : (chat.isSavedMessages ? this.authService.getUserId() : undefined),
+      firstName: isDirect ? peer?.firstName : undefined,
+      lastName: isDirect ? peer?.lastName : undefined,
+      name: chat.isSavedMessages ? 'Saved Messages' : (chat.name || null),
+      avatar: this.getAvatarUrl(avatar),
+      isGroup: chat.isGroup,
+      isChannel: chat.isChannel,
+      isSavedMessages: !!chat.isSavedMessages,
+      isOwner: chat.ownerId === this.authService.getUserId(),
+      ownerId: chat.ownerId,
+      participants: chat.participants,
+      lastMessage: chat.lastMessage,
+      pinnedMessage: chat.pinnedMessage || null,
+      messageCount: chat.unreadCount,
+      updatedAt: chat.updatedAt,
+      isOnline: isDirect ? peer?.isOnline : undefined,
+      lastSeen: isDirect ? peer?.lastSeen : undefined,
+    } as ChatListItem;
   }
 
   private async resolveAvatar(item: ChatListItem): Promise<string | null> {
@@ -194,13 +195,49 @@ export class MainService {
   }
 
   visibleChats(): ChatListItem[] {
+    if (this.chatFilter === 'direct') {
+      return this.chatItems.filter((c) => !c.isGroup && !c.isChannel && !this.isAgentChatSync(c));
+    }
     if (this.chatFilter === 'groups') return this.chatItems.filter((c) => c.isGroup);
     if (this.chatFilter === 'channels') return this.chatItems.filter((c) => c.isChannel);
+    if (this.chatFilter === 'bots') return this.chatItems.filter((c) => this.isAgentChatSync(c));
     return this.chatItems;
   }
 
-  setChatFilter(filter: 'all' | 'groups' | 'channels') {
+  setChatFilter(filter: 'all' | 'direct' | 'groups' | 'channels' | 'bots') {
     this.chatFilter = filter;
+  }
+
+  getFolderUnreadCount(folder: string): number {
+    let list: ChatListItem[] = [];
+    if (folder === 'all') list = this.chatItems;
+    else if (folder === 'direct') list = this.chatItems.filter((c) => !c.isGroup && !c.isChannel && !this.isAgentChatSync(c));
+    else if (folder === 'groups') list = this.chatItems.filter((c) => c.isGroup);
+    else if (folder === 'channels') list = this.chatItems.filter((c) => c.isChannel);
+    else if (folder === 'bots') list = this.chatItems.filter((c) => this.isAgentChatSync(c));
+    return list.reduce((acc, c) => acc + (c.messageCount || 0), 0);
+  }
+
+  async openSavedMessages(): Promise<ChatListItem> {
+    const res: any = await firstValueFrom(
+      this.httpRequestService.get('chat/saved-messages').pipe(take(1))
+    );
+    let item = this.findChatById(res.chatId || res._id);
+    if (!item) {
+      item = this.mapChatItem({
+        chatId: res.chatId || res._id,
+        isGroup: false,
+        isChannel: false,
+        isSavedMessages: true,
+        name: 'Saved Messages',
+        ownerId: this.authService.getUserId(),
+        participants: [{ _id: this.authService.getUserId() }],
+        lastMessage: null,
+      });
+      this.refreshItem(item);
+    }
+    this.openChat(item);
+    return item;
   }
 
   openChat(chatItem: ChatListItem) {

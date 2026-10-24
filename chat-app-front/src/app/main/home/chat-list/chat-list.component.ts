@@ -23,6 +23,7 @@ export class ChatListComponent implements OnInit, OnDestroy {
   @Output() selectChat = new EventEmitter<void>();
   searchQuery = '';
   searchResults: any[] = [];
+  searchTypeFilter: 'all' | 'users' | 'groups' | 'channels' = 'all';
   brokenAvatars = new Set<string>();
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
@@ -102,10 +103,19 @@ export class ChatListComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  filteredSearchResults(): any[] {
+    if (this.searchTypeFilter === 'all') return this.searchResults;
+    if (this.searchTypeFilter === 'users') return this.searchResults.filter((r) => !r.isGroup && !r.isChannel);
+    if (this.searchTypeFilter === 'groups') return this.searchResults.filter((r) => r.isGroup);
+    if (this.searchTypeFilter === 'channels') return this.searchResults.filter((r) => r.isChannel);
+    return this.searchResults;
+  }
+
   displayName(chat: ChatListItem): string {
+    if (chat.isSavedMessages) return 'پیام‌های ذخیره‌شده';
     if (chat.isGroup || chat.isChannel) return chat.name || '';
     if (chat.firstName || chat.lastName) return `${chat.firstName || ''} ${chat.lastName || ''}`.trim();
-    return '';
+    return chat.name || '';
   }
 
   avatarBg(chat: ChatListItem): string {

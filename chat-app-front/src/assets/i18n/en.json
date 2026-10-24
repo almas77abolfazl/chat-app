@@ -34,7 +34,10 @@
     "trendingGifs": "Trending GIFs",
     "noStickersFound": "No stickers found",
     "noGifsFound": "No GIFs found",
-    "noEmojiFound": "No emoji found"
+    "noEmojiFound": "No emoji found",
+    "searchInChat": "Search in chat",
+    "savedMessages": "Saved Messages",
+    "cloudStorage": "Personal cloud storage"
   },
   "contacts": {
     "title": "Contacts",
@@ -70,7 +73,9 @@
     "unpin": "Unpin",
     "confirmDelete": "Are you sure you want to delete this message?",
     "edited": "Edited",
-    "noMessages": "No messages"
+    "noMessages": "No messages",
+    "prev": "Previous",
+    "next": "Next"
   },
   "profile": {
     "editProfile": "Edit Profile",
@@ -144,6 +149,7 @@
     "brand": "ChatApp",
     "smartAssistant": "Smart Assistant",
     "chats": "Chats",
+    "savedMessages": "Saved Messages",
     "groups": "Groups",
     "channels": "Channels",
     "profile": "Profile",
@@ -154,10 +160,18 @@
     "language": "Language",
     "settings": "Settings"
   },
+  "folders": {
+    "all": "All",
+    "direct": "Personal",
+    "groups": "Groups",
+    "channels": "Channels",
+    "bots": "Bots"
+  },
   "search": {
     "placeholder": "Search...",
     "searchResults": "Search results",
-    "noResults": "No results found"
+    "noResults": "No results found",
+    "users": "Users"
   },
   "status": {
     "online": "Online",

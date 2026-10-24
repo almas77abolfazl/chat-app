@@ -325,26 +325,27 @@ input, button, textarea, select {
   &[data-tooltip]::after {
     content: attr(data-tooltip);
     position: absolute;
-    z-index: 1000;
-    bottom: calc(100% + 8px);
+    z-index: 9999;
+    bottom: calc(100% + 7px);
     left: 50%;
-    transform: translateX(-50%) translateY(-3px);
-    padding: 0.35rem 0.65rem;
-    font-size: 0.72rem;
-    font-weight: 600;
-    line-height: 1.2;
-    color: var(--color-text-on-primary, #ffffff);
-    background: color-mix(in srgb, var(--color-surface-solid) 88%, #000);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-radius: var(--radius-md);
+    transform: translateX(-50%) translateY(3px);
+    padding: 0.32rem 0.65rem;
+    font-size: 0.73rem;
+    font-weight: 500;
+    line-height: 1.25;
+    color: #ffffff !important;
+    background: rgba(18, 22, 32, 0.94);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: var(--radius-sm, 6px);
     white-space: nowrap;
     pointer-events: none;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.2s ease 0s, transform 0.2s ease 0s, visibility 0.2s ease 0s;
-    box-shadow: var(--shadow-lg);
-    border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+    transition: opacity 0.18s ease 0s, transform 0.18s ease 0s, visibility 0.18s ease 0s;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    letter-spacing: 0.01em;
   }
 
   &[data-tooltip]:hover::after,
@@ -352,14 +353,14 @@ input, button, textarea, select {
     opacity: 1;
     visibility: visible;
     transform: translateX(-50%) translateY(0);
-    transition-delay: 0.4s;
+    transition-delay: 0.35s;
   }
 
   &[data-tooltip-placement="bottom"]::after {
-    top: calc(100% + 8px);
+    top: calc(100% + 7px);
     bottom: auto;
     left: 50%;
-    transform: translateX(-50%) translateY(3px);
+    transform: translateX(-50%) translateY(-3px);
   }
 
   &[data-tooltip-placement="bottom"]:hover::after,
@@ -367,6 +368,7 @@ input, button, textarea, select {
     opacity: 1;
     visibility: visible;
     transform: translateX(-50%) translateY(0);
+    transition-delay: 0.35s;
   }
 
   &[data-tooltip-placement="inline-start"]::after,
@@ -374,15 +376,37 @@ input, button, textarea, select {
     top: 50%;
     bottom: auto;
     left: auto;
-    inset-inline-end: calc(100% + 8px);
-    transform: translateY(-50%) translateX(3px);
+    inset-inline-end: calc(100% + 7px);
+    transform: translateY(-50%) scale(0.96);
   }
 
   &[data-tooltip-placement="inline-start"]:hover::after,
   &[data-tooltip-placement="left"]:hover::after {
     opacity: 1;
     visibility: visible;
-    transform: translateY(-50%) translateX(0);
+    transform: translateY(-50%) scale(1);
+    transition-delay: 0.35s;
+  }
+
+  &[data-tooltip-placement="inline-end"]::after,
+  &[data-tooltip-placement="right"]::after {
+    top: 50%;
+    bottom: auto;
+    left: auto;
+    inset-inline-start: calc(100% + 7px);
+    transform: translateY(-50%) scale(0.96);
+  }
+
+  &[data-tooltip-placement="inline-end"]:hover::after,
+  &[data-tooltip-placement="right"]:hover::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(-50%) scale(1);
+    transition-delay: 0.35s;
+  }
+
+  &[data-tooltip=""]::after {
+    display: none !important;
   }
 }
 

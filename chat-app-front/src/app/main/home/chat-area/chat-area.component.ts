@@ -60,10 +60,17 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
   @ViewChild('chatMessages') chatMessages!: ElementRef<HTMLElement>;
   @ViewChild('element') element!: ElementRef<HTMLTextAreaElement>;
+  @ViewChild('inChatSearchInput') inChatSearchInput?: ElementRef<HTMLInputElement>;
   userReactions: Map<string, string> = new Map();
+
+  showInChatSearch = false;
+  inChatSearchQuery = '';
+  searchMatches: string[] = [];
+  currentMatchIndex = -1;
 
   ngOnInit() {
     this.mainService.chatOpened$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      this.closeInChatSearch();
       this.markCurrentChatMessagesRead();
       this.replyingToId = null;
       this.cdr.markForCheck();
@@ -92,10 +99,28 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
 
   @HostListener('document:keydown.escape')
   onEscapeKey() {
+    if (this.showInChatSearch) {
+      this.closeInChatSearch();
+    }
     this.closeContextMenu();
     this.showContentPicker = false;
     this.showBgSelector = false;
     this.showChatActions = false;
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  onWindowKeyDown(event: KeyboardEvent) {
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
+      if (this.mainService.currentChat) {
+        event.preventDefault();
+        this.showInChatSearch = true;
+        setTimeout(() => {
+          this.inChatSearchInput?.nativeElement?.select();
+          this.inChatSearchInput?.nativeElement?.focus();
+        }, 50);
+        this.cdr.markForCheck();
+      }
+    }
   }
 
   scrollToBottom() {
@@ -150,11 +175,14 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
 
   headerName(chat: ChatListItem): string {
     if (!chat) return '';
+    if (chat.isSavedMessages) return this.translationService.t('chat.savedMessages');
     if (chat.isGroup || chat.isChannel) return chat.name || '';
     return `${chat.firstName ?? ''} ${chat.lastName ?? ''}`.trim();
   }
 
   headerSubtitle(chat: ChatListItem): string {
+    if (!chat) return '';
+    if (chat.isSavedMessages) return this.translationService.t('chat.cloudStorage');
     if (chat?.isChannel) return this.translationService.t('profile.publicChannel');
     if (chat?.isGroup) {
       const count = (chat.participants || []).length;
@@ -162,6 +190,97 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     if (chat?.isOnline) return this.translationService.t('status.online');
     return '';
+  }
+
+  toggleInChatSearch() {
+    this.showInChatSearch = !this.showInChatSearch;
+    if (this.showInChatSearch) {
+      setTimeout(() => {
+        this.inChatSearchInput?.nativeElement?.select();
+        this.inChatSearchInput?.nativeElement?.focus();
+      }, 50);
+      if (this.inChatSearchQuery.trim()) {
+        this.performInChatSearch();
+      }
+    } else {
+      this.closeInChatSearch();
+    }
+    this.cdr.markForCheck();
+  }
+
+  closeInChatSearch() {
+    this.showInChatSearch = false;
+    this.inChatSearchQuery = '';
+    this.searchMatches = [];
+    this.currentMatchIndex = -1;
+    this.cdr.markForCheck();
+  }
+
+  onInChatSearchChange() {
+    this.performInChatSearch();
+  }
+
+  performInChatSearch() {
+    const q = this.inChatSearchQuery.trim().toLowerCase();
+    if (!q || !this.mainService.currentChat?.messages) {
+      this.searchMatches = [];
+      this.currentMatchIndex = -1;
+      return;
+    }
+
+    const matches: string[] = [];
+    for (const msg of this.mainService.currentChat.messages) {
+      if (msg.isDeleted) continue;
+      const contentMatch = msg.content?.toLowerCase().includes(q);
+      const fileMatch = msg.fileName?.toLowerCase().includes(q);
+      if (contentMatch || fileMatch) {
+        if (msg._id) {
+          matches.push(msg._id);
+        }
+      }
+    }
+    this.searchMatches = matches;
+    if (matches.length > 0) {
+      this.currentMatchIndex = matches.length - 1;
+      this.scrollToMatch(this.searchMatches[this.currentMatchIndex]);
+    } else {
+      this.currentMatchIndex = -1;
+    }
+    this.cdr.markForCheck();
+  }
+
+  goToNextMatch() {
+    if (this.searchMatches.length === 0) return;
+    this.currentMatchIndex = (this.currentMatchIndex + 1) % this.searchMatches.length;
+    this.scrollToMatch(this.searchMatches[this.currentMatchIndex]);
+    this.cdr.markForCheck();
+  }
+
+  goToPrevMatch() {
+    if (this.searchMatches.length === 0) return;
+    this.currentMatchIndex = (this.currentMatchIndex - 1 + this.searchMatches.length) % this.searchMatches.length;
+    this.scrollToMatch(this.searchMatches[this.currentMatchIndex]);
+    this.cdr.markForCheck();
+  }
+
+  private scrollToMatch(messageId: string) {
+    if (!messageId) return;
+    setTimeout(() => {
+      const el = document.getElementById('msg-' + messageId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 40);
+  }
+
+  isSearchHighlighted(message: Message): boolean {
+    if (!this.showInChatSearch || !this.inChatSearchQuery.trim() || !message._id) return false;
+    return this.searchMatches.includes(message._id);
+  }
+
+  isCurrentSearchMatch(message: Message): boolean {
+    if (!this.showInChatSearch || this.currentMatchIndex < 0 || !message._id) return false;
+    return this.searchMatches[this.currentMatchIndex] === message._id;
   }
 
   avatarBg(chat: ChatListItem): string {

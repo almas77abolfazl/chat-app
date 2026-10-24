@@ -17,6 +17,9 @@ export class Chat extends Document {
   @Prop({ default: false })
   isChannel: boolean;
 
+  @Prop({ default: false })
+  isSavedMessages?: boolean;
+
   @Prop({ type: Types.ObjectId, ref: 'User' })
   owner?: Types.ObjectId;
 
