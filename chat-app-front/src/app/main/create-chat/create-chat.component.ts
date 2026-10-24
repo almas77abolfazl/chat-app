@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -23,28 +23,28 @@ type Mode = 'direct' | 'group' | 'channel';
 
       <div class="create-chat-content">
         <div class="mode-pills">
-          <button type="button" class="mode-pill" [class.active]="mode === 'direct'" (click)="setMode('direct')">
+          <button type="button" class="mode-pill" [class.active]="mode() === 'direct'" (click)="setMode('direct')">
             <fa-icon [icon]="['fas', 'user']"></fa-icon>
             <span>چت خصوصی</span>
           </button>
-          <button type="button" class="mode-pill" [class.active]="mode === 'group'" (click)="setMode('group')">
+          <button type="button" class="mode-pill" [class.active]="mode() === 'group'" (click)="setMode('group')">
             <fa-icon [icon]="['fas', 'users']"></fa-icon>
             <span>گروه جدید</span>
           </button>
-          <button type="button" class="mode-pill" [class.active]="mode === 'channel'" (click)="setMode('channel')">
+          <button type="button" class="mode-pill" [class.active]="mode() === 'channel'" (click)="setMode('channel')">
             <fa-icon [icon]="['fas', 'broadcast-tower']"></fa-icon>
             <span>کانال جدید</span>
           </button>
         </div>
 
-        @if (mode === 'direct') {
+        @if (mode() === 'direct') {
           <div class="form-group">
             <label class="form-label">جستجوی مخاطب یا کاربر</label>
             <div class="search-wrapper">
               <input
                 class="custom-input with-icon"
                 placeholder="نام یا نام کاربری را جستجو کنید..."
-                [(ngModel)]="searchQuery"
+                [ngModel]="searchQuery()"
                 (ngModelChange)="onSearch($event)"
                 autofocus
               />
@@ -53,7 +53,7 @@ type Mode = 'direct' | 'group' | 'channel';
           </div>
 
           <div class="users-list">
-            @for (r of results; track r._id) {
+            @for (r of results(); track r._id) {
               <div class="user-row" (click)="startDirectWith(r)">
                 <div class="user-avatar">
                   @if (r.profilePicture) {
@@ -71,23 +71,28 @@ type Mode = 'direct' | 'group' | 'channel';
                 <fa-icon [icon]="['fas', 'comment-dots']" class="action-icon"></fa-icon>
               </div>
             }
-            @if (results.length === 0 && searchQuery) {
+            @if (results().length === 0 && searchQuery()) {
               <div class="empty-results">کاربری با این مشخصات یافت نشد</div>
-            } @else if (results.length === 0 && !searchQuery) {
+            } @else if (results().length === 0 && !searchQuery()) {
               <div class="empty-results">برای شروع گفتگو، نام یا نام کاربری فرد را تایپ کنید</div>
             }
           </div>
         }
 
-        @if (mode === 'group') {
+        @if (mode() === 'group') {
           <div class="form-group">
             <label class="form-label">نام گروه</label>
-            <input class="custom-input" placeholder="نام گروه را وارد کنید..." [(ngModel)]="name" />
+            <input
+              class="custom-input"
+              placeholder="نام گروه را وارد کنید..."
+              [ngModel]="name()"
+              (ngModelChange)="name.set($event)"
+            />
           </div>
 
-          @if (members.length > 0) {
+          @if (members().length > 0) {
             <div class="selected-chips">
-              @for (m of members; track m._id) {
+              @for (m of members(); track m._id) {
                 <div class="chip">
                   <span>{{ m.firstName }} {{ m.lastName || '' }}</span>
                   <fa-icon [icon]="['fas', 'times']" class="chip-remove" (click)="remove(m)"></fa-icon>
@@ -102,7 +107,7 @@ type Mode = 'direct' | 'group' | 'channel';
               <input
                 class="custom-input with-icon"
                 placeholder="جستجوی افراد برای افزودن به گروه..."
-                [(ngModel)]="searchQuery"
+                [ngModel]="searchQuery()"
                 (ngModelChange)="onSearch($event)"
               />
               <fa-icon [icon]="['fas', 'search']" class="search-icon"></fa-icon>
@@ -110,7 +115,7 @@ type Mode = 'direct' | 'group' | 'channel';
           </div>
 
           <div class="users-list">
-            @for (r of results; track r._id) {
+            @for (r of results(); track r._id) {
               <div class="user-row" (click)="add(r)">
                 <div class="user-avatar">
                   @if (r.profilePicture) {
@@ -131,44 +136,62 @@ type Mode = 'direct' | 'group' | 'channel';
           </div>
         }
 
-        @if (mode === 'channel') {
+        @if (mode() === 'channel') {
           <div class="form-group">
             <label class="form-label">نام کانال</label>
-            <input class="custom-input" placeholder="نام کانال را وارد کنید..." [(ngModel)]="name" />
+            <input
+              class="custom-input"
+              placeholder="نام کانال را وارد کنید..."
+              [ngModel]="name()"
+              (ngModelChange)="name.set($event)"
+            />
           </div>
         }
       </div>
 
-      @if (mode !== 'direct') {
+      @if (mode() !== 'direct') {
         <div class="dialog-actions">
           <button type="button" class="btn btn-secondary" (click)="cancel()">لغو</button>
           <button type="button" class="btn btn-primary" [disabled]="!canCreate()" (click)="create()">
-            {{ mode === 'group' ? 'ساخت گروه' : 'ساخت کانال' }}
+            {{ mode() === 'group' ? 'ساخت گروه' : 'ساخت کانال' }}
           </button>
         </div>
       }
     </div>
   `,
   styleUrl: './create-chat.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class CreateChatComponent {
-  mode: Mode = 'direct';
-  name = '';
-  searchQuery = '';
-  results: any[] = [];
-  members: any[] = [];
+  readonly mode = signal<Mode>('direct');
+  readonly name = signal<string>('');
+  readonly searchQuery = signal<string>('');
+  readonly results = signal<any[]>([]);
+  readonly members = signal<any[]>([]);
 
-  constructor(private dialogRef: MatDialogRef<CreateChatComponent>, private mainService: MainService) {}
+  readonly canCreate = computed(() => {
+    const m = this.mode();
+    const n = this.name().trim();
+    if (m === 'channel') return !!n;
+    if (m === 'group') return !!n && this.members().length > 0;
+    return true;
+  });
+
+  constructor(
+    private dialogRef: MatDialogRef<CreateChatComponent>,
+    private mainService: MainService
+  ) {}
 
   setMode(m: Mode) {
-    this.mode = m;
-    this.searchQuery = '';
-    this.results = [];
+    this.mode.set(m);
+    this.searchQuery.set('');
+    this.results.set([]);
   }
 
   onSearch(query: string) {
+    this.searchQuery.set(query);
     if (!query.trim()) {
-      this.results = [];
+      this.results.set([]);
       return;
     }
     this.mainService
@@ -177,20 +200,22 @@ export class CreateChatComponent {
       .subscribe({
         next: (res: any[]) => {
           const myId = this.mainService.authService.getUserId();
-          this.results = (res || []).filter((r) => r._id !== myId);
+          this.results.set((res || []).filter((r) => r._id !== myId));
         },
-        error: () => (this.results = []),
+        error: () => this.results.set([]),
       });
   }
 
   add(m: any) {
-    if (!this.members.some((x) => x._id === m._id)) this.members.push(m);
-    this.results = this.results.filter((x) => x._id !== m._id);
-    this.searchQuery = '';
+    if (!this.members().some((x) => x._id === m._id)) {
+      this.members.update((list) => [...list, m]);
+    }
+    this.results.update((list) => list.filter((x) => x._id !== m._id));
+    this.searchQuery.set('');
   }
 
   remove(m: any) {
-    this.members = this.members.filter((x) => x._id !== m._id);
+    this.members.update((list) => list.filter((x) => x._id !== m._id));
   }
 
   async startDirectWith(user: any) {
@@ -203,19 +228,15 @@ export class CreateChatComponent {
     }
   }
 
-  canCreate(): boolean {
-    if (this.mode === 'channel') return !!this.name.trim();
-    if (this.mode === 'group') return !!this.name.trim() && this.members.length > 0;
-    return true;
-  }
-
   async create() {
     try {
       let item: any;
-      if (this.mode === 'group') {
-        item = await this.mainService.createGroup(this.name.trim(), this.members.map((m) => m._id));
-      } else if (this.mode === 'channel') {
-        item = await this.mainService.createChannel(this.name.trim());
+      const m = this.mode();
+      const n = this.name().trim();
+      if (m === 'group') {
+        item = await this.mainService.createGroup(n, this.members().map((mem) => mem._id));
+      } else if (m === 'channel') {
+        item = await this.mainService.createChannel(n);
       }
       if (item) {
         this.mainService.openChat(item);

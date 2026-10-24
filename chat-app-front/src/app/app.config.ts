@@ -1,5 +1,4 @@
-import { ApplicationConfig, APP_INITIALIZER } from '@angular/core';
-import { provideZoneChangeDetection } from '@angular/core';
+import { ApplicationConfig, APP_INITIALIZER, provideZonelessChangeDetection } from '@angular/core';
 import { provideRouter, withViewTransitions } from '@angular/router';
 
 import { routes } from './app.routes';
@@ -13,7 +12,7 @@ import { TranslationService } from './helpers/translation.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideZoneChangeDetection({ eventCoalescing: true }),
+    provideZonelessChangeDetection(),
     provideRouter(routes, withViewTransitions()),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimationsAsync(),
@@ -27,15 +26,15 @@ export const appConfig: ApplicationConfig = {
     },
     {
       provide: APP_INITIALIZER,
-      useFactory: (theme: ThemeService) => () => theme.setTheme(theme.theme),
+      useFactory: (theme: ThemeService) => () => theme.setTheme(theme.theme()),
       deps: [ThemeService],
       multi: true,
     },
     {
       provide: APP_INITIALIZER,
       useFactory: (translation: TranslationService) => () => {
-        if (!translation.currentLang) return Promise.resolve();
-        return translation.loadLanguage(translation.currentLang);
+        if (!translation.currentLang()) return Promise.resolve();
+        return translation.loadLanguage(translation.currentLang());
       },
       deps: [TranslationService],
       multi: true,

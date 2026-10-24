@@ -1,5 +1,4 @@
-import { NgIf } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { AuthService } from '../auth.service';
@@ -10,14 +9,23 @@ import { ThemeService } from '../../helpers/theme.service';
 @Component({
   selector: 'app-fill-names',
   standalone: true,
-  imports: [FormsModule, NgIf, FontAwesomeModule, I18nPipe],
+  imports: [FormsModule, FontAwesomeModule, I18nPipe],
   templateUrl: './fill-names.component.html',
-  styleUrl: './fill-names.component.scss'
+  styleUrl: './fill-names.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FillNamesComponent {
-  firstName: string = '';
-  lastName: string = '';
-  errorMessage: string = '';
+  readonly firstNameSignal = signal<string>('');
+  get firstName(): string { return this.firstNameSignal(); }
+  set firstName(v: string) { this.firstNameSignal.set(v); }
+
+  readonly lastNameSignal = signal<string>('');
+  get lastName(): string { return this.lastNameSignal(); }
+  set lastName(v: string) { this.lastNameSignal.set(v); }
+
+  readonly errorMessageSignal = signal<string>('');
+  get errorMessage(): string { return this.errorMessageSignal(); }
+  set errorMessage(v: string) { this.errorMessageSignal.set(v); }
 
   constructor(
     private auth: AuthService,

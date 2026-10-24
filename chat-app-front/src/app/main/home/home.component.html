@@ -1,16 +1,24 @@
 <div class="home-container" [class.chat-open]="mainService.currentChat">
-  <app-side-bar class="side-bar" [class.mobile-open]="mobileMenuOpen" (close)="closeMobileMenu()"></app-side-bar>
+  <app-side-bar
+    class="side-bar"
+    [class.mobile-open]="mobileMenuOpen()"
+    [mobileOpen]="mobileMenuOpen()"
+    (close)="closeMobileMenu()"
+  ></app-side-bar>
 
+  @if (!mainService.currentChat && isMobile()) {
   <button
     class="mobile-menu-btn"
-    *ngIf="!mainService.currentChat && isMobile"
     (click)="toggleMobileMenu()"
     [attr.aria-label]="'chat.menu' | i18n"
   >
     <fa-icon [icon]="['fas', 'bars']"></fa-icon>
   </button>
+  }
 
-  <div class="mobile-overlay" *ngIf="mobileMenuOpen && isMobile" (click)="closeMobileMenu()"></div>
+  @if (mobileMenuOpen() && isMobile()) {
+  <div class="mobile-overlay" (click)="closeMobileMenu()"></div>
+  }
 
   <app-chat-list class="chat-list" (selectChat)="closeMobileMenu()"></app-chat-list>
   <app-chat-area class="chat-area"></app-chat-area>

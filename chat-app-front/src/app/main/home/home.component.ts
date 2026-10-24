@@ -1,5 +1,12 @@
-import { Component, HostListener, OnDestroy, ChangeDetectorRef, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  HostListener,
+  ChangeDetectionStrategy,
+  inject,
+  signal,
+  DestroyRef,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { SideBarComponent } from './side-bar/side-bar.component';
 import { ChatListComponent } from './chat-list/chat-list.component';
@@ -10,41 +17,50 @@ import { MainService } from '../main.service';
 import { SocketService } from '../socket.service';
 import { ThemeService } from '../../helpers/theme.service';
 import { I18nPipe } from '../../helpers/i18n.pipe';
-import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FontAwesomeModule, SideBarComponent, ChatListComponent, ChatAreaComponent, MatDialogModule, MatSnackBarModule, I18nPipe],
+  imports: [
+    FontAwesomeModule,
+    SideBarComponent,
+    ChatListComponent,
+    ChatAreaComponent,
+    MatDialogModule,
+    MatSnackBarModule,
+    I18nPipe,
+  ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class HomeComponent implements OnDestroy {
-  mobileMenuOpen = false;
-  isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-  private destroy$ = new Subject<void>();
+export class HomeComponent {
+  readonly mobileMenuOpen = signal(false);
+  readonly isMobile = signal(typeof window !== 'undefined' && window.innerWidth <= 768);
+  private readonly destroyRef = inject(DestroyRef);
 
   constructor(
     socketService: SocketService,
     public mainService: MainService,
-    public themeService: ThemeService,
-    private cdr: ChangeDetectorRef = inject(ChangeDetectorRef)
+    public themeService: ThemeService
   ) {
     socketService.init();
     mainService.listenToMessages();
     mainService.loadAgentStatus();
     mainService.listenToAgentEvents();
 
-    mainService.chatOpened$.pipe(takeUntil(this.destroy$)).subscribe(() => {
-      this.mobileMenuOpen = false;
-      this.cdr.markForCheck();
+    mainService.chatOpened$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.mobileMenuOpen.set(false);
     });
   }
 
   @HostListener('window:resize')
   onResize() {
-    this.isMobile = window.innerWidth <= 768;
-    if (this.isMobile === false) this.mobileMenuOpen = false;
+    const mobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+    this.isMobile.set(mobile);
+    if (!mobile) {
+      this.mobileMenuOpen.set(false);
+    }
   }
 
   @HostListener('window:orientationchange')
@@ -53,15 +69,10 @@ export class HomeComponent implements OnDestroy {
   }
 
   toggleMobileMenu() {
-    this.mobileMenuOpen = !this.mobileMenuOpen;
+    this.mobileMenuOpen.update((v) => !v);
   }
 
   closeMobileMenu() {
-    this.mobileMenuOpen = false;
-  }
-
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
+    this.mobileMenuOpen.set(false);
   }
 }

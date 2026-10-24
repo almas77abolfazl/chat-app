@@ -1,7 +1,7 @@
-<div class="settings-modal" [attr.dir]="translationService.isRTL ? 'rtl' : 'ltr'">
+<div class="settings-modal" [attr.dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
   <div class="settings-header">
     <div class="header-title-wrap">
-      <fa-icon [icon]="['fas', 'cog']" class="header-icon"></fa-icon>
+      <fa-icon [icon]="['fas', 'cog']"></fa-icon>
       <h2>{{ 'settings.title' | i18n }}</h2>
     </div>
     <button class="close-btn" (click)="close()" [attr.aria-label]="'actions.close' | i18n">
@@ -42,7 +42,7 @@
         <!-- Light Theme Card -->
         <div
           class="theme-card"
-          [class.active]="themeService.theme === 'light'"
+          [class.active]="!themeService.isDark()"
           (click)="selectTheme('light')"
         >
           <div class="theme-card-preview light-preview">
@@ -52,7 +52,7 @@
           <div class="theme-card-info">
             <fa-icon [icon]="['fas', 'sun']" class="theme-icon sun-icon"></fa-icon>
             <span class="theme-name">{{ 'settings.light' | i18n }}</span>
-            @if (themeService.theme === 'light') {
+            @if (!themeService.isDark()) {
             <fa-icon [icon]="['fas', 'check']" class="active-check"></fa-icon>
             }
           </div>
@@ -61,7 +61,7 @@
         <!-- Dark Theme Card -->
         <div
           class="theme-card"
-          [class.active]="themeService.theme === 'dark'"
+          [class.active]="themeService.isDark()"
           (click)="selectTheme('dark')"
         >
           <div class="theme-card-preview dark-preview">
@@ -71,7 +71,7 @@
           <div class="theme-card-info">
             <fa-icon [icon]="['fas', 'moon']" class="theme-icon moon-icon"></fa-icon>
             <span class="theme-name">{{ 'settings.dark' | i18n }}</span>
-            @if (themeService.theme === 'dark') {
+            @if (themeService.isDark()) {
             <fa-icon [icon]="['fas', 'check']" class="active-check"></fa-icon>
             }
           </div>
@@ -89,7 +89,7 @@
       <div class="language-options">
         <div
           class="language-row"
-          [class.active]="translationService.currentLang === 'fa'"
+          [class.active]="translationService.currentLang() === 'fa'"
           (click)="selectLanguage('fa')"
         >
           <div class="lang-info">
@@ -99,7 +99,7 @@
               <span class="lang-secondary">Persian (RTL)</span>
             </div>
           </div>
-          @if (translationService.currentLang === 'fa') {
+          @if (translationService.currentLang() === 'fa') {
           <div class="check-badge">
             <fa-icon [icon]="['fas', 'check']"></fa-icon>
           </div>
@@ -108,7 +108,7 @@
 
         <div
           class="language-row"
-          [class.active]="translationService.currentLang === 'en'"
+          [class.active]="translationService.currentLang() === 'en'"
           (click)="selectLanguage('en')"
         >
           <div class="lang-info">
@@ -118,7 +118,7 @@
               <span class="lang-secondary">Left-to-Right (LTR)</span>
             </div>
           </div>
-          @if (translationService.currentLang === 'en') {
+          @if (translationService.currentLang() === 'en') {
           <div class="check-badge">
             <fa-icon [icon]="['fas', 'check']"></fa-icon>
           </div>

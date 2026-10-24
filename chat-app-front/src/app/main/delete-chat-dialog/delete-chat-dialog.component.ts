@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, ChangeDetectionStrategy, signal } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { FormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -17,9 +17,12 @@ export interface DeleteChatDialogData {
   imports: [MatDialogModule, FormsModule, FontAwesomeModule, I18nPipe],
   templateUrl: './delete-chat-dialog.component.html',
   styleUrl: './delete-chat-dialog.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DeleteChatDialogComponent {
-  deleteForBoth = false;
+  readonly deleteForBothSignal = signal<boolean>(false);
+  get deleteForBoth(): boolean { return this.deleteForBothSignal(); }
+  set deleteForBoth(v: boolean) { this.deleteForBothSignal.set(v); }
 
   constructor(
     public dialogRef: MatDialogRef<DeleteChatDialogComponent>,

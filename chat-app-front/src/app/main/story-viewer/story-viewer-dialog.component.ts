@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, Inject, OnInit, OnDestroy, ChangeDetectionStrategy, signal } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { FormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -6,6 +6,7 @@ import { StoryGroup, StoryItem } from '../../models/story.model';
 import { MainService } from '../main.service';
 import { I18nPipe } from '../../helpers/i18n.pipe';
 import { TranslationService } from '../../helpers/translation.service';
+import { take } from 'rxjs';
 
 export interface StoryViewerDialogData {
   group: StoryGroup;
@@ -18,10 +19,17 @@ export interface StoryViewerDialogData {
   imports: [MatDialogModule, FormsModule, FontAwesomeModule, I18nPipe],
   templateUrl: './story-viewer-dialog.component.html',
   styleUrl: './story-viewer-dialog.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class StoryViewerDialogComponent implements OnInit, OnDestroy {
-  currentIndex = 0;
-  progress = 0;
+  readonly currentIndexSignal = signal<number>(0);
+  get currentIndex(): number { return this.currentIndexSignal(); }
+  set currentIndex(v: number) { this.currentIndexSignal.set(v); }
+
+  readonly progressSignal = signal<number>(0);
+  get progress(): number { return this.progressSignal(); }
+  set progress(v: number) { this.progressSignal.set(v); }
+
   private timerInterval: any;
   private isPaused = false;
   private readonly STORY_DURATION = 5000; // 5s per story
@@ -56,7 +64,7 @@ export class StoryViewerDialogComponent implements OnInit, OnDestroy {
     this.clearTimer();
     const story = this.currentStory;
     if (story) {
-      this.mainService.viewStory(story._id).subscribe();
+      this.mainService.viewStory(story._id).pipe(take(1)).subscribe();
       story.isViewed = true;
     }
 
