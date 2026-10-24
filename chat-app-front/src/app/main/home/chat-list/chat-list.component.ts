@@ -1,11 +1,16 @@
 import { Component, EventEmitter, Output, HostListener, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { MatDialog } from '@angular/material/dialog';
 import { MainService } from '../../main.service';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, Subject, take, takeUntil } from 'rxjs';
 import { ChatListItem } from '../../../models/chat-list-item.model';
+import { StoryGroup } from '../../../models/story.model';
 import { I18nPipe } from '../../../helpers/i18n.pipe';
+import { DeleteChatDialogComponent } from '../../delete-chat-dialog/delete-chat-dialog.component';
+import { StoryCreateDialogComponent } from '../../story-create/story-create-dialog.component';
+import { StoryViewerDialogComponent } from '../../story-viewer/story-viewer-dialog.component';
 
 export interface ChatContextMenuTarget {
   chat: ChatListItem;
@@ -34,6 +39,7 @@ export class ChatListComponent implements OnInit, OnDestroy {
 
   constructor(
     public mainService: MainService,
+    private dialog: MatDialog,
     private cdr: ChangeDetectorRef
   ) {
     this.searchSubject
@@ -43,6 +49,7 @@ export class ChatListComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.mainService.getChatList();
+    this.mainService.loadStories().pipe(take(1)).subscribe();
 
     this.mainService.chatListUpdated$.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.cdr.markForCheck();
@@ -159,14 +166,63 @@ export class ChatListComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  get userOwnStory(): StoryGroup | undefined {
+    return this.mainService.stories.find((s) => s.isCurrentUser);
+  }
+
+  get otherStories(): StoryGroup[] {
+    return this.mainService.stories.filter((s) => !s.isCurrentUser);
+  }
+
+  openStoryCreate() {
+    const dialogRef = this.dialog.open(StoryCreateDialogComponent, {
+      width: '420px',
+      maxWidth: '92vw',
+      panelClass: 'rtl-dialog',
+    });
+    dialogRef.afterClosed().pipe(take(1)).subscribe((result) => {
+      if (result?.formData) {
+        this.mainService.createStory(result.formData).pipe(take(1)).subscribe({
+          next: () => {
+            this.mainService.snackbar.success('استوری با موفقیت ثبت شد', 3000);
+          },
+        });
+      }
+    });
+  }
+
+  openStoryViewer(group: StoryGroup) {
+    this.dialog.open(StoryViewerDialogComponent, {
+      width: '440px',
+      maxWidth: '95vw',
+      panelClass: 'story-viewer-dialog-panel',
+      data: {
+        group,
+        currentUserId: this.mainService.authService.getUserId(),
+      },
+    });
+  }
+
   onChatContextMenuAction(action: string) {
     if (!this.chatContextMenuTarget) return;
+    const chat = this.chatContextMenuTarget;
     switch (action) {
-      case 'delete':
-        if (confirm('آیا از حذف این گفتگو مطمئن هستید؟')) {
-          this.mainService.deleteChat(this.chatContextMenuTarget!._id as string).pipe(take(1)).subscribe({
+      case 'delete': {
+        const isOwner = chat.ownerId === this.mainService.authService.getUserId();
+        const dialogRef = this.dialog.open(DeleteChatDialogComponent, {
+          width: '380px',
+          maxWidth: '92vw',
+          panelClass: 'rtl-dialog',
+          data: {
+            chat,
+            isOwner,
+          },
+        });
+        dialogRef.afterClosed().pipe(take(1)).subscribe((result) => {
+          if (!result?.confirmed) return;
+          this.mainService.deleteChat(chat._id as string, result.deleteForBoth).pipe(take(1)).subscribe({
             next: () => {
-              if (this.mainService.currentChat?._id === this.chatContextMenuTarget!._id) {
+              if (this.mainService.currentChat?._id === chat._id) {
                 this.mainService.closeCurrentChat();
               }
               this.mainService.getChatList();
@@ -175,13 +231,14 @@ export class ChatListComponent implements OnInit, OnDestroy {
               this.mainService.snackbar.error('خطا در حذف گفتگو', 3000);
             },
           });
-        }
+        });
         break;
+      }
       case 'leave':
         if (confirm('آیا از خروج از این گروه مطمئن هستید؟')) {
-          this.mainService.leaveChat(this.chatContextMenuTarget!._id as string).pipe(take(1)).subscribe({
+          this.mainService.leaveChat(chat._id as string).pipe(take(1)).subscribe({
             next: () => {
-              if (this.mainService.currentChat?._id === this.chatContextMenuTarget!._id) {
+              if (this.mainService.currentChat?._id === chat._id) {
                 this.mainService.closeCurrentChat();
               }
               this.mainService.getChatList();

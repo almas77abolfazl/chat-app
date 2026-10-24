@@ -7,7 +7,8 @@ import { ContactsComponent } from './contacts/contacts.component';
 import { CreateChatComponent } from './create-chat/create-chat.component';
 import { HttpRequestService } from '../helpers/http-request.service';
 import { BehaviorSubject, firstValueFrom, map, Observable, of, Subject, take, tap, catchError } from 'rxjs';
-import { ChatListItem, ChatParticipant } from '../models/chat-list-item.model';
+import { AdminPermissions, ChatAdmin, ChatListItem, ChatParticipant } from '../models/chat-list-item.model';
+import { StoryGroup } from '../models/story.model';
 import { SocketService } from './socket.service';
 import { HttpParams } from '@angular/common/http';
 import { Message } from '../models/message.model';
@@ -20,6 +21,7 @@ export class MainService {
   currentChat: ChatListItem = null;
   chatItems: ChatListItem[] = [];
   chatFilter: 'all' | 'direct' | 'groups' | 'channels' | 'bots' = 'all';
+  stories: StoryGroup[] = [];
   currentPage: number = 1;
   totalPages: number = 1;
   loadingMessages = false;
@@ -98,6 +100,7 @@ export class MainService {
       isSavedMessages: !!chat.isSavedMessages,
       isOwner: chat.ownerId === this.authService.getUserId(),
       ownerId: chat.ownerId,
+      admins: chat.admins || [],
       participants: chat.participants,
       lastMessage: chat.lastMessage,
       pinnedMessage: chat.pinnedMessage || null,
@@ -1099,12 +1102,90 @@ const messageData: Message = {
     this.socketService.emit('unpinMessage', { chatId });
   }
 
-  deleteChat(chatId: string): Observable<any> {
-    return this.httpRequestService.delete(`chat/${chatId}/delete`);
+  deleteChat(chatId: string, deleteForBoth: boolean = false): Observable<any> {
+    return this.httpRequestService.delete(`chat/${chatId}/delete?deleteForBoth=${deleteForBoth}`);
   }
 
   leaveChat(chatId: string): Observable<any> {
     return this.httpRequestService.post(`chat/${chatId}/leave`, {});
+  }
+
+  addAdmin(chatId: string, targetUserId: string, permissions?: AdminPermissions, customTitle?: string): Observable<any> {
+    return this.httpRequestService.post(`chat/${chatId}/admins`, { targetUserId, permissions, customTitle });
+  }
+
+  removeAdmin(chatId: string, targetUserId: string): Observable<any> {
+    return this.httpRequestService.delete(`chat/${chatId}/admins/${targetUserId}`);
+  }
+
+  getAdmins(chatId: string): Observable<any[]> {
+    return this.httpRequestService.get(`chat/${chatId}/admins`);
+  }
+
+  blockUser(targetUserId: string): Observable<any> {
+    return this.httpRequestService.post(`user/block/${targetUserId}`, {});
+  }
+
+  unblockUser(targetUserId: string): Observable<any> {
+    return this.httpRequestService.delete(`user/block/${targetUserId}`);
+  }
+
+  getBlockedUsers(): Observable<any[]> {
+    return this.httpRequestService.get('user/blocked');
+  }
+
+  isUserBlocked(targetUserId: string): Observable<{ isBlocked: boolean }> {
+    return this.httpRequestService.get(`user/is-blocked/${targetUserId}`);
+  }
+
+  get userProfile() {
+    return {
+      avatar: this.getAvatarUrl(this.pictureSrc) || this.pictureSrc,
+      name: `${this.authService.getFirstName() || ''} ${this.authService.getLastName() || ''}`.trim() || 'کاربر',
+    };
+  }
+
+  loadStories(): Observable<StoryGroup[]> {
+    return this.httpRequestService.get('story/feed').pipe(
+      map((stories: any[]) => {
+        return (stories || []).map((sg) => ({
+          ...sg,
+          hasUnseen: sg.hasUnviewed,
+          user: {
+            ...sg.user,
+            name: `${sg.user?.firstName || ''} ${sg.user?.lastName || ''}`.trim() || sg.user?.username || 'کاربر',
+            avatar: this.getAvatarUrl(sg.user?.profilePicture) || '',
+          },
+        }));
+      }),
+      tap((stories: StoryGroup[]) => {
+        this.stories = stories || [];
+      }),
+      catchError(() => {
+        this.stories = [];
+        return of([]);
+      }),
+    );
+  }
+
+  createStory(formData: FormData): Observable<any> {
+    return this.httpRequestService.postFile('story', formData).pipe(
+      tap(() => this.loadStories().pipe(take(1)).subscribe()),
+    );
+  }
+
+  viewStory(storyId: string): Observable<any> {
+    return this.httpRequestService.post(`story/${storyId}/view`, {});
+  }
+
+  deleteStory(storyId: string): Observable<any> {
+    return this.httpRequestService.delete(`story/${storyId}`).pipe(
+      tap(() => this.loadStories().pipe(take(1)).subscribe()),
+    );
+  }
+
+  getStoryViewers(storyId: string): Observable<any[]> {
+    return this.httpRequestService.get(`story/${storyId}/viewers`);
   }
 
   getNotificationSettings(): Observable<any> {

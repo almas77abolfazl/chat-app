@@ -1,0 +1,82 @@
+<div class="admin-dialog-container">
+  <div class="dialog-header">
+    <div class="header-icon">
+      <fa-icon [icon]="['fas', 'crown']"></fa-icon>
+    </div>
+    <div class="header-info">
+      <div class="dialog-title">{{ 'admin.title' | i18n }}</div>
+      <div class="member-name">{{ data.member.firstName }} {{ data.member.lastName }}</div>
+    </div>
+  </div>
+
+  <div class="dialog-body">
+    <div class="input-group">
+      <label class="input-label">{{ 'admin.customTitle' | i18n }}</label>
+      <input
+        type="text"
+        class="text-input"
+        [(ngModel)]="customTitle"
+        [placeholder]="'admin.customTitlePlaceholder' | i18n"
+      />
+    </div>
+
+    <div class="permissions-header">{{ 'admin.permissions' | i18n }}</div>
+
+    <div class="permissions-list">
+      <label class="permission-item">
+        <span class="perm-label">{{ 'admin.canChangeInfo' | i18n }}</span>
+        <input type="checkbox" [(ngModel)]="permissions.canChangeInfo" class="perm-checkbox" />
+      </label>
+
+      @if (data.isChannel) {
+      <label class="permission-item">
+        <span class="perm-label">{{ 'admin.canPostMessages' | i18n }}</span>
+        <input type="checkbox" [(ngModel)]="permissions.canPostMessages" class="perm-checkbox" />
+      </label>
+      }
+
+      <label class="permission-item">
+        <span class="perm-label">{{ 'admin.canEditMessages' | i18n }}</span>
+        <input type="checkbox" [(ngModel)]="permissions.canEditMessages" class="perm-checkbox" />
+      </label>
+
+      <label class="permission-item">
+        <span class="perm-label">{{ 'admin.canDeleteMessages' | i18n }}</span>
+        <input type="checkbox" [(ngModel)]="permissions.canDeleteMessages" class="perm-checkbox" />
+      </label>
+
+      <label class="permission-item">
+        <span class="perm-label">{{ 'admin.canInviteUsers' | i18n }}</span>
+        <input type="checkbox" [(ngModel)]="permissions.canInviteUsers" class="perm-checkbox" />
+      </label>
+
+      <label class="permission-item">
+        <span class="perm-label">{{ 'admin.canPinMessages' | i18n }}</span>
+        <input type="checkbox" [(ngModel)]="permissions.canPinMessages" class="perm-checkbox" />
+      </label>
+
+      @if (data.isOwner) {
+      <label class="permission-item">
+        <span class="perm-label">{{ 'admin.canManageAdmins' | i18n }}</span>
+        <input type="checkbox" [(ngModel)]="permissions.canManageAdmins" class="perm-checkbox" />
+      </label>
+      }
+    </div>
+  </div>
+
+  <div class="dialog-actions">
+    @if (data.isCurrentAdmin) {
+    <button type="button" class="btn btn-dismiss" (click)="dismiss()">
+      <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+      <span>{{ 'admin.dismissAdmin' | i18n }}</span>
+    </button>
+    }
+    <div class="spacer"></div>
+    <button type="button" class="btn btn-cancel" (click)="cancel()">
+      {{ 'deleteDialog.cancelButton' | i18n }}
+    </button>
+    <button type="button" class="btn btn-primary" (click)="save()">
+      {{ 'admin.save' | i18n }}
+    </button>
+  </div>
+</div>

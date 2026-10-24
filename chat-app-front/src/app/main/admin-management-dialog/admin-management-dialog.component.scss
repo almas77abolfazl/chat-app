@@ -1,0 +1,170 @@
+.admin-dialog-container {
+  padding: 1.5rem;
+  background: var(--color-surface-solid);
+  color: var(--color-text);
+  border-radius: var(--radius-xl);
+  direction: rtl;
+  min-width: 360px;
+  max-width: 480px;
+
+  .dialog-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    margin-bottom: 1.25rem;
+
+    .header-icon {
+      width: 2.75rem;
+      height: 2.75rem;
+      border-radius: var(--radius-full);
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+
+    .header-info {
+      .dialog-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--color-text);
+      }
+
+      .member-name {
+        font-size: 0.85rem;
+        color: var(--color-text-faint);
+        margin-top: 0.15rem;
+      }
+    }
+  }
+
+  .dialog-body {
+    margin-bottom: 1.5rem;
+
+    .input-group {
+      margin-bottom: 1.25rem;
+
+      .input-label {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--color-text-secondary);
+        margin-bottom: 0.4rem;
+      }
+
+      .text-input {
+        width: 100%;
+        padding: 0.6rem 0.85rem;
+        border-radius: var(--radius-md);
+        border: 1px solid var(--color-border);
+        background: var(--color-surface-container);
+        color: var(--color-text);
+        font-size: 0.9rem;
+        outline: none;
+        transition: border-color var(--transition-fast);
+
+        &:focus {
+          border-color: var(--color-primary);
+        }
+      }
+    }
+
+    .permissions-header {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--color-text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.6rem;
+    }
+
+    .permissions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+
+      .permission-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.55rem 0.75rem;
+        border-radius: var(--radius-md);
+        background: color-mix(in srgb, var(--color-primary) 4%, transparent);
+        cursor: pointer;
+        user-select: none;
+        transition: background var(--transition-fast);
+
+        &:hover {
+          background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+        }
+
+        .perm-label {
+          font-size: 0.88rem;
+          color: var(--color-text);
+        }
+
+        .perm-checkbox {
+          width: 1.15rem;
+          height: 1.15rem;
+          accent-color: var(--color-primary);
+          cursor: pointer;
+        }
+      }
+    }
+  }
+
+  .dialog-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .spacer {
+      flex: 1;
+    }
+
+    .btn {
+      padding: 0.55rem 1.2rem;
+      border-radius: var(--radius-full);
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all var(--transition-fast);
+
+      &.btn-dismiss {
+        background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+        color: var(--color-danger);
+
+        &:hover {
+          background: color-mix(in srgb, var(--color-danger) 22%, transparent);
+        }
+      }
+
+      &.btn-cancel {
+        background: transparent;
+        color: var(--color-text-secondary);
+
+        &:hover {
+          background: color-mix(in srgb, var(--color-border) 40%, transparent);
+        }
+      }
+
+      &.btn-primary {
+        background: var(--color-primary);
+        color: var(--color-text-on-primary);
+        box-shadow: 0 2px 8px color-mix(in srgb, var(--color-primary) 35%, transparent);
+
+        &:hover {
+          filter: brightness(1.08);
+          transform: translateY(-1px);
+        }
+      }
+    }
+  }
+}

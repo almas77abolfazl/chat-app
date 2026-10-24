@@ -332,6 +332,41 @@
       }
     }
   }
+
+  .user-block-row {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+
+    .block-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 1.4rem;
+      border-radius: var(--radius-full);
+      border: none;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+      color: var(--color-danger);
+      transition: all var(--transition-fast);
+
+      &:hover {
+        background: color-mix(in srgb, var(--color-danger) 22%, transparent);
+        transform: translateY(-1px);
+      }
+
+      &.blocked {
+        background: color-mix(in srgb, #10b981 12%, transparent);
+        color: #10b981;
+
+        &:hover {
+          background: color-mix(in srgb, #10b981 22%, transparent);
+        }
+      }
+    }
+  }
 }
 
 /* Media Summary Section */
@@ -686,6 +721,34 @@
         display: flex;
         flex-direction: column;
 
+        .member-name-row {
+          display: flex;
+          align-items: center;
+          gap: 0.45rem;
+
+          .role-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            padding: 0.1rem 0.45rem;
+            border-radius: var(--radius-full);
+            font-size: 0.68rem;
+            font-weight: 700;
+
+            &.owner-badge {
+              background: color-mix(in srgb, #f59e0b 15%, transparent);
+              color: #f59e0b;
+              border: 1px solid color-mix(in srgb, #f59e0b 30%, transparent);
+            }
+
+            &.admin-badge {
+              background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+              color: var(--color-primary);
+              border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+            }
+          }
+        }
+
         .member-name {
           font-size: 0.88rem;
           font-weight: 600;
@@ -695,6 +758,26 @@
         .member-status {
           font-size: 0.75rem;
           color: var(--color-text-secondary);
+        }
+      }
+
+      .admin-manage-btn {
+        background: transparent;
+        border: none;
+        color: var(--color-text-faint);
+        font-size: 0.95rem;
+        width: 2rem;
+        height: 2rem;
+        border-radius: var(--radius-full);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+
+        &:hover {
+          color: var(--color-primary);
+          background: color-mix(in srgb, var(--color-primary) 10%, transparent);
         }
       }
 

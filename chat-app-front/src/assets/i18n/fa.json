@@ -212,5 +212,53 @@
     "editProfile": "ویرایش نمایه",
     "about": "درباره چت‌اپ",
     "version": "نسخه ۱.۰.۰"
+  },
+  "deleteDialog": {
+    "title": "حذف گفتگو",
+    "confirmMessage": "آیا از حذف این گفتگو مطمئن هستید؟",
+    "alsoDeleteFor": "همچنین برای {{name}} حذف شود",
+    "deleteForAll": "حذف برای تمام اعضا",
+    "deleteButton": "حذف",
+    "cancelButton": "انصراف"
+  },
+  "admin": {
+    "title": "مدیریت مدیران",
+    "admins": "مدیران",
+    "addAdmin": "افزودن مدیر",
+    "editAdmin": "ویرایش دسترسی‌ها",
+    "dismissAdmin": "عزل از مدیریت",
+    "owner": "مالک",
+    "roleAdmin": "مدیر",
+    "customTitle": "عنوان دلخواه",
+    "customTitlePlaceholder": "مثلاً: مدیر ارشد",
+    "permissions": "دسترسی‌های مجاز",
+    "canChangeInfo": "تغییر اطلاعات گروه یا کانال",
+    "canPostMessages": "ارسال پیام",
+    "canEditMessages": "ویرایش پیام‌ها",
+    "canDeleteMessages": "حذف پیام‌ها",
+    "canInviteUsers": "افزودن اعضا",
+    "canPinMessages": "سنجاق پیام‌ها",
+    "canManageAdmins": "افزودن مدیر جدید",
+    "save": "ذخیره تغییرات"
+  },
+  "block": {
+    "blockUser": "مسدود کردن کاربر",
+    "unblockUser": "رفع مسدودیت",
+    "userBlockedBanner": "شما این کاربر را مسدود کرده‌اید.",
+    "blockedList": "کاربران مسدود شده",
+    "noBlocked": "هیچ کاربری مسدود نشده است.",
+    "confirmBlock": "آیا مطمئن هستید که می‌خواهید این کاربر را مسدود کنید؟"
+  },
+  "story": {
+    "yourStory": "استوری شما",
+    "createStory": "افزودن استوری",
+    "photoOrImage": "تصویر یا عکس",
+    "textStory": "استوری متنی",
+    "captionPlaceholder": "یک کپشن اضافه کنید...",
+    "postStory": "ارسال استوری",
+    "viewers": "بازدیدکنندگان",
+    "noViewers": "هنوز بازدیدی ثبت نشده است",
+    "deleteStory": "حذف استوری",
+    "storyDeleted": "استوری حذف شد"
   }
 }

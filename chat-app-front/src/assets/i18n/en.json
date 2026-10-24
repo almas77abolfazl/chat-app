@@ -212,5 +212,53 @@
     "editProfile": "Edit Profile",
     "about": "About ChatApp",
     "version": "Version 1.0.0"
+  },
+  "deleteDialog": {
+    "title": "Delete Chat",
+    "confirmMessage": "Are you sure you want to delete this chat?",
+    "alsoDeleteFor": "Also delete for {{name}}",
+    "deleteForAll": "Delete for all members",
+    "deleteButton": "Delete",
+    "cancelButton": "Cancel"
+  },
+  "admin": {
+    "title": "Admin Management",
+    "admins": "Admins",
+    "addAdmin": "Add Admin",
+    "editAdmin": "Edit Permissions",
+    "dismissAdmin": "Dismiss Admin",
+    "owner": "Owner",
+    "roleAdmin": "Admin",
+    "customTitle": "Custom Title",
+    "customTitlePlaceholder": "e.g. Senior Admin",
+    "permissions": "Permissions",
+    "canChangeInfo": "Change Group/Channel Info",
+    "canPostMessages": "Post Messages",
+    "canEditMessages": "Edit Messages",
+    "canDeleteMessages": "Delete Messages",
+    "canInviteUsers": "Add Members",
+    "canPinMessages": "Pin Messages",
+    "canManageAdmins": "Add New Admins",
+    "save": "Save Changes"
+  },
+  "block": {
+    "blockUser": "Block User",
+    "unblockUser": "Unblock User",
+    "userBlockedBanner": "You have blocked this user.",
+    "blockedList": "Blocked Users",
+    "noBlocked": "No blocked users.",
+    "confirmBlock": "Are you sure you want to block this user?"
+  },
+  "story": {
+    "yourStory": "Your Story",
+    "createStory": "Create Story",
+    "photoOrImage": "Photo or Image",
+    "textStory": "Text Story",
+    "captionPlaceholder": "Add a caption...",
+    "postStory": "Share Story",
+    "viewers": "Viewers",
+    "noViewers": "No views yet",
+    "deleteStory": "Delete Story",
+    "storyDeleted": "Story deleted successfully"
   }
 }

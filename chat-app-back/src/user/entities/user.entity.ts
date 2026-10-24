@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument } from 'mongoose';
+import { HydratedDocument, Types } from 'mongoose';
 import { ISession } from '../interfaces/session.interface';
 
 export type UserDocument = HydratedDocument<User>;
@@ -35,6 +35,9 @@ export class User {
 
   @Prop({ default: [] })
   contacts: string[];
+
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
+  blockedUsers?: Types.ObjectId[];
 
   @Prop({ default: [] })
   sessions: ISession[];

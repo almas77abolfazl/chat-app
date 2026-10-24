@@ -77,6 +77,12 @@
           <span>{{ 'chat.leave' | i18n }}</span>
         </button>
         } @else {
+        @if (!mainService.isAgentChat(mainService.currentChat) && !mainService.currentChat?.isSavedMessages) {
+        <button class="chat-action-item" (click)="toggleBlockPeer(); toggleChatActions()">
+          <fa-icon [icon]="['fas', isPeerBlocked ? 'check' : 'ban']" class="action-icon"></fa-icon>
+          <span>{{ (isPeerBlocked ? 'block.unblockUser' : 'block.blockUser') | i18n }}</span>
+        </button>
+        }
         <button class="chat-action-item" (click)="deleteCurrentChat(); toggleChatActions()">
           <fa-icon [icon]="['fas', 'trash']" class="action-icon delete-icon"></fa-icon>
           <span>{{ 'chat.delete' | i18n }}</span>
@@ -389,6 +395,15 @@
     <fa-icon [icon]="['fas', 'chevron-down']"></fa-icon>
   </button>
 
+  @if (isPeerBlocked) {
+  <div class="blocked-chat-banner">
+    <fa-icon [icon]="['fas', 'ban']" class="blocked-banner-icon"></fa-icon>
+    <span class="blocked-banner-text">{{ 'block.userBlockedBanner' | i18n }}</span>
+    <button type="button" class="blocked-unblock-btn" (click)="toggleBlockPeer()">
+      {{ 'block.unblockUser' | i18n }}
+    </button>
+  </div>
+  } @else {
   <div class="chat-input-container">
     @if (replyingToId) {
     <div class="reply-bar">
@@ -437,6 +452,7 @@
     ></app-content-picker>
     }
    </div>
+   }
   } @else {
   <div class="empty-chat hero">
     <div class="hero-illustration">

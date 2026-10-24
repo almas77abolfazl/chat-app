@@ -4,6 +4,7 @@ import { Model, Types } from 'mongoose';
 import { Message, MessageDocument } from './entities/message.entity';
 import { Chat, ChatDocument } from 'src/chat/entities/chat.entity';
 import { ReactionService } from './reaction/reaction.service';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class MessageService {
@@ -11,6 +12,7 @@ export class MessageService {
     @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
     @InjectModel(Chat.name) private chatModel: Model<ChatDocument>,
     @Optional() private reactionService?: ReactionService,
+    @Optional() private userService?: UserService,
   ) {}
 
   async findChatForMessage(chatId: string): Promise<ChatDocument> {
@@ -32,12 +34,24 @@ export class MessageService {
       throw new ForbiddenException('You are not a participant of this chat');
     }
 
-    if (chat.isChannel && chat.owner?.toString() !== senderId) {
-      throw new ForbiddenException('Only the channel owner can post in a channel');
+    if (chat.isChannel) {
+      const isOwner = chat.owner?.toString() === senderId;
+      const admin = chat.admins?.find((a: any) => a.userId?.toString() === senderId);
+      const canPost = isOwner || (admin && admin.permissions?.canPostMessages !== false);
+      if (!canPost) {
+        throw new ForbiddenException('Only channel admins can post in this channel');
+      }
     }
 
     const isDirect = !chat.isGroup && !chat.isChannel;
     const receiver = isDirect ? (chat.participants.find((p) => p.toString() !== senderId) ?? null) : null;
+
+    if (isDirect && receiver && this.userService) {
+      const isBlocked = await this.userService.isUserBlocked(senderId, receiver.toString());
+      if (isBlocked) {
+        throw new ForbiddenException('Cannot send message: one of the users has blocked the other');
+      }
+    }
 
     const message = await this.messageModel.create({
       sender: senderObjectId,
@@ -101,7 +115,19 @@ export class MessageService {
   async editMessage(messageId: string, userId: string, newContent: string): Promise<any> {
     const message = await this.messageModel.findById(messageId).exec();
     if (!message) throw new NotFoundException('Message not found');
-    if (message.sender.toString() !== userId) {
+    let canEdit = message.sender.toString() === userId;
+    if (!canEdit && message.chat) {
+      const chatQuery = this.chatModel.findById(message.chat);
+      const chat = chatQuery?.exec ? await chatQuery.exec() : await chatQuery;
+      if (chat && chat.isChannel) {
+        const isOwner = chat.owner?.toString() === userId;
+        const admin = chat.admins?.find((a: any) => a.userId?.toString() === userId);
+        if (isOwner || admin?.permissions?.canEditMessages) {
+          canEdit = true;
+        }
+      }
+    }
+    if (!canEdit) {
       throw new ForbiddenException('You can only edit your own messages');
     }
     if (message.isDeleted) {
@@ -118,8 +144,20 @@ export class MessageService {
   async deleteMessage(messageId: string, userId: string): Promise<void> {
     const message = await this.messageModel.findById(messageId).exec();
     if (!message) throw new NotFoundException('Message not found');
-    if (message.sender.toString() !== userId) {
-      throw new ForbiddenException('You can only delete your own messages');
+    let canDelete = message.sender.toString() === userId;
+    if (!canDelete && message.chat) {
+      const chatQuery = this.chatModel.findById(message.chat);
+      const chat = chatQuery?.exec ? await chatQuery.exec() : await chatQuery;
+      if (chat && (chat.isGroup || chat.isChannel)) {
+        const isOwner = chat.owner?.toString() === userId;
+        const admin = chat.admins?.find((a: any) => a.userId?.toString() === userId);
+        if (isOwner || admin?.permissions?.canDeleteMessages) {
+          canDelete = true;
+        }
+      }
+    }
+    if (!canDelete) {
+      throw new ForbiddenException('You do not have permission to delete this message');
     }
     message.isDeleted = true;
     message.deletedAt = new Date();
