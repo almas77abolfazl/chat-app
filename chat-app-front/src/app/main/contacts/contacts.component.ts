@@ -1,4 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  ChangeDetectionStrategy,
+  inject,
+  signal,
+  DestroyRef,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { FormsModule } from '@angular/forms';
@@ -10,7 +18,7 @@ import { MainService } from '../main.service';
 import { MatIconModule } from '@angular/material/icon';
 import { I18nPipe } from '../../helpers/i18n.pipe';
 
-interface ContactUser {
+export interface ContactUser {
   _id: string;
   firstName?: string;
   lastName?: string;
@@ -28,18 +36,21 @@ interface ContactUser {
   imports: [CommonModule, FontAwesomeModule, FormsModule, MatInputModule, MatButtonModule, MatIconModule, I18nPipe],
   templateUrl: './contacts.component.html',
   styleUrl: './contacts.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ContactsComponent implements OnInit {
-  query = '';
-  private searchSubject = new Subject<string>();
-  results: ContactUser[] = [];
-  contacts: ContactUser[] = [];
-  loading = false;
+  readonly query = signal<string>('');
+  readonly results = signal<ContactUser[]>([]);
+  readonly contacts = signal<ContactUser[]>([]);
+  readonly loading = signal<boolean>(false);
+  readonly showNewContactForm = signal<boolean>(false);
+  readonly newContactFirstName = signal<string>('');
+  readonly newContactLastName = signal<string>('');
+  readonly newContactPhone = signal<string>('');
+
   currentUserId: string;
-  showNewContactForm = false;
-  newContactFirstName = '';
-  newContactLastName = '';
-  newContactPhone = '';
+  private readonly searchSubject = new Subject<string>();
+  private readonly destroyRef = inject(DestroyRef);
 
   constructor(
     public mainService: MainService,
@@ -49,14 +60,16 @@ export class ContactsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.searchSubject.pipe(debounceTime(300)).subscribe((q) => this.doSearch(q));
+    this.searchSubject
+      .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
+      .subscribe((q) => this.doSearch(q));
     this.loadContacts();
   }
 
   loadContacts() {
     this.mainService.getContacts().pipe(take(1)).subscribe({
       next: (res: any[]) => {
-        this.contacts = (res || []).map((c) => ({
+        const mapped: ContactUser[] = (res || []).map((c) => ({
           _id: c._id,
           firstName: c.firstName,
           lastName: c.lastName,
@@ -67,37 +80,44 @@ export class ContactsComponent implements OnInit {
           isOnline: c.isOnline,
           lastSeen: c.lastSeen,
         }));
-        this.contacts.forEach(async (contact) => {
+        this.contacts.set(mapped);
+        mapped.forEach(async (contact) => {
           await this.resolveContactAvatar(contact);
         });
       },
       error: () => {
-        this.contacts = [];
+        this.contacts.set([]);
       },
     });
   }
 
   onSearch(query: string) {
+    this.query.set(query);
     this.searchSubject.next(query);
   }
 
   doSearch(query: string) {
     if (!query.trim()) {
-      this.results = [];
+      this.results.set([]);
       return;
     }
-    this.loading = true;
+    this.loading.set(true);
     this.mainService
       .search(query)
       .pipe(take(1))
       .subscribe({
         next: (res: any[]) => {
-          this.results = (res || []).filter((r) => r._id !== this.currentUserId && !this.contacts.some((c) => c._id === r._id));
-          this.loading = false;
+          const currentContacts = this.contacts();
+          this.results.set(
+            (res || []).filter(
+              (r) => r._id !== this.currentUserId && !currentContacts.some((c) => c._id === r._id)
+            )
+          );
+          this.loading.set(false);
         },
         error: () => {
-          this.results = [];
-          this.loading = false;
+          this.results.set([]);
+          this.loading.set(false);
         },
       });
   }
@@ -105,9 +125,9 @@ export class ContactsComponent implements OnInit {
   addContact(user: ContactUser) {
     this.mainService.addContact(user._id).pipe(take(1)).subscribe({
       next: () => {
-        this.contacts.push(user);
+        this.contacts.update((list) => [...list, user]);
         this.resolveContactAvatar(user);
-        this.results = this.results.filter((r) => r._id !== user._id);
+        this.results.update((list) => list.filter((r) => r._id !== user._id));
       },
       error: () => {},
     });
@@ -116,7 +136,7 @@ export class ContactsComponent implements OnInit {
   removeContact(user: ContactUser) {
     this.mainService.removeContact(user._id).pipe(take(1)).subscribe({
       next: () => {
-        this.contacts = this.contacts.filter((c) => c._id !== user._id);
+        this.contacts.update((list) => list.filter((c) => c._id !== user._id));
       },
       error: () => {},
     });
@@ -129,7 +149,10 @@ export class ContactsComponent implements OnInit {
   private async resolveContactAvatar(contact: ContactUser): Promise<void> {
     if (contact.avatar) return;
     const avatar = await this.mainService.getAvatar(contact._id);
-    if (avatar) contact.avatar = avatar;
+    if (avatar) {
+      contact.avatar = avatar;
+      this.contacts.update((list) => [...list]);
+    }
   }
 
   getAvatarUrl(contact: ContactUser): string | null {
@@ -137,28 +160,29 @@ export class ContactsComponent implements OnInit {
   }
 
   isContact(userId: string): boolean {
-    return this.contacts.some((c) => c._id === userId);
+    return this.contacts().some((c) => c._id === userId);
   }
 
   addNewContact() {
-    if (!this.newContactPhone.trim()) return;
+    const phone = this.newContactPhone().trim();
+    if (!phone) return;
     const newContact: ContactUser = {
       _id: 'new-' + Date.now(),
-      firstName: this.newContactFirstName.trim() || undefined,
-      lastName: this.newContactLastName.trim() || undefined,
-      phoneNumber: this.newContactPhone.trim(),
+      firstName: this.newContactFirstName().trim() || undefined,
+      lastName: this.newContactLastName().trim() || undefined,
+      phoneNumber: phone,
     };
     this.addContact(newContact);
-    this.showNewContactForm = false;
-    this.newContactFirstName = '';
-    this.newContactLastName = '';
-    this.newContactPhone = '';
+    this.showNewContactForm.set(false);
+    this.newContactFirstName.set('');
+    this.newContactLastName.set('');
+    this.newContactPhone.set('');
   }
 
   cancelNewContact() {
-    this.showNewContactForm = false;
-    this.newContactFirstName = '';
-    this.newContactLastName = '';
-    this.newContactPhone = '';
+    this.showNewContactForm.set(false);
+    this.newContactFirstName.set('');
+    this.newContactLastName.set('');
+    this.newContactPhone.set('');
   }
 }

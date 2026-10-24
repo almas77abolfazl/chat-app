@@ -6,27 +6,55 @@
         type="text"
         [placeholder]="'search.placeholder' | i18n"
         class="search-input"
-        [(ngModel)]="searchQuery"
+        [ngModel]="searchQuery()"
         (ngModelChange)="onSearchChange($event)"
       />
       <fa-icon [icon]="['fas', 'search']" class="search-icon"></fa-icon>
     </div>
 
-    @if (searchQuery.trim()) {
+    @if (searchQuery().trim()) {
     <div class="search-type-filters">
-      <button type="button" class="type-filter-chip" [class.active]="searchTypeFilter === 'all'" (click)="searchTypeFilter = 'all'">{{ 'folders.all' | i18n }}</button>
-      <button type="button" class="type-filter-chip" [class.active]="searchTypeFilter === 'users'" (click)="searchTypeFilter = 'users'">{{ 'search.users' | i18n }}</button>
-      <button type="button" class="type-filter-chip" [class.active]="searchTypeFilter === 'groups'" (click)="searchTypeFilter = 'groups'">{{ 'folders.groups' | i18n }}</button>
-      <button type="button" class="type-filter-chip" [class.active]="searchTypeFilter === 'channels'" (click)="searchTypeFilter = 'channels'">{{ 'folders.channels' | i18n }}</button>
+      <button
+        type="button"
+        class="type-filter-chip"
+        [class.active]="searchTypeFilter() === 'all'"
+        (click)="searchTypeFilter.set('all')"
+      >
+        {{ 'folders.all' | i18n }}
+      </button>
+      <button
+        type="button"
+        class="type-filter-chip"
+        [class.active]="searchTypeFilter() === 'users'"
+        (click)="searchTypeFilter.set('users')"
+      >
+        {{ 'search.users' | i18n }}
+      </button>
+      <button
+        type="button"
+        class="type-filter-chip"
+        [class.active]="searchTypeFilter() === 'groups'"
+        (click)="searchTypeFilter.set('groups')"
+      >
+        {{ 'folders.groups' | i18n }}
+      </button>
+      <button
+        type="button"
+        class="type-filter-chip"
+        [class.active]="searchTypeFilter() === 'channels'"
+        (click)="searchTypeFilter.set('channels')"
+      >
+        {{ 'folders.channels' | i18n }}
+      </button>
     </div>
     } @else {
     <div class="story-bar">
       <!-- Current user's story / Add story button -->
       <div
         class="story-item own-story"
-        (click)="userOwnStory && userOwnStory.stories.length > 0 ? openStoryViewer(userOwnStory) : openStoryCreate()"
+        (click)="userOwnStory() && userOwnStory()!.stories.length > 0 ? openStoryViewer(userOwnStory()!) : openStoryCreate()"
       >
-        <div class="story-avatar-wrap" [class.has-stories]="userOwnStory && userOwnStory.stories.length > 0">
+        <div class="story-avatar-wrap" [class.has-stories]="userOwnStory() && userOwnStory()!.stories.length > 0">
           @if (mainService.userProfile?.avatar) {
           <img [src]="mainService.userProfile?.avatar" class="story-avatar" alt="My Story" />
           } @else {
@@ -47,7 +75,7 @@
       </div>
 
       <!-- Other users' stories -->
-      @for (sg of otherStories; track sg.user._id) {
+      @for (sg of otherStories(); track sg.user._id) {
       <div class="story-item" [class.unseen]="sg.hasUnseen" (click)="openStoryViewer(sg)">
         <div class="story-avatar-wrap" [class.has-unseen]="sg.hasUnseen">
           @if (sg.user.avatar) {
@@ -123,7 +151,7 @@
     }
   </div>
 
-  @if (searchResults.length > 0) {
+  @if (searchResults().length > 0) {
   <div class="chat-list">
     <div class="search-results">
       <div class="search-results-title">{{ 'search.searchResults' | i18n }}</div>
@@ -161,54 +189,63 @@
             <fa-icon [icon]="['fas', 'bookmark']"></fa-icon>
           </div>
           } @else if (chat.isGroup || chat.isChannel) {
-          <fa-icon [icon]="['fas', chat.isChannel ? 'broadcast-tower' : 'users']" class="group-icon"></fa-icon>
+          <div class="chat-avatar-group">
+            <fa-icon [icon]="['fas', chat.isChannel ? 'broadcast-tower' : 'users']"></fa-icon>
+          </div>
           } @else if (chat.avatar && !avatarBroken(chat._id)) {
-          <img [src]="chat.avatar" alt="Avatar" (error)="markAvatarBroken(chat._id)" />
+          <img
+            [src]="chat.avatar"
+            alt="Avatar"
+            class="chat-avatar-img"
+            (error)="markAvatarBroken(chat._id)"
+          />
           } @else {
           <div class="chat-avatar-initials" [style.background]="avatarBg(chat)">
             {{ initials(chat) }}
           </div>
           }
           @if (chat.isOnline) {
-          <span class="status-dot online"></span>
-          } @else if (mainService.isAgentChat(chat)) {
-          <span class="status-dot agent"></span>
+          <span class="online-dot"></span>
           }
         </div>
-        <div class="chat-info">
-          <div class="chat-name">
-            @if (mainService.isAgentChat(chat)) {
-            <fa-icon [icon]="['fas', 'robot']" class="chat-agent-icon"></fa-icon>
-            }
-            <span>{{ displayName(chat) }}</span>
-            @if (chat.isChannel) {
-            <fa-icon [icon]="['fas', 'tag']" class="channel-tag"></fa-icon>
+
+        <div class="chat-content">
+          <div class="chat-top">
+            <div class="chat-name">{{ displayName(chat) }}</div>
+            @if (chat.lastMessage?.createdAt) {
+            <div class="chat-time">{{ chat.lastMessage?.createdAt | date : 'HH:mm' }}</div>
             }
           </div>
-          <div class="chat-last-message">{{ chat.lastMessage?.content ?? ('chat.noMessages' | i18n) }}</div>
-        </div>
-        <div class="chat-meta">
-          @if (chat.isOnline) {
-          <div class="chat-status-online">{{ 'status.online' | i18n }}</div>
-          } @else if (chat.lastSeen) {
-          <div class="chat-status-offline">{{ 'status.lastSeen' | i18n }}: {{ chat.lastSeen | date:'short' }}</div>
-          }
-          @if (chat.updatedAt && !chat.isOnline && !chat.lastSeen) {
-          <div class="chat-time">{{ chat.updatedAt | date: 'short-time' }}</div>
-          }
-          @if (chat.messageCount && chat.messageCount > 0) {
-          <div class="unread-count">{{ chat.messageCount > 99 ? '99+' : chat.messageCount }}</div>
-          }
+
+          <div class="chat-bottom">
+            <div class="last-message">
+              @if (chat.lastMessage?.isDeleted || chat.lastMessage?.deletedForEveryone) {
+              <span class="deleted-msg-label">
+                <fa-icon [icon]="['fas', 'trash']" class="deleted-icon"></fa-icon>
+                {{ 'chat.deletedMessage' | i18n }}
+              </span>
+              } @else {
+              {{ chat.lastMessage?.content || '' }}
+              }
+            </div>
+
+            @if (chat.messageCount && chat.messageCount > 0) {
+            <div class="unread-count">{{ chat.messageCount > 99 ? '99+' : chat.messageCount }}</div>
+            }
+          </div>
         </div>
       </div>
       }
-      <div class="empty-state" *ngIf="mainService.chatItems.length === 0">
+
+      @if (mainService.chatItems.length === 0) {
+      <div class="empty-state">
         <div class="empty-illustration">
           <fa-icon [icon]="['fas', 'comments']" class="empty-icon"></fa-icon>
         </div>
         <p class="empty-title">{{ 'chat.empty' | i18n }}</p>
         <p class="empty-subtitle">{{ 'chat.selectOrStart' | i18n }}</p>
       </div>
+      }
     </div>
   </div>
   }
@@ -218,9 +255,14 @@
   </div>
 </div>
 
-@if (showChatContextMenu && chatContextMenuTarget) {
-<div class="context-menu" [style.left.px]="chatContextMenuX" [style.top.px]="chatContextMenuY" (click)="$event.stopPropagation()">
-  @if (chatContextMenuTarget?.isGroup || chatContextMenuTarget?.isChannel) {
+@if (showChatContextMenu() && chatContextMenuTarget()) {
+<div
+  class="context-menu"
+  [style.left.px]="chatContextMenuX()"
+  [style.top.px]="chatContextMenuY()"
+  (click)="$event.stopPropagation()"
+>
+  @if (chatContextMenuTarget()?.isGroup || chatContextMenuTarget()?.isChannel) {
   <button class="context-menu-item" (click)="onChatContextMenuAction('leave')">
     <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
     <span>{{ 'chat.leave' | i18n }}</span>

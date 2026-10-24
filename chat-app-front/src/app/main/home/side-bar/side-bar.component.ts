@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, output, signal } from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MainService } from '../../main.service';
 import { ThemeService } from '../../../helpers/theme.service';
@@ -12,20 +12,22 @@ import { take } from 'rxjs/operators';
   imports: [FontAwesomeModule, I18nPipe],
   templateUrl: './side-bar.component.html',
   styleUrl: './side-bar.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SideBarComponent {
-  @Input() mobileOpen = false;
-  @Output() close = new EventEmitter<void>();
-  customItems: { icon: string; titleKey: string; id: string }[] = [];
-  navItems = [
+  readonly mobileOpen = input<boolean>(false);
+  readonly close = output<void>();
+
+  readonly navItems = [
     { icon: 'comment-dots', titleKey: 'sidebar.chats', id: 'all' },
     { icon: 'bookmark', titleKey: 'sidebar.savedMessages', id: 'saved-messages' },
     { icon: 'users', titleKey: 'sidebar.groups', id: 'groups' },
     { icon: 'broadcast-tower', titleKey: 'sidebar.channels', id: 'channels' },
     { icon: 'address-book', titleKey: 'contacts.title', id: 'contacts' },
   ];
-  notificationsEnabled = true;
-  agentHistory: { chatId: string; summary: string }[] = [];
+
+  readonly notificationsEnabled = signal(true);
+  readonly agentHistory = signal<{ chatId: string; summary: string }[]>([]);
 
   constructor(
     public mainService: MainService,
@@ -43,43 +45,48 @@ export class SideBarComponent {
     } else {
       this.mainService.openEditProfileModal();
     }
-    if (this.mobileOpen) this.close.emit();
+    if (this.mobileOpen()) this.close.emit();
   }
 
   openSettings() {
     this.mainService.openSettingsModal();
-    if (this.mobileOpen) this.close.emit();
+    if (this.mobileOpen()) this.close.emit();
   }
 
   toggleTheme() {
     this.themeService.toggleTheme();
-    if (this.mobileOpen) this.close.emit();
+    if (this.mobileOpen()) this.close.emit();
   }
 
   toggleLanguage() {
     this.translationService.switchLanguage();
-    if (this.mobileOpen) this.close.emit();
+    if (this.mobileOpen()) this.close.emit();
   }
 
   selectNav(id: string) {
     if (id === 'contacts') this.mainService.showContacts();
     else if (id === 'saved-messages') this.mainService.openSavedMessages();
     else this.mainService.setChatFilter(id as any);
-    if (this.mobileOpen) this.close.emit();
+    if (this.mobileOpen()) this.close.emit();
   }
 
   loadNotificationSettings() {
     this.mainService.getNotificationSettings().pipe(take(1)).subscribe({
-      next: (res: any) => { this.notificationsEnabled = res.enabled ?? true; },
-      error: () => { this.notificationsEnabled = true; },
+      next: (res: any) => {
+        this.notificationsEnabled.set(res?.enabled ?? true);
+      },
+      error: () => {
+        this.notificationsEnabled.set(true);
+      },
     });
   }
 
   toggleNotifications() {
-    this.notificationsEnabled = !this.notificationsEnabled;
-    this.mainService.updateNotificationSettings(this.notificationsEnabled).pipe(take(1)).subscribe({
+    const next = !this.notificationsEnabled();
+    this.notificationsEnabled.set(next);
+    this.mainService.updateNotificationSettings(next).pipe(take(1)).subscribe({
       error: () => {
-        this.notificationsEnabled = !this.notificationsEnabled;
+        this.notificationsEnabled.set(!next);
         this.mainService.snackbar.error('خطا در ذخیره تنظیمات', 3000);
       },
     });
@@ -91,10 +98,12 @@ export class SideBarComponent {
       next: (res: any) => {
         if (res.messages && res.messages.length > 0) {
           const botName = res.botName || 'دستیار';
-          this.agentHistory = [{
-            chatId: res.chatId,
-            summary: this.summarizeHistory(res.messages, botName),
-          }];
+          this.agentHistory.set([
+            {
+              chatId: res.chatId,
+              summary: this.summarizeHistory(res.messages, botName),
+            },
+          ]);
         }
       },
       error: () => {},

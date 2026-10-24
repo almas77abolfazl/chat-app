@@ -1,4 +1,4 @@
-import { Inject, Injectable, NgZone } from '@angular/core';
+import { Inject, Injectable, NgZone, signal, computed } from '@angular/core';
 import { EditProfileComponent } from './edit-profile/edit-profile.component';
 import { SettingsComponent } from './settings/settings.component';
 import { MatDialog } from '@angular/material/dialog';
@@ -18,13 +18,139 @@ import { SnackbarService } from '../helpers/snackbar/snackbar.service';
 
 @Injectable({ providedIn: 'root' })
 export class MainService {
-  currentChat: ChatListItem = null;
-  chatItems: ChatListItem[] = [];
-  chatFilter: 'all' | 'direct' | 'groups' | 'channels' | 'bots' = 'all';
-  stories: StoryGroup[] = [];
-  currentPage: number = 1;
-  totalPages: number = 1;
-  loadingMessages = false;
+  readonly currentChatSignal = signal<ChatListItem | null>(null);
+  get currentChat(): ChatListItem | null {
+    return this.currentChatSignal();
+  }
+  set currentChat(value: ChatListItem | null) {
+    this.currentChatSignal.set(value);
+  }
+
+  readonly chatItemsSignal = signal<ChatListItem[]>([]);
+  get chatItems(): ChatListItem[] {
+    return this.chatItemsSignal();
+  }
+  set chatItems(value: ChatListItem[]) {
+    this.chatItemsSignal.set(value);
+  }
+
+  readonly chatFilterSignal = signal<'all' | 'direct' | 'groups' | 'channels' | 'bots'>('all');
+  get chatFilter(): 'all' | 'direct' | 'groups' | 'channels' | 'bots' {
+    return this.chatFilterSignal();
+  }
+  set chatFilter(value: 'all' | 'direct' | 'groups' | 'channels' | 'bots') {
+    this.chatFilterSignal.set(value);
+  }
+
+  readonly storiesSignal = signal<StoryGroup[]>([]);
+  get stories(): StoryGroup[] {
+    return this.storiesSignal();
+  }
+  set stories(value: StoryGroup[]) {
+    this.storiesSignal.set(value);
+  }
+
+  readonly currentPageSignal = signal<number>(1);
+  get currentPage(): number {
+    return this.currentPageSignal();
+  }
+  set currentPage(v: number) {
+    this.currentPageSignal.set(v);
+  }
+
+  readonly totalPagesSignal = signal<number>(1);
+  get totalPages(): number {
+    return this.totalPagesSignal();
+  }
+  set totalPages(v: number) {
+    this.totalPagesSignal.set(v);
+  }
+
+  readonly loadingMessagesSignal = signal<boolean>(false);
+  get loadingMessages(): boolean {
+    return this.loadingMessagesSignal();
+  }
+  set loadingMessages(v: boolean) {
+    this.loadingMessagesSignal.set(v);
+  }
+
+  readonly pictureSrcSignal = signal<string>('');
+  get pictureSrc(): string {
+    return this.pictureSrcSignal();
+  }
+  set pictureSrc(v: string) {
+    this.pictureSrcSignal.set(v);
+  }
+
+  readonly agentConfiguredSignal = signal<boolean>(false);
+  get agentConfigured(): boolean {
+    return this.agentConfiguredSignal();
+  }
+  set agentConfigured(v: boolean) {
+    this.agentConfiguredSignal.set(v);
+  }
+
+  readonly botUserIdSignal = signal<string | null>(null);
+  get botUserId(): string | null {
+    return this.botUserIdSignal();
+  }
+  set botUserId(v: string | null) {
+    this.botUserIdSignal.set(v);
+  }
+
+  readonly botChatIdSignal = signal<string | null>(null);
+  get botChatId(): string | null {
+    return this.botChatIdSignal();
+  }
+  set botChatId(v: string | null) {
+    this.botChatIdSignal.set(v);
+  }
+
+  readonly botFirstNameSignal = signal<string>('دستیار');
+  get botFirstName(): string {
+    return this.botFirstNameSignal();
+  }
+  set botFirstName(v: string) {
+    this.botFirstNameSignal.set(v);
+  }
+
+  readonly botLastNameSignal = signal<string>('هوشمند');
+  get botLastName(): string {
+    return this.botLastNameSignal();
+  }
+  set botLastName(v: string) {
+    this.botLastNameSignal.set(v);
+  }
+
+  readonly agentWorkingSignal = signal<boolean>(false);
+  get agentWorking(): boolean {
+    return this.agentWorkingSignal();
+  }
+  set agentWorking(v: boolean) {
+    this.agentWorkingSignal.set(v);
+  }
+
+  readonly agentStreamingMessageSignal = signal<Message | null>(null);
+  get agentStreamingMessage(): Message | null {
+    return this.agentStreamingMessageSignal();
+  }
+  set agentStreamingMessage(v: Message | null) {
+    this.agentStreamingMessageSignal.set(v);
+  }
+
+  readonly filteredChatItems = computed(() => {
+    const filter = this.chatFilterSignal();
+    const items = this.chatItemsSignal();
+    if (filter === 'all') return items;
+    return items.filter((item) => {
+      if (filter === 'direct') return !item.isGroup && !item.isChannel && !item.isSavedMessages;
+      if (filter === 'groups') return !!item.isGroup;
+      if (filter === 'channels') return !!item.isChannel;
+      if (filter === 'bots') return item._id === this.botChatIdSignal();
+      return true;
+    });
+  });
+
   private chatOpenedSubject = new BehaviorSubject<void>(null);
   chatOpened$ = this.chatOpenedSubject.asObservable();
   private chatListUpdatedSubject = new Subject<ChatListItem[]>();
@@ -33,15 +159,6 @@ export class MainService {
   messagesLoaded$ = this.messagesLoadedSubject.asObservable();
 
   file: any;
-  pictureSrc = '';
-
-  agentConfigured = false;
-  botUserId: string | null = null;
-  botChatId: string | null = null;
-  botFirstName = 'دستیار';
-  botLastName = 'هوشمند';
-  agentWorking = false;
-  agentStreamingMessage: Message = null;
 
   private messagesSubscription: any;
   private typingTimeouts = new Map<string, ReturnType<typeof setTimeout>>;
@@ -188,8 +305,13 @@ export class MainService {
     const existing = this.findChatById(item._id as string);
     if (existing) {
       Object.assign(existing, item);
+      this.chatItemsSignal.set([...this.chatItems]);
     } else {
       this.chatItems.unshift(item);
+      this.chatItemsSignal.set([...this.chatItems]);
+    }
+    if (this.currentChat?._id === item._id) {
+      this.currentChatSignal.set(existing || item);
     }
   }
 

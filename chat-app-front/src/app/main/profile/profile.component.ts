@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectionStrategy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -34,32 +34,71 @@ export interface ProfileDialogData {
   imports: [CommonModule, MatButtonModule, MatDialogModule, FontAwesomeModule, I18nPipe],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProfileComponent implements OnInit {
-  chatData: ChatListItem | null = null;
-  targetUserId: string | null = null;
-  userProfile: any = null;
-  loadingProfile = true;
+  readonly chatDataSignal = signal<ChatListItem | null>(null);
+  get chatData(): ChatListItem | null { return this.chatDataSignal(); }
+  set chatData(v: ChatListItem | null) { this.chatDataSignal.set(v); }
+
+  readonly targetUserIdSignal = signal<string | null>(null);
+  get targetUserId(): string | null { return this.targetUserIdSignal(); }
+  set targetUserId(v: string | null) { this.targetUserIdSignal.set(v); }
+
+  readonly userProfileSignal = signal<any>(null);
+  get userProfile(): any { return this.userProfileSignal(); }
+  set userProfile(v: any) { this.userProfileSignal.set(v); }
+
+  readonly loadingProfileSignal = signal<boolean>(true);
+  get loadingProfile(): boolean { return this.loadingProfileSignal(); }
+  set loadingProfile(v: boolean) { this.loadingProfileSignal.set(v); }
 
   // Avatars carousel
-  avatars: string[] = [];
-  activeAvatarIndex = 0;
-  showFullscreenAvatar = false;
-  avatarLoadError = false;
+  readonly avatarsSignal = signal<string[]>([]);
+  get avatars(): string[] { return this.avatarsSignal(); }
+  set avatars(v: string[]) { this.avatarsSignal.set(v); }
+
+  readonly activeAvatarIndexSignal = signal<number>(0);
+  get activeAvatarIndex(): number { return this.activeAvatarIndexSignal(); }
+  set activeAvatarIndex(v: number) { this.activeAvatarIndexSignal.set(v); }
+
+  readonly showFullscreenAvatarSignal = signal<boolean>(false);
+  get showFullscreenAvatar(): boolean { return this.showFullscreenAvatarSignal(); }
+  set showFullscreenAvatar(v: boolean) { this.showFullscreenAvatarSignal.set(v); }
+
+  readonly avatarLoadErrorSignal = signal<boolean>(false);
+  get avatarLoadError(): boolean { return this.avatarLoadErrorSignal(); }
+  set avatarLoadError(v: boolean) { this.avatarLoadErrorSignal.set(v); }
 
   // Media tabs
-  activeMediaTab: 'photos' | 'files' | 'voice' = 'photos';
-  mediaSummary = {
+  readonly activeMediaTabSignal = signal<'photos' | 'files' | 'voice'>('photos');
+  get activeMediaTab(): 'photos' | 'files' | 'voice' { return this.activeMediaTabSignal(); }
+  set activeMediaTab(v: 'photos' | 'files' | 'voice') { this.activeMediaTabSignal.set(v); }
+
+  readonly mediaSummarySignal = signal({
     photosCount: 0,
     videosCount: 0,
     filesCount: 0,
     voiceCount: 0,
-  };
-  mediaItems: any[] = [];
-  loadingMedia = false;
+  });
+  get mediaSummary() { return this.mediaSummarySignal(); }
+  set mediaSummary(v: { photosCount: number; videosCount: number; filesCount: number; voiceCount: number }) { this.mediaSummarySignal.set(v); }
 
-  copiedUsername = false;
-  isTargetUserBlocked = false;
+  readonly mediaItemsSignal = signal<any[]>([]);
+  get mediaItems(): any[] { return this.mediaItemsSignal(); }
+  set mediaItems(v: any[]) { this.mediaItemsSignal.set(v); }
+
+  readonly loadingMediaSignal = signal<boolean>(false);
+  get loadingMedia(): boolean { return this.loadingMediaSignal(); }
+  set loadingMedia(v: boolean) { this.loadingMediaSignal.set(v); }
+
+  readonly copiedUsernameSignal = signal<boolean>(false);
+  get copiedUsername(): boolean { return this.copiedUsernameSignal(); }
+  set copiedUsername(v: boolean) { this.copiedUsernameSignal.set(v); }
+
+  readonly isTargetUserBlockedSignal = signal<boolean>(false);
+  get isTargetUserBlocked(): boolean { return this.isTargetUserBlockedSignal(); }
+  set isTargetUserBlocked(v: boolean) { this.isTargetUserBlockedSignal.set(v); }
 
   constructor(
     public dialogRef: MatDialogRef<ProfileComponent>,

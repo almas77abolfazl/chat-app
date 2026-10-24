@@ -1,9 +1,21 @@
-import { Component, OnDestroy, OnInit, AfterViewInit, ViewChild, ElementRef, HostListener, ChangeDetectorRef, inject } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  AfterViewInit,
+  viewChild,
+  ElementRef,
+  HostListener,
+  ChangeDetectorRef,
+  inject,
+  ChangeDetectionStrategy,
+  signal,
+  DestroyRef,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MainService } from '../../main.service';
 import { NgClass } from '@angular/common';
-import { take, takeUntil } from 'rxjs';
-import { Subscription, Subject } from 'rxjs';
+import { take } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
@@ -30,8 +42,11 @@ export interface ContextMenuAction {
   imports: [FontAwesomeModule, NgClass, MatButtonModule, FormsModule, I18nPipe, ContentPickerComponent],
   templateUrl: './chat-area.component.html',
   styleUrl: './chat-area.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
+export class ChatAreaComponent implements OnInit, AfterViewInit {
+  private readonly destroyRef = inject(DestroyRef);
+
   constructor(
     public mainService: MainService,
     private dialog: MatDialog,
@@ -39,39 +54,95 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     private cdr: ChangeDetectorRef,
     public translationService: TranslationService
   ) {}
-  showScrollBottom = false;
-  private destroy$ = new Subject<void>();
-  private typingSubscription: Subscription;
-  typingUsers: string[] = [];
-  editMessageId: string | null = null;
-  editContent = '';
+
+  readonly showScrollBottomSignal = signal<boolean>(false);
+  get showScrollBottom(): boolean { return this.showScrollBottomSignal(); }
+  set showScrollBottom(v: boolean) { this.showScrollBottomSignal.set(v); }
+
+  readonly typingUsersSignal = signal<string[]>([]);
+  get typingUsers(): string[] { return this.typingUsersSignal(); }
+  set typingUsers(v: string[]) { this.typingUsersSignal.set(v); }
+
+  readonly editMessageIdSignal = signal<string | null>(null);
+  get editMessageId(): string | null { return this.editMessageIdSignal(); }
+  set editMessageId(v: string | null) { this.editMessageIdSignal.set(v); }
+
+  readonly editContentSignal = signal<string>('');
+  get editContent(): string { return this.editContentSignal(); }
+  set editContent(v: string) { this.editContentSignal.set(v); }
+
   brokenAvatars = new Set<string>();
-  showBgSelector = false;
-  showChatActions = false;
-  showContentPicker = false;
+
+  readonly showBgSelectorSignal = signal<boolean>(false);
+  get showBgSelector(): boolean { return this.showBgSelectorSignal(); }
+  set showBgSelector(v: boolean) { this.showBgSelectorSignal.set(v); }
+
+  readonly showChatActionsSignal = signal<boolean>(false);
+  get showChatActions(): boolean { return this.showChatActionsSignal(); }
+  set showChatActions(v: boolean) { this.showChatActionsSignal.set(v); }
+
+  readonly showContentPickerSignal = signal<boolean>(false);
+  get showContentPicker(): boolean { return this.showContentPickerSignal(); }
+  set showContentPicker(v: boolean) { this.showContentPickerSignal.set(v); }
+
   get showEmojiPicker(): boolean { return this.showContentPicker; }
   set showEmojiPicker(v: boolean) { this.showContentPicker = v; }
-  showContextMenu = false;
-  contextMenuX = 0;
-  contextMenuY = 0;
-  contextMenuTarget: Message | null = null;
+
+  readonly showContextMenuSignal = signal<boolean>(false);
+  get showContextMenu(): boolean { return this.showContextMenuSignal(); }
+  set showContextMenu(v: boolean) { this.showContextMenuSignal.set(v); }
+
+  readonly contextMenuXSignal = signal<number>(0);
+  get contextMenuX(): number { return this.contextMenuXSignal(); }
+  set contextMenuX(v: number) { this.contextMenuXSignal.set(v); }
+
+  readonly contextMenuYSignal = signal<number>(0);
+  get contextMenuY(): number { return this.contextMenuYSignal(); }
+  set contextMenuY(v: number) { this.contextMenuYSignal.set(v); }
+
+  readonly contextMenuTargetSignal = signal<Message | null>(null);
+  get contextMenuTarget(): Message | null { return this.contextMenuTargetSignal(); }
+  set contextMenuTarget(v: Message | null) { this.contextMenuTargetSignal.set(v); }
+
   bgOptions = CHAT_BACKGROUNDS;
-  replyingToId: string | null = null;
-  replyingToPreview = '';
-  @ViewChild('fileInput') fileInput!: ElementRef<HTMLInputElement>;
-  @ViewChild('chatMessages') chatMessages!: ElementRef<HTMLElement>;
-  @ViewChild('element') element!: ElementRef<HTMLTextAreaElement>;
-  @ViewChild('inChatSearchInput') inChatSearchInput?: ElementRef<HTMLInputElement>;
+
+  readonly replyingToIdSignal = signal<string | null>(null);
+  get replyingToId(): string | null { return this.replyingToIdSignal(); }
+  set replyingToId(v: string | null) { this.replyingToIdSignal.set(v); }
+
+  readonly replyingToPreviewSignal = signal<string>('');
+  get replyingToPreview(): string { return this.replyingToPreviewSignal(); }
+  set replyingToPreview(v: string) { this.replyingToPreviewSignal.set(v); }
+
+  readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
+  readonly chatMessages = viewChild<ElementRef<HTMLElement>>('chatMessages');
+  readonly element = viewChild<ElementRef<HTMLTextAreaElement>>('element');
+  readonly inChatSearchInput = viewChild<ElementRef<HTMLInputElement>>('inChatSearchInput');
+
   userReactions: Map<string, string> = new Map();
 
-  showInChatSearch = false;
-  inChatSearchQuery = '';
-  searchMatches: string[] = [];
-  currentMatchIndex = -1;
-  isPeerBlocked = false;
+  readonly showInChatSearchSignal = signal<boolean>(false);
+  get showInChatSearch(): boolean { return this.showInChatSearchSignal(); }
+  set showInChatSearch(v: boolean) { this.showInChatSearchSignal.set(v); }
+
+  readonly inChatSearchQuerySignal = signal<string>('');
+  get inChatSearchQuery(): string { return this.inChatSearchQuerySignal(); }
+  set inChatSearchQuery(v: string) { this.inChatSearchQuerySignal.set(v); }
+
+  readonly searchMatchesSignal = signal<string[]>([]);
+  get searchMatches(): string[] { return this.searchMatchesSignal(); }
+  set searchMatches(v: string[]) { this.searchMatchesSignal.set(v); }
+
+  readonly currentMatchIndexSignal = signal<number>(-1);
+  get currentMatchIndex(): number { return this.currentMatchIndexSignal(); }
+  set currentMatchIndex(v: number) { this.currentMatchIndexSignal.set(v); }
+
+  readonly isPeerBlockedSignal = signal<boolean>(false);
+  get isPeerBlocked(): boolean { return this.isPeerBlockedSignal(); }
+  set isPeerBlocked(v: boolean) { this.isPeerBlockedSignal.set(v); }
 
   ngOnInit() {
-    this.mainService.chatOpened$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+    this.mainService.chatOpened$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.closeInChatSearch();
       this.checkPeerBlocked();
       this.markCurrentChatMessagesRead();
@@ -79,14 +150,15 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
       this.cdr.markForCheck();
     });
 
-    this.mainService.messagesLoaded$.pipe(takeUntil(this.destroy$)).subscribe(() => {
+    this.mainService.messagesLoaded$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.scrollToBottom();
       this.cdr.markForCheck();
     });
 
-    this.typingSubscription = this.mainService.typingUsers$.subscribe((typingMap) => {
+    this.mainService.typingUsers$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((typingMap) => {
       const chatId = this.mainService.currentChat?._id;
       this.typingUsers = chatId ? typingMap.get(chatId) || [] : [];
+      this.cdr.markForCheck();
     });
   }
 
@@ -118,8 +190,8 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
         event.preventDefault();
         this.showInChatSearch = true;
         setTimeout(() => {
-          this.inChatSearchInput?.nativeElement?.select();
-          this.inChatSearchInput?.nativeElement?.focus();
+          this.inChatSearchInput()?.nativeElement?.select();
+          this.inChatSearchInput()?.nativeElement?.focus();
         }, 50);
         this.cdr.markForCheck();
       }
@@ -127,17 +199,11 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   scrollToBottom() {
-    const el = this.chatMessages?.nativeElement;
+    const el = this.chatMessages()?.nativeElement;
     if (el) {
       el.scrollTop = el.scrollHeight;
       this.showScrollBottom = false;
     }
-  }
-
-  ngOnDestroy() {
-    this.destroy$.next();
-    this.destroy$.complete();
-    this.typingSubscription?.unsubscribe();
   }
 
   onTyping() {
@@ -199,8 +265,8 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     this.showInChatSearch = !this.showInChatSearch;
     if (this.showInChatSearch) {
       setTimeout(() => {
-        this.inChatSearchInput?.nativeElement?.select();
-        this.inChatSearchInput?.nativeElement?.focus();
+        this.inChatSearchInput()?.nativeElement?.select();
+        this.inChatSearchInput()?.nativeElement?.focus();
       }, 50);
       if (this.inChatSearchQuery.trim()) {
         this.performInChatSearch();
@@ -526,7 +592,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   replyToMessage(message: Message) {
     this.replyingToId = message._id;
     this.replyingToPreview = message.content?.substring(0, 60) || '';
-    const textarea = this.element?.nativeElement as HTMLTextAreaElement | null;
+    const textarea = this.element()?.nativeElement as HTMLTextAreaElement | null;
     if (textarea) textarea.focus();
   }
 
@@ -739,7 +805,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   insertEmoji(emoji: string) {
-    const textarea = this.element?.nativeElement as HTMLTextAreaElement | null;
+    const textarea = this.element()?.nativeElement as HTMLTextAreaElement | null;
     if (textarea) {
       const start = textarea.selectionStart || 0;
       const end = textarea.selectionEnd || 0;

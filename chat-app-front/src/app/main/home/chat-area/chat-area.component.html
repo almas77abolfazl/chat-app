@@ -3,7 +3,7 @@
 
   <div class="chat-header">
     <div class="back-button" (click)="goBack()" [attr.title]="'chat.backToChats' | i18n">
-      <fa-icon [icon]="['fas', translationService.isRTL ? 'arrow-right' : 'arrow-left']"></fa-icon>
+      <fa-icon [icon]="['fas', translationService.isRTL() ? 'arrow-right' : 'arrow-left']"></fa-icon>
     </div>
     <div class="chat-header-info" (click)="showProfile()">
       <div class="chat-avatar-wrap">

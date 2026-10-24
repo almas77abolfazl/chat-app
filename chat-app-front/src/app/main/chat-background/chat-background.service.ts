@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { Injectable, signal } from '@angular/core';
+import { toObservable } from '@angular/core/rxjs-interop';
 
 export type ChatBackgroundType = 'solid' | 'gradient' | 'wallpaper';
 
@@ -19,14 +19,15 @@ export const CHAT_BACKGROUNDS: ChatBackground[] = [
 
 @Injectable({ providedIn: 'root' })
 export class ChatBackgroundService {
-  private bgSubject = new BehaviorSubject<ChatBackground>(this.getInitialBackground());
-  bg$ = this.bgSubject.asObservable();
+  readonly currentBg = signal<ChatBackground>(this.getInitialBackground());
+  readonly bg$ = toObservable(this.currentBg);
 
   constructor() {
-    this.applyBackground(this.bgSubject.value);
+    this.applyBackground(this.currentBg());
   }
 
   private getInitialBackground(): ChatBackground {
+    if (typeof localStorage === 'undefined') return CHAT_BACKGROUNDS[0];
     const saved = localStorage.getItem('chat_bg');
     if (saved) {
       try {
@@ -40,16 +41,23 @@ export class ChatBackgroundService {
   }
 
   get current(): ChatBackground {
-    return this.bgSubject.value;
+    return this.currentBg();
   }
 
   setBackground(bg: ChatBackground): void {
-    this.bgSubject.next(bg);
-    localStorage.setItem('chat_bg', JSON.stringify(bg));
+    this.currentBg.set(bg);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('chat_bg', JSON.stringify(bg));
+    }
     this.applyBackground(bg);
   }
 
+  applyCurrent(): void {
+    this.applyBackground(this.currentBg());
+  }
+
   private applyBackground(bg: ChatBackground): void {
+    if (typeof document === 'undefined') return;
     const container = document.querySelector('.chat-area-container') as HTMLElement | null;
     if (!container) return;
     const el = container as HTMLElement;
@@ -58,17 +66,12 @@ export class ChatBackgroundService {
       el.style.removeProperty('background-image');
       el.style.backgroundColor = bg.value;
     } else if (bg.type === 'gradient') {
-      el.style.removeProperty('background-color');
       el.style.backgroundImage = bg.value;
-      el.style.backgroundSize = 'cover';
-      el.style.backgroundPosition = 'center';
-      el.style.backgroundAttachment = 'fixed';
-    } else {
       el.style.removeProperty('background-color');
+    } else if (bg.type === 'wallpaper') {
       el.style.backgroundImage = bg.value;
-      el.style.backgroundSize = 'cover';
-      el.style.backgroundPosition = 'center';
-      el.style.backgroundAttachment = 'fixed';
+      el.style.backgroundRepeat = 'repeat';
+      el.style.backgroundSize = 'auto';
     }
   }
 }

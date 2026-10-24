@@ -3,12 +3,12 @@
 
   <div class="fill-top-bar">
     <button class="top-bar-btn" (click)="translationService.switchLanguage()" [attr.aria-label]="'sidebar.language' | i18n" [attr.title]="'sidebar.language' | i18n" type="button">
-      <fa-icon [icon]="['fas', translationService.isRTL ? 'language' : 'earth']"></fa-icon>
-      <span>{{ translationService.isRTL ? 'English' : 'فارسی' }}</span>
+      <fa-icon [icon]="['fas', translationService.isRTL() ? 'language' : 'earth']"></fa-icon>
+      <span>{{ translationService.isRTL() ? 'English' : 'فارسی' }}</span>
     </button>
     <button class="top-bar-btn theme-toggle-btn" (click)="themeService.toggleTheme()" [attr.aria-label]="'theme.toggle' | i18n" [attr.title]="'theme.toggle' | i18n" type="button">
-      <fa-icon [icon]="['fas', themeService.theme === 'dark' ? 'sun' : 'moon']"></fa-icon>
-      <span>{{ themeService.theme === 'dark' ? ('theme.lightMode' | i18n) : ('theme.darkMode' | i18n) }}</span>
+      <fa-icon [icon]="['fas', themeService.isDark() ? 'sun' : 'moon']"></fa-icon>
+      <span>{{ themeService.isDark() ? ('theme.lightMode' | i18n) : ('theme.darkMode' | i18n) }}</span>
     </button>
   </div>
 
@@ -23,7 +23,9 @@
     <h2 class="fill-title">{{ 'profile.title' | i18n }}</h2>
     <p class="fill-subtitle">{{ 'profile.subtitle' | i18n }}</p>
 
-    <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+    @if (errorMessage) {
+    <div class="error-message">{{ errorMessage }}</div>
+    }
 
     <form (ngSubmit)="onSubmit()" class="fill-form">
       <div class="form-row">

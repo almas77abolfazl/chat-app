@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -15,14 +15,32 @@ import { take } from 'rxjs';
   imports: [CommonModule, FontAwesomeModule, MatButtonModule, I18nPipe],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsComponent implements OnInit {
-  notificationsEnabled = true;
-  userAvatar = '';
-  userName = '';
-  userPhone = '';
-  blockedUsers: any[] = [];
-  loadingBlocked = false;
+  readonly notificationsEnabledSignal = signal<boolean>(true);
+  get notificationsEnabled(): boolean { return this.notificationsEnabledSignal(); }
+  set notificationsEnabled(v: boolean) { this.notificationsEnabledSignal.set(v); }
+
+  readonly userAvatarSignal = signal<string>('');
+  get userAvatar(): string { return this.userAvatarSignal(); }
+  set userAvatar(v: string) { this.userAvatarSignal.set(v); }
+
+  readonly userNameSignal = signal<string>('');
+  get userName(): string { return this.userNameSignal(); }
+  set userName(v: string) { this.userNameSignal.set(v); }
+
+  readonly userPhoneSignal = signal<string>('');
+  get userPhone(): string { return this.userPhoneSignal(); }
+  set userPhone(v: string) { this.userPhoneSignal.set(v); }
+
+  readonly blockedUsersSignal = signal<any[]>([]);
+  get blockedUsers(): any[] { return this.blockedUsersSignal(); }
+  set blockedUsers(v: any[]) { this.blockedUsersSignal.set(v); }
+
+  readonly loadingBlockedSignal = signal<boolean>(false);
+  get loadingBlocked(): boolean { return this.loadingBlockedSignal(); }
+  set loadingBlocked(v: boolean) { this.loadingBlockedSignal.set(v); }
 
   constructor(
     public dialogRef: MatDialogRef<SettingsComponent>,
@@ -40,7 +58,7 @@ export class SettingsComponent implements OnInit {
 
     this.mainService.getNotificationSettings().pipe(take(1)).subscribe({
       next: (res: any) => {
-        this.notificationsEnabled = res.enabled ?? true;
+        this.notificationsEnabled = res?.enabled ?? true;
       },
       error: () => {
         this.notificationsEnabled = true;
@@ -84,7 +102,7 @@ export class SettingsComponent implements OnInit {
   }
 
   selectLanguage(lang: Language): void {
-    if (this.translationService.currentLang !== lang) {
+    if (this.translationService.currentLang() !== lang) {
       this.translationService.loadLanguage(lang);
     }
   }
