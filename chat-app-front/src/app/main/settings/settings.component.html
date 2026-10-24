@@ -145,6 +145,46 @@
       </div>
     </div>
 
+    <!-- Blocked Users Section -->
+    <div class="settings-section">
+      <div class="section-header">
+        <div class="section-title">
+          <fa-icon [icon]="['fas', 'ban']" class="section-header-icon"></fa-icon>
+          {{ 'block.blockedList' | i18n }}
+        </div>
+      </div>
+      @if (blockedUsers.length === 0) {
+      <div class="empty-blocked">
+        {{ 'block.noBlocked' | i18n }}
+      </div>
+      } @else {
+      <div class="blocked-users-list">
+        @for (user of blockedUsers; track user._id) {
+        <div class="blocked-user-row">
+          <div class="blocked-user-info">
+            <div class="blocked-user-avatar">
+              @if (user.avatar) {
+              <img [src]="user.avatar" [alt]="user.name" />
+              } @else {
+              <div class="avatar-ph">{{ (user.name || 'U').slice(0, 1).toUpperCase() }}</div>
+              }
+            </div>
+            <div class="blocked-user-names">
+              <span class="name">{{ user.name }}</span>
+              @if (user.username) {
+              <span class="uname">@{{ user.username }}</span>
+              }
+            </div>
+          </div>
+          <button type="button" class="unblock-btn" (click)="unblock(user)">
+            {{ 'block.unblockUser' | i18n }}
+          </button>
+        </div>
+        }
+      </div>
+      }
+    </div>
+
     <!-- About Section -->
     <div class="settings-footer-info">
       <div class="app-brand-mini">

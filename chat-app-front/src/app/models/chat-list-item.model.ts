@@ -1,5 +1,23 @@
 import { Message } from './message.model';
 
+export interface AdminPermissions {
+  canChangeInfo?: boolean;
+  canPostMessages?: boolean;
+  canEditMessages?: boolean;
+  canDeleteMessages?: boolean;
+  canInviteUsers?: boolean;
+  canPinMessages?: boolean;
+  canManageAdmins?: boolean;
+}
+
+export interface ChatAdmin {
+  userId: string;
+  customTitle?: string;
+  permissions: AdminPermissions;
+  promotedBy?: string;
+  promotedAt?: Date;
+}
+
 export interface ChatParticipant {
   _id: string;
   firstName?: string;
@@ -25,6 +43,8 @@ export interface ChatListItem {
   isSavedMessages?: boolean;
   isOwner?: boolean;
   ownerId?: string;
+  admins?: ChatAdmin[];
+  isBlocked?: boolean;
   participants?: ChatParticipant[];
   lastMessage: Message;
   pinnedMessage?: Message | null;

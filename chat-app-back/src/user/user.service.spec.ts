@@ -144,4 +144,60 @@ describe('UserService - Online Status', () => {
       expect(mockUserWithAvatars.save).toHaveBeenCalled();
     });
   });
+
+  describe('UserService - Blocking', () => {
+    it('should block a user', async () => {
+      const mockUser = {
+        _id: 'user-123',
+        blockedUsers: [],
+        save: jest.fn().mockResolvedValue({}),
+      };
+      jest.spyOn(userModel, 'findById').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockUser),
+      } as any);
+
+      const res = await service.blockUser('user-123', '507f1f77bcf86cd799439011');
+      expect(res.success).toBe(true);
+      expect(mockUser.blockedUsers.length).toBe(1);
+      expect(mockUser.save).toHaveBeenCalled();
+    });
+
+    it('should unblock a user', async () => {
+      const mockUser = {
+        _id: 'user-123',
+        blockedUsers: ['507f1f77bcf86cd799439011'],
+        save: jest.fn().mockResolvedValue({}),
+      };
+      jest.spyOn(userModel, 'findById').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockUser),
+      } as any);
+
+      const res = await service.unblockUser('user-123', '507f1f77bcf86cd799439011');
+      expect(res.success).toBe(true);
+      expect(mockUser.blockedUsers.length).toBe(0);
+      expect(mockUser.save).toHaveBeenCalled();
+    });
+
+    it('should check if user is blocked', async () => {
+      const mockUserA = {
+        _id: 'user-1',
+        blockedUsers: ['user-2'],
+      };
+      const mockUserB = {
+        _id: 'user-2',
+        blockedUsers: [],
+      };
+      jest.spyOn(userModel, 'findById').mockImplementation(
+        (id: any) =>
+          ({
+            select: jest.fn().mockReturnValue({
+              exec: jest.fn().mockResolvedValue(id === 'user-1' ? mockUserA : mockUserB),
+            }),
+          }) as any,
+      );
+
+      const isBlocked = await service.isUserBlocked('user-2', 'user-1');
+      expect(isBlocked).toBe(true);
+    });
+  });
 });

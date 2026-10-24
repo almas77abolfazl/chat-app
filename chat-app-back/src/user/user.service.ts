@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './entities/user.entity';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
 import { IUser } from './interfaces/user.interface';
 import { UpdateUserNamesDto } from './dto/update-user-names.dto';
 import * as fs from 'fs';
@@ -258,6 +258,44 @@ export class UserService {
     const user = await this.userModel.findByIdAndUpdate(userId, { notifications: enabled }, { new: true }).select('notifications').exec();
     if (!user) throw new NotFoundException('User not found');
     return { enabled: user.notifications };
+  }
+
+  async blockUser(userId: string, targetId: string): Promise<{ success: boolean }> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) throw new NotFoundException('User not found');
+    const targetObjId = new Types.ObjectId(targetId);
+    user.blockedUsers ??= [];
+    if (!user.blockedUsers.some((id: any) => id.toString() === targetId)) {
+      user.blockedUsers.push(targetObjId);
+      await user.save();
+    }
+    return { success: true };
+  }
+
+  async unblockUser(userId: string, targetId: string): Promise<{ success: boolean }> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) throw new NotFoundException('User not found');
+    user.blockedUsers = (user.blockedUsers || []).filter((id: any) => id.toString() !== targetId);
+    await user.save();
+    return { success: true };
+  }
+
+  async getBlockedUsers(userId: string): Promise<any[]> {
+    const user = await this.userModel
+      .findById(userId)
+      .populate('blockedUsers', 'firstName lastName username profilePicture avatars status isOnline lastSeen phoneNumber')
+      .exec();
+    if (!user) return [];
+    return user.blockedUsers || [];
+  }
+
+  async isUserBlocked(userA: string, userB: string): Promise<boolean> {
+    const user = await this.userModel.findById(userA).select('blockedUsers').exec();
+    if (user?.blockedUsers?.some((id: any) => id.toString() === userB)) {
+      return true;
+    }
+    const other = await this.userModel.findById(userB).select('blockedUsers').exec();
+    return !!other?.blockedUsers?.some((id: any) => id.toString() === userA);
   }
 
   private async doesUserExist(phoneNumber: string): Promise<boolean> {

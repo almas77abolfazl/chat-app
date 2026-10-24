@@ -14,6 +14,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SearchModule } from './search/search.module';
 import { AgentModule } from './agent/agent.module';
 import { ReactionModule } from './message/reaction/reaction.module';
+import { StoryModule } from './story/story.module';
 import llmConfig from './config/llm.config';
 import appConfig from './config/app.config';
 import databaseConfig from './config/database.config';
@@ -48,6 +49,7 @@ import { join } from 'path';
     SearchModule,
     AgentModule,
     ReactionModule,
+    StoryModule,
   ],
   controllers: [AppController],
   providers: [

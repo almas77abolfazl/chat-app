@@ -123,6 +123,20 @@
         </div>
       </div>
       }
+
+      @if (!isGroup && !isChannel && !isCurrentUser && targetUserId) {
+      <div class="user-block-row">
+        <button
+          type="button"
+          class="block-btn"
+          [class.blocked]="isTargetUserBlocked"
+          (click)="toggleBlockUser()"
+        >
+          <fa-icon [icon]="['fas', isTargetUserBlocked ? 'check' : 'ban']"></fa-icon>
+          <span>{{ (isTargetUserBlocked ? 'block.unblockUser' : 'block.blockUser') | i18n }}</span>
+        </button>
+      </div>
+      }
     </section>
 
     <!-- Telegram-style Media Summary Tabs -->
@@ -265,14 +279,38 @@
             }
           </div>
           <div class="member-info">
-            <span class="member-name">{{ p.firstName }} {{ p.lastName }}</span>
+            <div class="member-name-row">
+              <span class="member-name">{{ p.firstName }} {{ p.lastName }}</span>
+              @if (isChatOwner(p._id)) {
+              <span class="role-badge owner-badge">
+                <fa-icon [icon]="['fas', 'crown']"></fa-icon>
+                <span>{{ 'admin.owner' | i18n }}</span>
+              </span>
+              } @else if (isChatAdmin(p._id)) {
+              <span class="role-badge admin-badge">
+                <span>{{ getAdminTitle(p._id) }}</span>
+              </span>
+              }
+            </div>
             <span class="member-status">
               {{ p.isOnline ? ('status.online' | i18n) : ('status.offline' | i18n) }}
             </span>
           </div>
+
+          @if (canManageAdmins() && !isChatOwner(p._id)) {
+          <button
+            type="button"
+            class="admin-manage-btn"
+            (click)="openAdminManagement(p, $event)"
+            [attr.title]="'admin.editAdmin' | i18n"
+          >
+            <fa-icon [icon]="['fas', isChatAdmin(p._id) ? 'cog' : 'crown']"></fa-icon>
+          </button>
+          } @else {
           <button class="member-action-btn">
             <fa-icon [icon]="['fas', 'chevron-left']"></fa-icon>
           </button>
+          }
         </div>
         }
       </div>

@@ -1,0 +1,28 @@
+<div class="delete-dialog-container">
+  <div class="dialog-header">
+    <div class="header-icon-danger">
+      <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+    </div>
+    <div class="header-title">{{ 'deleteDialog.title' | i18n }}</div>
+  </div>
+
+  <div class="dialog-body">
+    <p class="dialog-message">{{ 'deleteDialog.confirmMessage' | i18n }}</p>
+
+    @if (!data.chat.isSavedMessages && (!data.chat.isGroup && !data.chat.isChannel || data.isOwner)) {
+    <label class="checkbox-row">
+      <input type="checkbox" [(ngModel)]="deleteForBoth" class="custom-checkbox" />
+      <span class="checkbox-label">{{ alsoDeleteLabel }}</span>
+    </label>
+    }
+  </div>
+
+  <div class="dialog-actions">
+    <button type="button" class="btn btn-cancel" (click)="cancel()">
+      {{ 'deleteDialog.cancelButton' | i18n }}
+    </button>
+    <button type="button" class="btn btn-danger" (click)="confirm()">
+      {{ 'deleteDialog.deleteButton' | i18n }}
+    </button>
+  </div>
+</div>

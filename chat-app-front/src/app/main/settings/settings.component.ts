@@ -21,6 +21,8 @@ export class SettingsComponent implements OnInit {
   userAvatar = '';
   userName = '';
   userPhone = '';
+  blockedUsers: any[] = [];
+  loadingBlocked = false;
 
   constructor(
     public dialogRef: MatDialogRef<SettingsComponent>,
@@ -42,6 +44,33 @@ export class SettingsComponent implements OnInit {
       },
       error: () => {
         this.notificationsEnabled = true;
+      },
+    });
+
+    this.loadBlockedUsers();
+  }
+
+  loadBlockedUsers(): void {
+    this.loadingBlocked = true;
+    this.mainService.getBlockedUsers().pipe(take(1)).subscribe({
+      next: (users) => {
+        this.blockedUsers = users || [];
+        this.loadingBlocked = false;
+      },
+      error: () => {
+        this.loadingBlocked = false;
+      },
+    });
+  }
+
+  unblock(user: any): void {
+    this.mainService.unblockUser(user._id).pipe(take(1)).subscribe({
+      next: () => {
+        this.blockedUsers = this.blockedUsers.filter((u) => u._id !== user._id);
+        this.mainService.snackbar.success('کاربر از مسدودیت خارج شد', 3000);
+      },
+      error: () => {
+        this.mainService.snackbar.error('خطا در رفع مسدودیت', 3000);
       },
     });
   }

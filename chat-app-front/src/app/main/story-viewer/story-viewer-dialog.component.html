@@ -1,0 +1,82 @@
+<div
+  class="story-viewer-container"
+  (mousedown)="pause()"
+  (mouseup)="resume()"
+  (touchstart)="pause()"
+  (touchend)="resume()"
+>
+  <!-- Progress Bars -->
+  <div class="story-progress-row">
+    @for (s of data.group.stories; track s._id; let i = $index) {
+    <div class="progress-bar-track">
+      <div
+        class="progress-bar-fill"
+        [style.width.%]="i < currentIndex ? 100 : (i === currentIndex ? progress : 0)"
+      ></div>
+    </div>
+    }
+  </div>
+
+  <!-- Header -->
+  <div class="story-header">
+    <div class="author-info">
+      <div class="author-avatar">
+        @if (data.group.user.profilePicture) {
+        <img [src]="mainService.getAvatarUrl(data.group.user.profilePicture)" alt="Avatar" />
+        } @else {
+        <div class="avatar-initials">
+          {{ authorName.charAt(0) }}
+        </div>
+        }
+      </div>
+      <div class="author-name">{{ authorName }}</div>
+    </div>
+
+    <div class="header-actions">
+      @if (data.group.isCurrentUser) {
+      <div class="views-badge">
+        <fa-icon [icon]="['fas', 'eye']"></fa-icon>
+        <span>{{ currentStory?.viewsCount || 0 }}</span>
+      </div>
+      <button
+        type="button"
+        class="action-btn delete-btn"
+        (click)="deleteCurrentStory(); $event.stopPropagation()"
+        [title]="'story.deleteStory' | i18n"
+      >
+        <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+      </button>
+      }
+      <button
+        type="button"
+        class="action-btn close-btn"
+        (click)="close(); $event.stopPropagation()"
+        [title]="'actions.close' | i18n"
+      >
+        <fa-icon [icon]="['fas', 'times']"></fa-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="story-content">
+    @if (currentStory?.mediaType === 'image') {
+    <img [src]="currentStory?.mediaUrl" alt="Story" class="story-image" />
+    } @else {
+    <div class="story-text-card" [style.background]="currentStory?.backgroundColor || currentStory?.mediaUrl">
+      <p class="story-text-content">{{ currentStory?.caption }}</p>
+    </div>
+    }
+  </div>
+
+  <!-- Caption overlay if image -->
+  @if (currentStory?.mediaType === 'image' && currentStory?.caption) {
+  <div class="story-caption-overlay">
+    <p class="story-caption-text">{{ currentStory?.caption }}</p>
+  </div>
+  }
+
+  <!-- Tap Nav Overlays -->
+  <div class="tap-zone left-tap" (click)="prev(); $event.stopPropagation()"></div>
+  <div class="tap-zone right-tap" (click)="next(); $event.stopPropagation()"></div>
+</div>

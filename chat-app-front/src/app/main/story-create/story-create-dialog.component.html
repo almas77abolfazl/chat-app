@@ -1,0 +1,87 @@
+<div class="story-create-container">
+  <div class="dialog-header">
+    <div class="header-icon">
+      <fa-icon [icon]="['fas', 'camera']"></fa-icon>
+    </div>
+    <div class="header-title">{{ 'story.createStory' | i18n }}</div>
+  </div>
+
+  <div class="mode-tabs">
+    <button
+      type="button"
+      class="mode-tab"
+      [class.active]="mode === 'image'"
+      (click)="mode = 'image'"
+    >
+      <fa-icon [icon]="['fas', 'image']"></fa-icon>
+      <span>{{ 'story.photoOrImage' | i18n }}</span>
+    </button>
+    <button
+      type="button"
+      class="mode-tab"
+      [class.active]="mode === 'text'"
+      (click)="mode = 'text'"
+    >
+      <fa-icon [icon]="['fas', 'pen']"></fa-icon>
+      <span>{{ 'story.textStory' | i18n }}</span>
+    </button>
+  </div>
+
+  <div class="dialog-body">
+    @if (mode === 'image') {
+    <div class="file-picker-area" (click)="fileInput.click()">
+      @if (imagePreviewUrl) {
+      <img [src]="imagePreviewUrl" alt="Story preview" class="story-preview-img" />
+      } @else {
+      <div class="picker-placeholder">
+        <fa-icon [icon]="['fas', 'camera']" class="placeholder-icon"></fa-icon>
+        <span class="placeholder-text">برای انتخاب عکس کلیک کنید</span>
+      </div>
+      }
+      <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none" />
+    </div>
+
+    <input
+      type="text"
+      class="caption-input"
+      [(ngModel)]="caption"
+      [placeholder]="'story.captionPlaceholder' | i18n"
+    />
+    } @else {
+    <div class="text-story-preview" [style.background]="selectedBg">
+      <textarea
+        [(ngModel)]="textContent"
+        class="text-story-textarea"
+        placeholder="متن استوری خود را بنویسید..."
+        rows="4"
+      ></textarea>
+    </div>
+
+    <div class="bg-palette">
+      @for (bg of bgGradients; track bg) {
+      <div
+        class="bg-circle"
+        [class.selected]="selectedBg === bg"
+        [style.background]="bg"
+        (click)="selectedBg = bg"
+      ></div>
+      }
+    </div>
+    }
+  </div>
+
+  <div class="dialog-actions">
+    <button type="button" class="btn btn-cancel" (click)="cancel()">
+      {{ 'deleteDialog.cancelButton' | i18n }}
+    </button>
+    <button
+      type="button"
+      class="btn btn-primary"
+      [disabled]="(mode === 'image' && !selectedFile) || (mode === 'text' && !textContent.trim())"
+      (click)="submit()"
+    >
+      <fa-icon [icon]="['fas', 'paper-plane']"></fa-icon>
+      <span>{{ 'story.postStory' | i18n }}</span>
+    </button>
+  </div>
+</div>

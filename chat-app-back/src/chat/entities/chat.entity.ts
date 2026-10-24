@@ -3,6 +3,24 @@ import { Document, Types } from 'mongoose';
 
 export type ChatDocument = Chat & Document;
 
+export interface AdminPermissions {
+  canChangeInfo?: boolean;
+  canPostMessages?: boolean;
+  canEditMessages?: boolean;
+  canDeleteMessages?: boolean;
+  canInviteUsers?: boolean;
+  canPinMessages?: boolean;
+  canManageAdmins?: boolean;
+}
+
+export interface ChatAdmin {
+  userId: Types.ObjectId;
+  customTitle?: string;
+  permissions: AdminPermissions;
+  promotedBy?: Types.ObjectId;
+  promotedAt?: Date;
+}
+
 @Schema()
 export class Chat extends Document {
   @Prop({ type: [Types.ObjectId], ref: 'User', required: true })
@@ -22,6 +40,12 @@ export class Chat extends Document {
 
   @Prop({ type: Types.ObjectId, ref: 'User' })
   owner?: Types.ObjectId;
+
+  @Prop({ type: Array, default: [] })
+  admins?: ChatAdmin[];
+
+  @Prop({ type: [Types.ObjectId], ref: 'User', default: [] })
+  deletedFor?: Types.ObjectId[];
 
   @Prop({ type: String })
   avatar?: string;

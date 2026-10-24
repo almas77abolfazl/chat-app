@@ -5,6 +5,7 @@ import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angu
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { ChatListItem } from '../../models/chat-list-item.model';
 import { EditProfileComponent } from '../edit-profile/edit-profile.component';
+import { AdminManagementDialogComponent } from '../admin-management-dialog/admin-management-dialog.component';
 import { MainService } from '../main.service';
 import { TranslationService } from '../../helpers/translation.service';
 import { I18nPipe } from '../../helpers/i18n.pipe';
@@ -58,6 +59,7 @@ export class ProfileComponent implements OnInit {
   loadingMedia = false;
 
   copiedUsername = false;
+  isTargetUserBlocked = false;
 
   constructor(
     public dialogRef: MatDialogRef<ProfileComponent>,
@@ -94,6 +96,9 @@ export class ProfileComponent implements OnInit {
       this.setupGroupOrChannel();
     } else if (this.targetUserId) {
       this.loadUserProfile(this.targetUserId);
+      if (!this.isCurrentUser) {
+        this.checkBlockedStatus();
+      }
     } else {
       this.loadingProfile = false;
     }
@@ -389,5 +394,132 @@ export class ProfileComponent implements OnInit {
     if (!item?.fileUrl) return;
     const url = this.mainService.getAvatarUrl(item.fileUrl) || item.fileUrl;
     window.open(url, '_blank');
+  }
+
+  checkBlockedStatus(): void {
+    if (!this.targetUserId || this.isCurrentUser) return;
+    this.mainService
+      .isUserBlocked(this.targetUserId)
+      .pipe(take(1))
+      .subscribe({
+        next: (res) => {
+          this.isTargetUserBlocked = !!res?.isBlocked;
+        },
+        error: () => {},
+      });
+  }
+
+  toggleBlockUser(): void {
+    if (!this.targetUserId || this.isCurrentUser) return;
+    if (!this.isTargetUserBlocked) {
+      if (confirm(this.translationService.t('block.confirmBlock'))) {
+        this.mainService
+          .blockUser(this.targetUserId)
+          .pipe(take(1))
+          .subscribe({
+            next: () => {
+              this.isTargetUserBlocked = true;
+              this.mainService.snackbar.success(this.translationService.t('block.userBlockedBanner'), 3000);
+            },
+            error: () => {
+              this.mainService.snackbar.error('خطا در مسدود کردن کاربر', 3000);
+            },
+          });
+      }
+    } else {
+      this.mainService
+        .unblockUser(this.targetUserId)
+        .pipe(take(1))
+        .subscribe({
+          next: () => {
+            this.isTargetUserBlocked = false;
+            this.mainService.snackbar.success(this.translationService.t('block.unblockUser'), 3000);
+          },
+          error: () => {
+            this.mainService.snackbar.error('خطا در رفع مسدودیت کاربر', 3000);
+          },
+        });
+    }
+  }
+
+  openAdminManagement(member: any, event?: Event): void {
+    if (event) event.stopPropagation();
+    if (!this.chatData?._id) return;
+
+    const memberId = (member._id || member).toString();
+    const existingAdmin = (this.chatData.admins || []).find((a: any) => a.userId === memberId);
+
+    const dialogRef = this.dialog.open(AdminManagementDialogComponent, {
+      width: '440px',
+      maxWidth: '95vw',
+      panelClass: 'rtl-dialog',
+      data: {
+        chatId: this.chatData._id,
+        member,
+        isChannel: this.isChannel,
+        existingPermissions: existingAdmin?.permissions,
+        customTitle: existingAdmin?.customTitle,
+        isOwner: this.isChatOwner(this.currentUserId),
+        isCurrentAdmin: !!existingAdmin,
+      },
+    });
+
+    dialogRef.afterClosed().pipe(take(1)).subscribe((result) => {
+      if (!result) return;
+      if (result.action === 'save') {
+        this.mainService
+          .addAdmin(this.chatData!._id, result.targetUserId, result.permissions, result.customTitle)
+          .pipe(take(1))
+          .subscribe({
+            next: (updatedChat: any) => {
+              this.chatData!.admins = updatedChat.admins;
+              this.mainService.snackbar.success('مدیر با موفقیت ثبت شد', 3000);
+            },
+            error: (err: any) => {
+              this.mainService.snackbar.error(err?.error?.message || 'خطا در ثبت مدیر', 3000);
+            },
+          });
+      } else if (result.action === 'dismiss') {
+        this.mainService
+          .removeAdmin(this.chatData!._id, result.targetUserId)
+          .pipe(take(1))
+          .subscribe({
+            next: (updatedChat: any) => {
+              this.chatData!.admins = updatedChat.admins;
+              this.mainService.snackbar.success('دسترسی مدیریت حذف شد', 3000);
+            },
+            error: (err: any) => {
+              this.mainService.snackbar.error(err?.error?.message || 'خطا در حذف مدیر', 3000);
+            },
+          });
+      }
+    });
+  }
+
+  isChatOwner(userId?: string): boolean {
+    if (!userId || !this.chatData) return false;
+    return (this.chatData.ownerId || (this.chatData as any).owner) === userId;
+  }
+
+  isChatAdmin(userId?: string): boolean {
+    if (!userId || !this.chatData?.admins) return false;
+    return this.chatData.admins.some((a: any) => a.userId === userId);
+  }
+
+  getAdminTitle(userId?: string): string {
+    if (!userId || !this.chatData?.admins) return '';
+    const admin = this.chatData.admins.find((a: any) => a.userId === userId);
+    return admin?.customTitle || 'مدیر';
+  }
+
+  canManageAdmins(): boolean {
+    const myId = this.currentUserId;
+    if (this.isChatOwner(myId)) return true;
+    const admin = this.chatData?.admins?.find((a: any) => a.userId === myId);
+    return !!admin?.permissions?.canManageAdmins;
+  }
+
+  get currentUserId(): string {
+    return this.mainService.authService.getUserId();
   }
 }

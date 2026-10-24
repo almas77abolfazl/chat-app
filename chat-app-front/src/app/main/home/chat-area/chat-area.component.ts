@@ -8,6 +8,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 import { ProfileComponent } from '../../profile/profile.component';
+import { DeleteChatDialogComponent } from '../../delete-chat-dialog/delete-chat-dialog.component';
 import { ContentPickerComponent } from './content-picker/content-picker.component';
 import { Message } from '../../../models/message.model';
 import { ChatListItem } from '../../../models/chat-list-item.model';
@@ -67,10 +68,12 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   inChatSearchQuery = '';
   searchMatches: string[] = [];
   currentMatchIndex = -1;
+  isPeerBlocked = false;
 
   ngOnInit() {
     this.mainService.chatOpened$.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.closeInChatSearch();
+      this.checkPeerBlocked();
       this.markCurrentChatMessagesRead();
       this.replyingToId = null;
       this.cdr.markForCheck();
@@ -601,20 +604,88 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
     this.showChatActions = !this.showChatActions;
   }
 
+  checkPeerBlocked(): void {
+    const chat = this.mainService.currentChat;
+    if (chat && !chat.isGroup && !chat.isChannel && !chat.isSavedMessages && chat.peerId) {
+      this.mainService
+        .isUserBlocked(chat.peerId)
+        .pipe(take(1))
+        .subscribe({
+          next: (res) => {
+            this.isPeerBlocked = !!res?.isBlocked;
+            this.cdr.markForCheck();
+          },
+          error: () => {},
+        });
+    } else {
+      this.isPeerBlocked = false;
+    }
+  }
+
+  toggleBlockPeer(): void {
+    const chat = this.mainService.currentChat;
+    if (!chat || chat.isGroup || chat.isChannel || chat.isSavedMessages || !chat.peerId) return;
+
+    if (!this.isPeerBlocked) {
+      if (confirm(this.translationService.t('block.confirmBlock'))) {
+        this.mainService
+          .blockUser(chat.peerId)
+          .pipe(take(1))
+          .subscribe({
+            next: () => {
+              this.isPeerBlocked = true;
+              this.mainService.snackbar.success(this.translationService.t('block.userBlockedBanner'), 3000);
+              this.cdr.markForCheck();
+            },
+          });
+      }
+    } else {
+      this.mainService
+        .unblockUser(chat.peerId)
+        .pipe(take(1))
+        .subscribe({
+          next: () => {
+            this.isPeerBlocked = false;
+            this.mainService.snackbar.success(this.translationService.t('block.unblockUser'), 3000);
+            this.cdr.markForCheck();
+          },
+        });
+    }
+  }
+
   deleteCurrentChat() {
     const chat = this.mainService.currentChat;
     if (!chat) return;
-    if (confirm('آیا از حذف این گفتگو مطمئن هستید؟')) {
-      this.mainService.deleteChat(chat._id as string).pipe(take(1)).subscribe({
-        next: () => {
-          this.mainService.closeCurrentChat();
-          this.mainService.getChatList();
-        },
-        error: () => {
-          this.mainService.snackbar.error('خطا در حذف گفتگو', 3000);
-        },
+
+    const isOwner = chat.ownerId === this.mainService.authService.getUserId();
+    const dialogRef = this.dialog.open(DeleteChatDialogComponent, {
+      width: '380px',
+      maxWidth: '92vw',
+      panelClass: 'rtl-dialog',
+      data: {
+        chat,
+        isOwner,
+      },
+    });
+
+    dialogRef
+      .afterClosed()
+      .pipe(take(1))
+      .subscribe((result) => {
+        if (!result?.confirmed) return;
+        this.mainService
+          .deleteChat(chat._id as string, result.deleteForBoth)
+          .pipe(take(1))
+          .subscribe({
+            next: () => {
+              this.mainService.closeCurrentChat();
+              this.mainService.getChatList();
+            },
+            error: () => {
+              this.mainService.snackbar.error('خطا در حذف گفتگو', 3000);
+            },
+          });
       });
-    }
   }
 
   leaveCurrentChat() {

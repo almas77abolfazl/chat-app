@@ -1,10 +1,11 @@
-import { Body, Controller, Delete, Get, Param, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RequestWithUser } from 'src/auth/interfaces/request-with-user.model';
 import { CreateChatDto, ChatMemberDto } from './dto/create-chat.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerOptions } from 'src/helpers/upload';
+import { AdminPermissions } from './entities/chat.entity';
 
 @Controller('chat')
 export class ChatController {
@@ -103,10 +104,38 @@ export class ChatController {
     return { success: true };
   }
 
+  @Get(':id/admins')
+  @UseGuards(JwtAuthGuard)
+  async getAdmins(@Param('id') id: string, @Req() request: RequestWithUser) {
+    return this.chatService.getAdmins(id, request.user._id.toString());
+  }
+
+  @Post(':id/admins')
+  @UseGuards(JwtAuthGuard)
+  async addAdmin(
+    @Param('id') id: string,
+    @Body() body: { targetUserId: string; permissions?: AdminPermissions; customTitle?: string },
+    @Req() request: RequestWithUser,
+  ) {
+    return this.chatService.addAdmin(id, body.targetUserId, request.user._id.toString(), body.permissions, body.customTitle);
+  }
+
+  @Delete(':id/admins/:targetUserId')
+  @UseGuards(JwtAuthGuard)
+  async removeAdmin(@Param('id') id: string, @Param('targetUserId') targetUserId: string, @Req() request: RequestWithUser) {
+    return this.chatService.removeAdmin(id, targetUserId, request.user._id.toString());
+  }
+
   @Delete(':id/delete')
   @UseGuards(JwtAuthGuard)
-  async deleteChat(@Param('id') id: string, @Req() request: RequestWithUser) {
-    await this.chatService.deleteChat(id, request.user._id.toString());
+  async deleteChat(
+    @Param('id') id: string,
+    @Req() request: RequestWithUser,
+    @Query('deleteForBoth') queryDeleteForBoth?: string,
+    @Body('deleteForBoth') bodyDeleteForBoth?: boolean,
+  ) {
+    const deleteForBoth = bodyDeleteForBoth === true || queryDeleteForBoth === 'true';
+    await this.chatService.deleteChat(id, request.user._id.toString(), deleteForBoth);
     return { success: true };
   }
 }

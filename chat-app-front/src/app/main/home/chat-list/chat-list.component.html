@@ -20,6 +20,49 @@
       <button type="button" class="type-filter-chip" [class.active]="searchTypeFilter === 'channels'" (click)="searchTypeFilter = 'channels'">{{ 'folders.channels' | i18n }}</button>
     </div>
     } @else {
+    <div class="story-bar">
+      <!-- Current user's story / Add story button -->
+      <div
+        class="story-item own-story"
+        (click)="userOwnStory && userOwnStory.stories.length > 0 ? openStoryViewer(userOwnStory) : openStoryCreate()"
+      >
+        <div class="story-avatar-wrap" [class.has-stories]="userOwnStory && userOwnStory.stories.length > 0">
+          @if (mainService.userProfile?.avatar) {
+          <img [src]="mainService.userProfile?.avatar" class="story-avatar" alt="My Story" />
+          } @else {
+          <div class="story-avatar-placeholder">
+            {{ (mainService.userProfile?.name || 'U').slice(0, 1).toUpperCase() }}
+          </div>
+          }
+          <button
+            type="button"
+            class="story-add-badge"
+            (click)="$event.stopPropagation(); openStoryCreate()"
+            [title]="'story.createStory' | i18n"
+          >
+            <fa-icon [icon]="['fas', 'plus']"></fa-icon>
+          </button>
+        </div>
+        <span class="story-name">{{ 'story.yourStory' | i18n }}</span>
+      </div>
+
+      <!-- Other users' stories -->
+      @for (sg of otherStories; track sg.user._id) {
+      <div class="story-item" [class.unseen]="sg.hasUnseen" (click)="openStoryViewer(sg)">
+        <div class="story-avatar-wrap" [class.has-unseen]="sg.hasUnseen">
+          @if (sg.user.avatar) {
+          <img [src]="sg.user.avatar" class="story-avatar" [alt]="sg.user.name" />
+          } @else {
+          <div class="story-avatar-placeholder">
+            {{ (sg.user.name || 'U').slice(0, 1).toUpperCase() }}
+          </div>
+          }
+        </div>
+        <span class="story-name">{{ sg.user.name }}</span>
+      </div>
+      }
+    </div>
+
     <div class="folders-bar">
       <button
         type="button"

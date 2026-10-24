@@ -62,6 +62,31 @@ export class UserController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('blocked')
+  async getBlockedUsers(@Req() request: RequestWithUser) {
+    return this.userService.getBlockedUsers(request.user._id.toString());
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('block/:targetId')
+  async blockUser(@Req() request: RequestWithUser, @Param('targetId') targetId: string) {
+    return this.userService.blockUser(request.user._id.toString(), targetId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('block/:targetId')
+  async unblockUser(@Req() request: RequestWithUser, @Param('targetId') targetId: string) {
+    return this.userService.unblockUser(request.user._id.toString(), targetId);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('is-blocked/:targetId')
+  async isUserBlocked(@Req() request: RequestWithUser, @Param('targetId') targetId: string) {
+    const isBlocked = await this.userService.isUserBlocked(request.user._id.toString(), targetId);
+    return { isBlocked };
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Get(':id/status')
   async getUserStatus(@Param('id') id: string) {
     return this.userService.getUserStatus(id);
