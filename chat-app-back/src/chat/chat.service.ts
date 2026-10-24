@@ -1,11 +1,17 @@
-import { BadRequestException, Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, ForbiddenException, NotFoundException, Optional } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Chat, ChatDocument } from './entities/chat.entity';
+import { Message, MessageDocument } from '../message/entities/message.entity';
+import { User, UserDocument } from '../user/entities/user.entity';
 
 @Injectable()
 export class ChatService {
-  constructor(@InjectModel(Chat.name) private chatModel: Model<ChatDocument>) {}
+  constructor(
+    @InjectModel(Chat.name) private chatModel: Model<ChatDocument>,
+    @Optional() @InjectModel(Message.name) private messageModel?: Model<MessageDocument>,
+    @Optional() @InjectModel(User.name) private userModel?: Model<UserDocument>,
+  ) {}
 
   async getChatList(userId: string) {
     const userObjectId = new Types.ObjectId(userId);
@@ -105,7 +111,7 @@ export class ChatService {
     if (memberIds.length < 2) {
       throw new BadRequestException('A group needs at least 2 members');
     }
-    return this.chatModel.create({
+    const chat = await this.chatModel.create({
       name: name.trim(),
       isGroup: true,
       isChannel: false,
@@ -113,6 +119,47 @@ export class ChatService {
       owner: new Types.ObjectId(admin),
       unreadCounts: {},
     });
+
+    if (this.messageModel) {
+      try {
+        let adminName = 'شما';
+        let addedNames: string[] = [];
+        if (this.userModel) {
+          const adminUser = await this.userModel.findById(admin).exec();
+          if (adminUser) adminName = `${adminUser.firstName || ''} ${adminUser.lastName || ''}`.trim() || 'مدیر';
+          const otherMembers = memberIds.filter((id) => id !== admin);
+          if (otherMembers.length > 0) {
+            const users = await this.userModel.find({ _id: { $in: otherMembers } }).exec();
+            addedNames = users.map((u) => `${u.firstName || ''} ${u.lastName || ''}`.trim()).filter(Boolean);
+          }
+        }
+        const createMsg = await this.messageModel.create({
+          sender: new Types.ObjectId(admin),
+          chat: chat._id,
+          content: `${adminName} گروه را ایجاد کرد`,
+          mediaType: 'system',
+          read: true,
+          status: 'sent',
+        });
+        chat.lastMessage = createMsg._id as any;
+        if (addedNames.length > 0) {
+          const addMsg = await this.messageModel.create({
+            sender: new Types.ObjectId(admin),
+            chat: chat._id,
+            content: `${adminName}، ${addedNames.join(' و ')} را به گروه اضافه کرد`,
+            mediaType: 'system',
+            read: true,
+            status: 'sent',
+          });
+          chat.lastMessage = addMsg._id as any;
+        }
+        await chat.save();
+      } catch {
+        // Non-blocking system message creation
+      }
+    }
+
+    return chat;
   }
 
   async createChannel(name: string, owner: string): Promise<ChatDocument> {
@@ -140,6 +187,31 @@ export class ChatService {
       chat.unreadCounts ??= new Map();
       chat.unreadCounts.set(userId, 0);
       await chat.save();
+
+      if (this.messageModel) {
+        try {
+          let requesterName = 'مدیر';
+          let addedUserName = 'کاربر جدید';
+          if (this.userModel) {
+            const reqUser = await this.userModel.findById(requesterId).exec();
+            if (reqUser) requesterName = `${reqUser.firstName || ''} ${reqUser.lastName || ''}`.trim() || 'مدیر';
+            const targetUser = await this.userModel.findById(userId).exec();
+            if (targetUser) addedUserName = `${targetUser.firstName || ''} ${targetUser.lastName || ''}`.trim() || 'کاربر جدید';
+          }
+          const sysMsg = await this.messageModel.create({
+            sender: new Types.ObjectId(requesterId),
+            chat: chat._id,
+            content: `${requesterName}، ${addedUserName} را به گروه اضافه کرد`,
+            mediaType: 'system',
+            read: true,
+            status: 'sent',
+          });
+          chat.lastMessage = sysMsg._id as any;
+          await chat.save();
+        } catch {
+          // Non-blocking
+        }
+      }
     }
     return chat;
   }

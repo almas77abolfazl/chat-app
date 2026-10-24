@@ -14,8 +14,6 @@
       class="menu-item"
       [class.active]="mainService.chatFilter === item.id"
       (click)="selectNav(item.id)"
-      [attr.data-tooltip]="item.titleKey | i18n"
-      data-tooltip-placement="left"
     >
       <fa-icon [icon]="['fas', item.icon]"></fa-icon>
       <span>{{ item.titleKey | i18n }}</span>
@@ -25,8 +23,6 @@
     <div
       class="menu-item theme-item"
       (click)="toggleTheme()"
-      [attr.data-tooltip]="(themeService.isDark ? 'sidebar.lightMode' : 'sidebar.darkMode') | i18n"
-      data-tooltip-placement="left"
     >
       <fa-icon [icon]="['fas', themeService.isDark ? 'sun' : 'moon']"></fa-icon>
       <span>{{ (themeService.isDark ? 'sidebar.lightMode' : 'sidebar.darkMode') | i18n }}</span>
@@ -35,8 +31,6 @@
     <div
       class="menu-item lang-item"
       (click)="toggleLanguage()"
-      [attr.data-tooltip]="'sidebar.language' | i18n"
-      data-tooltip-placement="left"
     >
       <fa-icon [icon]="['fas', 'language']"></fa-icon>
       <span>{{ translationService.currentLang === 'fa' ? 'English' : 'فارسی' }}</span>
@@ -53,8 +47,6 @@
       <div
         class="menu-item agent-history-item"
         (click)="openAgentHistory(item.chatId)"
-        [attr.data-tooltip]="item.summary"
-        data-tooltip-placement="left"
       >
         <fa-icon [icon]="['fas', 'comment-dots']"></fa-icon>
         <span class="agent-history-text">{{ item.summary }}</span>
@@ -65,15 +57,15 @@
   </div>
 
   <div class="sidebar-footer">
-    <div class="menu-item settings-item" (click)="openSettings()" [attr.data-tooltip]="'sidebar.settings' | i18n" data-tooltip-placement="left">
+    <div class="menu-item settings-item" (click)="openSettings()">
       <fa-icon [icon]="['fas', 'cog']"></fa-icon>
       <span>{{ 'sidebar.settings' | i18n }}</span>
     </div>
-    <div class="menu-item profile-item" (click)="openProfile()" [attr.data-tooltip]="'sidebar.profile' | i18n" data-tooltip-placement="left">
+    <div class="menu-item profile-item" (click)="openProfile()">
       <fa-icon [icon]="['fas', 'user-circle']"></fa-icon>
       <span>{{ 'sidebar.profile' | i18n }}</span>
     </div>
-    <div class="menu-item logout-item" (click)="mainService.logout()" [attr.data-tooltip]="'sidebar.logout' | i18n" data-tooltip-placement="left">
+    <div class="menu-item logout-item" (click)="mainService.logout()">
       <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
       <span>{{ 'sidebar.logout' | i18n }}</span>
     </div>

@@ -244,7 +244,7 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   isEditing(messageId: string): boolean {
-    return this.editMessageId === messageId;
+    return !!this.editMessageId && !!messageId && this.editMessageId === messageId;
   }
 
   startEdit(message: Message) {
@@ -296,34 +296,18 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
 
   toggleReaction(message: Message, emoji: string) {
     const messageId = message._id;
-    const currentEmoji = this.getUserReaction(message);
+    if (!messageId) return;
 
-    // Emit socket event for instant real-time sync with all chat participants
-    this.mainService.socketService.emit('messageReaction', { messageId, emoji });
-
-    if (currentEmoji === emoji) {
-      this.mainService.removeReaction(messageId).pipe(take(1)).subscribe({
-        next: (res: any) => {
-          this.userReactions.delete(messageId);
-          if (Array.isArray(res)) {
-            message.reactions = res;
-          }
-        },
-        error: () => {},
-      });
-    } else {
-      this.mainService.addReaction(messageId, emoji).pipe(take(1)).subscribe({
-        next: (res: any) => {
-          this.userReactions.set(messageId, emoji);
-          if (Array.isArray(res)) {
-            message.reactions = res;
-          }
-        },
-        error: () => {
-          this.mainService.snackbar.error('امکان ثبت واکنش وجود ندارد', 3000);
-        },
-      });
-    }
+    this.mainService.addReaction(messageId, emoji).pipe(take(1)).subscribe({
+      next: (res: any) => {
+        if (Array.isArray(res)) {
+          message.reactions = res;
+        }
+      },
+      error: () => {
+        this.mainService.snackbar.error('امکان ثبت واکنش وجود ندارد', 3000);
+      },
+    });
   }
 
   pinMessage(message: Message) {
@@ -625,12 +609,26 @@ export class ChatAreaComponent implements OnInit, OnDestroy, AfterViewInit {
 
   getMediaUrl(fileUrl?: string): string {
     if (!fileUrl) return '';
-    if (fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) return fileUrl;
+    if (fileUrl.startsWith('data:') || fileUrl.startsWith('blob:') || fileUrl.startsWith('http://') || fileUrl.startsWith('https://')) {
+      return fileUrl;
+    }
     if (fileUrl.startsWith('/uploads/')) {
       const base = environment.apiUrl.replace('/v1', '');
       return `${base}${fileUrl}`;
     }
     if (fileUrl.startsWith('/')) return `${environment.uploadUrl}${fileUrl}`;
     return `${environment.uploadUrl}/${fileUrl}`;
+  }
+
+  formatSystemMessage(message: Message): string {
+    const content = message.content || '';
+    const myName = `${this.mainService.authService.getFirstName() || ''} ${this.mainService.authService.getLastName() || ''}`.trim();
+
+    if (myName && content.includes(myName) && content.includes('اضافه کرد')) {
+      const parts = content.split('،');
+      const author = parts[0] || 'مدیر';
+      return `شما توسط ${author} به گروه اضافه شدید`;
+    }
+    return content;
   }
 }

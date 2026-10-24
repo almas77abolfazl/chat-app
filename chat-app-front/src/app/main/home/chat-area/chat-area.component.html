@@ -149,10 +149,15 @@
       <span>{{ getMessageDate(message) }}</span>
     </div>
     }
+    @if (message.mediaType === 'system') {
+    <div class="system-message-row">
+      <span class="system-message-pill">{{ formatSystemMessage(message) }}</span>
+    </div>
+    } @else {
     <div
       [id]="'msg-' + message._id"
       class="message"
-      [ngClass]="{ 'sent': ownMessage(message), 'received': !ownMessage(message) }"
+      [ngClass]="{ 'sent': ownMessage(message), 'received': !ownMessage(message), 'sticker-msg': message.mediaType === 'sticker' }"
       [style.animation-delay]="($index * 30) + 'ms'"
       (contextmenu)="openContextMenu($event, message)"
     >
@@ -284,6 +289,7 @@
         }
       </div>
     </div>
+    }
     }
     @if (mainService.agentWorking && !mainService.agentStreamingMessage) {
     <div class="message received">

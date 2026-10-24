@@ -10,7 +10,16 @@ export class ReactionController {
   @UseGuards(JwtAuthGuard)
   @Post(':messageId/reaction')
   async addReaction(@Param('messageId') messageId: string, @Body() body: { emoji: string }, @Req() request: RequestWithUser) {
-    await this.reactionService.addReaction(messageId, request.user._id.toString(), body.emoji);
+    const userId = request.user._id.toString();
+    const existing = await this.reactionService.getReactionCounts(messageId);
+    const userReaction = existing.find((r) => r.users.includes(userId));
+
+    if (userReaction && userReaction.emoji === body.emoji) {
+      // Toggle off if already reacted with the same emoji
+      await this.reactionService.removeReaction(messageId, userId);
+    } else {
+      await this.reactionService.addReaction(messageId, userId, body.emoji);
+    }
     return this.reactionService.getReactionCounts(messageId);
   }
 
