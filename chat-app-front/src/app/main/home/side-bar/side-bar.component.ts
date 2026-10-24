@@ -19,6 +19,7 @@ export class SideBarComponent {
   customItems: { icon: string; titleKey: string; id: string }[] = [];
   navItems = [
     { icon: 'comment-dots', titleKey: 'sidebar.chats', id: 'all' },
+    { icon: 'bookmark', titleKey: 'sidebar.savedMessages', id: 'saved-messages' },
     { icon: 'users', titleKey: 'sidebar.groups', id: 'groups' },
     { icon: 'broadcast-tower', titleKey: 'sidebar.channels', id: 'channels' },
     { icon: 'address-book', titleKey: 'contacts.title', id: 'contacts' },
@@ -62,6 +63,7 @@ export class SideBarComponent {
 
   selectNav(id: string) {
     if (id === 'contacts') this.mainService.showContacts();
+    else if (id === 'saved-messages') this.mainService.openSavedMessages();
     else this.mainService.setChatFilter(id as any);
     if (this.mobileOpen) this.close.emit();
   }

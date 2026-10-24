@@ -38,6 +38,21 @@ export class ChatController {
     throw new Error(`Unknown chat type: ${type}`);
   }
 
+  @Get('saved-messages')
+  @UseGuards(JwtAuthGuard)
+  async getSavedMessages(@Req() request: RequestWithUser) {
+    const chat = await this.chatService.findOrCreateSavedMessages(request.user._id.toString());
+    return {
+      chatId: chat._id,
+      name: chat.name || 'Saved Messages',
+      isGroup: false,
+      isChannel: false,
+      isSavedMessages: true,
+      ownerId: chat.owner?.toString(),
+      participants: chat.participants,
+    };
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   async getChat(@Param('id') id: string, @Req() request: RequestWithUser) {

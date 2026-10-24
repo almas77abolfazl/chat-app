@@ -37,6 +37,7 @@ export class ChatService {
         name: chat.name || null,
         isGroup: chat.isGroup,
         isChannel: chat.isChannel,
+        isSavedMessages: !!chat.isSavedMessages,
         avatar: chat.avatar || null,
         avatars: chat.avatars || [],
         ownerId: chat.owner?.toString() || null,
@@ -101,6 +102,29 @@ export class ChatService {
       participants: [aId, bId],
       isGroup: false,
       isChannel: false,
+      unreadCounts: {},
+    });
+  }
+
+  async findOrCreateSavedMessages(userId: string): Promise<ChatDocument> {
+    const userObjId = new Types.ObjectId(userId);
+    const existing = await this.chatModel
+      .findOne({
+        isGroup: false,
+        isChannel: false,
+        isSavedMessages: true,
+        participants: userObjId,
+      })
+      .exec();
+    if (existing) return existing;
+
+    return this.chatModel.create({
+      participants: [userObjId],
+      owner: userObjId,
+      isGroup: false,
+      isChannel: false,
+      isSavedMessages: true,
+      name: 'Saved Messages',
       unreadCounts: {},
     });
   }

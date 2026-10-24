@@ -11,13 +11,80 @@
       />
       <fa-icon [icon]="['fas', 'search']" class="search-icon"></fa-icon>
     </div>
+
+    @if (searchQuery.trim()) {
+    <div class="search-type-filters">
+      <button type="button" class="type-filter-chip" [class.active]="searchTypeFilter === 'all'" (click)="searchTypeFilter = 'all'">{{ 'folders.all' | i18n }}</button>
+      <button type="button" class="type-filter-chip" [class.active]="searchTypeFilter === 'users'" (click)="searchTypeFilter = 'users'">{{ 'search.users' | i18n }}</button>
+      <button type="button" class="type-filter-chip" [class.active]="searchTypeFilter === 'groups'" (click)="searchTypeFilter = 'groups'">{{ 'folders.groups' | i18n }}</button>
+      <button type="button" class="type-filter-chip" [class.active]="searchTypeFilter === 'channels'" (click)="searchTypeFilter = 'channels'">{{ 'folders.channels' | i18n }}</button>
+    </div>
+    } @else {
+    <div class="folders-bar">
+      <button
+        type="button"
+        class="folder-tab"
+        [class.active]="mainService.chatFilter === 'all'"
+        (click)="mainService.setChatFilter('all')"
+      >
+        <span>{{ 'folders.all' | i18n }}</span>
+        @if (mainService.getFolderUnreadCount('all') > 0) {
+        <span class="folder-badge">{{ mainService.getFolderUnreadCount('all') }}</span>
+        }
+      </button>
+      <button
+        type="button"
+        class="folder-tab"
+        [class.active]="mainService.chatFilter === 'direct'"
+        (click)="mainService.setChatFilter('direct')"
+      >
+        <span>{{ 'folders.direct' | i18n }}</span>
+        @if (mainService.getFolderUnreadCount('direct') > 0) {
+        <span class="folder-badge">{{ mainService.getFolderUnreadCount('direct') }}</span>
+        }
+      </button>
+      <button
+        type="button"
+        class="folder-tab"
+        [class.active]="mainService.chatFilter === 'groups'"
+        (click)="mainService.setChatFilter('groups')"
+      >
+        <span>{{ 'folders.groups' | i18n }}</span>
+        @if (mainService.getFolderUnreadCount('groups') > 0) {
+        <span class="folder-badge">{{ mainService.getFolderUnreadCount('groups') }}</span>
+        }
+      </button>
+      <button
+        type="button"
+        class="folder-tab"
+        [class.active]="mainService.chatFilter === 'channels'"
+        (click)="mainService.setChatFilter('channels')"
+      >
+        <span>{{ 'folders.channels' | i18n }}</span>
+        @if (mainService.getFolderUnreadCount('channels') > 0) {
+        <span class="folder-badge">{{ mainService.getFolderUnreadCount('channels') }}</span>
+        }
+      </button>
+      <button
+        type="button"
+        class="folder-tab"
+        [class.active]="mainService.chatFilter === 'bots'"
+        (click)="mainService.setChatFilter('bots')"
+      >
+        <span>{{ 'folders.bots' | i18n }}</span>
+        @if (mainService.getFolderUnreadCount('bots') > 0) {
+        <span class="folder-badge">{{ mainService.getFolderUnreadCount('bots') }}</span>
+        }
+      </button>
+    </div>
+    }
   </div>
 
   @if (searchResults.length > 0) {
   <div class="chat-list">
     <div class="search-results">
       <div class="search-results-title">{{ 'search.searchResults' | i18n }}</div>
-      @for (result of searchResults; track $index) {
+      @for (result of filteredSearchResults(); track $index) {
       <div class="search-result-item" (click)="selectSearchResult(result)">
         <div class="result-avatar">
           {{ (result.firstName ?? (result.phoneNumber ?? '؟')).charAt(0) }}
@@ -28,6 +95,9 @@
         </div>
         <fa-icon [icon]="['fas', 'arrow-right']" class="result-arrow"></fa-icon>
       </div>
+      }
+      @if (filteredSearchResults().length === 0) {
+      <div class="no-filter-results">{{ 'search.noResults' | i18n }}</div>
       }
     </div>
   </div>
@@ -43,7 +113,11 @@
         [style.animation-delay]="(i * 40) + 'ms'"
       >
         <div class="chat-avatar">
-          @if (chat.isGroup || chat.isChannel) {
+          @if (chat.isSavedMessages) {
+          <div class="chat-avatar-saved">
+            <fa-icon [icon]="['fas', 'bookmark']"></fa-icon>
+          </div>
+          } @else if (chat.isGroup || chat.isChannel) {
           <fa-icon [icon]="['fas', chat.isChannel ? 'broadcast-tower' : 'users']" class="group-icon"></fa-icon>
           } @else if (chat.avatar && !avatarBroken(chat._id)) {
           <img [src]="chat.avatar" alt="Avatar" (error)="markAvatarBroken(chat._id)" />
