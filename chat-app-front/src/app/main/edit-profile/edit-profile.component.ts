@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, ChangeDetectionStrategy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,10 +13,11 @@ import { MainService } from '../main.service';
   imports: [CommonModule, FontAwesomeModule, FormsModule, MatButtonModule, I18nPipe],
   templateUrl: './edit-profile.component.html',
   styleUrls: ['./edit-profile.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EditProfileComponent {
   file: any;
-  imageError = false;
+  readonly imageError = signal(false);
 
   constructor(
     public dialogRef: MatDialogRef<EditProfileComponent>,
@@ -32,7 +33,7 @@ export class EditProfileComponent {
   ) {}
 
   get avatarDisplaySrc(): string | null {
-    if (this.imageError || !this.data?.pictureSrc) return null;
+    if (this.imageError() || !this.data?.pictureSrc) return null;
     return this.mainService.getAvatarUrl(this.data.pictureSrc);
   }
 
@@ -46,7 +47,7 @@ export class EditProfileComponent {
   }
 
   onImageError(): void {
-    this.imageError = true;
+    this.imageError.set(true);
   }
 
   onCancel(): void {
@@ -67,7 +68,7 @@ export class EditProfileComponent {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
       this.file = selectedFile;
-      this.imageError = false;
+      this.imageError.set(false);
       const reader = new FileReader();
       reader.onload = () => {
         this.data.pictureSrc = reader.result as string;

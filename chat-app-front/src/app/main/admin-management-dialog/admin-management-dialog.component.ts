@@ -1,4 +1,4 @@
-import { Component, Inject } from '@angular/core';
+import { Component, Inject, ChangeDetectionStrategy, signal } from '@angular/core';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
 import { FormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -21,10 +21,14 @@ export interface AdminManagementDialogData {
   imports: [MatDialogModule, FormsModule, FontAwesomeModule, I18nPipe],
   templateUrl: './admin-management-dialog.component.html',
   styleUrl: './admin-management-dialog.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AdminManagementDialogComponent {
-  customTitle = '';
-  permissions: AdminPermissions = {
+  readonly customTitleSignal = signal<string>('');
+  get customTitle(): string { return this.customTitleSignal(); }
+  set customTitle(v: string) { this.customTitleSignal.set(v); }
+
+  readonly permissionsSignal = signal<AdminPermissions>({
     canChangeInfo: true,
     canPostMessages: true,
     canEditMessages: false,
@@ -32,7 +36,9 @@ export class AdminManagementDialogComponent {
     canInviteUsers: true,
     canPinMessages: true,
     canManageAdmins: false,
-  };
+  });
+  get permissions(): AdminPermissions { return this.permissionsSignal(); }
+  set permissions(v: AdminPermissions) { this.permissionsSignal.set(v); }
 
   constructor(
     public dialogRef: MatDialogRef<AdminManagementDialogComponent>,

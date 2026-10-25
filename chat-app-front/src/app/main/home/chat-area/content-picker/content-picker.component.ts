@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, ChangeDetectionStrategy, output, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -15,42 +15,44 @@ export type PickerTab = 'emoji' | 'stickers' | 'gifs';
   imports: [CommonModule, FormsModule, FontAwesomeModule, I18nPipe],
   templateUrl: './content-picker.component.html',
   styleUrl: './content-picker.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ContentPickerComponent {
-  @Output() emojiSelect = new EventEmitter<string>();
-  @Output() stickerSelect = new EventEmitter<{ url: string; name: string }>();
-  @Output() gifSelect = new EventEmitter<{ url: string; caption?: string }>();
-  @Output() gifFileSelect = new EventEmitter<File>();
-  @Output() close = new EventEmitter<void>();
+  readonly emojiSelect = output<string>();
+  readonly stickerSelect = output<{ url: string; name: string }>();
+  readonly gifSelect = output<{ url: string; caption?: string }>();
+  readonly gifFileSelect = output<File>();
+  readonly close = output<void>();
 
-  activeTab: PickerTab = 'emoji';
-  searchQuery = '';
+  readonly activeTab = signal<PickerTab>('emoji');
+  readonly searchQuery = signal<string>('');
 
   // Emoji data
-  emojiCategories: EmojiCategory[] = EMOJI_CATEGORIES;
-  selectedEmojiCategory: string = 'smileys';
+  readonly emojiCategories: EmojiCategory[] = EMOJI_CATEGORIES;
+  readonly selectedEmojiCategory = signal<string>('smileys');
 
   // Sticker data
-  stickerPacks: StickerPack[] = STICKER_PACKS;
-  selectedStickerPack: string = 'all';
-  stickers: StickerItem[] = STICKERS;
+  readonly stickerPacks: StickerPack[] = STICKER_PACKS;
+  readonly selectedStickerPack = signal<string>('all');
+  readonly stickers: StickerItem[] = STICKERS;
 
   // GIF data
-  gifCategories = GIF_CATEGORIES;
-  selectedGifCategory: string = 'all';
-  gifs: GifItem[] = GIFS;
+  readonly gifCategories = GIF_CATEGORIES;
+  readonly selectedGifCategory = signal<string>('all');
+  readonly gifs: GifItem[] = GIFS;
 
   setTab(tab: PickerTab): void {
-    this.activeTab = tab;
-    this.searchQuery = '';
+    this.activeTab.set(tab);
+    this.searchQuery.set('');
   }
 
   // --- Emojis ---
-  get filteredEmojiCategories(): EmojiCategory[] {
-    const q = this.searchQuery.trim().toLowerCase();
+  readonly filteredEmojiCategories = computed(() => {
+    const q = this.searchQuery().trim().toLowerCase();
+    const selCat = this.selectedEmojiCategory();
     if (!q) {
-      if (this.selectedEmojiCategory === 'all') return this.emojiCategories;
-      return this.emojiCategories.filter((c) => c.id === this.selectedEmojiCategory);
+      if (selCat === 'all') return this.emojiCategories;
+      return this.emojiCategories.filter((c) => c.id === selCat);
     }
     return this.emojiCategories
       .map((cat) => ({
@@ -58,7 +60,7 @@ export class ContentPickerComponent {
         emojis: cat.emojis.filter((e) => e.includes(q) || cat.name.toLowerCase().includes(q)),
       }))
       .filter((cat) => cat.emojis.length > 0);
-  }
+  });
 
   selectEmoji(emoji: string, event: Event): void {
     event.stopPropagation();
@@ -66,17 +68,18 @@ export class ContentPickerComponent {
   }
 
   // --- Stickers ---
-  get filteredStickers(): StickerItem[] {
-    const q = this.searchQuery.trim().toLowerCase();
+  readonly filteredStickers = computed(() => {
+    const q = this.searchQuery().trim().toLowerCase();
+    const selPack = this.selectedStickerPack();
     let list = this.stickers;
-    if (this.selectedStickerPack !== 'all') {
-      list = list.filter((s) => s.pack === this.selectedStickerPack);
+    if (selPack !== 'all') {
+      list = list.filter((s) => s.pack === selPack);
     }
     if (q) {
       list = list.filter((s) => s.name.toLowerCase().includes(q));
     }
     return list;
-  }
+  });
 
   selectSticker(sticker: StickerItem, event: Event): void {
     event.stopPropagation();
@@ -84,11 +87,12 @@ export class ContentPickerComponent {
   }
 
   // --- GIFs ---
-  get filteredGifs(): GifItem[] {
-    const q = this.searchQuery.trim().toLowerCase();
+  readonly filteredGifs = computed(() => {
+    const q = this.searchQuery().trim().toLowerCase();
+    const selCat = this.selectedGifCategory();
     let list = this.gifs;
-    if (this.selectedGifCategory !== 'all') {
-      list = list.filter((g) => g.category === this.selectedGifCategory);
+    if (selCat !== 'all') {
+      list = list.filter((g) => g.category === selCat);
     }
     if (q) {
       list = list.filter(
@@ -96,7 +100,7 @@ export class ContentPickerComponent {
       );
     }
     return list;
-  }
+  });
 
   selectGif(gif: GifItem, event: Event): void {
     event.stopPropagation();
