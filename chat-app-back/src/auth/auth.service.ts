@@ -1,7 +1,6 @@
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { JwtPayload } from './interfaces/jwt-payload,interface';
-import { User } from 'src/user/entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import { VerifyCodeDto } from './dto/verify-code.dto';
 import * as crypto from 'crypto';
@@ -77,7 +76,7 @@ export class AuthService {
     return user ?? null;
   }
 
-  public async validateUserByJwt(payload: JwtPayload): Promise<User> {
+  public async validateUserByJwt(payload: JwtPayload): Promise<IUser | null> {
     return await this.userService.findUserByPhoneNumber(payload.phoneNumber);
   }
 

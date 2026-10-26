@@ -1,6 +1,6 @@
 # چت‌اپ — Chat App
 
-اپلیکیشن چت Real-time با **NestJS** و **Angular** و **دستیار هوشمند Agentic**.
+اپلیکیشن چت Real-time با **NestJS 11** و **Angular 22** و **دستیار هوشمند Agentic**.
 
 [English below](#english)
 
@@ -24,7 +24,7 @@ cp .env.example .env   # مقادیر را ویرایش کنید
 npm run start:dev      # http://localhost:3000 (پیشوند v1)
 ```
 
-پیش‌نیاز: Node 20+ و MongoDB.
+پیش‌نیاز: Node 20+ و MongoDB (محلی یا Docker).
 
 ### اجرا با Docker (بدون نصب MongoDB محلی)
 
@@ -42,8 +42,6 @@ docker compose up --build
 
 - **F5: Full Stack (Mongo+Backend+Frontend) - Debug** — Mongo را در docker بالا می‌آورد و بک‌اند را با دیباگ TS + فرانت‌اند در Chrome اجرا می‌کند (برای برنامه‌نویسی).
 - **F5: Docker Full Stack (test only)** — کل استک را در Docker بالا می‌آورد و Chrome را باز می‌کند.
-
-```
 
 ### فرانت‌اند
 
@@ -69,17 +67,17 @@ LLM_MODEL=gemini-2.5-flash
 ## تست و بیلد
 
 ```bash
-# بک‌اند
+# بک‌اند (۷۳ تست واحد Jest در ۹ مجموعه تست)
 cd chat-app-back && npm test && npm run lint && npm run build
 
-# فرانت‌اند
-cd chat-app-front && npm run build
+# فرانت‌اند (تست واحد Vitest و بیلد پروداکشن)
+cd chat-app-front && npm test && npm run build
 ```
 
 ## ساختار
 
 ```
-chat-app-back/src/     NestJS: auth, user, chat, message, agent, search
+chat-app-back/src/     NestJS: auth, user, chat, message, agent, search, story, reaction, sms
 chat-app-front/src/    Angular: auth pages + home (chat-list, chat-area, side-bar)
 TASK_LIST.md           باگ‌های یافت‌شده، کارهای انجام‌شده و نقشه راه
 AGENTS.md              راهنمای دستورها برای عامل‌های هوشمند
@@ -95,7 +93,7 @@ AGENTS.md              راهنمای دستورها برای عامل‌های 
 
 ## English
 
-Real-time chat application built with **NestJS**, **Angular**, and an **agentic AI assistant**.
+Real-time chat application built with **NestJS 11**, **Angular 22**, and an **agentic AI assistant**.
 
 ### Features
 
@@ -128,7 +126,8 @@ Get a free key from [Google AI Studio](https://aistudio.google.com/apikey), set 
 ### Tests
 
 ```bash
-cd chat-app-back && npm test   # 15 unit tests (Jest)
+cd chat-app-back && npm test   # 73 unit tests in 9 suites (Jest)
+cd chat-app-front && npm test  # Vitest unit tests
 ```
 
 ## License

@@ -1,20 +1,21 @@
 import { ISession } from './session.interface';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 
 export interface IUser extends Document {
-  username: string;
+  username?: string;
   phoneNumber: string;
-  firstName: string;
-  lastName: string;
-  bio: string;
-  email: string;
-  profilePicture: string;
+  firstName?: string;
+  lastName?: string;
+  bio?: string;
+  email?: string;
+  profilePicture?: string;
   avatars?: string[];
-  status: string;
+  status?: string;
   contacts: string[];
+  blockedUsers?: Types.ObjectId[];
   sessions: ISession[];
   createdAt: Date;
   isOnline: boolean;
-  lastSeen: Date;
+  lastSeen?: Date;
   notifications: boolean;
 }

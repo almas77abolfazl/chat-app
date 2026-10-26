@@ -6,32 +6,32 @@ export type UserDocument = HydratedDocument<User>;
 
 @Schema()
 export class User {
-  @Prop({ unique: true })
-  username: string;
+  @Prop({ unique: true, sparse: true })
+  username?: string;
 
   @Prop({ required: true, unique: true })
   phoneNumber: string;
 
   @Prop()
-  email: string;
+  email?: string;
 
   @Prop()
-  firstName: string;
+  firstName?: string;
 
   @Prop()
-  lastName: string;
+  lastName?: string;
 
   @Prop()
-  bio: string;
+  bio?: string;
 
   @Prop()
-  profilePicture: string;
+  profilePicture?: string;
 
   @Prop({ type: [String], default: [] })
   avatars?: string[];
 
   @Prop()
-  status: string;
+  status?: string;
 
   @Prop({ default: [] })
   contacts: string[];
@@ -49,7 +49,7 @@ export class User {
   isOnline: boolean;
 
   @Prop({ default: null })
-  lastSeen: Date;
+  lastSeen?: Date;
 
   @Prop({ default: true })
   notifications: boolean;

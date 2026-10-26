@@ -34,8 +34,8 @@
         "pattern": { "name": "ng-error", "owner": "ng-watch", "file": "^.*$", "message": ".*" },
         "background": {
           "activeOnStart": true,
-          "beginsPattern": "Angular Live Development Server",
-          "endsPattern": "listening on"
+          "beginsPattern": "(Building\\.\\.\\.|Generating|Watch mode enabled)",
+          "endsPattern": "(Watch mode enabled|Local:\\s+http)"
         }
       }
     }
