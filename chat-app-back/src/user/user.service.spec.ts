@@ -123,9 +123,33 @@ describe('UserService - Online Status', () => {
           createdAt: new Date(),
         }),
       } as any);
-      const profile = await service.getUserProfile('user-123');
+      const profile = await service.getUserProfile('user-123', 'user-123');
       expect(profile.username).toBe('ali');
+      expect(profile.phoneNumber).toBe('09120000001');
       expect(profile.avatars).toContain('avatar1.jpg');
+
+      jest
+        .spyOn(userModel, 'findById')
+        .mockReturnValueOnce({
+          select: jest.fn().mockReturnThis(),
+          exec: jest.fn().mockResolvedValue({
+            _id: 'user-123',
+            username: 'ali',
+            phoneNumber: '09120000001',
+            avatars: [],
+          }),
+        } as any)
+        .mockReturnValueOnce({
+          select: jest.fn().mockReturnThis(),
+          exec: jest.fn().mockResolvedValue({
+            _id: 'stranger-456',
+            contacts: [],
+            phoneKnownContacts: [],
+            phoneSharedWith: [],
+          }),
+        } as any);
+      const hiddenProfile = await service.getUserProfile('user-123', 'stranger-456');
+      expect(hiddenProfile.phoneNumber).toBeNull();
     });
 
     it('should delete avatar and fallback to next avatar', async () => {

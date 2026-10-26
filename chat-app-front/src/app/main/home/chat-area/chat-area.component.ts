@@ -439,12 +439,12 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
 
   showProfile() {
     this.dialog.open(ProfileComponent, {
-      width: '520px',
+      width: '480px',
       maxWidth: '96vw',
       data: {
         chat: this.mainService.currentChat,
       },
-      panelClass: 'rtl-dialog',
+      panelClass: 'profile-dialog-panel',
     });
   }
 
@@ -750,6 +750,27 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
   deleteCurrentChat() {
     const chat = this.mainService.currentChat;
     if (!chat) return;
+
+    if (chat.isSavedMessages) {
+      if (confirm(this.translationService.t('chat.clearHistoryConfirm'))) {
+        this.mainService
+          .clearChatHistory(chat._id as string)
+          .pipe(take(1))
+          .subscribe({
+            next: () => {
+              if (this.mainService.currentChat) {
+                this.mainService.currentChat.messages = [];
+              }
+              this.mainService.getChatList();
+              this.mainService.snackbar.success('پیام‌های ذخیره‌شده پاک شدند', 3000);
+            },
+            error: () => {
+              this.mainService.snackbar.error('خطا در پاک کردن پیام‌ها', 3000);
+            },
+          });
+      }
+      return;
+    }
 
     const isOwner = chat.ownerId === this.mainService.authService.getUserId();
     const dialogRef = this.dialog.open(DeleteChatDialogComponent, {

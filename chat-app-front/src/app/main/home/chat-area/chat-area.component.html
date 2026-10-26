@@ -83,10 +83,17 @@
           <span>{{ (isPeerBlocked ? 'block.unblockUser' : 'block.blockUser') | i18n }}</span>
         </button>
         }
+        @if (mainService.currentChat?.isSavedMessages) {
+        <button class="chat-action-item" (click)="deleteCurrentChat(); toggleChatActions()">
+          <fa-icon [icon]="['fas', 'broom']" class="action-icon delete-icon"></fa-icon>
+          <span>{{ 'chat.clearHistory' | i18n }}</span>
+        </button>
+        } @else {
         <button class="chat-action-item" (click)="deleteCurrentChat(); toggleChatActions()">
           <fa-icon [icon]="['fas', 'trash']" class="action-icon delete-icon"></fa-icon>
           <span>{{ 'chat.delete' | i18n }}</span>
         </button>
+        }
         }
       </div>
       }

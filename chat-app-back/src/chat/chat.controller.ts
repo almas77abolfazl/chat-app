@@ -138,4 +138,11 @@ export class ChatController {
     await this.chatService.deleteChat(id, request.user._id.toString(), deleteForBoth);
     return { success: true };
   }
+
+  @Post(':id/clear')
+  @UseGuards(JwtAuthGuard)
+  async clearChat(@Param('id') id: string, @Req() request: RequestWithUser) {
+    await this.chatService.clearChatHistory(id, request.user._id.toString());
+    return { success: true };
+  }
 }

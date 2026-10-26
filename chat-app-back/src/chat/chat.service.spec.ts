@@ -121,5 +121,19 @@ describe('ChatService', () => {
       expect(chatModel.deleteOne).not.toHaveBeenCalled();
       expect(mockChat.save).toHaveBeenCalled();
     });
+
+    it('should prevent deleting saved messages chat', async () => {
+      (mockChat as any).isSavedMessages = true;
+      await expect(service.deleteChat('507f1f77bcf86cd799439011', '507f1f77bcf86cd799439012', true)).rejects.toThrow(
+        'نمی‌توانید گفتگوی پیام‌های ذخیره‌شده را حذف کنید',
+      );
+      (mockChat as any).isSavedMessages = false;
+    });
+
+    it('should clear chat history without deleting the chat', async () => {
+      await service.clearChatHistory('507f1f77bcf86cd799439011', '507f1f77bcf86cd799439012');
+      expect(messageModel.deleteMany).toHaveBeenCalledWith({ chat: '507f1f77bcf86cd799439011' });
+      expect(mockChat.save).toHaveBeenCalled();
+    });
   });
 });

@@ -100,6 +100,10 @@ export class ProfileComponent implements OnInit {
   get isTargetUserBlocked(): boolean { return this.isTargetUserBlockedSignal(); }
   set isTargetUserBlocked(v: boolean) { this.isTargetUserBlockedSignal.set(v); }
 
+  readonly isContactSignal = signal<boolean>(false);
+  get isContact(): boolean { return this.isContactSignal(); }
+  set isContact(v: boolean) { this.isContactSignal.set(v); }
+
   constructor(
     public dialogRef: MatDialogRef<ProfileComponent>,
     private dialog: MatDialog,
@@ -253,6 +257,7 @@ export class ProfileComponent implements OnInit {
       .subscribe({
         next: (profile: any) => {
           this.userProfile = profile;
+          this.isContact = !!profile.isContact;
           this.loadingProfile = false;
           const rawAvatars: string[] = [];
           if (profile.avatars && Array.isArray(profile.avatars)) {
@@ -476,6 +481,39 @@ export class ProfileComponent implements OnInit {
           },
           error: () => {
             this.mainService.snackbar.error('خطا در رفع مسدودیت کاربر', 3000);
+          },
+        });
+    }
+  }
+
+  toggleContact(): void {
+    if (!this.targetUserId || this.isCurrentUser) return;
+    if (this.isContact) {
+      this.mainService
+        .removeContact(this.targetUserId)
+        .pipe(take(1))
+        .subscribe({
+          next: () => {
+            this.isContact = false;
+            this.mainService.snackbar.success(this.translationService.t('contacts.removeFromContacts'), 3000);
+            this.mainService.getContacts().pipe(take(1)).subscribe();
+          },
+          error: () => {
+            this.mainService.snackbar.error('خطا در حذف از مخاطبین', 3000);
+          },
+        });
+    } else {
+      this.mainService
+        .addContact(this.targetUserId)
+        .pipe(take(1))
+        .subscribe({
+          next: () => {
+            this.isContact = true;
+            this.mainService.snackbar.success(this.translationService.t('contacts.addToContacts'), 3000);
+            this.mainService.getContacts().pipe(take(1)).subscribe();
+          },
+          error: () => {
+            this.mainService.snackbar.error('خطا در افزودن به مخاطبین', 3000);
           },
         });
     }

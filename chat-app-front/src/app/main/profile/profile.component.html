@@ -73,12 +73,22 @@
       </div>
     </div>
 
-    <!-- Quick Action: Message Button (if not own profile) -->
-    @if (!isCurrentUser) {
+    <!-- Quick Action: Message & Contact Buttons (if not own profile) -->
+    @if (!isCurrentUser && !isGroup && !isChannel) {
     <div class="primary-actions">
       <button class="btn btn-primary message-action-btn" (click)="sendMessage()">
         <fa-icon [icon]="['fas', 'paper-plane']"></fa-icon>
         <span>{{ 'profile.message' | i18n }}</span>
+      </button>
+
+      <button
+        type="button"
+        class="btn contact-action-btn"
+        [class.is-contact]="isContact"
+        (click)="toggleContact()"
+      >
+        <fa-icon [icon]="['fas', isContact ? 'user-check' : 'user-plus']"></fa-icon>
+        <span>{{ (isContact ? 'contacts.removeFromContacts' : 'contacts.addToContacts') | i18n }}</span>
       </button>
     </div>
     }

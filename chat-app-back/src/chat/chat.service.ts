@@ -15,22 +15,32 @@ export class ChatService {
 
   async getChatList(userId: string) {
     const userObjectId = new Types.ObjectId(userId);
-    const chats = await this.chatModel
+    let chats = await this.chatModel
       .find({
         participants: userObjectId,
         deletedFor: { $ne: userObjectId },
-        $or: [
-          { isGroup: true },
-          { isChannel: true },
-          { isSavedMessages: true },
-          { lastMessage: { $exists: true, $ne: null } },
-        ],
+        $or: [{ isGroup: true }, { isChannel: true }, { isSavedMessages: true }, { lastMessage: { $exists: true, $ne: null } }],
       })
       .populate<{ participants: any[] }>('participants', 'firstName lastName profilePicture avatars status isOnline lastSeen')
       .populate('lastMessage', 'content sender createdAt')
       .populate('pinnedMessage', 'content sender createdAt status isDeleted')
       .sort({ updatedAt: -1 })
       .exec();
+
+    if (!chats.some((c) => c.isSavedMessages)) {
+      await this.findOrCreateSavedMessages(userId);
+      chats = await this.chatModel
+        .find({
+          participants: userObjectId,
+          deletedFor: { $ne: userObjectId },
+          $or: [{ isGroup: true }, { isChannel: true }, { isSavedMessages: true }, { lastMessage: { $exists: true, $ne: null } }],
+        })
+        .populate<{ participants: any[] }>('participants', 'firstName lastName profilePicture avatars status isOnline lastSeen')
+        .populate('lastMessage', 'content sender createdAt')
+        .populate('pinnedMessage', 'content sender createdAt status isDeleted')
+        .sort({ updatedAt: -1 })
+        .exec();
+    }
 
     return chats.map((chat) => {
       const otherParticipant = chat.participants.find((participant) => participant._id.toString() !== userId);
@@ -401,6 +411,10 @@ export class ChatService {
     const chat = await this.chatModel.findById(chatId).exec();
     if (!chat) throw new NotFoundException('Chat not found');
 
+    if (chat.isSavedMessages) {
+      throw new BadRequestException('نمی‌توانید گفتگوی پیام‌های ذخیره‌شده را حذف کنید');
+    }
+
     if (!chat.isGroup && !chat.isChannel) {
       if (!chat.participants.some((p: any) => (p._id || p).toString() === userId)) {
         throw new ForbiddenException('You are not a participant of this chat');
@@ -448,6 +462,20 @@ export class ChatService {
     if (chat.unreadCounts) {
       chat.unreadCounts.delete(userId);
     }
+    await chat.save();
+  }
+
+  async clearChatHistory(chatId: string, userId: string): Promise<void> {
+    const chat = await this.chatModel.findById(chatId).exec();
+    if (!chat) throw new NotFoundException('Chat not found');
+    if (!chat.participants.some((p: any) => (p._id || p).toString() === userId)) {
+      throw new ForbiddenException('You are not a participant of this chat');
+    }
+    if (this.messageModel) {
+      await this.messageModel.deleteMany({ chat: chatId }).exec();
+    }
+    chat.lastMessage = undefined;
+    chat.pinnedMessage = undefined;
     await chat.save();
   }
 }

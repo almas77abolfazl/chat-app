@@ -37,7 +37,9 @@
     "noEmojiFound": "No emoji found",
     "searchInChat": "Search in chat",
     "savedMessages": "Saved Messages",
-    "cloudStorage": "Personal cloud storage"
+    "cloudStorage": "Personal cloud storage",
+    "clearHistory": "Clear messages",
+    "clearHistoryConfirm": "Are you sure you want to clear all messages in this chat?"
   },
   "contacts": {
     "title": "Contacts",
@@ -47,6 +49,8 @@
     "noResults": "No contacts found",
     "searching": "Searching...",
     "addNew": "Add new contact",
+    "addToContacts": "Add to Contacts",
+    "removeFromContacts": "Remove from Contacts",
     "offline": "Offline",
     "noContacts": "No saved contacts",
     "phoneNumber": "Phone number",

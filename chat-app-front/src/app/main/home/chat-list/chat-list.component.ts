@@ -259,6 +259,26 @@ export class ChatListComponent implements OnInit {
         });
         break;
       }
+      case 'clearHistory': {
+        if (confirm(this.translationService.t('chat.clearHistoryConfirm'))) {
+          this.mainService
+            .clearChatHistory(chat._id as string)
+            .pipe(take(1))
+            .subscribe({
+              next: () => {
+                if (this.mainService.currentChat?._id === chat._id) {
+                  this.mainService.currentChat.messages = [];
+                }
+                this.mainService.getChatList();
+                this.mainService.snackbar.success('پیام‌های ذخیره‌شده پاک شدند', 3000);
+              },
+              error: () => {
+                this.mainService.snackbar.error('خطا در پاک کردن پیام‌ها', 3000);
+              },
+            });
+        }
+        break;
+      }
       case 'leave':
         if (confirm('آیا از خروج از این گروه مطمئن هستید؟')) {
           this.mainService

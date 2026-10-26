@@ -1310,9 +1310,9 @@ export class MainService {
   async openUserProfileModal(userId: string, chat?: any): Promise<void> {
     const { ProfileComponent } = await import('./profile/profile.component');
     this.dialog.open(ProfileComponent, {
-      width: '520px',
+      width: '480px',
       maxWidth: '96vw',
-      panelClass: 'rtl-dialog',
+      panelClass: 'profile-dialog-panel',
       data: {
         targetUserId: userId,
         chat: chat,
@@ -1334,6 +1334,10 @@ export class MainService {
 
   deleteChat(chatId: string, deleteForBoth: boolean = false): Observable<any> {
     return this.httpRequestService.delete(`chat/${chatId}/delete?deleteForBoth=${deleteForBoth}`);
+  }
+
+  clearChatHistory(chatId: string): Observable<any> {
+    return this.httpRequestService.post(`chat/${chatId}/clear`, {});
   }
 
   leaveChat(chatId: string): Observable<any> {

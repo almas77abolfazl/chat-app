@@ -52,8 +52,8 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id/profile')
-  async getUserProfile(@Param('id') id: string) {
-    return this.userService.getUserProfile(id);
+  async getUserProfile(@Param('id') id: string, @Req() request: RequestWithUser) {
+    return this.userService.getUserProfile(id, request.user._id.toString());
   }
 
   @UseGuards(JwtAuthGuard)
@@ -102,12 +102,7 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Post('contacts/by-phone')
   async addContactByPhone(@Req() request: RequestWithUser, @Body() dto: AddContactByPhoneDto) {
-    return this.userService.addContactByPhone(
-      request.user._id.toString(),
-      dto.phoneNumber,
-      dto.firstName,
-      dto.lastName,
-    );
+    return this.userService.addContactByPhone(request.user._id.toString(), dto.phoneNumber, dto.firstName, dto.lastName);
   }
 
   @UseGuards(JwtAuthGuard)

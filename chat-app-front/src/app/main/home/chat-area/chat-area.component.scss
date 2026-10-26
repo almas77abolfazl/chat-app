@@ -846,40 +846,55 @@
 
       .message-actions {
         position: absolute;
-        inset-block-start: 0.3rem;
-        inset-inline-end: 0.3rem;
-        display: flex;
+        inset-block-start: -1.85rem;
+        display: inline-flex;
+        align-items: center;
         gap: 0.25rem;
+        padding: 0.2rem 0.45rem;
+        border-radius: var(--radius-full);
+        background: var(--color-surface-solid);
+        border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
         opacity: 0;
-        transition: opacity var(--transition-fast);
+        pointer-events: none;
+        transform: translateY(6px) scale(0.94);
+        transition: opacity 0.24s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+        z-index: 15;
+      }
+
+      &.sent .message-actions {
+        inset-inline-start: 0.5rem;
+        inset-inline-end: auto;
+      }
+
+      &.received .message-actions {
+        inset-inline-end: 0.5rem;
+        inset-inline-start: auto;
       }
 
       &:hover .message-actions {
         opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0) scale(1);
       }
 
       .msg-action {
-        width: 2.1rem;
-        height: 2.1rem;
+        width: 1.85rem;
+        height: 1.85rem;
         border-radius: var(--radius-full);
         border: none;
-        background: rgba(0, 0, 0, 0.08);
+        background: transparent;
         color: var(--color-text-secondary);
         display: inline-flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        font-size: 0.85rem;
-        transition: all var(--transition-fast);
-        box-shadow: var(--shadow-xs);
+        font-size: 0.82rem;
+        transition: transform var(--transition-fast), background var(--transition-fast), color var(--transition-fast);
 
         &:hover {
-          transform: scale(1.1);
-          box-shadow: var(--shadow-sm);
-        }
-
-        &.edit-btn:hover,
-        &.reaction-btn:hover {
+          transform: scale(1.15);
           background: color-mix(in srgb, var(--color-primary) 15%, transparent);
           color: var(--color-primary-dark);
         }
@@ -887,6 +902,15 @@
         &.delete-btn:hover {
           background: color-mix(in srgb, var(--color-danger) 15%, transparent);
           color: var(--color-danger);
+        }
+
+        &.reaction-btn {
+          font-size: 0.95rem;
+          line-height: 1;
+
+          &.reacted {
+            background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+          }
         }
       }
     }

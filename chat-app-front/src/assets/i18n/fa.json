@@ -37,7 +37,9 @@
     "noEmojiFound": "ایموجی یافت نشد",
     "searchInChat": "جستجو در گفتگو",
     "savedMessages": "پیام‌های ذخیره‌شده",
-    "cloudStorage": "فضای ابری شخصی"
+    "cloudStorage": "فضای ابری شخصی",
+    "clearHistory": "پاک کردن پیام‌ها",
+    "clearHistoryConfirm": "آیا از پاک کردن تمامی پیام‌های این گفتگو اطمینان دارید؟"
   },
   "contacts": {
     "title": "مخاطبان",
@@ -47,6 +49,8 @@
     "noResults": "مخاطب یافت نشد",
     "searching": "در حال جستجو...",
     "addNew": "اضافه کردن مخاطب جدید",
+    "addToContacts": "افزودن به مخاطبین",
+    "removeFromContacts": "حذف از مخاطبین",
     "offline": "آفلاین",
     "noContacts": "مخاطبی ذخیره نکرده‌اید",
     "phoneNumber": "شماره موبایل",

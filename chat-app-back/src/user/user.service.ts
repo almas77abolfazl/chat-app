@@ -147,10 +147,12 @@ export class UserService {
     return user;
   }
 
-  async getUserProfile(userId: string): Promise<any> {
+  async getUserProfile(userId: string, requesterId?: string): Promise<any> {
     const user = await this.userModel
       .findById(userId)
-      .select('firstName lastName username phoneNumber bio profilePicture avatars status isOnline lastSeen createdAt')
+      .select(
+        'firstName lastName username phoneNumber bio profilePicture avatars status isOnline lastSeen createdAt phoneKnownContacts phoneSharedWith',
+      )
       .exec();
     if (!user) {
       throw new NotFoundException('User not found');
@@ -159,12 +161,31 @@ export class UserService {
     if (user.profilePicture && !avatars.includes(user.profilePicture)) {
       avatars.unshift(user.profilePicture);
     }
+
+    let canSeePhone = false;
+    let isContact = false;
+
+    if (requesterId) {
+      if (requesterId === userId) {
+        canSeePhone = true;
+      } else {
+        const requester = await this.userModel.findById(requesterId).select('contacts phoneKnownContacts phoneSharedWith').exec();
+        if (requester) {
+          isContact = (requester.contacts || []).some((c: any) => c.toString() === userId);
+          const requesterKnewPhone = (requester.phoneKnownContacts || []).some((c: any) => c.toString() === userId);
+          const targetSharedWithRequester = (user.phoneSharedWith || []).some((c: any) => c.toString() === requesterId);
+          const targetKnewRequesterPhone = (user.phoneKnownContacts || []).some((c: any) => c.toString() === requesterId);
+          canSeePhone = requesterKnewPhone || targetSharedWithRequester || targetKnewRequesterPhone;
+        }
+      }
+    }
+
     return {
       _id: user._id,
       firstName: user.firstName,
       lastName: user.lastName,
       username: user.username,
-      phoneNumber: user.phoneNumber,
+      phoneNumber: canSeePhone ? user.phoneNumber : null,
       bio: user.bio,
       profilePicture: user.profilePicture,
       avatars,
@@ -172,6 +193,7 @@ export class UserService {
       isOnline: user.isOnline,
       lastSeen: user.lastSeen,
       createdAt: user.createdAt,
+      isContact,
     };
   }
 
@@ -220,10 +242,25 @@ export class UserService {
   async getContacts(userId: string): Promise<IUser[]> {
     const user = await this.userModel
       .findById(userId)
-      .populate('contacts', 'firstName lastName username profilePicture avatars status isOnline lastSeen phoneNumber')
+      .populate(
+        'contacts',
+        'firstName lastName username profilePicture avatars status isOnline lastSeen phoneNumber phoneSharedWith phoneKnownContacts',
+      )
       .exec();
     if (!user) return [];
-    return user.contacts as unknown as IUser[];
+    const knownSet = new Set(((user as any).phoneKnownContacts || []).map((id: any) => id.toString()));
+    return (user.contacts as any[]).map((contact: any) => {
+      const contactObj = contact.toObject ? contact.toObject() : { ...contact };
+      const contactId = (contactObj._id || contactObj).toString();
+      const userKnewPhone = knownSet.has(contactId);
+      const contactSharedPhone = (contactObj.phoneSharedWith || []).some((id: any) => id.toString() === userId);
+      const contactKnewPhone = (contactObj.phoneKnownContacts || []).some((id: any) => id.toString() === userId);
+      const canSeePhone = userKnewPhone || contactSharedPhone || contactKnewPhone;
+      return {
+        ...contactObj,
+        phoneNumber: canSeePhone ? contactObj.phoneNumber : null,
+      };
+    });
   }
 
   async addContact(userId: string, contactId: string): Promise<IUser> {
@@ -231,8 +268,8 @@ export class UserService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    if (!user.contacts.includes(contactId as any)) {
-      user.contacts.push(contactId as any);
+    if (!user.contacts.some((id: any) => id.toString() === contactId)) {
+      user.contacts.push(new Types.ObjectId(contactId) as any);
       await user.save();
     }
     return user;
@@ -266,11 +303,30 @@ export class UserService {
     }
 
     user.contacts ??= [];
+    user.phoneKnownContacts ??= [];
+    targetUser.phoneSharedWith ??= [];
+
     const targetObjId = new Types.ObjectId(targetUser._id.toString());
+    const userObjId = new Types.ObjectId(userId);
+
+    let userChanged = false;
+    let targetChanged = false;
+
     if (!user.contacts.some((id: any) => id.toString() === targetUser._id.toString())) {
       user.contacts.push(targetObjId as any);
-      await user.save();
+      userChanged = true;
     }
+    if (!user.phoneKnownContacts.some((id: any) => id.toString() === targetUser._id.toString())) {
+      user.phoneKnownContacts.push(targetObjId as any);
+      userChanged = true;
+    }
+    if (!targetUser.phoneSharedWith.some((id: any) => id.toString() === userId)) {
+      targetUser.phoneSharedWith.push(userObjId as any);
+      targetChanged = true;
+    }
+
+    if (userChanged) await user.save();
+    if (targetChanged) await targetUser.save();
 
     return {
       _id: targetUser._id.toString(),
@@ -292,6 +348,9 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
     user.contacts = user.contacts.filter((id) => id.toString() !== contactId);
+    if (user.phoneKnownContacts) {
+      user.phoneKnownContacts = user.phoneKnownContacts.filter((id: any) => id.toString() !== contactId);
+    }
     await user.save();
     return user;
   }

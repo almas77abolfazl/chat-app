@@ -13,4 +13,3 @@ export class AddContactByPhoneDto {
   @IsOptional()
   lastName?: string;
 }
-

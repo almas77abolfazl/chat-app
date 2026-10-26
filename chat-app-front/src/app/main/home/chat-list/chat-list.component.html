@@ -272,6 +272,11 @@
     <fa-icon [icon]="['fas', 'sign-out-alt']"></fa-icon>
     <span>{{ 'chat.leave' | i18n }}</span>
   </button>
+  } @else if (chatContextMenuTarget()?.isSavedMessages) {
+  <button class="context-menu-item danger" (click)="onChatContextMenuAction('clearHistory')">
+    <fa-icon [icon]="['fas', 'broom']"></fa-icon>
+    <span>{{ 'chat.clearHistory' | i18n }}</span>
+  </button>
   } @else {
   <button class="context-menu-item danger" (click)="onChatContextMenuAction('delete')">
     <fa-icon [icon]="['fas', 'trash']"></fa-icon>
