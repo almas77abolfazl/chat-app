@@ -102,7 +102,12 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @Post('contacts/by-phone')
   async addContactByPhone(@Req() request: RequestWithUser, @Body() dto: AddContactByPhoneDto) {
-    return this.userService.addContactByPhone(request.user._id.toString(), dto.phoneNumber, dto.firstName, dto.lastName);
+    return this.userService.addContactByPhone(
+      request.user._id.toString(),
+      dto.phoneNumber,
+      dto.firstName,
+      dto.lastName,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
