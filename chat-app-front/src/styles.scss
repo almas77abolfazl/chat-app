@@ -53,6 +53,24 @@ body.theme-dark {
   padding: 1.5rem;
 }
 
+.story-viewer-dialog-panel {
+  max-width: 100vw !important;
+  overflow: hidden !important;
+
+  .mat-mdc-dialog-container {
+    padding: 0 !important;
+    overflow: hidden !important;
+
+    .mdc-dialog__surface {
+      padding: 0 !important;
+      background: transparent !important;
+      box-shadow: none !important;
+      overflow: hidden !important;
+      max-width: 100vw !important;
+    }
+  }
+}
+
 @font-face {
   font-family: "Shabnam";
   src: url("/Shabnam.ttf") format("truetype");

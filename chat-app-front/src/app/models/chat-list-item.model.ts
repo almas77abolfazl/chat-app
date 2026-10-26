@@ -41,6 +41,7 @@ export interface ChatListItem {
   isGroup?: boolean;
   isChannel?: boolean;
   isSavedMessages?: boolean;
+  isDraft?: boolean;
   isOwner?: boolean;
   ownerId?: string;
   admins?: ChatAdmin[];

@@ -218,7 +218,23 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
     }
   }
 
-  onTyping() {
+  adjustTextareaHeight(textarea: HTMLTextAreaElement) {
+    if (!textarea) return;
+    textarea.style.height = 'auto';
+    const maxHeight = 160; // Up to 5-6 lines without scrollbar
+    if (textarea.scrollHeight > maxHeight) {
+      textarea.style.height = `${maxHeight}px`;
+      textarea.style.overflowY = 'auto';
+    } else {
+      textarea.style.height = `${Math.max(textarea.scrollHeight, 40)}px`;
+      textarea.style.overflowY = 'hidden';
+    }
+  }
+
+  onTyping(textarea?: HTMLTextAreaElement) {
+    if (textarea) {
+      this.adjustTextareaHeight(textarea);
+    }
     const chatId = this.mainService.currentChat?._id;
     if (chatId) {
       this.mainService.sendTypingStart(chatId);
@@ -826,7 +842,7 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
       textarea.selectionStart = newPos;
       textarea.selectionEnd = newPos;
       textarea.focus();
-      this.onTyping();
+      this.onTyping(textarea);
     }
   }
 

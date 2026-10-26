@@ -25,3 +25,4 @@ export function getInitials(firstName?: string, lastName?: string, fallback = 'Ø
   if (l) return l.charAt(0);
   return fallback;
 }
+

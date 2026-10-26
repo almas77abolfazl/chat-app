@@ -1,9 +1,10 @@
 <div
   class="story-viewer-container"
-  (mousedown)="pause()"
-  (mouseup)="resume()"
-  (touchstart)="pause()"
-  (touchend)="resume()"
+  (mousedown)="onPointerDown($event)"
+  (mouseup)="onPointerUp($event)"
+  (mouseleave)="resume()"
+  (touchstart)="onPointerDown($event)"
+  (touchend)="onPointerUp($event)"
 >
   <!-- Progress Bars -->
   <div class="story-progress-row">
@@ -34,10 +35,6 @@
 
     <div class="header-actions">
       @if (data.group.isCurrentUser) {
-      <div class="views-badge">
-        <fa-icon [icon]="['fas', 'eye']"></fa-icon>
-        <span>{{ currentStory?.viewsCount || 0 }}</span>
-      </div>
       <button
         type="button"
         class="action-btn delete-btn"
@@ -77,6 +74,75 @@
   }
 
   <!-- Tap Nav Overlays -->
-  <div class="tap-zone left-tap" (click)="prev(); $event.stopPropagation()"></div>
-  <div class="tap-zone right-tap" (click)="next(); $event.stopPropagation()"></div>
+  <div
+    class="tap-zone left-tap"
+    (mousedown)="onPointerDown($event)"
+    (mouseup)="onPointerUp($event, 'prev'); $event.stopPropagation()"
+    (touchstart)="onPointerDown($event)"
+    (touchend)="onPointerUp($event, 'prev'); $event.stopPropagation()"
+  ></div>
+  <div
+    class="tap-zone right-tap"
+    (mousedown)="onPointerDown($event)"
+    (mouseup)="onPointerUp($event, 'next'); $event.stopPropagation()"
+    (touchstart)="onPointerDown($event)"
+    (touchend)="onPointerUp($event, 'next'); $event.stopPropagation()"
+  ></div>
+
+  <!-- Bottom Bar: Eye Viewers Trigger for Author -->
+  @if (data.group.isCurrentUser) {
+  <div class="story-bottom-bar" (click)="toggleViewers(); $event.stopPropagation()">
+    <div class="views-pill">
+      <fa-icon [icon]="['fas', 'eye']"></fa-icon>
+      <span>{{ currentStory?.viewsCount || 0 }}</span>
+      <fa-icon [icon]="['fas', 'chevron-up']" class="views-chevron"></fa-icon>
+    </div>
+  </div>
+  }
+
+  <!-- Viewers Bottom Sheet -->
+  @if (showViewers()) {
+  <div class="viewers-sheet" (click)="$event.stopPropagation()">
+    <div class="sheet-handle-bar" (click)="closeViewers()">
+      <div class="sheet-handle"></div>
+    </div>
+    <div class="sheet-header">
+      <div class="sheet-title">
+        <fa-icon [icon]="['fas', 'eye']"></fa-icon>
+        <span>{{ 'story.viewers' | i18n }} ({{ viewersList().length }})</span>
+      </div>
+      <button type="button" class="sheet-close-btn" (click)="closeViewers()">
+        <fa-icon [icon]="['fas', 'times']"></fa-icon>
+      </button>
+    </div>
+
+    <div class="sheet-body">
+      @if (loadingViewers()) {
+      <div class="sheet-loading">...</div>
+      } @else if (viewersList().length === 0) {
+      <div class="sheet-empty">{{ 'story.noViewers' | i18n }}</div>
+      } @else {
+      <div class="viewers-list">
+        @for (v of viewersList(); track v.user?._id || $index) {
+        <div class="viewer-item">
+          <div class="viewer-avatar" [style.background]="getViewerBg(v.user)">
+            @if (v.user?.profilePicture) {
+            <img [src]="mainService.getAvatarUrl(v.user.profilePicture)" alt="" />
+            } @else {
+            <span>{{ getViewerInitial(v.user) }}</span>
+            }
+          </div>
+          <div class="viewer-info">
+            <div class="viewer-name">{{ getViewerName(v.user) }}</div>
+            @if (v.viewedAt) {
+            <div class="viewer-time">{{ v.viewedAt | date : 'HH:mm' }}</div>
+            }
+          </div>
+        </div>
+        }
+      </div>
+      }
+    </div>
+  </div>
+  }
 </div>

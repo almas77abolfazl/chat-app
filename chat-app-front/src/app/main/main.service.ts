@@ -244,25 +244,53 @@ export class MainService {
     return !chat.isGroup && !chat.isChannel && chat.peerId === this.botUserId;
   }
 
-  /** 1:1 from a peer (search result). */
+  /** 1:1 from a peer (search result). Creates a draft without saving to DB until a message is sent. */
   async startDirectChat(peer: any): Promise<ChatListItem> {
+    const existing = this.chatItems.find(
+      (c) => !c.isGroup && !c.isChannel && !c.isSavedMessages && c.peerId === peer._id
+    );
+    if (existing) {
+      return existing;
+    }
+    const draftItem: ChatListItem = this.mapChatItem({
+      chatId: 'draft_' + peer._id,
+      isGroup: false,
+      isChannel: false,
+      isDraft: true,
+      otherParticipant: {
+        _id: peer._id,
+        firstName: peer.firstName,
+        lastName: peer.lastName,
+        profilePicture: peer.profilePicture,
+      },
+      participants: [{ _id: peer._id }],
+      lastMessage: null,
+    });
+    draftItem.peerId = peer._id;
+    draftItem.isDraft = true;
+    return draftItem;
+  }
+
+  async ensureRealDirectChat(peerId: string): Promise<ChatListItem> {
     const res: any = await firstValueFrom(
       this.httpRequestService
-        .post('chat', { type: 'direct', peerId: peer._id })
+        .post('chat', { type: 'direct', peerId })
         .pipe(take(1))
     );
-    const chatItem = this.findChatById(res.chatId || res._id);
+    const realId = res.chatId || res._id;
+    let chatItem = this.findChatById(realId);
     if (!chatItem) {
-      const item: ChatListItem = this.mapChatItem({
-        chatId: res.chatId || res._id,
+      chatItem = this.mapChatItem({
+        chatId: realId,
         isGroup: false,
         isChannel: false,
-        otherParticipant: { _id: peer._id, firstName: peer.firstName, lastName: peer.lastName, profilePicture: peer.profilePicture },
-        participants: [{ _id: peer._id }],
+        otherParticipant: res.otherParticipant || { _id: peerId },
+        participants: res.participants || [{ _id: peerId }],
         lastMessage: null,
       });
-      this.chatItems.unshift(item);
-      return item;
+      this.chatItems.unshift(chatItem);
+      this.chatItemsSignal.set([...this.chatItems]);
+      this.chatListUpdatedSubject.next(this.chatItems);
     }
     return chatItem;
   }
@@ -472,10 +500,10 @@ export class MainService {
             chatItem.messageCount = (chatItem.messageCount || 0) + 1;
           }
           const itemIdx = this.chatItems.findIndex((c) => c._id === chatItem._id);
-          if (itemIdx > 0) {
+          if (itemIdx !== -1) {
             this.chatItems.splice(itemIdx, 1);
-            this.chatItems.unshift(chatItem);
           }
+          this.chatItems.unshift(chatItem);
           this.chatItemsSignal.set([...this.chatItems]);
           this.chatListUpdatedSubject.next(this.chatItems);
 
@@ -504,10 +532,10 @@ export class MainService {
           this.scrollChatToBottom();
         }
         const itemIdx = this.chatItems.findIndex((c) => c._id === chatItem._id);
-        if (itemIdx > 0) {
+        if (itemIdx !== -1) {
           this.chatItems.splice(itemIdx, 1);
-          this.chatItems.unshift(chatItem);
         }
+        this.chatItems.unshift(chatItem);
         this.chatItemsSignal.set([...this.chatItems]);
         this.chatListUpdatedSubject.next(this.chatItems);
       });
@@ -996,7 +1024,7 @@ export class MainService {
     return this.httpRequestService.get(`message/${messageId}/reactions`);
   }
 
-  sendMessage(currentChat: ChatListItem, input: HTMLTextAreaElement) {
+  async sendMessage(currentChat: ChatListItem, input: HTMLTextAreaElement) {
     const content = input.value?.trim();
     if (!content) return;
 
@@ -1006,7 +1034,14 @@ export class MainService {
       return;
     }
 
-const messageData: Message = {
+    if (currentChat.isDraft || String(currentChat._id).startsWith('draft_')) {
+      const realChat = await this.ensureRealDirectChat(currentChat.peerId!);
+      currentChat._id = realChat._id;
+      currentChat.isDraft = false;
+      this.currentChat = currentChat;
+    }
+
+    const messageData: Message = {
       _id: null,
       _pending: true,
       status: 'sent',
@@ -1027,13 +1062,27 @@ const messageData: Message = {
     currentChat.messages = currentChat.messages || [];
     currentChat.messages.push(messageData);
     currentChat.lastMessage = messageData;
+    currentChat.updatedAt = new Date();
     input.value = '';
-    this.refreshItem(currentChat);
+
+    const itemIdx = this.chatItems.findIndex((c) => c._id === currentChat._id);
+    if (itemIdx !== -1) {
+      this.chatItems.splice(itemIdx, 1);
+    }
+    this.chatItems.unshift(currentChat);
+    this.chatItemsSignal.set([...this.chatItems]);
+    this.chatListUpdatedSubject.next(this.chatItems);
     this.scrollChatToBottom();
   }
 
-  sendSticker(currentChat: ChatListItem, stickerUrl: string, stickerName: string = 'Sticker') {
+  async sendSticker(currentChat: ChatListItem, stickerUrl: string, stickerName: string = 'Sticker') {
     if (!currentChat) return;
+    if (currentChat.isDraft || String(currentChat._id).startsWith('draft_')) {
+      const realChat = await this.ensureRealDirectChat(currentChat.peerId!);
+      currentChat._id = realChat._id;
+      currentChat.isDraft = false;
+      this.currentChat = currentChat;
+    }
     const chatId = currentChat._id as string;
     const media = {
       mediaType: 'sticker',
@@ -1063,12 +1112,26 @@ const messageData: Message = {
     currentChat.messages = currentChat.messages || [];
     currentChat.messages.push(messageData);
     currentChat.lastMessage = messageData;
-    this.refreshItem(currentChat);
+    currentChat.updatedAt = new Date();
+
+    const itemIdx = this.chatItems.findIndex((c) => c._id === currentChat._id);
+    if (itemIdx !== -1) {
+      this.chatItems.splice(itemIdx, 1);
+    }
+    this.chatItems.unshift(currentChat);
+    this.chatItemsSignal.set([...this.chatItems]);
+    this.chatListUpdatedSubject.next(this.chatItems);
     this.scrollChatToBottom();
   }
 
-  sendGif(currentChat: ChatListItem, gifUrl: string, caption: string = '') {
+  async sendGif(currentChat: ChatListItem, gifUrl: string, caption: string = '') {
     if (!currentChat) return;
+    if (currentChat.isDraft || String(currentChat._id).startsWith('draft_')) {
+      const realChat = await this.ensureRealDirectChat(currentChat.peerId!);
+      currentChat._id = realChat._id;
+      currentChat.isDraft = false;
+      this.currentChat = currentChat;
+    }
     const chatId = currentChat._id as string;
     const media = {
       mediaType: 'gif',
@@ -1098,7 +1161,15 @@ const messageData: Message = {
     currentChat.messages = currentChat.messages || [];
     currentChat.messages.push(messageData);
     currentChat.lastMessage = messageData;
-    this.refreshItem(currentChat);
+    currentChat.updatedAt = new Date();
+
+    const itemIdx = this.chatItems.findIndex((c) => c._id === currentChat._id);
+    if (itemIdx !== -1) {
+      this.chatItems.splice(itemIdx, 1);
+    }
+    this.chatItems.unshift(currentChat);
+    this.chatItemsSignal.set([...this.chatItems]);
+    this.chatListUpdatedSubject.next(this.chatItems);
     this.scrollChatToBottom();
   }
 
@@ -1109,7 +1180,9 @@ const messageData: Message = {
 
   loadMessages(page: number = 1) {
     const chatId = this.currentChat?._id?.toString();
-    if (!chatId) {
+    if (!chatId || chatId.startsWith('draft_')) {
+      if (this.currentChat) this.currentChat.messages = [];
+      this.messagesLoadedSubject.next();
       return of({ messages: [], totalMessages: 0, currentPage: 1, totalPages: 1 });
     }
     return this.getMessages(chatId, page).pipe(

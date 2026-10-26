@@ -208,8 +208,8 @@ export class ChatListComponent implements OnInit {
 
   openStoryViewer(group: StoryGroup) {
     const dialogRef = this.dialog.open(StoryViewerDialogComponent, {
-      width: '440px',
-      maxWidth: '95vw',
+      width: '420px',
+      maxWidth: '100vw',
       panelClass: 'story-viewer-dialog-panel',
       data: {
         group,

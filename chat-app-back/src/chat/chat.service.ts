@@ -19,6 +19,7 @@ export class ChatService {
       .find({
         participants: userObjectId,
         deletedFor: { $ne: userObjectId },
+        $or: [{ isGroup: true }, { isChannel: true }, { isSavedMessages: true }, { lastMessage: { $exists: true, $ne: null } }],
       })
       .populate<{ participants: any[] }>('participants', 'firstName lastName profilePicture avatars status isOnline lastSeen')
       .populate('lastMessage', 'content sender createdAt')

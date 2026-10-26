@@ -428,7 +428,7 @@
         #element
         class="chat-input"
         [placeholder]="'chat.typeMessage' | i18n"
-        (input)="onTyping()"
+        (input)="onTyping(element)"
         (keydown)="onChatInputKeyDown($event, element)"
         rows="1"
       ></textarea>

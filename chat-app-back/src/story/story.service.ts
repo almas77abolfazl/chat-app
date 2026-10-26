@@ -130,6 +130,11 @@ export class StoryService {
     const story = await this.storyModel.findById(storyId).exec();
     if (!story) throw new NotFoundException('Story not found');
 
+    // Author viewing their own story should NOT be recorded as a viewer
+    if (story.user.toString() === userId) {
+      return { success: true };
+    }
+
     const userObjId = new Types.ObjectId(userId);
     const alreadyViewed = (story.views || []).some((v: any) => (v.user?._id || v.user)?.toString() === userId);
     if (!alreadyViewed) {
@@ -156,9 +161,11 @@ export class StoryService {
     if (story.user.toString() !== userId) {
       throw new ForbiddenException('Only the author can view story viewers');
     }
-    return (story.views || []).map((v: any) => ({
-      user: v.user,
-      viewedAt: v.viewedAt,
-    }));
+    return (story.views || [])
+      .filter((v: any) => (v.user?._id || v.user)?.toString() !== userId)
+      .map((v: any) => ({
+        user: v.user,
+        viewedAt: v.viewedAt,
+      }));
   }
 }

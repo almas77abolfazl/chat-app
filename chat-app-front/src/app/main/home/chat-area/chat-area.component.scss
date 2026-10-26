@@ -1169,17 +1169,20 @@
       .chat-input {
         flex: 1;
         min-width: 0;
-        padding: 0.6rem 0.9rem;
+        padding: 0.65rem 1rem;
         border: 1px solid var(--color-border);
-        border-radius: var(--radius-full);
+        border-radius: var(--radius-lg);
         background: var(--color-surface);
-        font-family: "Shabnam", "Helvetica Neue", sans-serif;
-        font-size: 0.9rem;
+        font-family: inherit;
+        font-size: 0.95rem;
         line-height: 1.5;
         outline: none;
         resize: none;
         min-height: 2.7rem;
-        max-height: 8rem;
+        max-height: 10.5rem;
+        overflow-y: hidden;
+        scrollbar-width: thin;
+        box-sizing: border-box;
         transition: border var(--transition), background var(--transition), box-shadow var(--transition);
 
         &::placeholder {

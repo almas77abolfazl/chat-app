@@ -89,6 +89,13 @@ describe('StoryService', () => {
     expect(mockStory.views.length).toBe(1);
   });
 
+  it('should not record view if author views their own story', async () => {
+    mockStory.views = [];
+    const res = await service.viewStory('507f1f77bcf86cd799439021', '507f1f77bcf86cd799439011');
+    expect(res.success).toBe(true);
+    expect(mockStory.views.length).toBe(0);
+  });
+
   it('should delete own story', async () => {
     const res = await service.deleteStory('507f1f77bcf86cd799439021', '507f1f77bcf86cd799439011');
     expect(res.success).toBe(true);

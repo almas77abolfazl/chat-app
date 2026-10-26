@@ -23,21 +23,37 @@
     <h2 class="login-title">{{ 'login.title' | i18n }}</h2>
     <p class="login-subtitle">{{ 'login.subtitle' | i18n }}</p>
 
-    <!-- Country Selector Button & Dropdown -->
-    <div class="country-selector-wrap">
-      <button
-        type="button"
-        class="country-btn"
-        (click)="toggleCountryMenu(); $event.stopPropagation()"
-        [attr.aria-expanded]="showCountryMenu()"
-      >
-        <span class="country-flag">{{ currentCountry().flag }}</span>
-        <span class="country-name">
-          {{ translationService.isRTL() ? currentCountry().nameFa : currentCountry().nameEn }}
-        </span>
-        <fa-icon [icon]="['fas', showCountryMenu() ? 'chevron-up' : 'chevron-down']" class="chevron"></fa-icon>
-      </button>
+    <!-- Unified Phone Input with Country Prefix Dropdown -->
+    <div class="phone-field-group">
+      <div class="phone-input-wrapper">
+        <div class="country-prefix-pill" (click)="toggleCountryMenu(); $event.stopPropagation()">
+          <span class="country-flag">{{ currentCountry().flag }}</span>
+          <span class="plus-sign">+</span>
+          <input
+            [(ngModel)]="countryCode"
+            type="text"
+            class="country-code-input"
+            placeholder="98"
+            maxlength="4"
+            inputmode="numeric"
+            aria-label="Country Code"
+            (click)="$event.stopPropagation()"
+          />
+          <fa-icon [icon]="['fas', showCountryMenu() ? 'chevron-up' : 'chevron-down']" class="chevron"></fa-icon>
+        </div>
 
+        <input
+          [(ngModel)]="phoneNumber"
+          type="tel"
+          id="phone"
+          class="phone-input"
+          [placeholder]="'login.phonePlaceholder' | i18n"
+          inputmode="tel"
+          maxlength="14"
+        />
+      </div>
+
+      <!-- Dropdown opens directly below the unified input -->
       @if (showCountryMenu()) {
       <div class="country-dropdown" (click)="$event.stopPropagation()">
         <div class="country-search-box">
@@ -67,31 +83,6 @@
         </div>
       </div>
       }
-    </div>
-
-    <!-- Phone Input Row -->
-    <div class="phone-input-wrapper">
-      <div class="country-code-pill">
-        <span class="plus-sign">+</span>
-        <input
-          [(ngModel)]="countryCode"
-          type="text"
-          class="country-code-input"
-          placeholder="98"
-          maxlength="4"
-          inputmode="numeric"
-          aria-label="Country Code"
-        />
-      </div>
-      <input
-        [(ngModel)]="phoneNumber"
-        type="tel"
-        id="phone"
-        class="phone-input"
-        [placeholder]="'login.phonePlaceholder' | i18n"
-        inputmode="tel"
-        maxlength="14"
-      />
     </div>
 
     <button

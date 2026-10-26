@@ -217,30 +217,27 @@
           }
         </div>
 
-        <div class="chat-content">
-          <div class="chat-top">
-            <div class="chat-name">{{ displayName(chat) }}</div>
-            @if (chat.lastMessage?.createdAt) {
-            <div class="chat-time">{{ chat.lastMessage?.createdAt | date : 'HH:mm' }}</div>
+        <div class="chat-info">
+          <div class="chat-name">{{ displayName(chat) }}</div>
+          <div class="chat-last-message">
+            @if (chat.lastMessage?.isDeleted || chat.lastMessage?.deletedForEveryone) {
+            <span class="deleted-msg-label">
+              <fa-icon [icon]="['fas', 'trash']" class="deleted-icon"></fa-icon>
+              {{ 'chat.deletedMessage' | i18n }}
+            </span>
+            } @else {
+            {{ chat.lastMessage?.content || '' }}
             }
           </div>
+        </div>
 
-          <div class="chat-bottom">
-            <div class="last-message">
-              @if (chat.lastMessage?.isDeleted || chat.lastMessage?.deletedForEveryone) {
-              <span class="deleted-msg-label">
-                <fa-icon [icon]="['fas', 'trash']" class="deleted-icon"></fa-icon>
-                {{ 'chat.deletedMessage' | i18n }}
-              </span>
-              } @else {
-              {{ chat.lastMessage?.content || '' }}
-              }
-            </div>
-
-            @if (chat.messageCount && chat.messageCount > 0) {
-            <div class="unread-count">{{ chat.messageCount > 99 ? '99+' : chat.messageCount }}</div>
-            }
-          </div>
+        <div class="chat-meta">
+          @if (chat.lastMessage?.createdAt) {
+          <span class="chat-time">{{ chat.lastMessage?.createdAt | date : 'HH:mm' }}</span>
+          }
+          @if (chat.messageCount && chat.messageCount > 0) {
+          <span class="unread-count">{{ chat.messageCount > 99 ? '99+' : chat.messageCount }}</span>
+          }
         </div>
       </div>
       }
