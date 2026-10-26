@@ -124,7 +124,7 @@
       } @else {
       <div class="viewers-list">
         @for (v of viewersList(); track v.user?._id || $index) {
-        <div class="viewer-item">
+        <div class="viewer-item clickable" (click)="openViewerProfile(v)">
           <div class="viewer-avatar" [style.background]="getViewerBg(v.user)">
             @if (v.user?.profilePicture) {
             <img [src]="mainService.getAvatarUrl(v.user.profilePicture)" alt="" />

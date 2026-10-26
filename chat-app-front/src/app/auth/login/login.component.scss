@@ -135,6 +135,9 @@
         border: 1.5px solid var(--color-border);
         border-radius: var(--radius-lg);
         padding: 0.25rem 0.5rem;
+        width: 100%;
+        box-sizing: border-box;
+        overflow: hidden;
         transition: border-color var(--transition), box-shadow var(--transition);
         direction: ltr;
 
@@ -146,6 +149,7 @@
         .country-prefix-pill {
           display: inline-flex;
           align-items: center;
+          flex-shrink: 0;
           gap: 0.35rem;
           padding: 0.45rem 0.65rem;
           background: color-mix(in srgb, var(--color-surface) 75%, transparent);
@@ -163,6 +167,7 @@
           .country-flag {
             font-size: 1.2rem;
             line-height: 1;
+            font-family: "Twemoji Country Flags", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
           }
 
           .plus-sign {
@@ -193,13 +198,16 @@
 
         .phone-input {
           flex: 1;
+          min-width: 0;
+          width: 0;
           border: none;
           background: transparent;
-          padding: 0.75rem 0.85rem;
+          padding: 0.75rem 0.75rem;
           font-size: 1.05rem;
           font-weight: 600;
           color: var(--color-text);
           outline: none;
+          box-sizing: border-box;
           letter-spacing: 0.05em;
 
           &::placeholder {

@@ -137,13 +137,12 @@ export class AuthService {
   }
 
   public clearSession(): void {
-    if (this.loggingOut) return;
-    this.loggingOut = true;
     this.currentUser.set(null);
-    this.gotoLogin();
-    this.cacheService.clearCache();
     if (typeof localStorage !== 'undefined') localStorage.clear();
     if (typeof sessionStorage !== 'undefined') sessionStorage.clear();
+    this.cacheService.clearCache();
+    this.gotoLogin();
+    this.loggingOut = false;
   }
 
   public logout(): void {

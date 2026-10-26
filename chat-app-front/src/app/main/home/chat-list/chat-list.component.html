@@ -165,8 +165,8 @@
       <div class="search-results-title">{{ 'search.searchResults' | i18n }}</div>
       @for (result of filteredSearchResults(); track $index) {
       <div class="search-result-item" (click)="selectSearchResult(result)">
-        <div class="result-avatar">
-          {{ (result.firstName ?? (result.phoneNumber ?? '؟')).charAt(0) }}
+        <div class="result-avatar" [style.background]="searchResultGradient(result)">
+          {{ (result.firstName ?? '؟').charAt(0) }}
         </div>
         <div class="chat-info">
           <div class="result-name">{{ result.firstName }} {{ result.lastName }}</div>

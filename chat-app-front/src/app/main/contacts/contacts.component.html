@@ -32,11 +32,12 @@
       (ngModelChange)="newContactLastName.set($event)"
     />
     <input
-      type="text"
+      type="tel"
       class="form-control"
       [placeholder]="'contacts.phoneNumber' | i18n"
       [ngModel]="newContactPhone()"
       (ngModelChange)="newContactPhone.set($event)"
+      direction="ltr"
     />
     <div class="form-actions">
       <button class="btn btn-secondary" (click)="cancelNewContact()">{{ 'actions.cancel' | i18n }}</button>
@@ -49,16 +50,16 @@
   }
 
   <div class="contacts-list">
-    <!-- Saved contacts -->
-    @if (contacts().length > 0) {
-    <div class="section-title">{{ 'contacts.saved' | i18n }}</div>
-    @for (contact of contacts(); track contact._id) {
+    <!-- Saved Contacts List -->
+    @if (filteredContacts().length > 0) {
+    <div class="section-title">{{ 'contacts.saved' | i18n }} ({{ filteredContacts().length }})</div>
+    @for (contact of filteredContacts(); track contact._id) {
     <div class="contact-item contact-saved" (click)="pick(contact)">
-      <div class="avatar">
+      <div class="avatar" [style.background]="getContactBg(contact)">
         @if (getAvatarUrl(contact)) {
         <img [src]="getAvatarUrl(contact)" alt="avatar" />
         } @else {
-        {{ (contact.firstName ?? contact.phoneNumber ?? '؟').charAt(0) }}
+        <span>{{ getContactInitial(contact) }}</span>
         }
       </div>
       <div class="contact-info">
@@ -78,36 +79,16 @@
       </button>
     </div>
     }
-    }
-
-    @if (contacts().length === 0 && !showNewContactForm()) {
+    } @else if (contacts().length > 0 && query().trim()) {
+    <div class="empty">
+      <fa-icon [icon]="['fas', 'search']" class="empty-icon"></fa-icon>
+      <p>{{ 'search.noResults' | i18n }}</p>
+    </div>
+    } @else if (!showNewContactForm()) {
     <div class="empty">
       <fa-icon [icon]="['fas', 'user-group']" class="empty-icon"></fa-icon>
       <p>{{ 'contacts.noContacts' | i18n }}</p>
     </div>
-    }
-
-    <!-- Search results -->
-    @if (query().trim()) {
-    <div class="section-title">{{ 'search.searchResults' | i18n }}</div>
-    @if (loading()) {
-    <div class="empty">{{ 'contacts.searching' | i18n }}</div>
-    } @else if (results().length === 0) {
-    <div class="empty">{{ 'search.noResults' | i18n }}</div>
-    }
-
-    @for (contact of results(); track contact._id) {
-    <div class="contact-item" (click)="addContact(contact)">
-      <div class="avatar">{{ (contact.firstName ?? '؟').charAt(0) }}</div>
-      <div class="contact-info">
-        <div class="contact-name">{{ contact.firstName }} {{ contact.lastName }}</div>
-        <div class="contact-status">{{ contact.phoneNumber }}</div>
-      </div>
-      <button class="btn-add" (click)="addContact(contact); $event.stopPropagation()">
-        <fa-icon [icon]="['fas', 'user-plus']"></fa-icon>
-      </button>
-    </div>
-    }
     }
   </div>
 </div>

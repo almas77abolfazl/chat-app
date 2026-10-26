@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './entities/user.entity';
 import { Model, Types } from 'mongoose';
@@ -236,6 +236,54 @@ export class UserService {
       await user.save();
     }
     return user;
+  }
+
+  async addContactByPhone(userId: string, rawPhone: string, firstName?: string, lastName?: string): Promise<any> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) throw new NotFoundException('User not found');
+
+    const cleanDigits = rawPhone.replace(/\D/g, '');
+    const candidates = [rawPhone.trim(), cleanDigits, '+' + cleanDigits];
+    if (cleanDigits.startsWith('98')) {
+      candidates.push('0' + cleanDigits.slice(2));
+      candidates.push(cleanDigits.slice(2));
+    } else if (cleanDigits.startsWith('09')) {
+      candidates.push('98' + cleanDigits.slice(1));
+      candidates.push('+98' + cleanDigits.slice(1));
+      candidates.push(cleanDigits.slice(1));
+    } else if (cleanDigits.startsWith('9') && cleanDigits.length === 10) {
+      candidates.push('0' + cleanDigits);
+      candidates.push('98' + cleanDigits);
+      candidates.push('+98' + cleanDigits);
+    }
+
+    const targetUser = await this.userModel.findOne({ phoneNumber: { $in: candidates } }).exec();
+    if (!targetUser) {
+      throw new NotFoundException('کاربری با این شماره تلفن در برنامه ثبت‌نام نکرده است');
+    }
+    if (targetUser._id.toString() === userId) {
+      throw new BadRequestException('نمی‌توانید خودتان را به عنوان مخاطب اضافه کنید');
+    }
+
+    user.contacts ??= [];
+    const targetObjId = new Types.ObjectId(targetUser._id.toString());
+    if (!user.contacts.some((id: any) => id.toString() === targetUser._id.toString())) {
+      user.contacts.push(targetObjId as any);
+      await user.save();
+    }
+
+    return {
+      _id: targetUser._id.toString(),
+      firstName: firstName || targetUser.firstName || '',
+      lastName: lastName || targetUser.lastName || '',
+      username: targetUser.username,
+      profilePicture: targetUser.profilePicture,
+      avatars: targetUser.avatars || [],
+      phoneNumber: targetUser.phoneNumber,
+      status: targetUser.status,
+      isOnline: targetUser.isOnline,
+      lastSeen: targetUser.lastSeen,
+    };
   }
 
   async removeContact(userId: string, contactId: string): Promise<IUser> {

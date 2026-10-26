@@ -95,7 +95,11 @@ export class SocketService implements OnDestroy {
     this.socket?.emit('agentMessage', payload);
   }
 
-  ngOnDestroy(): void {
+  disconnect(): void {
     this.socket?.disconnect();
+  }
+
+  ngOnDestroy(): void {
+    this.disconnect();
   }
 }

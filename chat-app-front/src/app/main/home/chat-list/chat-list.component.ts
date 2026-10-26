@@ -138,6 +138,10 @@ export class ChatListComponent implements OnInit {
     return chat.name || '';
   }
 
+  searchResultGradient(r: any): string {
+    return getTelegramGradient(r?._id || r?.firstName);
+  }
+
   avatarBg(chat: ChatListItem): string {
     if (!chat) return '#0088cc';
     return getTelegramGradient(chat._id || chat.name || chat.firstName);

@@ -44,6 +44,7 @@ export class HomeComponent {
     public mainService: MainService,
     public themeService: ThemeService
   ) {
+    mainService.closeCurrentChat();
     socketService.init();
     mainService.listenToMessages();
     mainService.loadAgentStatus();

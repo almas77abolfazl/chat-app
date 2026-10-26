@@ -1,30 +1,24 @@
-import {
-  Component,
-  OnInit,
-  ChangeDetectionStrategy,
-  inject,
-  signal,
-  DestroyRef,
-} from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component, OnInit, ChangeDetectionStrategy, signal, computed, inject, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { FormsModule } from '@angular/forms';
-import { MatDialogRef } from '@angular/material/dialog';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { debounceTime, Subject, take } from 'rxjs';
-import { MainService } from '../main.service';
 import { MatIconModule } from '@angular/material/icon';
+import { MatDialogRef } from '@angular/material/dialog';
+import { take } from 'rxjs';
+import { MainService } from '../main.service';
 import { I18nPipe } from '../../helpers/i18n.pipe';
+import { getTelegramGradient, getInitials } from '../../helpers/avatar.helper';
 
 export interface ContactUser {
   _id: string;
   firstName?: string;
   lastName?: string;
+  username?: string;
   phoneNumber?: string;
   profilePicture?: string;
-  avatar?: string;
+  avatar?: string | null;
   status?: string;
   isOnline?: boolean;
   lastSeen?: Date;
@@ -40,7 +34,6 @@ export interface ContactUser {
 })
 export class ContactsComponent implements OnInit {
   readonly query = signal<string>('');
-  readonly results = signal<ContactUser[]>([]);
   readonly contacts = signal<ContactUser[]>([]);
   readonly loading = signal<boolean>(false);
   readonly showNewContactForm = signal<boolean>(false);
@@ -48,9 +41,18 @@ export class ContactsComponent implements OnInit {
   readonly newContactLastName = signal<string>('');
   readonly newContactPhone = signal<string>('');
 
+  readonly filteredContacts = computed(() => {
+    const q = this.query().trim().toLowerCase();
+    const list = this.contacts();
+    if (!q) return list;
+    return list.filter((c) => {
+      const name = `${c.firstName || ''} ${c.lastName || ''}`.toLowerCase();
+      const phone = c.phoneNumber || '';
+      return name.includes(q) || phone.includes(q);
+    });
+  });
+
   currentUserId: string;
-  private readonly searchSubject = new Subject<string>();
-  private readonly destroyRef = inject(DestroyRef);
 
   constructor(
     public mainService: MainService,
@@ -60,19 +62,18 @@ export class ContactsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.searchSubject
-      .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
-      .subscribe((q) => this.doSearch(q));
     this.loadContacts();
   }
 
   loadContacts() {
+    this.loading.set(true);
     this.mainService.getContacts().pipe(take(1)).subscribe({
       next: (res: any[]) => {
         const mapped: ContactUser[] = (res || []).map((c) => ({
           _id: c._id,
           firstName: c.firstName,
           lastName: c.lastName,
+          username: c.username,
           phoneNumber: c.phoneNumber,
           profilePicture: c.profilePicture,
           avatar: null,
@@ -81,102 +82,42 @@ export class ContactsComponent implements OnInit {
           lastSeen: c.lastSeen,
         }));
         this.contacts.set(mapped);
-        mapped.forEach(async (contact) => {
-          await this.resolveContactAvatar(contact);
-        });
+        this.loading.set(false);
       },
       error: () => {
         this.contacts.set([]);
+        this.loading.set(false);
       },
     });
   }
 
   onSearch(query: string) {
     this.query.set(query);
-    this.searchSubject.next(query);
-  }
-
-  doSearch(query: string) {
-    if (!query.trim()) {
-      this.results.set([]);
-      return;
-    }
-    this.loading.set(true);
-    this.mainService
-      .search(query)
-      .pipe(take(1))
-      .subscribe({
-        next: (res: any[]) => {
-          const currentContacts = this.contacts();
-          this.results.set(
-            (res || []).filter(
-              (r) => r._id !== this.currentUserId && !currentContacts.some((c) => c._id === r._id)
-            )
-          );
-          this.loading.set(false);
-        },
-        error: () => {
-          this.results.set([]);
-          this.loading.set(false);
-        },
-      });
-  }
-
-  addContact(user: ContactUser) {
-    this.mainService.addContact(user._id).pipe(take(1)).subscribe({
-      next: () => {
-        this.contacts.update((list) => [...list, user]);
-        this.resolveContactAvatar(user);
-        this.results.update((list) => list.filter((r) => r._id !== user._id));
-      },
-      error: () => {},
-    });
-  }
-
-  removeContact(user: ContactUser) {
-    this.mainService.removeContact(user._id).pipe(take(1)).subscribe({
-      next: () => {
-        this.contacts.update((list) => list.filter((c) => c._id !== user._id));
-      },
-      error: () => {},
-    });
-  }
-
-  pick(user: ContactUser) {
-    this.dialogRef.close({ startChat: user });
-  }
-
-  private async resolveContactAvatar(contact: ContactUser): Promise<void> {
-    if (contact.avatar) return;
-    const avatar = await this.mainService.getAvatar(contact._id);
-    if (avatar) {
-      contact.avatar = avatar;
-      this.contacts.update((list) => [...list]);
-    }
-  }
-
-  getAvatarUrl(contact: ContactUser): string | null {
-    return contact.profilePicture || contact.avatar || null;
-  }
-
-  isContact(userId: string): boolean {
-    return this.contacts().some((c) => c._id === userId);
   }
 
   addNewContact() {
     const phone = this.newContactPhone().trim();
     if (!phone) return;
-    const newContact: ContactUser = {
-      _id: 'new-' + Date.now(),
-      firstName: this.newContactFirstName().trim() || undefined,
-      lastName: this.newContactLastName().trim() || undefined,
-      phoneNumber: phone,
-    };
-    this.addContact(newContact);
-    this.showNewContactForm.set(false);
-    this.newContactFirstName.set('');
-    this.newContactLastName.set('');
-    this.newContactPhone.set('');
+    const firstName = this.newContactFirstName().trim();
+    const lastName = this.newContactLastName().trim();
+
+    this.mainService
+      .addContactByPhone(phone, firstName, lastName)
+      .pipe(take(1))
+      .subscribe({
+        next: (newContact: any) => {
+          this.contacts.update((list) => {
+            const filtered = list.filter((c) => c._id !== newContact._id);
+            return [...filtered, newContact];
+          });
+          this.mainService.snackbar.success('مخاطب با موفقیت افزوده شد', 3000);
+          this.cancelNewContact();
+        },
+        error: (err) => {
+          const msg = err?.error?.message || 'کاربری با این شماره تلفن در برنامه ثبت‌نام نکرده است';
+          this.mainService.snackbar.error(Array.isArray(msg) ? msg[0] : msg, 3500);
+        },
+      });
   }
 
   cancelNewContact() {
@@ -184,5 +125,36 @@ export class ContactsComponent implements OnInit {
     this.newContactFirstName.set('');
     this.newContactLastName.set('');
     this.newContactPhone.set('');
+  }
+
+  removeContact(user: ContactUser) {
+    this.mainService.removeContact(user._id).pipe(take(1)).subscribe({
+      next: () => {
+        this.contacts.update((list) => list.filter((c) => c._id !== user._id));
+        this.mainService.snackbar.success('مخاطب حذف شد', 2500);
+      },
+      error: () => {
+        this.mainService.snackbar.error('خطا در حذف مخاطب', 3000);
+      },
+    });
+  }
+
+  pick(user: ContactUser) {
+    this.dialogRef.close({ startChat: user });
+  }
+
+  getAvatarUrl(contact: ContactUser): string | null {
+    if (contact.profilePicture) {
+      return this.mainService.getAvatarUrl(contact.profilePicture);
+    }
+    return null;
+  }
+
+  getContactBg(contact: ContactUser): string {
+    return getTelegramGradient(contact._id || contact.firstName || contact.phoneNumber);
+  }
+
+  getContactInitial(contact: ContactUser): string {
+    return getInitials(contact.firstName, contact.lastName, '؟');
   }
 }

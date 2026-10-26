@@ -976,7 +976,23 @@ export class MainService {
     this.agentWorking = false;
   }
 
+  resetState(): void {
+    this.closeCurrentChat();
+    this.currentChat = null;
+    this.chatItems = [];
+    this.chatItemsSignal.set([]);
+    this.stories = [];
+    this.pictureSrc = '';
+    this.botChatId = null;
+    if (this.messagesSubscription) {
+      this.messagesSubscription.unsubscribe();
+      this.messagesSubscription = null;
+    }
+    this.socketService.disconnect();
+  }
+
   logout() {
+    this.resetState();
     this.authService.logout();
   }
 
@@ -990,6 +1006,10 @@ export class MainService {
 
   addContact(contactId: string): Observable<any> {
     return this.httpRequestService.post(`user/contacts/${contactId}`, {});
+  }
+
+  addContactByPhone(phoneNumber: string, firstName?: string, lastName?: string): Observable<any> {
+    return this.httpRequestService.post('user/contacts/by-phone', { phoneNumber, firstName, lastName });
   }
 
   removeContact(contactId: string): Observable<any> {

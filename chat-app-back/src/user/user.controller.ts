@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserNamesDto } from './dto/update-user-names.dto';
+import { AddContactByPhoneDto } from './dto/add-contact-by-phone.dto';
 import { IUser } from './interfaces/user.interface';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RequestWithUser } from 'src/auth/interfaces/request-with-user.model';
@@ -96,6 +97,12 @@ export class UserController {
   @Get('contacts')
   async getContacts(@Req() request: RequestWithUser) {
     return this.userService.getContacts(request.user._id.toString());
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('contacts/by-phone')
+  async addContactByPhone(@Req() request: RequestWithUser, @Body() dto: AddContactByPhoneDto) {
+    return this.userService.addContactByPhone(request.user._id.toString(), dto.phoneNumber, dto.firstName, dto.lastName);
   }
 
   @UseGuards(JwtAuthGuard)
