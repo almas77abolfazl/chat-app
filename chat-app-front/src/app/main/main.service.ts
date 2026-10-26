@@ -1277,7 +1277,7 @@ const messageData: Message = {
 
   get userProfile() {
     return {
-      avatar: this.getAvatarUrl(this.pictureSrc) || this.pictureSrc || '/default_profile.jpg',
+      avatar: this.getAvatarUrl(this.pictureSrc) || this.pictureSrc || '',
       name: `${this.authService.getFirstName() || ''} ${this.authService.getLastName() || ''}`.trim() || 'کاربر',
     };
   }
@@ -1291,7 +1291,7 @@ const messageData: Message = {
           user: {
             ...sg.user,
             name: `${sg.user?.firstName || ''} ${sg.user?.lastName || ''}`.trim() || sg.user?.username || 'کاربر',
-            avatar: this.getAvatarUrl(sg.user?.profilePicture) || '/default_profile.jpg',
+            avatar: this.getAvatarUrl(sg.user?.profilePicture) || '',
           },
           stories: (sg.stories || []).map((s: any) => ({
             ...s,

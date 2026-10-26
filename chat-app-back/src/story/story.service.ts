@@ -34,8 +34,26 @@ export class StoryService {
 
   async getActiveStories(currentUserId: string): Promise<any[]> {
     const now = new Date();
+
+    // Only allow stories from the current user and their saved contacts
+    const currentUser = await this.userModel.findById(currentUserId).select('contacts').exec();
+    const contactIds: Types.ObjectId[] = [];
+    if (currentUser?.contacts && Array.isArray(currentUser.contacts)) {
+      for (const c of currentUser.contacts) {
+        const rawId = ((c as any)?._id || c)?.toString();
+        if (rawId && Types.ObjectId.isValid(rawId)) {
+          contactIds.push(new Types.ObjectId(rawId));
+        }
+      }
+    }
+    const currentObjId = Types.ObjectId.isValid(currentUserId) ? new Types.ObjectId(currentUserId) : currentUserId;
+    const allowedUserIds = [currentObjId, ...contactIds];
+
     const activeStories = await this.storyModel
-      .find({ expiresAt: { $gt: now } })
+      .find({
+        expiresAt: { $gt: now },
+        user: { $in: allowedUserIds },
+      })
       .populate('user', 'firstName lastName username profilePicture isOnline')
       .sort({ createdAt: 1 })
       .exec();

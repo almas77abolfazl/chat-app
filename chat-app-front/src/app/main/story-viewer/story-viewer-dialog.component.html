@@ -24,7 +24,7 @@
         @if (data.group.user.profilePicture) {
         <img [src]="mainService.getAvatarUrl(data.group.user.profilePicture)" alt="Avatar" />
         } @else {
-        <div class="avatar-initials">
+        <div class="avatar-initials" [style.background]="authorBg">
           {{ authorName.charAt(0) }}
         </div>
         }

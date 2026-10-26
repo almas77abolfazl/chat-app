@@ -7,6 +7,7 @@ import { MainService } from '../main.service';
 import { I18nPipe } from '../../helpers/i18n.pipe';
 import { TranslationService } from '../../helpers/translation.service';
 import { take } from 'rxjs';
+import { getTelegramGradient } from '../../helpers/avatar.helper';
 
 export interface StoryViewerDialogData {
   group: StoryGroup;
@@ -54,6 +55,10 @@ export class StoryViewerDialogComponent implements OnInit, OnDestroy {
     return this.data.group.stories[this.currentIndex];
   }
 
+  get authorBg(): string {
+    return getTelegramGradient(this.data.group.user._id || this.authorName);
+  }
+
   get authorName(): string {
     const u = this.data.group.user;
     return `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.username || 'کاربر';
@@ -66,6 +71,7 @@ export class StoryViewerDialogComponent implements OnInit, OnDestroy {
     if (story) {
       this.mainService.viewStory(story._id).pipe(take(1)).subscribe();
       story.isViewed = true;
+      this.data.group.hasUnseen = this.data.group.stories.some((s) => !s.isViewed);
     }
 
     this.timerInterval = setInterval(() => {

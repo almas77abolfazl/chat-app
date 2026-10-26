@@ -124,6 +124,152 @@
       margin: 0;
     }
 
+    .country-selector-wrap {
+      position: relative;
+      width: 100%;
+      text-align: start;
+
+      .country-btn {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0.75rem 1rem;
+        background: var(--color-surface-solid);
+        border: 1.5px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        color: var(--color-text);
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 0.95rem;
+        transition: all var(--transition-fast);
+
+        &:hover {
+          background: var(--color-surface-hover);
+          border-color: var(--color-primary);
+        }
+
+        .country-flag {
+          font-size: 1.25rem;
+          line-height: 1;
+        }
+
+        .country-name {
+          flex: 1;
+          font-weight: 600;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .chevron {
+          font-size: 0.8rem;
+          color: var(--color-text-faint);
+          transition: transform var(--transition-fast);
+        }
+      }
+
+      .country-dropdown {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        z-index: 50;
+        background: var(--color-surface);
+        border: 1px solid var(--color-border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-lg);
+        padding: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+        max-height: 250px;
+        animation: fade-in-item 150ms ease both;
+
+        .country-search-box {
+          position: relative;
+          display: flex;
+          align-items: center;
+
+          .country-search-input {
+            width: 100%;
+            padding: 0.45rem 1.8rem 0.45rem 0.75rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-border);
+            background: var(--color-surface-solid);
+            color: var(--color-text);
+            font-size: 0.85rem;
+            outline: none;
+
+            &:focus {
+              border-color: var(--color-primary);
+            }
+          }
+
+          .search-icon {
+            position: absolute;
+            inset-inline-end: 0.65rem;
+            font-size: 0.75rem;
+            color: var(--color-text-faint);
+            pointer-events: none;
+          }
+        }
+
+        .country-list {
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+          max-height: 190px;
+          padding-right: 2px;
+
+          .country-item {
+            display: flex;
+            align-items: center;
+            gap: 0.65rem;
+            padding: 0.5rem 0.65rem;
+            border-radius: var(--radius-md);
+            border: none;
+            background: transparent;
+            color: var(--color-text);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.9rem;
+            text-align: start;
+            transition: background var(--transition-fast);
+
+            &:hover,
+            &.selected {
+              background: var(--color-surface-hover);
+            }
+
+            &.selected {
+              color: var(--color-primary);
+              font-weight: 700;
+            }
+
+            .item-flag {
+              font-size: 1.15rem;
+            }
+
+            .item-name {
+              flex: 1;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+
+            .item-code {
+              font-size: 0.85rem;
+              color: var(--color-text-secondary);
+              direction: ltr;
+              font-family: var(--font-en);
+            }
+          }
+        }
+      }
+    }
+
     .phone-input-wrapper {
       display: flex;
       align-items: center;
@@ -139,15 +285,35 @@
         box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 15%, transparent);
       }
 
-      .phone-prefix {
-        padding: 0.5rem 0.75rem;
-        font-weight: 600;
-        color: var(--color-text-secondary);
-        border-right: 1px solid var(--color-border);
-        font-size: 0.95rem;
-        display: flex;
+      .country-code-pill {
+        display: inline-flex;
         align-items: center;
-        gap: 0.25rem;
+        padding: 0.4rem 0.6rem;
+        background: color-mix(in srgb, var(--color-surface) 60%, transparent);
+        border-radius: var(--radius-md);
+        border-inline-end: 1px solid var(--color-border);
+        font-weight: 700;
+        color: var(--color-text);
+        font-size: 1rem;
+        gap: 0.15rem;
+
+        .plus-sign {
+          color: var(--color-text-secondary);
+          font-weight: 600;
+        }
+
+        .country-code-input {
+          width: 2.8rem;
+          border: none;
+          background: transparent;
+          color: var(--color-text);
+          font-size: 1rem;
+          font-weight: 700;
+          font-family: var(--font-en);
+          outline: none;
+          padding: 0;
+          text-align: start;
+        }
       }
 
       .phone-input {

@@ -23,9 +23,55 @@
     <h2 class="login-title">{{ 'login.title' | i18n }}</h2>
     <p class="login-subtitle">{{ 'login.subtitle' | i18n }}</p>
 
+    <!-- Country Selector Button & Dropdown -->
+    <div class="country-selector-wrap">
+      <button
+        type="button"
+        class="country-btn"
+        (click)="toggleCountryMenu(); $event.stopPropagation()"
+        [attr.aria-expanded]="showCountryMenu()"
+      >
+        <span class="country-flag">{{ currentCountry().flag }}</span>
+        <span class="country-name">
+          {{ translationService.isRTL() ? currentCountry().nameFa : currentCountry().nameEn }}
+        </span>
+        <fa-icon [icon]="['fas', showCountryMenu() ? 'chevron-up' : 'chevron-down']" class="chevron"></fa-icon>
+      </button>
+
+      @if (showCountryMenu()) {
+      <div class="country-dropdown" (click)="$event.stopPropagation()">
+        <div class="country-search-box">
+          <input
+            type="text"
+            class="country-search-input"
+            [placeholder]="'search.placeholder' | i18n"
+            [ngModel]="countrySearch()"
+            (ngModelChange)="countrySearch.set($event)"
+            autofocus
+          />
+          <fa-icon [icon]="['fas', 'search']" class="search-icon"></fa-icon>
+        </div>
+        <div class="country-list">
+          @for (c of filteredCountries(); track c.code + c.nameEn) {
+          <button
+            type="button"
+            class="country-item"
+            [class.selected]="c.code === countryCodeSignal()"
+            (click)="selectCountry(c)"
+          >
+            <span class="item-flag">{{ c.flag }}</span>
+            <span class="item-name">{{ translationService.isRTL() ? c.nameFa : c.nameEn }}</span>
+            <span class="item-code">+{{ c.code }}</span>
+          </button>
+          }
+        </div>
+      </div>
+      }
+    </div>
+
+    <!-- Phone Input Row -->
     <div class="phone-input-wrapper">
-      <div class="country-code-container">
-        <span class="country-flag">{{ currentCountryFlag() }}</span>
+      <div class="country-code-pill">
         <span class="plus-sign">+</span>
         <input
           [(ngModel)]="countryCode"

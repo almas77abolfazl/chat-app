@@ -46,6 +46,16 @@ describe('StoryService', () => {
 
     storyModel = MockStoryConstructor;
 
+    const mockUserModel = {
+      findById: jest.fn().mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue({
+            contacts: ['507f1f77bcf86cd799439012'],
+          }),
+        }),
+      }),
+    };
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         StoryService,
@@ -55,7 +65,7 @@ describe('StoryService', () => {
         },
         {
           provide: getModelToken(User.name),
-          useValue: {},
+          useValue: mockUserModel,
         },
       ],
     }).compile();
@@ -83,6 +93,12 @@ describe('StoryService', () => {
     const res = await service.deleteStory('507f1f77bcf86cd799439021', '507f1f77bcf86cd799439011');
     expect(res.success).toBe(true);
     expect(storyModel.deleteOne).toHaveBeenCalled();
+  });
+
+  it('should get active stories for contacts only', async () => {
+    const stories = await service.getActiveStories('507f1f77bcf86cd799439011');
+    expect(stories).toBeDefined();
+    expect(Array.isArray(stories)).toBe(true);
   });
 
   it('should throw ForbiddenException when deleting another user story', async () => {

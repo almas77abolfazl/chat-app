@@ -23,6 +23,7 @@ import { TranslationService } from '../../../helpers/translation.service';
 import { DeleteChatDialogComponent } from '../../delete-chat-dialog/delete-chat-dialog.component';
 import { StoryCreateDialogComponent } from '../../story-create/story-create-dialog.component';
 import { StoryViewerDialogComponent } from '../../story-viewer/story-viewer-dialog.component';
+import { getTelegramGradient, getInitials } from '../../../helpers/avatar.helper';
 
 export interface ChatContextMenuTarget {
   chat: ChatListItem;
@@ -139,19 +140,31 @@ export class ChatListComponent implements OnInit {
 
   avatarBg(chat: ChatListItem): string {
     if (!chat) return '#0088cc';
-    const hue = chat._id ? (Number(String(chat._id).charCodeAt(0)) % 60) + 240 : 264;
-    return `linear-gradient(135deg, hsl(${hue} 70% 55%), hsl(${(hue - 10) % 360} 65% 50%))`;
+    return getTelegramGradient(chat._id || chat.name || chat.firstName);
   }
 
   initials(chat: ChatListItem): string {
-    if (!chat) return '?';
+    if (!chat) return '؟';
     if (chat.isGroup || chat.isChannel) return '';
-    const first = (chat.firstName ?? '').trim();
-    const last = (chat.lastName ?? '').trim();
-    if (first && last) return `${first.charAt(0)}${last.charAt(0)}`;
-    if (first) return first.charAt(0);
-    if (last) return last.charAt(0);
-    return '?';
+    return getInitials(chat.firstName, chat.lastName, '؟');
+  }
+
+  myInitials(): string {
+    const fn = this.mainService.authService.getFirstName();
+    const ln = this.mainService.authService.getLastName();
+    return getInitials(fn, ln, '؟');
+  }
+
+  myAvatarBg(): string {
+    return getTelegramGradient(this.mainService.authService.getUserId() || 'me');
+  }
+
+  storyUserInitials(sg: StoryGroup): string {
+    return getInitials(sg.user.firstName, sg.user.lastName, sg.user.name?.charAt(0) || '؟');
+  }
+
+  storyUserAvatarBg(sg: StoryGroup): string {
+    return getTelegramGradient(sg.user._id || sg.user.name);
   }
 
   avatarBroken(chatId: string): boolean {
@@ -194,7 +207,7 @@ export class ChatListComponent implements OnInit {
   }
 
   openStoryViewer(group: StoryGroup) {
-    this.dialog.open(StoryViewerDialogComponent, {
+    const dialogRef = this.dialog.open(StoryViewerDialogComponent, {
       width: '440px',
       maxWidth: '95vw',
       panelClass: 'story-viewer-dialog-panel',
@@ -202,6 +215,9 @@ export class ChatListComponent implements OnInit {
         group,
         currentUserId: this.mainService.authService.getUserId(),
       },
+    });
+    dialogRef.afterClosed().pipe(take(1)).subscribe(() => {
+      this.mainService.loadStories().pipe(take(1)).subscribe();
     });
   }
 

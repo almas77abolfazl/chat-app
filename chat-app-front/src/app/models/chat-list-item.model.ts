@@ -34,7 +34,7 @@ export interface ChatListItem {
   firstName?: string;
   lastName?: string;
   name?: string;          // group / channel name
-  avatar?: string;        // url or 'default_profile.jpg'
+  avatar?: string;        // profile image url (optional; falls back to Telegram initials)
   avatars?: string[];
   otherParticipant?: ChatParticipant;
   chatId?: string;
