@@ -216,6 +216,13 @@ export class StoryViewerDialogComponent implements OnInit, OnDestroy {
     this.mainService.openUserProfileModal(userId);
   }
 
+  openAuthorProfile() {
+    const authorId = this.data.group.user?._id;
+    if (!authorId) return;
+    this.close();
+    this.mainService.openUserProfileModal(authorId);
+  }
+
   next() {
     if (this.currentIndex < this.data.group.stories.length - 1) {
       this.currentIndex++;

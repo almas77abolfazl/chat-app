@@ -617,7 +617,8 @@
     }
 
     .message {
-      max-width: min(90%, 52rem);
+      min-width: 5.5rem;
+      max-width: min(85%, 48rem);
       margin-bottom: 0.7rem;
       animation: message-in var(--transition) ease both;
       font-size: 0.9rem;
@@ -626,6 +627,8 @@
       padding: 0.6rem 0.85rem;
       border-radius: var(--radius-message);
       border: 1px solid transparent;
+      word-break: break-word;
+      overflow-wrap: break-word;
       transition: transform var(--transition-fast), box-shadow var(--transition-fast);
 
       &.search-match {
@@ -1197,6 +1200,7 @@
         border: 1px solid var(--color-border);
         border-radius: var(--radius-lg);
         background: var(--color-surface);
+        color: var(--color-text);
         font-family: inherit;
         font-size: 0.95rem;
         line-height: 1.5;

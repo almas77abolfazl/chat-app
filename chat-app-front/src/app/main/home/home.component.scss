@@ -36,29 +36,37 @@
 
   app-side-bar {
     flex: 0 0 250px;
+    width: 250px;
+    min-width: 250px;
+    max-width: 250px;
     height: 100%;
     background: var(--color-surface-glass);
     backdrop-filter: blur(20px) saturate(180%);
     -webkit-backdrop-filter: blur(20px) saturate(180%);
     border-inline-end: 1px solid var(--color-border);
     box-shadow: var(--shadow-sm);
-    transition: flex-basis var(--transition), flex-grow var(--transition);
+    transition: width var(--transition), flex-basis var(--transition);
   }
 
   app-chat-list {
     flex: 0 0 360px;
+    width: 360px;
+    min-width: 360px;
+    max-width: 360px;
     height: 100%;
     background: var(--color-surface-container);
     border-inline-end: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
     box-shadow: var(--shadow-xs);
-    transition: flex-basis var(--transition), transform var(--transition);
+    transition: width var(--transition), flex-basis var(--transition), transform var(--transition);
   }
 
   app-chat-area {
-    flex: 1;
+    flex: 1 1 0%;
+    width: 0;
     min-width: 0;
     height: 100%;
     background: var(--color-surface-container-high);
+    overflow: hidden;
   }
 
   @media (max-width: 768px) {

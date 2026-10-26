@@ -20,7 +20,7 @@
 
   <!-- Header -->
   <div class="story-header">
-    <div class="author-info">
+    <div class="author-info" (click)="openAuthorProfile(); $event.stopPropagation()">
       <div class="author-avatar">
         @if (data.group.user.profilePicture) {
         <img [src]="mainService.getAvatarUrl(data.group.user.profilePicture)" alt="Avatar" />

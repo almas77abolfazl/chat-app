@@ -670,6 +670,39 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
     });
   }
 
+  onPaste(event: ClipboardEvent) {
+    const items = event.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (item.type && item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) {
+          event.preventDefault();
+          const chatId = this.mainService.currentChat?._id;
+          if (!chatId) return;
+
+          const ext = item.type.split('/')[1] || 'png';
+          const fileName = file.name || `image_${Date.now()}.${ext}`;
+          this.mainService.snackbar.info('در حال ارسال تصویر از کلیپ‌بورد...', 2000);
+          this.mainService
+            .sendMedia(chatId, file, fileName)
+            .pipe(take(1))
+            .subscribe({
+              next: () => {
+                this.mainService.snackbar.success('تصویر با موفقیت ارسال شد', 2500);
+              },
+              error: () => {
+                this.mainService.snackbar.error('خطا در ارسال تصویر از کلیپ‌بورد', 3000);
+              },
+            });
+          return;
+        }
+      }
+    }
+  }
+
   formatFileSize(bytes: number): string {
     if (!bytes) return '0 B';
     const k = 1024;
