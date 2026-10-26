@@ -20,9 +20,6 @@ export class SideBarComponent {
 
   readonly navItems = [
     { icon: 'comment-dots', titleKey: 'sidebar.chats', id: 'all' },
-    { icon: 'bookmark', titleKey: 'sidebar.savedMessages', id: 'saved-messages' },
-    { icon: 'users', titleKey: 'sidebar.groups', id: 'groups' },
-    { icon: 'broadcast-tower', titleKey: 'sidebar.channels', id: 'channels' },
     { icon: 'address-book', titleKey: 'contacts.title', id: 'contacts' },
   ];
 

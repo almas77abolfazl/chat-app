@@ -320,13 +320,15 @@ export class MainService {
   }
 
   visibleChats(): ChatListItem[] {
-    if (this.chatFilter === 'direct') {
-      return this.chatItems.filter((c) => !c.isGroup && !c.isChannel && !this.isAgentChatSync(c));
+    const filter = this.chatFilterSignal();
+    const items = this.chatItemsSignal();
+    if (filter === 'direct') {
+      return items.filter((c) => !c.isGroup && !c.isChannel && !c.isSavedMessages && !this.isAgentChatSync(c));
     }
-    if (this.chatFilter === 'groups') return this.chatItems.filter((c) => c.isGroup);
-    if (this.chatFilter === 'channels') return this.chatItems.filter((c) => c.isChannel);
-    if (this.chatFilter === 'bots') return this.chatItems.filter((c) => this.isAgentChatSync(c));
-    return this.chatItems;
+    if (filter === 'groups') return items.filter((c) => c.isGroup);
+    if (filter === 'channels') return items.filter((c) => c.isChannel);
+    if (filter === 'bots') return items.filter((c) => this.isAgentChatSync(c));
+    return items;
   }
 
   setChatFilter(filter: 'all' | 'direct' | 'groups' | 'channels' | 'bots') {
@@ -469,6 +471,12 @@ export class MainService {
           } else {
             chatItem.messageCount = (chatItem.messageCount || 0) + 1;
           }
+          const itemIdx = this.chatItems.findIndex((c) => c._id === chatItem._id);
+          if (itemIdx > 0) {
+            this.chatItems.splice(itemIdx, 1);
+            this.chatItems.unshift(chatItem);
+          }
+          this.chatItemsSignal.set([...this.chatItems]);
           this.chatListUpdatedSubject.next(this.chatItems);
 
           if (msg.senderId !== this.authService.getUserId() && msg.status !== 'delivered') {
@@ -489,11 +497,18 @@ export class MainService {
         if (!exists) {
           chatItem.messages.push(msg);
           chatItem.lastMessage = msg;
+          chatItem.updatedAt = new Date(msg.createdAt);
         }
         if (this.currentChat?._id === chatItem._id) {
           this.messagesLoadedSubject.next();
           this.scrollChatToBottom();
         }
+        const itemIdx = this.chatItems.findIndex((c) => c._id === chatItem._id);
+        if (itemIdx > 0) {
+          this.chatItems.splice(itemIdx, 1);
+          this.chatItems.unshift(chatItem);
+        }
+        this.chatItemsSignal.set([...this.chatItems]);
         this.chatListUpdatedSubject.next(this.chatItems);
       });
     });
@@ -1262,7 +1277,7 @@ const messageData: Message = {
 
   get userProfile() {
     return {
-      avatar: this.getAvatarUrl(this.pictureSrc) || this.pictureSrc,
+      avatar: this.getAvatarUrl(this.pictureSrc) || this.pictureSrc || '/default_profile.jpg',
       name: `${this.authService.getFirstName() || ''} ${this.authService.getLastName() || ''}`.trim() || 'کاربر',
     };
   }
@@ -1276,8 +1291,12 @@ const messageData: Message = {
           user: {
             ...sg.user,
             name: `${sg.user?.firstName || ''} ${sg.user?.lastName || ''}`.trim() || sg.user?.username || 'کاربر',
-            avatar: this.getAvatarUrl(sg.user?.profilePicture) || '',
+            avatar: this.getAvatarUrl(sg.user?.profilePicture) || '/default_profile.jpg',
           },
+          stories: (sg.stories || []).map((s: any) => ({
+            ...s,
+            mediaUrl: s.mediaType === 'image' && s.mediaUrl ? (this.getAvatarUrl(s.mediaUrl) || s.mediaUrl) : s.mediaUrl,
+          })),
         }));
       }),
       tap((stories: StoryGroup[]) => {

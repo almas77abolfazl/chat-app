@@ -13,8 +13,8 @@ export class Story extends Document {
   @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   user: Types.ObjectId;
 
-  @Prop({ required: true })
-  mediaUrl: string;
+  @Prop({ required: false, default: '' })
+  mediaUrl?: string;
 
   @Prop({ default: 'image' })
   mediaType: string;

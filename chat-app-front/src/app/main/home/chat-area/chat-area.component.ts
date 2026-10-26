@@ -176,11 +176,23 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
   onEscapeKey() {
     if (this.showInChatSearch) {
       this.closeInChatSearch();
+      return;
     }
-    this.closeContextMenu();
-    this.showContentPicker = false;
-    this.showBgSelector = false;
-    this.showChatActions = false;
+    if (this.showContextMenu) {
+      this.closeContextMenu();
+      return;
+    }
+    if (this.showContentPicker || this.showBgSelector || this.showChatActions) {
+      this.showContentPicker = false;
+      this.showBgSelector = false;
+      this.showChatActions = false;
+      return;
+    }
+    if (this.replyingToId) {
+      this.cancelReply();
+      return;
+    }
+    this.mainService.closeCurrentChat();
   }
 
   @HostListener('window:keydown', ['$event'])

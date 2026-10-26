@@ -68,6 +68,13 @@ export class HomeComponent {
     this.onResize();
   }
 
+  @HostListener('window:keydown.escape')
+  onEscape() {
+    if (this.mainService.currentChat) {
+      this.mainService.closeCurrentChat();
+    }
+  }
+
   toggleMobileMenu() {
     this.mobileMenuOpen.update((v) => !v);
   }

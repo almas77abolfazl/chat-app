@@ -55,13 +55,12 @@
         (click)="userOwnStory() && userOwnStory()!.stories.length > 0 ? openStoryViewer(userOwnStory()!) : openStoryCreate()"
       >
         <div class="story-avatar-wrap" [class.has-stories]="userOwnStory() && userOwnStory()!.stories.length > 0">
-          @if (mainService.userProfile?.avatar) {
-          <img [src]="mainService.userProfile?.avatar" class="story-avatar" alt="My Story" />
-          } @else {
-          <div class="story-avatar-placeholder">
-            {{ (mainService.userProfile?.name || 'U').slice(0, 1).toUpperCase() }}
-          </div>
-          }
+          <img
+            [src]="mainService.userProfile?.avatar || '/default_profile.jpg'"
+            class="story-avatar"
+            alt="My Story"
+            (error)="$any($event.target).src = '/default_profile.jpg'"
+          />
           <button
             type="button"
             class="story-add-badge"
@@ -78,13 +77,12 @@
       @for (sg of otherStories(); track sg.user._id) {
       <div class="story-item" [class.unseen]="sg.hasUnseen" (click)="openStoryViewer(sg)">
         <div class="story-avatar-wrap" [class.has-unseen]="sg.hasUnseen">
-          @if (sg.user.avatar) {
-          <img [src]="sg.user.avatar" class="story-avatar" [alt]="sg.user.name" />
-          } @else {
-          <div class="story-avatar-placeholder">
-            {{ (sg.user.name || 'U').slice(0, 1).toUpperCase() }}
-          </div>
-          }
+          <img
+            [src]="sg.user.avatar || '/default_profile.jpg'"
+            class="story-avatar"
+            [alt]="sg.user.name"
+            (error)="$any($event.target).src = '/default_profile.jpg'"
+          />
         </div>
         <span class="story-name">{{ sg.user.name }}</span>
       </div>

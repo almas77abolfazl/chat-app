@@ -24,7 +24,19 @@
     <p class="login-subtitle">{{ 'login.subtitle' | i18n }}</p>
 
     <div class="phone-input-wrapper">
-      <span class="phone-prefix">🇮🇷 +98</span>
+      <div class="country-code-container">
+        <span class="country-flag">{{ currentCountryFlag() }}</span>
+        <span class="plus-sign">+</span>
+        <input
+          [(ngModel)]="countryCode"
+          type="text"
+          class="country-code-input"
+          placeholder="98"
+          maxlength="4"
+          inputmode="numeric"
+          aria-label="Country Code"
+        />
+      </div>
       <input
         [(ngModel)]="phoneNumber"
         type="tel"
@@ -32,7 +44,7 @@
         class="phone-input"
         [placeholder]="'login.phonePlaceholder' | i18n"
         inputmode="tel"
-        maxlength="11"
+        maxlength="14"
       />
     </div>
 

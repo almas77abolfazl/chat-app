@@ -53,20 +53,69 @@ export class VerifyCodeComponent implements OnInit {
   }
 
   verifyCode() {
-    this.authService.verifyCode(this.verificationCode, this.phoneNumber);
+    const code = this.verificationCode.trim();
+    if (code.length < 6 || code.includes(' ')) return;
+    this.authService.verifyCode(code, this.phoneNumber);
+  }
+
+  onOtpPaste(event: ClipboardEvent) {
+    event.preventDefault();
+    const pasted = event.clipboardData?.getData('text') || '';
+    const digits = pasted.replace(/\D/g, '').slice(0, 6);
+    if (!digits) return;
+
+    this.verificationCode = digits;
+
+    const inputs = document.querySelectorAll<HTMLInputElement>('.otp-input');
+    const targetIdx = Math.min(digits.length, 5);
+    if (inputs[targetIdx]) {
+      inputs[targetIdx].focus();
+    }
+
+    if (digits.length === 6) {
+      this.verifyCode();
+    }
   }
 
   onOtpInput(event: Event, index: number) {
     const input = event.target as HTMLInputElement;
     const value = input.value;
+
+    if (value.length > 1) {
+      const digits = value.replace(/\D/g, '');
+      if (digits.length > 1) {
+        const currentArr = (this.verificationCode || '').padEnd(6, ' ').split('');
+        for (let i = 0; i < digits.length && (index + i) < 6; i++) {
+          currentArr[index + i] = digits[i];
+        }
+        this.verificationCode = currentArr.join('').trimEnd();
+        const nextIdx = Math.min(index + digits.length, 5);
+        const inputs = document.querySelectorAll<HTMLInputElement>('.otp-input');
+        if (inputs[nextIdx]) inputs[nextIdx].focus();
+        if (this.verificationCode.length === 6 && !this.verificationCode.includes(' ')) {
+          this.verifyCode();
+        }
+        return;
+      }
+    }
+
     if (value.length === 1 && /^\d$/.test(value)) {
-      this.verificationCode = this.verificationCode.substring(0, index) + value + this.verificationCode.substring(index + 1);
+      const currentArr = (this.verificationCode || '').padEnd(6, ' ').split('');
+      currentArr[index] = value;
+      this.verificationCode = currentArr.join('').trimEnd();
+
       if (index < 5) {
         const nextInput = (event.target as HTMLElement).parentElement?.children[index + 1] as HTMLInputElement;
         if (nextInput) nextInput.focus();
       }
+
+      if (this.verificationCode.length === 6 && !this.verificationCode.includes(' ')) {
+        this.verifyCode();
+      }
     } else if (value.length === 0) {
-      this.verificationCode = this.verificationCode.substring(0, index) + this.verificationCode.substring(index + 1);
+      const currentArr = (this.verificationCode || '').padEnd(6, ' ').split('');
+      currentArr[index] = ' ';
+      this.verificationCode = currentArr.join('').trimEnd();
     }
   }
 
@@ -76,7 +125,9 @@ export class VerifyCodeComponent implements OnInit {
       const prevInput = (event.target as HTMLElement).parentElement?.children[index - 1] as HTMLInputElement;
       if (prevInput) {
         prevInput.focus();
-        this.verificationCode = this.verificationCode.substring(0, index - 1) + this.verificationCode.substring(index);
+        const currentArr = (this.verificationCode || '').padEnd(6, ' ').split('');
+        currentArr[index - 1] = ' ';
+        this.verificationCode = currentArr.join('').trimEnd();
       }
     }
   }

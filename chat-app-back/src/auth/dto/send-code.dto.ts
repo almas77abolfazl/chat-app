@@ -1,7 +1,7 @@
-import { IsPhoneNumber, IsNotEmpty } from 'class-validator';
+import { Matches, IsNotEmpty } from 'class-validator';
 
 export class SendCodeDto {
-  @IsPhoneNumber('IR') // اینجا کشور ایران به عنوان مثال انتخاب شده است
+  @Matches(/^\+?[0-9]{7,15}$/, { message: 'phoneNumber must be a valid phone number' })
   @IsNotEmpty()
   phoneNumber: string;
 }

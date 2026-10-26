@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, Length, IsPhoneNumber } from 'class-validator';
+import { IsString, IsNotEmpty, Length, Matches } from 'class-validator';
 
 export class VerifyCodeDto {
   @IsString()
@@ -6,7 +6,7 @@ export class VerifyCodeDto {
   @Length(6, 6)
   code: string;
 
-  @IsPhoneNumber('IR')
+  @Matches(/^\+?[0-9]{7,15}$/, { message: 'phoneNumber must be a valid phone number' })
   @IsNotEmpty()
   phoneNumber: string;
 }

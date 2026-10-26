@@ -19,6 +19,7 @@ import { debounceTime, Subject, take } from 'rxjs';
 import { ChatListItem } from '../../../models/chat-list-item.model';
 import { StoryGroup } from '../../../models/story.model';
 import { I18nPipe } from '../../../helpers/i18n.pipe';
+import { TranslationService } from '../../../helpers/translation.service';
 import { DeleteChatDialogComponent } from '../../delete-chat-dialog/delete-chat-dialog.component';
 import { StoryCreateDialogComponent } from '../../story-create/story-create-dialog.component';
 import { StoryViewerDialogComponent } from '../../story-viewer/story-viewer-dialog.component';
@@ -73,6 +74,7 @@ export class ChatListComponent implements OnInit {
 
   constructor(
     public mainService: MainService,
+    public translationService: TranslationService,
     private dialog: MatDialog
   ) {
     this.searchSubject
@@ -129,7 +131,7 @@ export class ChatListComponent implements OnInit {
   }
 
   displayName(chat: ChatListItem): string {
-    if (chat.isSavedMessages) return 'پیام‌های ذخیره‌شده';
+    if (chat.isSavedMessages) return this.translationService.t('chat.savedMessages');
     if (chat.isGroup || chat.isChannel) return chat.name || '';
     if (chat.firstName || chat.lastName) return `${chat.firstName || ''} ${chat.lastName || ''}`.trim();
     return chat.name || '';

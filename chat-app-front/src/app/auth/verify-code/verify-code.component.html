@@ -23,73 +23,79 @@
     <h2 class="verify-title">{{ 'verify.title' | i18n }}</h2>
     <p class="verify-subtitle" [innerHTML]="'verify.subtitle' | i18n:{ phone: phoneNumber }"></p>
 
-    <div class="otp-inputs">
+    <div class="otp-inputs" (paste)="onOtpPaste($event)">
       <input
         type="text"
         inputmode="numeric"
         pattern="[0-9]*"
-        maxlength="1"
+        maxlength="6"
         class="otp-input"
-        [value]="verificationCode[0] || ''"
+        [value]="verificationCode[0] && verificationCode[0] !== ' ' ? verificationCode[0] : ''"
         (input)="onOtpInput($event, 0)"
         (keydown.backspace)="onOtpBackspace($event, 0)"
+        (paste)="onOtpPaste($event)"
       />
       <input
         type="text"
         inputmode="numeric"
         pattern="[0-9]*"
-        maxlength="1"
+        maxlength="6"
         class="otp-input"
-        [value]="verificationCode[1] || ''"
+        [value]="verificationCode[1] && verificationCode[1] !== ' ' ? verificationCode[1] : ''"
         (input)="onOtpInput($event, 1)"
         (keydown.backspace)="onOtpBackspace($event, 1)"
+        (paste)="onOtpPaste($event)"
       />
       <input
         type="text"
         inputmode="numeric"
         pattern="[0-9]*"
-        maxlength="1"
+        maxlength="6"
         class="otp-input"
-        [value]="verificationCode[2] || ''"
+        [value]="verificationCode[2] && verificationCode[2] !== ' ' ? verificationCode[2] : ''"
         (input)="onOtpInput($event, 2)"
         (keydown.backspace)="onOtpBackspace($event, 2)"
+        (paste)="onOtpPaste($event)"
       />
       <input
         type="text"
         inputmode="numeric"
         pattern="[0-9]*"
-        maxlength="1"
+        maxlength="6"
         class="otp-input"
-        [value]="verificationCode[3] || ''"
+        [value]="verificationCode[3] && verificationCode[3] !== ' ' ? verificationCode[3] : ''"
         (input)="onOtpInput($event, 3)"
         (keydown.backspace)="onOtpBackspace($event, 3)"
+        (paste)="onOtpPaste($event)"
       />
       <input
         type="text"
         inputmode="numeric"
         pattern="[0-9]*"
-        maxlength="1"
+        maxlength="6"
         class="otp-input"
-        [value]="verificationCode[4] || ''"
+        [value]="verificationCode[4] && verificationCode[4] !== ' ' ? verificationCode[4] : ''"
         (input)="onOtpInput($event, 4)"
         (keydown.backspace)="onOtpBackspace($event, 4)"
+        (paste)="onOtpPaste($event)"
       />
       <input
         type="text"
         inputmode="numeric"
         pattern="[0-9]*"
-        maxlength="1"
+        maxlength="6"
         class="otp-input"
-        [value]="verificationCode[5] || ''"
+        [value]="verificationCode[5] && verificationCode[5] !== ' ' ? verificationCode[5] : ''"
         (input)="onOtpInput($event, 5)"
         (keydown.backspace)="onOtpBackspace($event, 5)"
+        (paste)="onOtpPaste($event)"
       />
     </div>
 
     <button
       type="button"
       class="submit-btn app-button"
-      [class.disabled]="verificationCode.length < 6"
+      [class.disabled]="verificationCode.trim().length < 6 || verificationCode.includes(' ')"
       (click)="verifyCode()"
     >
       {{ 'verify.submit' | i18n }}
