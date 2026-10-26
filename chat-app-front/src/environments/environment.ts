@@ -1,6 +1,20 @@
+function getBaseUrl(): string {
+  if (typeof window !== 'undefined' && window.location?.hostname) {
+    const { protocol, hostname } = window.location;
+    return `${protocol}//${hostname}:3000`;
+  }
+  return 'http://localhost:3000';
+}
+
 export const environment = {
   production: true,
-  apiUrl: 'http://localhost:3000/v1',
-  socketUrl: 'http://localhost:3000',
-  uploadUrl: 'http://localhost:3000/uploads',
+  get apiUrl(): string {
+    return `${getBaseUrl()}/v1`;
+  },
+  get socketUrl(): string {
+    return getBaseUrl();
+  },
+  get uploadUrl(): string {
+    return `${getBaseUrl()}/uploads`;
+  },
 };

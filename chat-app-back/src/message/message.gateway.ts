@@ -17,7 +17,13 @@ import { Model } from 'mongoose';
 const MAX_MESSAGE_LENGTH = 2000;
 const MAX_AGENT_CONTENT_LENGTH = 4000;
 
-@WebSocketGateway({ cors: { origin: '*', transports: ['websocket'] } })
+@WebSocketGateway({
+  cors: {
+    origin: (origin: any, callback: any) => callback(null, true),
+    credentials: true,
+  },
+  transports: ['websocket', 'polling'],
+})
 @UseGuards(WsJwtGuard)
 export class MessageGateway {
   @WebSocketServer()
