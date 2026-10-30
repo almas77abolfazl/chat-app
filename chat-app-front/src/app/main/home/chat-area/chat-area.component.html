@@ -1,6 +1,38 @@
 <div class="chat-area-container" (contextmenu)="onChatAreaContextMenu($event)">
   @if (mainService.currentChat) {
 
+  @if (isSelectionMode) {
+  <div class="selection-header-bar">
+    <div class="selection-header-start">
+      <button type="button" class="selection-close-btn" (click)="cancelSelection()" [attr.title]="'chat.cancelSelection' | i18n">
+        <fa-icon [icon]="['fas', 'times']"></fa-icon>
+      </button>
+      <span class="selection-count">{{ 'chat.selectedCount' | i18n: { count: selectedMessageIds.size } }}</span>
+    </div>
+    <div class="selection-header-actions">
+      <button
+        type="button"
+        class="selection-action-btn forward-btn"
+        (click)="forwardSelectedMessages()"
+        [disabled]="selectedMessageIds.size === 0"
+        [attr.title]="'chat.forward' | i18n"
+      >
+        <fa-icon [icon]="['fas', 'share']"></fa-icon>
+        <span>{{ 'chat.forward' | i18n }}</span>
+      </button>
+      <button
+        type="button"
+        class="selection-action-btn delete-btn"
+        (click)="deleteSelectedMessages()"
+        [disabled]="selectedMessageIds.size === 0"
+        [attr.title]="'chat.deleteSelected' | i18n"
+      >
+        <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+        <span>{{ 'actions.delete' | i18n }}</span>
+      </button>
+    </div>
+  </div>
+  } @else {
   <div class="chat-header">
     <div class="back-button" (click)="goBack()" [attr.title]="'chat.backToChats' | i18n">
       <fa-icon [icon]="['fas', translationService.isRTL() ? 'arrow-right' : 'arrow-left']"></fa-icon>
@@ -39,6 +71,15 @@
       @if (mainService.isAgentChat(mainService.currentChat)) {
       <fa-icon [icon]="['fas', 'robot']" class="chat-agent-icon" [attr.title]="'agent.title' | i18n"></fa-icon>
       }
+      <button
+        type="button"
+        class="header-action-btn"
+        (click)="enterSelectionMode()"
+        [attr.data-tooltip]="'chat.selectMessages' | i18n"
+        data-tooltip-placement="bottom"
+      >
+        <fa-icon [icon]="['fas', 'check-double']"></fa-icon>
+      </button>
       <button
         type="button"
         class="header-action-btn"
@@ -99,6 +140,7 @@
       }
     </div>
   </div>
+  }
 
   @if (showInChatSearch) {
   <div class="in-chat-search-bar">
@@ -239,11 +281,25 @@
         'received': !ownMessage(message),
         'sticker-msg': message.mediaType === 'sticker',
         'search-match': isSearchHighlighted(message),
-        'search-active-match': isCurrentSearchMatch(message)
+        'search-active-match': isCurrentSearchMatch(message),
+        'is-selected': isMessageSelected(message)
       }"
       [style.animation-delay]="($index * 30) + 'ms'"
+      (click)="isSelectionMode ? toggleMessageSelection(message, $event) : null"
       (contextmenu)="openContextMenu($event, message)"
     >
+      @if (isSelectionMode) {
+      <div class="message-select-checkbox" (click)="toggleMessageSelection(message, $event)">
+        <fa-icon [icon]="['fas', isMessageSelected(message) ? 'check-circle' : 'circle']" [class.checked]="isMessageSelected(message)"></fa-icon>
+      </div>
+      }
+      @if (message.forwardFrom) {
+      <div class="forwarded-header" (click)="openForwardSenderProfile(message, $event)">
+        <fa-icon [icon]="['fas', 'share']" class="forward-header-icon"></fa-icon>
+        <span class="forward-label">{{ 'chat.forwardedFrom' | i18n }}:</span>
+        <span class="forward-author">{{ message.forwardFrom.fromSenderName || 'کاربر' }}</span>
+      </div>
+      }
       @if (message.toolCalls?.length) {
       <div class="agent-tools">
         @for (tool of message.toolCalls; track $index) {
@@ -491,6 +547,14 @@
     </button>
 
     @if (!contextMenuTarget.isDeleted) {
+    <button type="button" class="context-menu-item" (click)="onContextMenuAction('forward')">
+      <fa-icon [icon]="['fas', 'share']"></fa-icon>
+      <span>{{ 'chat.forward' | i18n }}</span>
+    </button>
+    <button type="button" class="context-menu-item" (click)="onContextMenuAction('select')">
+      <fa-icon [icon]="['fas', 'check-circle']"></fa-icon>
+      <span>{{ 'chat.select' | i18n }}</span>
+    </button>
     <button type="button" class="context-menu-item" (click)="onContextMenuAction('pin')">
       <fa-icon [icon]="['fas', 'thumbtack']"></fa-icon>
       <span>{{ (isMessagePinned(contextMenuTarget) ? 'actions.unpin' : 'actions.pin') | i18n }}</span>

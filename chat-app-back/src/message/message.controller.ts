@@ -77,6 +77,27 @@ export class MessageController {
     return this.messageService.editMessage(messageId, request.user._id.toString(), body.content);
   }
 
+  @Delete('bulk')
+  @UseGuards(JwtAuthGuard)
+  async deleteMessagesBulk(@Req() request: RequestWithUser, @Body() body: { messageIds: string[] }) {
+    if (!Array.isArray(body?.messageIds) || body.messageIds.length === 0) {
+      throw new BadRequestException('messageIds array is required');
+    }
+    return this.messageService.deleteMessagesBulk(body.messageIds, request.user._id.toString());
+  }
+
+  @Post('forward')
+  @UseGuards(JwtAuthGuard)
+  async forwardMessages(@Req() request: RequestWithUser, @Body() body: { messageIds: string[]; targetChatId: string }) {
+    if (!Array.isArray(body?.messageIds) || body.messageIds.length === 0) {
+      throw new BadRequestException('messageIds array is required');
+    }
+    if (!body?.targetChatId) {
+      throw new BadRequestException('targetChatId is required');
+    }
+    return this.messageService.forwardMessages(body.messageIds, body.targetChatId, request.user._id.toString());
+  }
+
   @Delete(':messageId')
   @UseGuards(JwtAuthGuard)
   async deleteMessage(@Req() request: RequestWithUser, @Param('messageId') messageId: string) {

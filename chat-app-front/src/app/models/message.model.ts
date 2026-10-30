@@ -23,6 +23,11 @@ export interface Message {
   fileUrl?: string;
   fileName?: string;
   fileSize?: number;
+  forwardFrom?: {
+    fromUserId?: string;
+    fromSenderName?: string;
+    originalChatId?: string;
+  };
   reactions?: { emoji: string; count: number; users: string[] }[];
   userReactedEmoji?: string;
 }

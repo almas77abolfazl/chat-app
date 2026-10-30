@@ -21,6 +21,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 import { ProfileComponent } from '../../profile/profile.component';
 import { DeleteChatDialogComponent } from '../../delete-chat-dialog/delete-chat-dialog.component';
+import { ForwardDialogComponent } from '../../forward-dialog/forward-dialog.component';
 import { ContentPickerComponent } from './content-picker/content-picker.component';
 import { Message } from '../../../models/message.model';
 import { ChatListItem } from '../../../models/chat-list-item.model';
@@ -103,6 +104,13 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
   readonly contextMenuTargetSignal = signal<Message | null>(null);
   get contextMenuTarget(): Message | null { return this.contextMenuTargetSignal(); }
   set contextMenuTarget(v: Message | null) { this.contextMenuTargetSignal.set(v); }
+
+  readonly isSelectionModeSignal = signal<boolean>(false);
+  get isSelectionMode(): boolean { return this.isSelectionModeSignal(); }
+  set isSelectionMode(v: boolean) { this.isSelectionModeSignal.set(v); }
+
+  readonly selectedMessageIdsSignal = signal<Set<string>>(new Set<string>());
+  get selectedMessageIds(): Set<string> { return this.selectedMessageIdsSignal(); }
 
   bgOptions = CHAT_BACKGROUNDS;
 
@@ -433,8 +441,114 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
   }
 
   goBack() {
+    if (this.isSelectionMode) {
+      this.cancelSelection();
+      return;
+    }
     this.mainService.closeCurrentChat();
     this.replyingToId = null;
+  }
+
+  toggleMessageSelection(message: Message, event?: Event) {
+    if (event) event.stopPropagation();
+    if (!message._id || message.isDeleted) return;
+
+    const set = new Set(this.selectedMessageIds);
+    if (set.has(message._id)) {
+      set.delete(message._id);
+    } else {
+      set.add(message._id);
+    }
+    this.selectedMessageIdsSignal.set(set);
+
+    if (set.size === 0 && this.isSelectionMode) {
+      this.isSelectionMode = false;
+    } else if (set.size > 0 && !this.isSelectionMode) {
+      this.isSelectionMode = true;
+    }
+  }
+
+  isMessageSelected(message: Message): boolean {
+    return !!message._id && this.selectedMessageIds.has(message._id);
+  }
+
+  enterSelectionMode(message?: Message) {
+    this.isSelectionMode = true;
+    const set = new Set<string>();
+    if (message && message._id && !message.isDeleted) {
+      set.add(message._id);
+    }
+    this.selectedMessageIdsSignal.set(set);
+    this.closeContextMenu();
+  }
+
+  cancelSelection() {
+    this.isSelectionMode = false;
+    this.selectedMessageIdsSignal.set(new Set<string>());
+  }
+
+  deleteSelectedMessages() {
+    const ids = Array.from(this.selectedMessageIds);
+    if (ids.length === 0) return;
+
+    const confirmMsg = this.translationService.t('chat.deleteSelectedConfirm', { count: ids.length });
+    if (confirm(confirmMsg)) {
+      this.mainService
+        .deleteMessagesBulk(ids)
+        .pipe(take(1))
+        .subscribe({
+          next: () => {
+            if (this.mainService.currentChat?.messages) {
+              for (const id of ids) {
+                const target = this.mainService.currentChat.messages.find((m) => m._id === id);
+                if (target) {
+                  target.isDeleted = true;
+                  target.content = 'این پیام حذف شد';
+                }
+              }
+            }
+            this.mainService.snackbar.success(this.translationService.t('chat.deleteSuccess'), 2500);
+            this.cancelSelection();
+          },
+          error: () => {
+            this.mainService.snackbar.error(this.translationService.t('chat.deleteError'), 3000);
+          },
+        });
+    }
+  }
+
+  forwardSelectedMessages() {
+    const ids = Array.from(this.selectedMessageIds);
+    if (ids.length === 0) return;
+
+    const dialogRef = this.dialog.open(ForwardDialogComponent, {
+      width: '420px',
+      maxWidth: '92vw',
+      panelClass: 'profile-dialog-panel',
+      data: {
+        messageIds: ids,
+        messageCount: ids.length,
+      },
+    });
+
+    dialogRef.afterClosed().pipe(take(1)).subscribe((result) => {
+      if (!result?.targetChat?._id) return;
+      const targetChatId = result.targetChat._id;
+
+      this.mainService
+        .forwardMessages(ids, targetChatId)
+        .pipe(take(1))
+        .subscribe({
+          next: () => {
+            this.mainService.snackbar.success(this.translationService.t('chat.forwardSuccess'), 2500);
+            this.cancelSelection();
+            this.mainService.getChatList();
+          },
+          error: () => {
+            this.mainService.snackbar.error(this.translationService.t('chat.forwardError'), 3000);
+          },
+        });
+    });
   }
 
   showProfile() {
@@ -452,6 +566,14 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
     const senderId = message.senderId || (message.sender as any)?._id;
     if (senderId) {
       this.mainService.openUserProfileModal(senderId);
+    }
+  }
+
+  openForwardSenderProfile(message: Message, event?: Event) {
+    if (event) event.stopPropagation();
+    const forwardUserId = message.forwardFrom?.fromUserId;
+    if (forwardUserId) {
+      this.mainService.openUserProfileModal(forwardUserId);
     }
   }
 
@@ -606,8 +728,37 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
       case 'reply':
         this.replyToMessage(this.contextMenuTarget!);
         break;
-      case 'forward':
-        this.mainService.snackbar.info('ارسال به forwarded soon', 2000);
+      case 'forward': {
+        const msg = this.contextMenuTarget!;
+        this.closeContextMenu();
+        const dialogRef = this.dialog.open(ForwardDialogComponent, {
+          width: '420px',
+          maxWidth: '92vw',
+          panelClass: 'profile-dialog-panel',
+          data: {
+            messageIds: [msg._id],
+            messageCount: 1,
+          },
+        });
+        dialogRef.afterClosed().pipe(take(1)).subscribe((result) => {
+          if (!result?.targetChat?._id) return;
+          this.mainService
+            .forwardMessages([msg._id], result.targetChat._id)
+            .pipe(take(1))
+            .subscribe({
+              next: () => {
+                this.mainService.snackbar.success(this.translationService.t('chat.forwardSuccess'), 2500);
+                this.mainService.getChatList();
+              },
+              error: () => {
+                this.mainService.snackbar.error(this.translationService.t('chat.forwardError'), 3000);
+              },
+            });
+        });
+        break;
+      }
+      case 'select':
+        this.enterSelectionMode(this.contextMenuTarget!);
         break;
       case 'copy':
         navigator.clipboard.writeText(this.contextMenuTarget!.content || '');
