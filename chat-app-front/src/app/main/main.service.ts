@@ -7,7 +7,7 @@ import { ContactsComponent } from './contacts/contacts.component';
 import { CreateChatComponent } from './create-chat/create-chat.component';
 import { HttpRequestService } from '../helpers/http-request.service';
 import { BehaviorSubject, firstValueFrom, map, Observable, of, Subject, take, tap, catchError } from 'rxjs';
-import { AdminPermissions, ChatAdmin, ChatListItem, ChatParticipant } from '../models/chat-list-item.model';
+import { AdminPermissions, ChatAdmin, ChatListItem, ChatParticipant, TypingUser } from '../models/chat-list-item.model';
 import { StoryGroup } from '../models/story.model';
 import { SocketService } from './socket.service';
 import { HttpEvent, HttpParams } from '@angular/common/http';
@@ -161,8 +161,9 @@ export class MainService {
   file: any;
 
   private messagesSubscription: any;
-  private typingTimeouts = new Map<string, ReturnType<typeof setTimeout>>;
-  private typingUsersSubject = new BehaviorSubject<Map<string, string[]>>(new Map());
+  private typingTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+  private typingUsersMap = new Map<string, Map<string, { user: TypingUser; timer: ReturnType<typeof setTimeout> }>>();
+  private typingUsersSubject = new BehaviorSubject<Map<string, TypingUser[]>>(new Map());
   typingUsers$ = this.typingUsersSubject.asObservable();
 
   constructor(
@@ -663,20 +664,82 @@ export class MainService {
       });
     });
 
+    this.socketService.on('userStatusChanged', (payload: { userId: string; isOnline: boolean; lastSeen?: string | Date }) => {
+      this.zone.run(() => {
+        const lastSeenDate = payload.lastSeen ? new Date(payload.lastSeen) : undefined;
+        let changed = false;
+
+        const updateItem = (item: ChatListItem) => {
+          if (!item.isGroup && !item.isChannel && item.peerId === payload.userId) {
+            item.isOnline = payload.isOnline;
+            if (lastSeenDate) item.lastSeen = lastSeenDate;
+            changed = true;
+          }
+          if (item.participants) {
+            const p = item.participants.find((part) => part._id === payload.userId);
+            if (p) {
+              p.isOnline = payload.isOnline;
+              if (lastSeenDate) p.lastSeen = lastSeenDate;
+              changed = true;
+            }
+          }
+        };
+
+        for (const item of this.chatItems) {
+          updateItem(item);
+        }
+
+        if (this.currentChat) {
+          updateItem(this.currentChat);
+        }
+
+        if (changed) {
+          this.chatListUpdatedSubject.next(this.chatItems);
+        }
+      });
+    });
+
     this.socketService.on('typingStatus', (payload: { chatId: string; userId: string; userName: string; isTyping: boolean }) => {
       this.zone.run(() => {
-        const current = new Map<string, string[]>(this.typingUsersSubject.value as Iterable<readonly [string, string[]]>);
-        const chatUsers: string[] = current.get(payload.chatId) || [];
-        if (payload.isTyping) {
-          if (!chatUsers.includes(payload.userId)) {
-            chatUsers.push(payload.userId);
-          }
-        } else {
-          const idx = chatUsers.indexOf(payload.userId);
-          if (idx !== -1) chatUsers.splice(idx, 1);
+        const myId = this.authService.getUserId();
+        if (payload.userId === myId) return;
+
+        let chatMap = this.typingUsersMap.get(payload.chatId);
+        if (!chatMap) {
+          chatMap = new Map();
+          this.typingUsersMap.set(payload.chatId, chatMap);
         }
-        current.set(payload.chatId, chatUsers);
-        this.typingUsersSubject.next(current);
+
+        if (payload.isTyping) {
+          const existing = chatMap.get(payload.userId);
+          if (existing) {
+            clearTimeout(existing.timer);
+          }
+          const timer = setTimeout(() => {
+            this.zone.run(() => {
+              this.removeTypingUser(payload.chatId, payload.userId);
+            });
+          }, 3500);
+
+          chatMap.set(payload.userId, {
+            user: {
+              userId: payload.userId,
+              userName: payload.userName || 'User',
+            },
+            timer,
+          });
+        } else {
+          const existing = chatMap.get(payload.userId);
+          if (existing) {
+            clearTimeout(existing.timer);
+            chatMap.delete(payload.userId);
+          }
+          if (chatMap.size === 0) {
+            this.typingUsersMap.delete(payload.chatId);
+          }
+        }
+
+        this.broadcastTypingUsers();
       });
     });
 
@@ -700,16 +763,59 @@ export class MainService {
     });
   }
 
+  private removeTypingUser(chatId: string, userId: string) {
+    const chatMap = this.typingUsersMap.get(chatId);
+    if (!chatMap) return;
+    const existing = chatMap.get(userId);
+    if (existing) {
+      clearTimeout(existing.timer);
+      chatMap.delete(userId);
+    }
+    if (chatMap.size === 0) {
+      this.typingUsersMap.delete(chatId);
+    }
+    this.broadcastTypingUsers();
+  }
+
+  private broadcastTypingUsers() {
+    const nextMap = new Map<string, TypingUser[]>();
+    for (const [chatId, userMap] of this.typingUsersMap.entries()) {
+      if (userMap.size > 0) {
+        nextMap.set(
+          chatId,
+          Array.from(userMap.values()).map((v) => v.user),
+        );
+      }
+    }
+    this.typingUsersSubject.next(nextMap);
+  }
+
   stopListening() {
     this.messagesSubscription?.unsubscribe();
     this.messagesSubscription = null;
     this.typingTimeouts.forEach((t) => clearTimeout(t));
     this.typingTimeouts.clear();
+    for (const userMap of this.typingUsersMap.values()) {
+      for (const entry of userMap.values()) {
+        clearTimeout(entry.timer);
+      }
+    }
+    this.typingUsersMap.clear();
+    this.typingUsersSubject.next(new Map());
   }
 
   sendTypingStart(chatId: string) {
     this.socketService.emit('typingStart', { chatId });
     this.scheduleTypingStop(chatId);
+  }
+
+  stopTyping(chatId: string) {
+    const existing = this.typingTimeouts.get(chatId);
+    if (existing) {
+      clearTimeout(existing);
+      this.typingTimeouts.delete(chatId);
+    }
+    this.socketService.emit('typingStop', { chatId });
   }
 
   private scheduleTypingStop(chatId: string) {
@@ -718,11 +824,11 @@ export class MainService {
     const timeout = setTimeout(() => {
       this.socketService.emit('typingStop', { chatId });
       this.typingTimeouts.delete(chatId);
-    }, 2000);
+    }, 2500);
     this.typingTimeouts.set(chatId, timeout);
   }
 
-  getTypingUsers(chatId: string): string[] {
+  getTypingUsers(chatId: string): TypingUser[] {
     return this.typingUsersSubject.value.get(chatId) || [];
   }
 
@@ -1109,6 +1215,7 @@ export class MainService {
       linkPreview: options?.linkPreview || undefined,
     };
     const chatId = currentChat._id as string;
+    this.stopTyping(chatId);
     this.socketService.sendMessage({
       chatId,
       content,

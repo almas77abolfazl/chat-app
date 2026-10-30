@@ -63,7 +63,16 @@
     "uploadFailed": "خطا در آپلود",
     "uploadSuccess": "ارسال فایل با موفقیت انجام شد",
     "recordVoice": "ضبط پیام صوتی",
-    "recordingVoice": "در حال ضبط پیام صوتی..."
+    "recordingVoice": "در حال ضبط پیام صوتی...",
+    "typingSingle": "{name} در حال نوشتن است...",
+    "typingDouble": "{name1} و {name2} در حال نوشتن هستند...",
+    "typingMultiple": "{name1}، {name2} و {count} نفر دیگر در حال نوشتن هستند...",
+    "typingDirect": "در حال نوشتن...",
+    "onlineMembers": "{members} عضو، {online} نفر آنلاین",
+    "lastSeenAt": "آخرین بازدید {time}",
+    "lastSeenToday": "آخرین بازدید امروز ساعت {time}",
+    "lastSeenYesterday": "آخرین بازدید دیروز ساعت {time}",
+    "lastSeenRecently": "آخرین بازدید اخیراً"
   },
   "contacts": {
     "title": "مخاطبان",

@@ -63,7 +63,16 @@
     "uploadFailed": "Upload failed",
     "uploadSuccess": "File sent successfully",
     "recordVoice": "Record voice message",
-    "recordingVoice": "Recording voice message..."
+    "recordingVoice": "Recording voice message...",
+    "typingSingle": "{name} is typing...",
+    "typingDouble": "{name1} and {name2} are typing...",
+    "typingMultiple": "{name1}, {name2} and {count} others are typing...",
+    "typingDirect": "typing...",
+    "onlineMembers": "{members} members, {online} online",
+    "lastSeenAt": "last seen {time}",
+    "lastSeenToday": "last seen today at {time}",
+    "lastSeenYesterday": "last seen yesterday at {time}",
+    "lastSeenRecently": "last seen recently"
   },
   "contacts": {
     "title": "Contacts",

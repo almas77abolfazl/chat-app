@@ -63,6 +63,10 @@ export class MessageGateway {
       await this.userService.updateOnlineStatus(user._id.toString(), true);
 
       this.server.to(user._id.toString()).emit('connected', { userId: user._id, isOnline: true });
+      this.server.emit('userStatusChanged', {
+        userId: user._id.toString(),
+        isOnline: true,
+      });
     } catch {
       client.disconnect();
     }
@@ -71,7 +75,13 @@ export class MessageGateway {
   handleDisconnect(client: Socket) {
     const user = client.data.user as IUser;
     if (user) {
+      const lastSeen = new Date();
       this.userService.updateOnlineStatus(user._id.toString(), false).catch(() => {});
+      this.server.emit('userStatusChanged', {
+        userId: user._id.toString(),
+        isOnline: false,
+        lastSeen,
+      });
     }
     console.log(`Client disconnected: ${client.id}`);
   }
@@ -178,13 +188,16 @@ export class MessageGateway {
   async handleTypingStart(@MessageBody() data: { chatId: string }, @ConnectedSocket() client: Socket) {
     try {
       const user = client.data.user as IUser;
+      if (!user || !data?.chatId) return;
       const participantIds = await this.chatService.getParticipantIds(data.chatId);
+      const rawName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
+      const userName = rawName || user.username || user.phoneNumber || 'User';
       for (const pid of participantIds) {
         if (pid !== user._id.toString()) {
           this.server.to(pid).emit('typingStatus', {
             chatId: data.chatId,
             userId: user._id.toString(),
-            userName: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
+            userName,
             isTyping: true,
           });
         }
@@ -198,13 +211,16 @@ export class MessageGateway {
   async handleTypingStop(@MessageBody() data: { chatId: string }, @ConnectedSocket() client: Socket) {
     try {
       const user = client.data.user as IUser;
+      if (!user || !data?.chatId) return;
       const participantIds = await this.chatService.getParticipantIds(data.chatId);
+      const rawName = `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim();
+      const userName = rawName || user.username || user.phoneNumber || 'User';
       for (const pid of participantIds) {
         if (pid !== user._id.toString()) {
           this.server.to(pid).emit('typingStatus', {
             chatId: data.chatId,
             userId: user._id.toString(),
-            userName: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
+            userName,
             isTyping: false,
           });
         }

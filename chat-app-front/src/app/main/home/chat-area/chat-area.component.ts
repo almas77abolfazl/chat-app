@@ -28,7 +28,7 @@ import { compressImage } from '../../../helpers/image-compressor.helper';
 import { VoicePlayerComponent } from '../../voice-player/voice-player.component';
 import { ContentPickerComponent } from './content-picker/content-picker.component';
 import { Message } from '../../../models/message.model';
-import { ChatListItem } from '../../../models/chat-list-item.model';
+import { ChatListItem, TypingUser } from '../../../models/chat-list-item.model';
 import { ChatBackgroundService, ChatBackground, CHAT_BACKGROUNDS } from '../../chat-background/chat-background.service';
 import { I18nPipe } from '../../../helpers/i18n.pipe';
 import { TranslationService } from '../../../helpers/translation.service';
@@ -112,9 +112,9 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
   private recordedAudioChunks: Blob[] = [];
   private liveSampledPeaks: number[] = [];
 
-  readonly typingUsersSignal = signal<string[]>([]);
-  get typingUsers(): string[] { return this.typingUsersSignal(); }
-  set typingUsers(v: string[]) { this.typingUsersSignal.set(v); }
+  readonly typingUsersSignal = signal<TypingUser[]>([]);
+  get typingUsers(): TypingUser[] { return this.typingUsersSignal(); }
+  set typingUsers(v: TypingUser[]) { this.typingUsersSignal.set(v); }
 
   readonly editMessageIdSignal = signal<string | null>(null);
   get editMessageId(): string | null { return this.editMessageIdSignal(); }
@@ -390,16 +390,95 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
     return `${chat.firstName ?? ''} ${chat.lastName ?? ''}`.trim();
   }
 
-  headerSubtitle(chat: ChatListItem): string {
+  get headerTypingText(): string {
+    const users = this.typingUsers;
+    if (!users || users.length === 0) return '';
+    const chat = this.mainService.currentChat;
+    const isGroup = !!chat?.isGroup;
+    return this.formatTypingText(users, isGroup);
+  }
+
+  formatTypingText(users: TypingUser[], isGroup: boolean): string {
+    if (!users || users.length === 0) return '';
+    const isRtl = this.translationService.isRTL();
+
+    if (!isGroup) {
+      return this.translationService.t('chat.typingDirect');
+    }
+
+    const names = users.map((u) => u.userName || (isRtl ? 'یک کاربر' : 'A user'));
+
+    if (names.length === 1) {
+      return this.translationService.t('chat.typingSingle', { name: names[0] });
+    } else if (names.length === 2) {
+      return this.translationService.t('chat.typingDouble', { name1: names[0], name2: names[1] });
+    } else {
+      const othersCount = names.length - 2;
+      return this.translationService.t('chat.typingMultiple', {
+        name1: names[0],
+        name2: names[1],
+        count: othersCount,
+      });
+    }
+  }
+
+  isHeaderOnline(chat: ChatListItem | null | undefined): boolean {
+    if (!chat || chat.isGroup || chat.isChannel || chat.isSavedMessages) return false;
+    return !!chat.isOnline;
+  }
+
+  headerSubtitle(chat: ChatListItem | null | undefined): string {
     if (!chat) return '';
     if (chat.isSavedMessages) return this.translationService.t('chat.cloudStorage');
     if (chat?.isChannel) return this.translationService.t('profile.publicChannel');
     if (chat?.isGroup) {
-      const count = (chat.participants || []).length;
-      return this.translationService.t('profile.membersCount', { count });
+      const members = (chat.participants || []).length;
+      const onlineCount = (chat.participants || []).filter((p: any) => p.isOnline).length;
+      if (onlineCount > 0) {
+        return this.translationService.t('chat.onlineMembers', { members, online: onlineCount });
+      }
+      return this.translationService.t('profile.membersCount', { count: members });
     }
     if (chat?.isOnline) return this.translationService.t('status.online');
+    if (chat?.lastSeen) return this.formatLastSeen(chat.lastSeen);
     return '';
+  }
+
+  formatLastSeen(lastSeenDate?: Date | string): string {
+    if (!lastSeenDate) return '';
+    const date = new Date(lastSeenDate);
+    if (isNaN(date.getTime())) return '';
+
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMinutes = Math.floor(diffMs / 60000);
+
+    if (diffMinutes < 1) {
+      return this.translationService.t('chat.lastSeenRecently');
+    }
+
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const timeStr = `${hours}:${minutes}`;
+
+    const isToday = date.toDateString() === now.toDateString();
+    if (isToday) {
+      return this.translationService.t('chat.lastSeenToday', { time: timeStr });
+    }
+
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    const isYesterday = date.toDateString() === yesterday.toDateString();
+    if (isYesterday) {
+      return this.translationService.t('chat.lastSeenYesterday', { time: timeStr });
+    }
+
+    const isRtl = this.translationService.isRTL();
+    const formattedDate = date.toLocaleDateString(isRtl ? 'fa-IR' : 'en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+    return this.translationService.t('chat.lastSeenAt', { time: `${formattedDate} ${timeStr}` });
   }
 
   toggleInChatSearch() {

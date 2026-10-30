@@ -220,7 +220,14 @@
         <div class="chat-info">
           <div class="chat-name">{{ displayName(chat) }}</div>
           <div class="chat-last-message">
-            @if (chat.lastMessage?.isDeleted || chat.lastMessage?.deletedForEveryone) {
+            @if (getChatTypingText(chat)) {
+            <span class="chat-typing-indicator">
+              <span class="typing-dots-mini">
+                <span></span><span></span><span></span>
+              </span>
+              {{ getChatTypingText(chat) }}
+            </span>
+            } @else if (chat.lastMessage?.isDeleted || chat.lastMessage?.deletedForEveryone) {
             <span class="deleted-msg-label">
               <fa-icon [icon]="['fas', 'trash']" class="deleted-icon"></fa-icon>
               {{ 'chat.deletedMessage' | i18n }}

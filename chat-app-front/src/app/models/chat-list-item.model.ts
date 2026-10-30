@@ -28,6 +28,11 @@ export interface ChatParticipant {
   lastSeen?: Date;
 }
 
+export interface TypingUser {
+  userId: string;
+  userName: string;
+}
+
 export interface ChatListItem {
   _id: string;            // Chat document id (used as chatId in the gateway)
   peerId?: string;        // for 1:1 chats: the other user's id

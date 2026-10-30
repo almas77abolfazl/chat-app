@@ -391,6 +391,40 @@
         font-size: 0.72rem;
         color: var(--color-text-faint);
         letter-spacing: 0.01em;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: color var(--transition-fast);
+
+        &.is-typing {
+          color: var(--color-primary);
+          font-weight: 500;
+        }
+
+        &.is-online {
+          color: var(--color-primary);
+          font-weight: 500;
+        }
+
+        .header-typing-dots {
+          display: inline-flex;
+          align-items: center;
+          gap: 2.5px;
+          height: 10px;
+
+          span {
+            width: 3.5px;
+            height: 3.5px;
+            background-color: var(--color-primary);
+            border-radius: 50%;
+            display: inline-block;
+            animation: header-dot-pulse 1.4s infinite ease-in-out both;
+
+            &:nth-child(1) { animation-delay: -0.32s; }
+            &:nth-child(2) { animation-delay: -0.16s; }
+            &:nth-child(3) { animation-delay: 0s; }
+          }
+        }
       }
     }
 
@@ -564,29 +598,28 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.65rem 1rem;
+    padding: 0.45rem 1rem;
     background: var(--color-surface-glass);
-    font-size: 0.85rem;
-    color: var(--color-text-secondary);
-    border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
-
-    .typing-names {
-      font-weight: 600;
-      color: var(--color-text);
-    }
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    font-size: 0.8rem;
+    color: var(--color-primary);
+    border-top: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
 
     .typing-text {
-      font-style: italic;
+      font-weight: 500;
+      color: var(--color-primary);
     }
 
     .typing-dots {
       display: flex;
+      align-items: center;
       gap: 0.2rem;
 
       .dot {
-        width: 0.6rem;
-        height: 0.6rem;
-        background: var(--color-text-faint);
+        width: 0.4rem;
+        height: 0.4rem;
+        background: var(--color-primary);
         border-radius: var(--radius-full);
         animation: typing-dot-bounce 1.4s infinite ease-in-out both;
       }
@@ -598,8 +631,19 @@
   }
 
   @keyframes typing-dot-bounce {
-    0%, 80%, 100% { transform: scale(0); }
-    40% { transform: scale(1); }
+    0%, 80%, 100% { transform: scale(0.4); opacity: 0.5; }
+    40% { transform: scale(1); opacity: 1; }
+  }
+
+  @keyframes header-dot-pulse {
+    0%, 80%, 100% {
+      transform: scale(0.6);
+      opacity: 0.4;
+    }
+    40% {
+      transform: scale(1.15);
+      opacity: 1;
+    }
   }
 
   .loading-messages {

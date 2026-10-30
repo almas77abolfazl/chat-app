@@ -16,7 +16,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MainService } from '../../main.service';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, Subject, take } from 'rxjs';
-import { ChatListItem } from '../../../models/chat-list-item.model';
+import { ChatListItem, TypingUser } from '../../../models/chat-list-item.model';
 import { StoryGroup } from '../../../models/story.model';
 import { I18nPipe } from '../../../helpers/i18n.pipe';
 import { TranslationService } from '../../../helpers/translation.service';
@@ -49,6 +49,7 @@ export class ChatListComponent implements OnInit {
 
   private readonly searchSubject = new Subject<string>();
   private readonly destroyRef = inject(DestroyRef);
+  readonly typingMap = signal<Map<string, TypingUser[]>>(new Map());
 
   readonly showChatContextMenu = signal<boolean>(false);
   readonly chatContextMenuX = signal<number>(0);
@@ -81,6 +82,32 @@ export class ChatListComponent implements OnInit {
     this.searchSubject
       .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
       .subscribe((query) => this.performSearch(query));
+
+    this.mainService.typingUsers$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((m) => this.typingMap.set(m));
+  }
+
+  getChatTypingText(chat: ChatListItem): string {
+    const users = this.typingMap().get(chat._id);
+    if (!users || users.length === 0) return '';
+    const isGroup = !!chat.isGroup;
+    const isRtl = this.translationService.isRTL();
+    if (!isGroup) {
+      return this.translationService.t('chat.typingDirect');
+    }
+    const names = users.map((u) => u.userName || (isRtl ? 'یک کاربر' : 'A user'));
+    if (names.length === 1) {
+      return this.translationService.t('chat.typingSingle', { name: names[0] });
+    } else if (names.length === 2) {
+      return this.translationService.t('chat.typingDouble', { name1: names[0], name2: names[1] });
+    } else {
+      return this.translationService.t('chat.typingMultiple', {
+        name1: names[0],
+        name2: names[1],
+        count: names.length - 2,
+      });
+    }
   }
 
   ngOnInit() {
