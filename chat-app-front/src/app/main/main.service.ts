@@ -1060,7 +1060,16 @@ export class MainService {
     return this.httpRequestService.get(`message/${messageId}/reactions`);
   }
 
-  async sendMessage(currentChat: ChatListItem, input: HTMLTextAreaElement) {
+  getLinkPreview(url: string): Observable<{ preview: any }> {
+    const params = new HttpParams().set('url', url);
+    return this.httpRequestService.get('message/link-preview', null, params);
+  }
+
+  async sendMessage(
+    currentChat: ChatListItem,
+    input: HTMLTextAreaElement,
+    options?: { linkPreview?: any; skipLinkPreview?: boolean },
+  ) {
     const content = input.value?.trim();
     if (!content) return;
 
@@ -1091,9 +1100,15 @@ export class MainService {
       content,
       avatar: this.pictureSrc,
       createdAt: new Date(),
+      linkPreview: options?.linkPreview || undefined,
     };
     const chatId = currentChat._id as string;
-    this.socketService.sendMessage({ chatId, content });
+    this.socketService.sendMessage({
+      chatId,
+      content,
+      linkPreview: options?.linkPreview,
+      skipLinkPreview: options?.skipLinkPreview,
+    });
 
     currentChat.messages = currentChat.messages || [];
     currentChat.messages.push(messageData);

@@ -74,6 +74,24 @@ export class Message {
     fromSenderName?: string;
     originalChatId?: Types.ObjectId;
   };
+
+  @Prop({
+    type: {
+      url: { type: String },
+      title: { type: String },
+      description: { type: String },
+      image: { type: String },
+      siteName: { type: String },
+    },
+    default: null,
+  })
+  linkPreview?: {
+    url?: string;
+    title?: string;
+    description?: string;
+    image?: string;
+    siteName?: string;
+  };
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);

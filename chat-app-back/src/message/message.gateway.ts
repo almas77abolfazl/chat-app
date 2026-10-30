@@ -106,7 +106,10 @@ export class MessageGateway {
         return;
       }
 
-      const msg = await this.messageService.saveMessageToChat(chatId, senderId, content.trim(), media, messageData?.forwardFrom);
+      const msg = await this.messageService.saveMessageToChat(chatId, senderId, content.trim(), media, messageData?.forwardFrom, {
+        linkPreview: messageData?.linkPreview,
+        skipLinkPreview: messageData?.skipLinkPreview,
+      });
       const participantIds = await this.chatService.getParticipantIds(chatId);
       for (const pid of participantIds) {
         if (pid === senderId) {

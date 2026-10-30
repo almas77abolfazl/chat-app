@@ -30,4 +30,11 @@ export interface Message {
   };
   reactions?: { emoji: string; count: number; users: string[] }[];
   userReactedEmoji?: string;
+  linkPreview?: {
+    url?: string;
+    title?: string;
+    description?: string;
+    image?: string;
+    siteName?: string;
+  };
 }

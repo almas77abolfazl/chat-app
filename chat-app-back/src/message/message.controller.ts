@@ -20,6 +20,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { mediaMulterOptions } from 'src/helpers/media-upload';
 import { MessageGateway } from './message.gateway';
 import { extname } from 'path';
+import { fetchLinkPreview } from 'src/helpers/link-preview.helper';
 
 @Controller('message')
 export class MessageController {
@@ -38,6 +39,16 @@ export class MessageController {
   ) {
     if (!chatId) throw new Error('chatId is required');
     return this.messageService.getMessagesByChat(chatId, request.user._id.toString(), page, limit);
+  }
+
+  @Get('link-preview')
+  @UseGuards(JwtAuthGuard)
+  async getLinkPreview(@Query('url') url: string) {
+    if (!url) {
+      throw new BadRequestException('url query parameter is required');
+    }
+    const preview = await fetchLinkPreview(url);
+    return { preview };
   }
 
   @Get('chat/:chatId/media-summary')

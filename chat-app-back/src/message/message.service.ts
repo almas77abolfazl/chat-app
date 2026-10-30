@@ -5,6 +5,7 @@ import { Message, MessageDocument } from './entities/message.entity';
 import { Chat, ChatDocument } from 'src/chat/entities/chat.entity';
 import { ReactionService } from './reaction/reaction.service';
 import { UserService } from 'src/user/user.service';
+import { extractFirstUrl, fetchLinkPreview, LinkPreviewData } from 'src/helpers/link-preview.helper';
 
 @Injectable()
 export class MessageService {
@@ -27,6 +28,7 @@ export class MessageService {
     content: string,
     media?: { mediaType: string; fileUrl: string; fileName?: string; fileSize?: number },
     forwardFrom?: { fromUserId?: string; fromSenderName?: string; originalChatId?: string },
+    options?: { linkPreview?: LinkPreviewData; skipLinkPreview?: boolean },
   ): Promise<any> {
     const chat = await this.findChatForMessage(chatId);
     const senderObjectId = new Types.ObjectId(senderId);
@@ -54,6 +56,14 @@ export class MessageService {
       }
     }
 
+    let linkPreview: LinkPreviewData | null | undefined = options?.linkPreview;
+    if (!options?.skipLinkPreview && !linkPreview && !media && content) {
+      const detectedUrl = extractFirstUrl(content);
+      if (detectedUrl) {
+        linkPreview = await fetchLinkPreview(detectedUrl);
+      }
+    }
+
     const message = await this.messageModel.create({
       sender: senderObjectId,
       receiver: receiver ?? undefined,
@@ -71,6 +81,7 @@ export class MessageService {
             originalChatId: forwardFrom.originalChatId ? new Types.ObjectId(forwardFrom.originalChatId) : undefined,
           }
         : undefined,
+      linkPreview: linkPreview || undefined,
     });
 
     chat.messages.push(message._id as unknown as Types.ObjectId);
@@ -384,6 +395,15 @@ export class MessageService {
             fromUserId: message.forwardFrom.fromUserId?.toString(),
             fromSenderName: message.forwardFrom.fromSenderName,
             originalChatId: message.forwardFrom.originalChatId?.toString(),
+          }
+        : null,
+      linkPreview: message.linkPreview
+        ? {
+            url: message.linkPreview.url,
+            title: message.linkPreview.title,
+            description: message.linkPreview.description,
+            image: message.linkPreview.image,
+            siteName: message.linkPreview.siteName,
           }
         : null,
       reactions: reactions ?? message.reactions ?? [],

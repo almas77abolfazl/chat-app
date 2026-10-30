@@ -83,6 +83,16 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
     return this.activeUploadsSignal().filter((u) => u.chatId === currentChatId);
   }
 
+  readonly detectedLinkPreviewSignal = signal<{
+    url: string;
+    title?: string;
+    description?: string;
+    image?: string;
+    siteName?: string;
+  } | null>(null);
+  readonly dismissedUrlSignal = signal<string | null>(null);
+  private previewDebounceTimeout: any = null;
+
   readonly typingUsersSignal = signal<string[]>([]);
   get typingUsers(): string[] { return this.typingUsersSignal(); }
   set typingUsers(v: string[]) { this.typingUsersSignal.set(v); }
@@ -265,11 +275,64 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
   onTyping(textarea?: HTMLTextAreaElement) {
     if (textarea) {
       this.adjustTextareaHeight(textarea);
+      this.checkUrlForPreview(textarea.value);
     }
     const chatId = this.mainService.currentChat?._id;
     if (chatId) {
       this.mainService.sendTypingStart(chatId);
     }
+  }
+
+  checkUrlForPreview(text: string) {
+    if (this.previewDebounceTimeout) {
+      clearTimeout(this.previewDebounceTimeout);
+    }
+
+    if (!text) {
+      this.detectedLinkPreviewSignal.set(null);
+      this.dismissedUrlSignal.set(null);
+      return;
+    }
+
+    const urlRegex = /https?:\/\/[^\s<>"'{}|\\^`]+[^\s<>"'{}|\\^`.,;:?!]/i;
+    const match = text.match(urlRegex);
+    if (!match) {
+      this.detectedLinkPreviewSignal.set(null);
+      this.dismissedUrlSignal.set(null);
+      return;
+    }
+
+    const detectedUrl = match[0];
+    if (this.dismissedUrlSignal() === detectedUrl) {
+      return;
+    }
+
+    if (this.detectedLinkPreviewSignal()?.url === detectedUrl) {
+      return;
+    }
+
+    this.previewDebounceTimeout = setTimeout(() => {
+      this.mainService
+        .getLinkPreview(detectedUrl)
+        .pipe(take(1))
+        .subscribe({
+          next: (res) => {
+            if (res?.preview && this.dismissedUrlSignal() !== detectedUrl) {
+              this.detectedLinkPreviewSignal.set(res.preview);
+              this.cdr.markForCheck();
+            }
+          },
+          error: () => {},
+        });
+    }, 450);
+  }
+
+  dismissLinkPreview() {
+    const current = this.detectedLinkPreviewSignal();
+    if (current) {
+      this.dismissedUrlSignal.set(current.url);
+    }
+    this.detectedLinkPreviewSignal.set(null);
   }
 
   private markCurrentChatMessagesRead() {
@@ -1126,7 +1189,14 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
       event.preventDefault();
       const content = textarea.value.trim();
       if (content && this.mainService.currentChat) {
-        this.mainService.sendMessage(this.mainService.currentChat, textarea);
+        const linkPreview = this.detectedLinkPreviewSignal();
+        const skipLinkPreview = !linkPreview && !!this.dismissedUrlSignal();
+        this.mainService.sendMessage(this.mainService.currentChat, textarea, {
+          linkPreview: linkPreview || undefined,
+          skipLinkPreview,
+        });
+        this.detectedLinkPreviewSignal.set(null);
+        this.dismissedUrlSignal.set(null);
         textarea.value = '';
         textarea.style.height = 'auto';
       }
@@ -1136,7 +1206,14 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
   sendFromButton(textarea: HTMLTextAreaElement) {
     const content = textarea.value.trim();
     if (content && this.mainService.currentChat) {
-      this.mainService.sendMessage(this.mainService.currentChat, textarea);
+      const linkPreview = this.detectedLinkPreviewSignal();
+      const skipLinkPreview = !linkPreview && !!this.dismissedUrlSignal();
+      this.mainService.sendMessage(this.mainService.currentChat, textarea, {
+        linkPreview: linkPreview || undefined,
+        skipLinkPreview,
+      });
+      this.detectedLinkPreviewSignal.set(null);
+      this.dismissedUrlSignal.set(null);
       textarea.value = '';
       textarea.style.height = 'auto';
     }

@@ -407,6 +407,33 @@
         <span class="edit-badge">{{ 'actions.edited' | i18n }}</span>
         }
         }
+        @if (message.linkPreview) {
+        <a
+          [href]="message.linkPreview.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="link-preview-card"
+          (click)="$event.stopPropagation()"
+        >
+          <div class="preview-accent-line"></div>
+          <div class="preview-content-col">
+            @if (message.linkPreview.siteName) {
+            <span class="preview-site">{{ message.linkPreview.siteName }}</span>
+            }
+            @if (message.linkPreview.title) {
+            <span class="preview-title">{{ message.linkPreview.title }}</span>
+            }
+            @if (message.linkPreview.description) {
+            <span class="preview-desc">{{ message.linkPreview.description }}</span>
+            }
+          </div>
+          @if (message.linkPreview.image) {
+          <div class="preview-thumb-box">
+            <img [src]="message.linkPreview.image" alt="Preview" class="preview-thumb-img" (error)="$any($event.target).style.display = 'none'" />
+          </div>
+          }
+        </a>
+        }
       </div>
       }
       @if (message.reactions && message.reactions.length > 0) {
@@ -534,6 +561,23 @@
         </div>
       </div>
       }
+    </div>
+    }
+    @if (detectedLinkPreviewSignal()) {
+    <div class="link-preview-banner">
+      <div class="preview-banner-accent"></div>
+      <div class="preview-banner-content">
+        <fa-icon [icon]="['fas', 'globe']" class="preview-banner-icon"></fa-icon>
+        <div class="preview-banner-text">
+          <span class="preview-banner-title">{{ detectedLinkPreviewSignal()?.title || detectedLinkPreviewSignal()?.siteName || detectedLinkPreviewSignal()?.url }}</span>
+          @if (detectedLinkPreviewSignal()?.description) {
+          <span class="preview-banner-desc">{{ detectedLinkPreviewSignal()?.description }}</span>
+          }
+        </div>
+      </div>
+      <button type="button" class="preview-banner-close" (click)="dismissLinkPreview()" [attr.title]="'actions.cancel' | i18n">
+        <fa-icon [icon]="['fas', 'times']"></fa-icon>
+      </button>
     </div>
     }
     <div class="input-row">
