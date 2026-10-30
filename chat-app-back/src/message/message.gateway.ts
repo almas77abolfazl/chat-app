@@ -106,7 +106,7 @@ export class MessageGateway {
         return;
       }
 
-      const msg = await this.messageService.saveMessageToChat(chatId, senderId, content.trim(), media);
+      const msg = await this.messageService.saveMessageToChat(chatId, senderId, content.trim(), media, messageData?.forwardFrom);
       const participantIds = await this.chatService.getParticipantIds(chatId);
       for (const pid of participantIds) {
         if (pid === senderId) {
@@ -294,6 +294,34 @@ export class MessageGateway {
       }
     } catch (error) {
       client.emit('messageError', { message: error?.message ?? 'Failed to delete message' });
+    }
+  }
+
+  @SubscribeMessage('forwardMessages')
+  async handleForwardMessages(@MessageBody() data: { messageIds: string[]; targetChatId: string }, @ConnectedSocket() client: Socket) {
+    try {
+      const user = client.data.user as IUser;
+      const senderId = user._id.toString();
+      const newMessages = await this.messageService.forwardMessages(data.messageIds, data.targetChatId, senderId);
+
+      const participantIds = await this.chatService.getParticipantIds(data.targetChatId);
+      for (const msg of newMessages) {
+        for (const pid of participantIds) {
+          if (pid === senderId) {
+            client.emit('messageSent', { chatId: data.targetChatId, message: msg });
+          } else {
+            this.server.to(pid).emit('receiveMessage', { chatId: data.targetChatId, message: msg });
+            this.server.to(pid).emit('notification', {
+              chatId: data.targetChatId,
+              message: msg,
+              senderId: senderId,
+              senderName: `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim(),
+            });
+          }
+        }
+      }
+    } catch (error) {
+      client.emit('messageError', { message: error?.message ?? 'Failed to forward messages' });
     }
   }
 

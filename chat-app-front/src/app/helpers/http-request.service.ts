@@ -38,10 +38,10 @@ export class HttpRequestService {
     return this.http.put(`${this.ROOT_URL}/${uri}/${id}`, payload, { headers });
   }
 
-  public delete(uri: string, id?: string, headers?: any): Observable<any> {
+  public delete(uri: string, id?: string, headers?: any, body?: any): Observable<any> {
     headers = headers ?? new HttpHeaders();
     const url = id ? `${this.ROOT_URL}/${uri}/${id}` : `${this.ROOT_URL}/${uri}`;
-    return this.http.delete(url, { headers });
+    return this.http.delete(url, { headers, body });
   }
 
   public postFile(uri: string, formData: FormData, headers?: HttpHeaders): Observable<any> {

@@ -81,6 +81,99 @@
     }
   }
 
+  .selection-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.65rem 1rem;
+    background: var(--color-surface-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    animation: fade-in var(--transition-fast) ease;
+
+    .selection-header-start {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+
+      .selection-close-btn {
+        background: transparent;
+        border: none;
+        color: var(--color-text-secondary);
+        width: 2.2rem;
+        height: 2.2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: var(--radius-full);
+        cursor: pointer;
+        font-size: 1.1rem;
+        transition: background var(--transition-fast), color var(--transition-fast);
+
+        &:hover {
+          background: color-mix(in srgb, var(--color-text) 10%, transparent);
+          color: var(--color-text);
+        }
+      }
+
+      .selection-count {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--color-text);
+      }
+    }
+
+    .selection-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      .selection-action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.45rem 0.9rem;
+        border: none;
+        border-radius: var(--radius-md);
+        font-size: 0.85rem;
+        font-weight: 600;
+        font-family: inherit;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+
+        &.forward-btn {
+          background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+          color: var(--color-primary);
+
+          &:hover:not(:disabled) {
+            background: var(--color-primary);
+            color: #fff;
+          }
+        }
+
+        &.delete-btn {
+          background: color-mix(in srgb, var(--color-danger) 15%, transparent);
+          color: var(--color-danger);
+
+          &:hover:not(:disabled) {
+            background: var(--color-danger);
+            color: #fff;
+          }
+        }
+
+        &:disabled {
+          opacity: 0.4;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+
   .chat-header {
     display: flex;
     align-items: center;
@@ -640,6 +733,103 @@
         border-color: #f59e0b !important;
         box-shadow: 0 0 0 4px color-mix(in srgb, #f59e0b 50%, transparent), 0 4px 16px rgba(245, 158, 11, 0.25) !important;
         animation: pulse-search-match 1.4s ease-in-out infinite;
+      }
+
+      &.is-selected {
+        outline: 2px solid var(--color-primary);
+        outline-offset: 2px;
+        box-shadow: 0 0 16px color-mix(in srgb, var(--color-primary) 40%, transparent) !important;
+        position: relative;
+        z-index: 2;
+
+        &.sent {
+          background: color-mix(in srgb, var(--color-message-sent) 90%, #fff) !important;
+        }
+
+        &.received {
+          background: color-mix(in srgb, var(--color-primary) 12%, var(--color-message-received)) !important;
+        }
+      }
+
+      .message-select-checkbox {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        margin-bottom: 0.3rem;
+        font-size: 1rem;
+        cursor: pointer;
+        user-select: none;
+        color: color-mix(in srgb, var(--color-text-faint) 80%, transparent);
+        transition: transform var(--transition-fast), color var(--transition-fast);
+
+        &:hover {
+          transform: scale(1.1);
+        }
+
+        .checked {
+          color: var(--color-primary);
+        }
+      }
+
+      &.sent .message-select-checkbox {
+        color: rgba(255, 255, 255, 0.7);
+
+        .checked {
+          color: #fff;
+        }
+      }
+
+      .forwarded-header {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        margin-bottom: 0.35rem;
+        font-size: 0.76rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: var(--radius-xs);
+        background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+        border-inline-start: 2px solid var(--color-primary);
+        cursor: pointer;
+        transition: background var(--transition-fast), opacity var(--transition-fast);
+        max-width: 100%;
+
+        &:hover {
+          background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+        }
+
+        .forward-header-icon {
+          font-size: 0.7rem;
+        }
+
+        .forward-label {
+          color: var(--color-text-secondary);
+          font-weight: 500;
+        }
+
+        .forward-author {
+          font-weight: 700;
+          color: var(--color-primary);
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+
+      &.sent .forwarded-header {
+        background: rgba(255, 255, 255, 0.15);
+        border-inline-start-color: rgba(255, 255, 255, 0.9);
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.25);
+        }
+
+        .forward-label {
+          color: rgba(255, 255, 255, 0.85);
+        }
+
+        .forward-author {
+          color: #fff;
+        }
       }
 
       &.sticker-msg {

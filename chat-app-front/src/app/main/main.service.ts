@@ -1024,6 +1024,14 @@ export class MainService {
     return this.httpRequestService.delete('message', messageId);
   }
 
+  deleteMessagesBulk(messageIds: string[]): Observable<any> {
+    return this.httpRequestService.delete('message/bulk', undefined, undefined, { messageIds });
+  }
+
+  forwardMessages(messageIds: string[], targetChatId: string): Observable<any> {
+    return this.httpRequestService.post('message/forward', { messageIds, targetChatId });
+  }
+
   sendMedia(chatId: string, file: File, content: string = ''): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);

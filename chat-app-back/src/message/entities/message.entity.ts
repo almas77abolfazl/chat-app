@@ -60,6 +60,20 @@ export class Message {
 
   @Prop()
   fileSize: number;
+
+  @Prop({
+    type: {
+      fromUserId: { type: Types.ObjectId, ref: 'User' },
+      fromSenderName: { type: String },
+      originalChatId: { type: Types.ObjectId, ref: 'Chat' },
+    },
+    default: null,
+  })
+  forwardFrom?: {
+    fromUserId?: Types.ObjectId;
+    fromSenderName?: string;
+    originalChatId?: Types.ObjectId;
+  };
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);

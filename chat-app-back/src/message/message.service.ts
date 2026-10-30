@@ -26,6 +26,7 @@ export class MessageService {
     senderId: string,
     content: string,
     media?: { mediaType: string; fileUrl: string; fileName?: string; fileSize?: number },
+    forwardFrom?: { fromUserId?: string; fromSenderName?: string; originalChatId?: string },
   ): Promise<any> {
     const chat = await this.findChatForMessage(chatId);
     const senderObjectId = new Types.ObjectId(senderId);
@@ -63,6 +64,13 @@ export class MessageService {
       fileUrl: media?.fileUrl || null,
       fileName: media?.fileName || null,
       fileSize: media?.fileSize || null,
+      forwardFrom: forwardFrom
+        ? {
+            fromUserId: forwardFrom.fromUserId ? new Types.ObjectId(forwardFrom.fromUserId) : undefined,
+            fromSenderName: forwardFrom.fromSenderName,
+            originalChatId: forwardFrom.originalChatId ? new Types.ObjectId(forwardFrom.originalChatId) : undefined,
+          }
+        : undefined,
     });
 
     chat.messages.push(message._id as unknown as Types.ObjectId);
@@ -163,6 +171,59 @@ export class MessageService {
     message.deletedAt = new Date();
     message.content = 'این پیام حذف شد';
     await message.save();
+  }
+
+  async deleteMessagesBulk(messageIds: string[], userId: string): Promise<{ deletedIds: string[] }> {
+    const deletedIds: string[] = [];
+    for (const id of messageIds) {
+      try {
+        await this.deleteMessage(id, userId);
+        deletedIds.push(id);
+      } catch {
+        // Skip messages user doesn't have permission to delete
+      }
+    }
+    return { deletedIds };
+  }
+
+  async forwardMessages(messageIds: string[], targetChatId: string, senderId: string): Promise<any[]> {
+    const targetChat = await this.findChatForMessage(targetChatId);
+    if (!targetChat.participants.some((p) => p.toString() === senderId)) {
+      throw new ForbiddenException('You are not a participant of the target chat');
+    }
+
+    const messages = await this.messageModel
+      .find({ _id: { $in: messageIds.map((id) => new Types.ObjectId(id)) } })
+      .populate('sender', 'firstName lastName')
+      .sort({ createdAt: 1 })
+      .exec();
+
+    const createdMessages: any[] = [];
+    for (const msg of messages) {
+      if (msg.isDeleted) continue;
+      const originalSender = msg.sender as any;
+      const originalSenderName = originalSender ? `${originalSender.firstName ?? ''} ${originalSender.lastName ?? ''}`.trim() || 'کاربر' : 'کاربر';
+
+      const forwardFromData = {
+        fromUserId: msg.forwardFrom?.fromUserId ? msg.forwardFrom.fromUserId.toString() : originalSender?._id?.toString(),
+        fromSenderName: msg.forwardFrom?.fromSenderName || originalSenderName,
+        originalChatId: msg.chat ? msg.chat.toString() : undefined,
+      };
+
+      const media = msg.mediaType
+        ? {
+            mediaType: msg.mediaType,
+            fileUrl: msg.fileUrl,
+            fileName: msg.fileName,
+            fileSize: msg.fileSize,
+          }
+        : undefined;
+
+      const newMsg = await this.saveMessageToChat(targetChatId, senderId, msg.content, media, forwardFromData);
+      createdMessages.push(newMsg);
+    }
+
+    return createdMessages;
   }
 
   async getMessagesByChat(
@@ -318,6 +379,13 @@ export class MessageService {
       fileUrl: message.fileUrl,
       fileName: message.fileName,
       fileSize: message.fileSize,
+      forwardFrom: message.forwardFrom
+        ? {
+            fromUserId: message.forwardFrom.fromUserId?.toString(),
+            fromSenderName: message.forwardFrom.fromSenderName,
+            originalChatId: message.forwardFrom.originalChatId?.toString(),
+          }
+        : null,
       reactions: reactions ?? message.reactions ?? [],
     };
   }
