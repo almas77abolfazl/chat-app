@@ -15,13 +15,16 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MainService } from '../../main.service';
 import { NgClass } from '@angular/common';
-import { take } from 'rxjs';
+import { HttpEvent, HttpEventType } from '@angular/common/http';
+import { take, Subscription } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 import { ProfileComponent } from '../../profile/profile.component';
 import { DeleteChatDialogComponent } from '../../delete-chat-dialog/delete-chat-dialog.component';
 import { ForwardDialogComponent } from '../../forward-dialog/forward-dialog.component';
+import { MediaSendDialogComponent, MediaSendDialogResult } from '../../media-send-dialog/media-send-dialog.component';
+import { compressImage } from '../../../helpers/image-compressor.helper';
 import { ContentPickerComponent } from './content-picker/content-picker.component';
 import { Message } from '../../../models/message.model';
 import { ChatListItem } from '../../../models/chat-list-item.model';
@@ -35,6 +38,20 @@ export interface ContextMenuAction {
   icon: string;
   action: 'edit' | 'delete' | 'reply' | 'forward' | 'copy' | 'cancel' | 'pin';
   danger?: boolean;
+}
+
+export interface ActiveUpload {
+  id: string;
+  chatId: string;
+  file: File;
+  fileName: string;
+  fileSize: number;
+  previewUrl?: string;
+  progress: number;
+  status: 'compressing' | 'uploading' | 'success' | 'error';
+  content: string;
+  shouldCompress: boolean;
+  subscription?: Subscription;
 }
 
 @Component({
@@ -59,6 +76,12 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
   readonly showScrollBottomSignal = signal<boolean>(false);
   get showScrollBottom(): boolean { return this.showScrollBottomSignal(); }
   set showScrollBottom(v: boolean) { this.showScrollBottomSignal.set(v); }
+
+  readonly activeUploadsSignal = signal<ActiveUpload[]>([]);
+  get activeUploads(): ActiveUpload[] {
+    const currentChatId = this.mainService.currentChat?._id;
+    return this.activeUploadsSignal().filter((u) => u.chatId === currentChatId);
+  }
 
   readonly typingUsersSignal = signal<string[]>([]);
   get typingUsers(): string[] { return this.typingUsersSignal(); }
@@ -803,54 +826,149 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
     return this.isNewDay(messages[index - 1], messages[index]);
   }
 
+  isMusicFile(fileName?: string): boolean {
+    if (!fileName) return false;
+    const ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+    return ['.mp3', '.wav', '.ogg', '.m4a', '.flac', '.aac', '.opus', '.wma'].includes(ext);
+  }
+
+  isCodeFile(fileName?: string): boolean {
+    if (!fileName) return false;
+    const ext = fileName.substring(fileName.lastIndexOf('.')).toLowerCase();
+    return ['.html', '.htm', '.js', '.ts', '.json', '.css', '.py', '.cpp', '.c', '.java', '.xml', '.md'].includes(ext);
+  }
+
+  getFileFaIcon(fileName?: string): [string, string] {
+    if (this.isMusicFile(fileName)) return ['fas', 'music'];
+    if (this.isCodeFile(fileName)) return ['fas', 'code'];
+    return ['fas', 'file'];
+  }
+
+  openMediaSendDialog(file: File): void {
+    const chatId = this.mainService.currentChat?._id;
+    if (!chatId) return;
+
+    const dialogRef = this.dialog.open<MediaSendDialogComponent, { file: File }, MediaSendDialogResult>(
+      MediaSendDialogComponent,
+      {
+        data: { file },
+        maxWidth: '94vw',
+        autoFocus: false,
+      }
+    );
+
+    dialogRef.afterClosed().pipe(take(1)).subscribe((result) => {
+      if (result) {
+        this.startUpload(chatId, result.file, result.caption, result.compress);
+      }
+    });
+  }
+
+  async startUpload(chatId: string, file: File, caption: string, shouldCompress: boolean): Promise<void> {
+    const uploadId = `up_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    let previewUrl: string | undefined;
+    if (file.type.startsWith('image/')) {
+      previewUrl = URL.createObjectURL(file);
+    }
+
+    const uploadItem: ActiveUpload = {
+      id: uploadId,
+      chatId,
+      file,
+      fileName: file.name,
+      fileSize: file.size,
+      previewUrl,
+      progress: 0,
+      status: shouldCompress ? 'compressing' : 'uploading',
+      content: caption,
+      shouldCompress,
+    };
+
+    this.activeUploadsSignal.update((list) => [...list, uploadItem]);
+
+    let fileToUpload = file;
+    if (shouldCompress) {
+      try {
+        fileToUpload = await compressImage(file);
+        uploadItem.fileName = fileToUpload.name;
+        uploadItem.fileSize = fileToUpload.size;
+      } catch (err) {
+        console.warn('Image compression fallback to original:', err);
+      }
+      uploadItem.status = 'uploading';
+      this.activeUploadsSignal.update((list) => [...list]);
+    }
+
+    uploadItem.subscription = this.mainService
+      .sendMediaWithProgress(chatId, fileToUpload, caption)
+      .subscribe({
+        next: (event: HttpEvent<any>) => {
+          if (event.type === HttpEventType.UploadProgress && event.total) {
+            uploadItem.progress = Math.round((event.loaded / event.total) * 100);
+            this.activeUploadsSignal.update((list) => [...list]);
+            this.cdr.markForCheck();
+          } else if (event.type === HttpEventType.Response) {
+            if (uploadItem.previewUrl) {
+              URL.revokeObjectURL(uploadItem.previewUrl);
+            }
+            this.activeUploadsSignal.update((list) => list.filter((u) => u.id !== uploadId));
+            this.cdr.markForCheck();
+          }
+        },
+        error: (err) => {
+          uploadItem.status = 'error';
+          this.activeUploadsSignal.update((list) => [...list]);
+          this.cdr.markForCheck();
+          this.mainService.snackbar.error(this.translationService.translate('chat.uploadFailed'), 3000);
+        },
+      });
+  }
+
+  cancelUpload(upload: ActiveUpload): void {
+    upload.subscription?.unsubscribe();
+    if (upload.previewUrl) {
+      URL.revokeObjectURL(upload.previewUrl);
+    }
+    this.activeUploadsSignal.update((list) => list.filter((u) => u.id !== upload.id));
+    this.cdr.markForCheck();
+  }
+
+  retryUpload(upload: ActiveUpload): void {
+    const { chatId, file, content, shouldCompress } = upload;
+    this.cancelUpload(upload);
+    this.startUpload(chatId, file, content, shouldCompress);
+  }
+
   onFileSelected(event: Event) {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
 
     const file = input.files[0];
-    const chatId = this.mainService.currentChat?._id;
-    if (!chatId) return;
-
     input.value = '';
-
-    this.mainService.sendMedia(chatId, file, file.name).pipe(take(1)).subscribe({
-      next: (res) => {},
-      error: (err) => {
-        this.mainService.snackbar.error('خطا در ارسال فایل', 3000);
-      },
-    });
+    this.openMediaSendDialog(file);
   }
 
   onPaste(event: ClipboardEvent) {
+    if (event.defaultPrevented) return;
     const items = event.clipboardData?.items;
-    if (!items) return;
-
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      if (item.type && item.type.startsWith('image/')) {
-        const file = item.getAsFile();
-        if (file) {
-          event.preventDefault();
-          const chatId = this.mainService.currentChat?._id;
-          if (!chatId) return;
-
-          const ext = item.type.split('/')[1] || 'png';
-          const fileName = file.name || `image_${Date.now()}.${ext}`;
-          this.mainService.snackbar.info('در حال ارسال تصویر از کلیپ‌بورد...', 2000);
-          this.mainService
-            .sendMedia(chatId, file, fileName)
-            .pipe(take(1))
-            .subscribe({
-              next: () => {
-                this.mainService.snackbar.success('تصویر با موفقیت ارسال شد', 2500);
-              },
-              error: () => {
-                this.mainService.snackbar.error('خطا در ارسال تصویر از کلیپ‌بورد', 3000);
-              },
-            });
-          return;
+    if (items) {
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        if (item.type && item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) {
+            event.preventDefault();
+            this.openMediaSendDialog(file);
+            return;
+          }
         }
       }
+    }
+
+    const files = event.clipboardData?.files;
+    if (files && files.length > 0) {
+      event.preventDefault();
+      this.openMediaSendDialog(files[0]);
     }
   }
 

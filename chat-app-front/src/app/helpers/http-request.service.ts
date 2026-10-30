@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpEvent, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -47,5 +47,13 @@ export class HttpRequestService {
   public postFile(uri: string, formData: FormData, headers?: HttpHeaders): Observable<any> {
     // Do not set Content-Type for FormData; browser sets multipart boundary automatically
     return this.http.post(`${this.ROOT_URL}/${uri}`, formData, { headers });
+  }
+
+  public postFileWithProgress(uri: string, formData: FormData, headers?: HttpHeaders): Observable<HttpEvent<any>> {
+    return this.http.post<any>(`${this.ROOT_URL}/${uri}`, formData, {
+      headers,
+      reportProgress: true,
+      observe: 'events',
+    });
   }
 }

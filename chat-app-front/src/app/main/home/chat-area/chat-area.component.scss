@@ -987,6 +987,14 @@
         font-family: "Shabnam", "Helvetica Neue", sans-serif;
         margin-bottom: 0.25rem;
 
+        .msg-caption {
+          margin-top: 0.35rem;
+          font-size: 0.88rem;
+          line-height: 1.5;
+          word-break: break-word;
+          white-space: pre-wrap;
+        }
+
         &.agent-typing {
           font-style: italic;
           color: var(--color-text-secondary);
@@ -1368,6 +1376,130 @@
         &:hover {
           color: var(--color-danger);
           background: color-mix(in srgb, var(--color-danger) 10%, transparent);
+        }
+      }
+    }
+
+    .active-uploads-bar {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      width: 100%;
+      max-width: none;
+      animation: message-in var(--transition) ease both;
+
+      .upload-item {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+        padding: 0.5rem 0.85rem;
+        background: var(--color-surface-glass);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-xs);
+
+        &.is-error {
+          border-color: color-mix(in srgb, var(--color-danger) 50%, transparent);
+          background: color-mix(in srgb, var(--color-danger) 8%, var(--color-surface-glass));
+        }
+
+        .upload-thumb {
+          width: 2.2rem;
+          height: 2.2rem;
+          border-radius: var(--radius-sm);
+          object-fit: cover;
+          flex-shrink: 0;
+        }
+
+        .upload-file-icon {
+          font-size: 1.4rem;
+          color: var(--color-primary);
+          flex-shrink: 0;
+        }
+
+        .upload-details {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          gap: 0.25rem;
+          min-width: 0;
+
+          .upload-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+
+            .upload-filename {
+              font-size: 0.82rem;
+              font-weight: 600;
+              color: var(--color-text);
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+
+            .upload-percentage {
+              font-size: 0.75rem;
+              font-weight: 700;
+              color: var(--color-primary);
+            }
+          }
+
+          .upload-progress-track {
+            height: 4px;
+            width: 100%;
+            background: color-mix(in srgb, var(--color-border) 60%, transparent);
+            border-radius: var(--radius-full);
+            overflow: hidden;
+
+            .upload-progress-fill {
+              height: 100%;
+              background: var(--color-primary);
+              border-radius: var(--radius-full);
+              transition: width 0.2s ease;
+
+              &.indeterminate {
+                animation: indeterminate-progress 1.5s infinite linear;
+                background: linear-gradient(90deg, var(--color-primary), #60a5fa, var(--color-primary));
+                background-size: 200% 100%;
+              }
+            }
+          }
+        }
+
+        .upload-actions {
+          display: flex;
+          align-items: center;
+          gap: 0.25rem;
+          flex-shrink: 0;
+
+          .upload-action-btn {
+            background: none;
+            border: none;
+            width: 1.8rem;
+            height: 1.8rem;
+            border-radius: var(--radius-full);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--color-text-secondary);
+            transition: all var(--transition-fast);
+
+            &.retry:hover {
+              color: var(--color-primary);
+              background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+            }
+
+            &.cancel:hover {
+              color: var(--color-danger);
+              background: color-mix(in srgb, var(--color-danger) 15%, transparent);
+            }
+          }
         }
       }
     }

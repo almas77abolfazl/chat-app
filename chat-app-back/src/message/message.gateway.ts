@@ -415,4 +415,26 @@ export class MessageGateway {
       client.emit('messageError', { message: error?.message ?? 'Failed to leave chat' });
     }
   }
+
+  async broadcastNewMessage(chatId: string, senderId: string, msg: any, senderName?: string) {
+    if (!this.server) return;
+    try {
+      const participantIds = await this.chatService.getParticipantIds(chatId);
+      for (const pid of participantIds) {
+        if (pid === senderId) {
+          this.server.to(pid).emit('messageSent', { chatId, message: msg });
+        } else {
+          this.server.to(pid).emit('receiveMessage', { chatId, message: msg });
+          this.server.to(pid).emit('notification', {
+            chatId,
+            message: msg,
+            senderId: senderId,
+            senderName: senderName || 'کاربر',
+          });
+        }
+      }
+    } catch (e) {
+      console.error('Failed to broadcast media message:', e);
+    }
+  }
 }

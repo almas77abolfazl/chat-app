@@ -10,7 +10,7 @@ import { BehaviorSubject, firstValueFrom, map, Observable, of, Subject, take, ta
 import { AdminPermissions, ChatAdmin, ChatListItem, ChatParticipant } from '../models/chat-list-item.model';
 import { StoryGroup } from '../models/story.model';
 import { SocketService } from './socket.service';
-import { HttpParams } from '@angular/common/http';
+import { HttpEvent, HttpParams } from '@angular/common/http';
 import { Message } from '../models/message.model';
 import { CacheService } from '../helpers/cache.service';
 import { environment } from '../../environments/environment';
@@ -1038,6 +1038,14 @@ export class MainService {
     formData.append('chatId', chatId);
     formData.append('content', content);
     return this.httpRequestService.postFile('message/media', formData);
+  }
+
+  sendMediaWithProgress(chatId: string, file: File, content: string = ''): Observable<HttpEvent<any>> {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('chatId', chatId);
+    formData.append('content', content);
+    return this.httpRequestService.postFileWithProgress('message/media', formData);
   }
 
   addReaction(messageId: string, emoji: string): Observable<any> {

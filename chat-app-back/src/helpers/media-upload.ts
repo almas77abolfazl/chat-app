@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
 
@@ -14,37 +15,13 @@ export const mediaMulterOptions = {
     fileSize: 50 * 1024 * 1024, // 50MB max
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = [
-      // Images
-      'image/jpeg',
-      'image/png',
-      'image/jpg',
-      'image/webp',
-      'image/gif',
-      // Videos
-      'video/mp4',
-      'video/webm',
-      'video/ogg',
-      'video/quicktime',
-      // Audio/Voice
-      'audio/mp3',
-      'audio/wav',
-      'audio/ogg',
-      'audio/m4a',
-      // Documents
-      'application/pdf',
-      'application/msword',
-      'application/vnd.ms-excel',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'text/plain',
-      'application/zip',
-      'application/x-rar-compressed',
-    ];
-    if (allowedTypes.includes(file.mimetype)) {
-      cb(null, true);
+    // Disallow dangerous executable scripts and binaries for security
+    const dangerousExtensions = ['.exe', '.bat', '.cmd', '.sh', '.vbs', '.msi', '.com', '.scr', '.pif', '.reg', '.app'];
+    const ext = extname(file.originalname || '').toLowerCase();
+    if (dangerousExtensions.includes(ext)) {
+      cb(new BadRequestException('Executable files are not allowed for security reasons.'), false);
     } else {
-      cb(new Error('Unsupported file type.'), false);
+      cb(null, true);
     }
   },
 };

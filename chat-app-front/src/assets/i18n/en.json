@@ -53,7 +53,15 @@
     "deleteSelectedConfirm": "Are you sure you want to delete {count} selected messages?",
     "deleteSuccess": "Selected messages deleted",
     "deleteError": "Failed to delete messages",
-    "cancelSelection": "Cancel"
+    "cancelSelection": "Cancel",
+    "sendImage": "Send Image",
+    "sendFile": "Send File",
+    "addCaption": "Add a caption...",
+    "compressImage": "Compress image",
+    "compressing": "Compressing...",
+    "uploading": "Uploading...",
+    "uploadFailed": "Upload failed",
+    "uploadSuccess": "File sent successfully"
   },
   "contacts": {
     "title": "Contacts",
@@ -95,7 +103,9 @@
     "edited": "Edited",
     "noMessages": "No messages",
     "prev": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "retry": "Retry",
+    "download": "Download"
   },
   "profile": {
     "editProfile": "Edit Profile",

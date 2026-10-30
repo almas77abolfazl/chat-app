@@ -53,7 +53,15 @@
     "deleteSelectedConfirm": "آیا از حذف {count} پیام انتخاب‌شده اطمینان دارید؟",
     "deleteSuccess": "پیام‌های انتخاب‌شده حذف شدند",
     "deleteError": "خطا در حذف پیام‌ها",
-    "cancelSelection": "لغو انتخاب"
+    "cancelSelection": "لغو انتخاب",
+    "sendImage": "ارسال تصویر",
+    "sendFile": "ارسال فایل",
+    "addCaption": "افزودن پیام یا کپشن...",
+    "compressImage": "فشرده‌سازی تصویر",
+    "compressing": "در حال فشرده‌سازی...",
+    "uploading": "در حال ارسال...",
+    "uploadFailed": "خطا در آپلود",
+    "uploadSuccess": "ارسال فایل با موفقیت انجام شد"
   },
   "contacts": {
     "title": "مخاطبان",
@@ -95,7 +103,9 @@
     "edited": "ویرایش شده",
     "noMessages": "بدون پیام",
     "prev": "قبلی",
-    "next": "بعدی"
+    "next": "بعدی",
+    "retry": "تلاش مجدد",
+    "download": "دانلود"
   },
   "profile": {
     "editProfile": "ویرایش نمایه",

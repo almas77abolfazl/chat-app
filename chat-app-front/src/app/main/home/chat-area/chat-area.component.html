@@ -1,4 +1,4 @@
-<div class="chat-area-container" (contextmenu)="onChatAreaContextMenu($event)">
+<div class="chat-area-container" (contextmenu)="onChatAreaContextMenu($event)" (paste)="onPaste($event)">
   @if (mainService.currentChat) {
 
   @if (isSelectionMode) {
@@ -358,27 +358,42 @@
         <span class="deleted-msg">{{ 'chat.deletedMessage' | i18n }}</span>
         } @else if (message.mediaType === 'image' && message.fileUrl) {
         <img [src]="getMediaUrl(message.fileUrl)" class="msg-image" alt="Image" />
+        @if (message.content) {
+        <div class="msg-caption">{{ message.content }}</div>
+        }
         } @else if (message.mediaType === 'video' && message.fileUrl) {
         <video [src]="getMediaUrl(message.fileUrl)" class="msg-video" controls preload="metadata"></video>
+        @if (message.content) {
+        <div class="msg-caption">{{ message.content }}</div>
+        }
         } @else if (message.mediaType === 'voice' && message.fileUrl) {
         <div class="msg-voice">
-          <fa-icon [icon]="['fas', 'microphone']" class="voice-icon"></fa-icon>
-          <audio [src]="getMediaUrl(message.fileUrl)" class="voice-audio" controls></audio>
+          <fa-icon [icon]="isMusicFile(message.fileName) ? ['fas', 'music'] : ['fas', 'microphone']" class="voice-icon"></fa-icon>
+          <audio [src]="getMediaUrl(message.fileUrl)" class="voice-audio" controls preload="metadata"></audio>
           <span class="voice-duration">{{ message.fileName }}</span>
         </div>
+        @if (message.content) {
+        <div class="msg-caption">{{ message.content }}</div>
+        }
         } @else if (message.mediaType === 'file' && message.fileUrl) {
         <div class="msg-file">
-          <fa-icon [icon]="['fas', 'file']" class="file-icon"></fa-icon>
+          <fa-icon [icon]="getFileFaIcon(message.fileName)" class="file-icon"></fa-icon>
           <div class="file-info">
-            <div class="file-name">{{ message.fileName }}</div>
+            <div class="file-name" [attr.title]="message.fileName">{{ message.fileName }}</div>
             <div class="file-size">{{ formatFileSize(message.fileSize) }}</div>
           </div>
-          <a [href]="getMediaUrl(message.fileUrl)" download class="file-download">
+          <a [href]="getMediaUrl(message.fileUrl)" [download]="message.fileName" class="file-download" [attr.title]="'actions.download' | i18n">
             <fa-icon [icon]="['fas', 'download']"></fa-icon>
           </a>
         </div>
+        @if (message.content) {
+        <div class="msg-caption">{{ message.content }}</div>
+        }
         } @else if (message.mediaType === 'gif' && message.fileUrl) {
         <img [src]="getMediaUrl(message.fileUrl)" class="msg-gif" alt="GIF" />
+        @if (message.content) {
+        <div class="msg-caption">{{ message.content }}</div>
+        }
         } @else if (message.mediaType === 'sticker' && message.fileUrl) {
         <img [src]="getMediaUrl(message.fileUrl)" class="msg-sticker" alt="Sticker" />
         } @else if (message.mediaType === 'emoji' && message.fileUrl) {
@@ -475,6 +490,50 @@
       <button class="reply-cancel-btn" (click)="cancelReply()">
         <fa-icon [icon]="['fas', 'times']"></fa-icon>
       </button>
+    </div>
+    }
+    @if (activeUploads.length > 0) {
+    <div class="active-uploads-bar">
+      @for (upload of activeUploads; track upload.id) {
+      <div class="upload-item" [class.is-error]="upload.status === 'error'">
+        @if (upload.previewUrl) {
+        <img [src]="upload.previewUrl" class="upload-thumb" alt="Preview" />
+        } @else {
+        <fa-icon [icon]="getFileFaIcon(upload.fileName)" class="upload-file-icon"></fa-icon>
+        }
+        <div class="upload-details">
+          <div class="upload-header">
+            <span class="upload-filename" [attr.title]="upload.fileName">{{ upload.fileName }}</span>
+            <span class="upload-percentage">
+              @if (upload.status === 'compressing') {
+              {{ 'chat.compressing' | i18n }}
+              } @else if (upload.status === 'error') {
+              {{ 'chat.uploadFailed' | i18n }}
+              } @else {
+              {{ upload.progress }}%
+              }
+            </span>
+          </div>
+          <div class="upload-progress-track">
+            <div
+              class="upload-progress-fill"
+              [class.indeterminate]="upload.status === 'compressing'"
+              [style.width.%]="upload.status === 'compressing' ? 100 : upload.progress"
+            ></div>
+          </div>
+        </div>
+        <div class="upload-actions">
+          @if (upload.status === 'error') {
+          <button type="button" class="upload-action-btn retry" (click)="retryUpload(upload)" [attr.title]="'actions.retry' | i18n">
+            <fa-icon [icon]="['fas', 'redo']"></fa-icon>
+          </button>
+          }
+          <button type="button" class="upload-action-btn cancel" (click)="cancelUpload(upload)" [attr.title]="'actions.cancel' | i18n">
+            <fa-icon [icon]="['fas', 'times']"></fa-icon>
+          </button>
+        </div>
+      </div>
+      }
     </div>
     }
     <div class="input-row">

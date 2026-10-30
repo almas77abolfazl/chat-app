@@ -18,10 +18,15 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RequestWithUser } from 'src/auth/interfaces/request-with-user.model';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { mediaMulterOptions } from 'src/helpers/media-upload';
+import { MessageGateway } from './message.gateway';
+import { extname } from 'path';
 
 @Controller('message')
 export class MessageController {
-  constructor(private readonly messageService: MessageService) {}
+  constructor(
+    private readonly messageService: MessageService,
+    private readonly messageGateway: MessageGateway,
+  ) {}
 
   @Get()
   @UseGuards(JwtAuthGuard)
@@ -121,19 +126,39 @@ export class MessageController {
     }
 
     const fileUrl = `/uploads/media/${file.filename}`;
-    return this.messageService.saveMessageToChat(chatId, request.user._id.toString(), content, {
-      mediaType: file.mimetype.startsWith('image/gif')
-        ? 'gif'
-        : file.mimetype.startsWith('image/')
-          ? 'image'
-          : file.mimetype.startsWith('video/')
-            ? 'video'
-            : file.mimetype.startsWith('audio/')
-              ? 'voice'
-              : 'file',
+    const mimetype = (file.mimetype || '').toLowerCase();
+    const ext = extname(file.originalname || '').toLowerCase();
+
+    let mediaType: 'image' | 'video' | 'voice' | 'file' | 'gif' = 'file';
+    if (mimetype === 'image/gif' || ext === '.gif') {
+      mediaType = 'gif';
+    } else if (mimetype.startsWith('image/')) {
+      mediaType = 'image';
+    } else if (mimetype.startsWith('video/')) {
+      mediaType = 'video';
+    } else if (mimetype.startsWith('audio/') || ['.mp3', '.wav', '.ogg', '.m4a', '.flac', '.aac', '.opus', '.wma'].includes(ext)) {
+      mediaType = 'voice';
+    } else {
+      mediaType = 'file';
+    }
+
+    let fileName = file.originalname;
+    try {
+      fileName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+    } catch {
+      fileName = file.originalname;
+    }
+
+    const savedMessage = await this.messageService.saveMessageToChat(chatId, request.user._id.toString(), content, {
+      mediaType,
       fileUrl,
-      fileName: file.originalname,
+      fileName,
       fileSize: file.size,
     });
+
+    const senderName = `${request.user.firstName ?? ''} ${request.user.lastName ?? ''}`.trim();
+    await this.messageGateway.broadcastNewMessage(chatId, request.user._id.toString(), savedMessage, senderName);
+
+    return savedMessage;
   }
 }

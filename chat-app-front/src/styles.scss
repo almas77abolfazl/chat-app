@@ -521,13 +521,14 @@ input, button, textarea, select {
 /* ---------- Media messages ---------- */
 .msg-image,
 .msg-video {
-  max-width: 45%;
-  max-height: 30rem;
+  max-width: 100%;
+  width: auto;
+  max-height: 28rem;
   border-radius: var(--radius-lg);
-  object-fit: cover;
+  object-fit: contain;
   display: block;
   cursor: pointer;
-  box-shadow: var(--shadow-md);
+  box-shadow: var(--shadow-sm);
 }
 
 .msg-image.sent,
@@ -537,29 +538,71 @@ input, button, textarea, select {
 
 .msg-voice,
 .msg-file {
-  max-width: 45%;
+  width: 100%;
+  max-width: 24rem;
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.65rem;
   padding: 0.6rem 0.9rem;
   background: var(--color-surface-glass);
   border-radius: var(--radius-lg);
   border: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
-  cursor: pointer;
   box-shadow: var(--shadow-xs);
 }
 
 .msg-voice.sent,
 .msg-file.sent {
   align-self: flex-end;
-  background: var(--color-message-sent);
+  background: rgba(255, 255, 255, 0.12);
   color: var(--color-text-on-primary);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 .msg-voice.sent .voice-duration,
 .msg-file.sent .file-name,
 .msg-file.sent .file-size {
   color: var(--color-text-on-primary);
+}
+
+.msg-file.sent .file-download {
+  color: #fff;
+}
+
+.file-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1;
+
+  .file-name {
+    font-weight: 600;
+    font-size: 0.88rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .file-size {
+    font-size: 0.72rem;
+    color: var(--color-text-secondary);
+  }
+}
+
+.file-download {
+  color: var(--color-primary);
+  padding: 0.35rem;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 1.1rem;
+  transition: transform var(--transition-fast), color var(--transition-fast);
+
+  &:hover {
+    transform: scale(1.15);
+  }
 }
 
 .voice-icon,
