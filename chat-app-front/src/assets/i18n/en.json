@@ -61,7 +61,9 @@
     "compressing": "Compressing...",
     "uploading": "Uploading...",
     "uploadFailed": "Upload failed",
-    "uploadSuccess": "File sent successfully"
+    "uploadSuccess": "File sent successfully",
+    "recordVoice": "Record voice message",
+    "recordingVoice": "Recording voice message..."
   },
   "contacts": {
     "title": "Contacts",

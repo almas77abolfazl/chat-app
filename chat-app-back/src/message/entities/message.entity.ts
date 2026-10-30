@@ -61,6 +61,9 @@ export class Message {
   @Prop()
   fileSize: number;
 
+  @Prop({ type: [Number], default: null })
+  waveform?: number[];
+
   @Prop({
     type: {
       fromUserId: { type: Types.ObjectId, ref: 'User' },

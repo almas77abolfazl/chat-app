@@ -26,9 +26,9 @@ export class MessageService {
     chatId: string,
     senderId: string,
     content: string,
-    media?: { mediaType: string; fileUrl: string; fileName?: string; fileSize?: number },
+    media?: { mediaType: string; fileUrl: string; fileName?: string; fileSize?: number; waveform?: number[] },
     forwardFrom?: { fromUserId?: string; fromSenderName?: string; originalChatId?: string },
-    options?: { linkPreview?: LinkPreviewData; skipLinkPreview?: boolean },
+    options?: { linkPreview?: LinkPreviewData; skipLinkPreview?: boolean; waveform?: number[] },
   ): Promise<any> {
     const chat = await this.findChatForMessage(chatId);
     const senderObjectId = new Types.ObjectId(senderId);
@@ -82,6 +82,7 @@ export class MessageService {
           }
         : undefined,
       linkPreview: linkPreview || undefined,
+      waveform: media?.waveform || options?.waveform || undefined,
     });
 
     chat.messages.push(message._id as unknown as Types.ObjectId);
@@ -406,6 +407,7 @@ export class MessageService {
             siteName: message.linkPreview.siteName,
           }
         : null,
+      waveform: message.waveform || null,
       reactions: reactions ?? message.reactions ?? [],
     };
   }

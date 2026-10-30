@@ -109,6 +109,7 @@ export class MessageGateway {
       const msg = await this.messageService.saveMessageToChat(chatId, senderId, content.trim(), media, messageData?.forwardFrom, {
         linkPreview: messageData?.linkPreview,
         skipLinkPreview: messageData?.skipLinkPreview,
+        waveform: messageData?.waveform || media?.waveform,
       });
       const participantIds = await this.chatService.getParticipantIds(chatId);
       for (const pid of participantIds) {

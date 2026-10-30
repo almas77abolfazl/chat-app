@@ -367,11 +367,12 @@
         <div class="msg-caption">{{ message.content }}</div>
         }
         } @else if (message.mediaType === 'voice' && message.fileUrl) {
-        <div class="msg-voice">
-          <fa-icon [icon]="isMusicFile(message.fileName) ? ['fas', 'music'] : ['fas', 'microphone']" class="voice-icon"></fa-icon>
-          <audio [src]="getMediaUrl(message.fileUrl)" class="voice-audio" controls preload="metadata"></audio>
-          <span class="voice-duration">{{ message.fileName }}</span>
-        </div>
+        <app-voice-player
+          [audioUrl]="getMediaUrl(message.fileUrl)"
+          [fileName]="message.fileName"
+          [waveform]="message.waveform"
+          [isSent]="ownMessage(message)"
+        ></app-voice-player>
         @if (message.content) {
         <div class="msg-caption">{{ message.content }}</div>
         }
@@ -580,6 +581,37 @@
       </button>
     </div>
     }
+    @if (isRecordingVoice) {
+    <div class="voice-recording-row">
+      <div class="recording-indicator">
+        <span class="recording-pulse-dot"></span>
+        <span class="recording-timer">{{ formatRecordingTimer(recordingDuration) }}</span>
+      </div>
+      <div class="recording-visualizer">
+        @for (bar of liveWaveformBars; track $index) {
+        <div class="live-visualizer-bar" [style.height.%]="bar"></div>
+        }
+      </div>
+      <div class="recording-actions">
+        <button
+          type="button"
+          class="recording-btn cancel"
+          (click)="cancelVoiceRecording()"
+          [attr.title]="'actions.cancel' | i18n"
+        >
+          <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+        </button>
+        <button
+          type="button"
+          class="recording-btn send"
+          (click)="finishAndSendVoiceRecording()"
+          [attr.title]="'actions.send' | i18n"
+        >
+          <fa-icon [icon]="['fas', 'paper-plane']"></fa-icon>
+        </button>
+      </div>
+    </div>
+    } @else {
     <div class="input-row">
       <div class="input-actions">
         <button class="emoji-picker-toggle" [class.active]="showContentPicker" (click)="toggleContentPicker(); $event.stopPropagation()" type="button" [attr.title]="'chat.emoji' | i18n">
@@ -599,15 +631,25 @@
         (paste)="onPaste($event)"
         rows="1"
       ></textarea>
+      @if (element.value.trim()) {
       <div
         class="send-icon"
         [attr.title]="'chat.send' | i18n"
         (click)="sendFromButton(element)"
-        [class.disabled]="!element?.value?.trim()"
       >
-         <fa-icon [icon]="['fas', 'paper-plane']"></fa-icon>
+        <fa-icon [icon]="['fas', 'paper-plane']"></fa-icon>
       </div>
+      } @else {
+      <div
+        class="send-icon mic-icon"
+        [attr.title]="'chat.recordVoice' | i18n"
+        (click)="startVoiceRecording()"
+      >
+        <fa-icon [icon]="['fas', 'microphone']"></fa-icon>
+      </div>
+      }
     </div>
+    }
     @if (showContentPicker) {
     <app-content-picker
       (click)="$event.stopPropagation()"

@@ -61,7 +61,9 @@
     "compressing": "در حال فشرده‌سازی...",
     "uploading": "در حال ارسال...",
     "uploadFailed": "خطا در آپلود",
-    "uploadSuccess": "ارسال فایل با موفقیت انجام شد"
+    "uploadSuccess": "ارسال فایل با موفقیت انجام شد",
+    "recordVoice": "ضبط پیام صوتی",
+    "recordingVoice": "در حال ضبط پیام صوتی..."
   },
   "contacts": {
     "title": "مخاطبان",

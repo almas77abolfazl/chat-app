@@ -128,6 +128,7 @@ export class MessageController {
     @UploadedFile() file: Express.Multer.File,
     @Body('chatId') chatId: string,
     @Body('content') content: string = '',
+    @Body('waveform') waveformStr?: string,
   ) {
     if (!file) {
       throw new BadRequestException('No file uploaded!');
@@ -160,11 +161,22 @@ export class MessageController {
       fileName = file.originalname;
     }
 
+    let waveform: number[] | undefined;
+    if (waveformStr) {
+      try {
+        const parsed = typeof waveformStr === 'string' ? JSON.parse(waveformStr) : waveformStr;
+        if (Array.isArray(parsed)) {
+          waveform = parsed.map((n) => Math.max(5, Math.min(100, Math.round(Number(n) || 0))));
+        }
+      } catch {}
+    }
+
     const savedMessage = await this.messageService.saveMessageToChat(chatId, request.user._id.toString(), content, {
       mediaType,
       fileUrl,
       fileName,
       fileSize: file.size,
+      waveform,
     });
 
     const senderName = `${request.user.firstName ?? ''} ${request.user.lastName ?? ''}`.trim();

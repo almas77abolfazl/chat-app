@@ -25,6 +25,7 @@ import { DeleteChatDialogComponent } from '../../delete-chat-dialog/delete-chat-
 import { ForwardDialogComponent } from '../../forward-dialog/forward-dialog.component';
 import { MediaSendDialogComponent, MediaSendDialogResult } from '../../media-send-dialog/media-send-dialog.component';
 import { compressImage } from '../../../helpers/image-compressor.helper';
+import { VoicePlayerComponent } from '../../voice-player/voice-player.component';
 import { ContentPickerComponent } from './content-picker/content-picker.component';
 import { Message } from '../../../models/message.model';
 import { ChatListItem } from '../../../models/chat-list-item.model';
@@ -57,7 +58,7 @@ export interface ActiveUpload {
 @Component({
   selector: 'app-chat-area',
   standalone: true,
-  imports: [FontAwesomeModule, NgClass, MatButtonModule, FormsModule, I18nPipe, ContentPickerComponent],
+  imports: [FontAwesomeModule, NgClass, MatButtonModule, FormsModule, I18nPipe, ContentPickerComponent, VoicePlayerComponent],
   templateUrl: './chat-area.component.html',
   styleUrl: './chat-area.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -92,6 +93,24 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
   } | null>(null);
   readonly dismissedUrlSignal = signal<string | null>(null);
   private previewDebounceTimeout: any = null;
+
+  // Voice recording state
+  readonly isRecordingVoiceSignal = signal<boolean>(false);
+  get isRecordingVoice(): boolean { return this.isRecordingVoiceSignal(); }
+
+  readonly recordingDurationSignal = signal<number>(0);
+  get recordingDuration(): number { return this.recordingDurationSignal(); }
+
+  readonly liveWaveformSignal = signal<number[]>([]);
+  get liveWaveformBars(): number[] { return this.liveWaveformSignal(); }
+
+  private mediaRecorder: MediaRecorder | null = null;
+  private audioStream: MediaStream | null = null;
+  private audioContext: AudioContext | null = null;
+  private recordingTimerInterval: any = null;
+  private analyserAnimationId: any = null;
+  private recordedAudioChunks: Blob[] = [];
+  private liveSampledPeaks: number[] = [];
 
   readonly typingUsersSignal = signal<string[]>([]);
   get typingUsers(): string[] { return this.typingUsersSignal(); }
@@ -1314,5 +1333,175 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
       return `شما توسط ${author} به گروه اضافه شدید`;
     }
     return content;
+  }
+
+  async startVoiceRecording(): Promise<void> {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      this.mainService.snackbar.error('مرورگر شما از ضبط صدا پشتیبانی نمی‌کند', 3000);
+      return;
+    }
+
+    try {
+      this.audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const source = this.audioContext.createMediaStreamSource(this.audioStream);
+      const analyser = this.audioContext.createAnalyser();
+      analyser.fftSize = 64;
+      source.connect(analyser);
+
+      const mimeType = MediaRecorder.isTypeSupported('audio/webm')
+        ? 'audio/webm'
+        : MediaRecorder.isTypeSupported('audio/ogg')
+          ? 'audio/ogg'
+          : '';
+      this.mediaRecorder = mimeType ? new MediaRecorder(this.audioStream, { mimeType }) : new MediaRecorder(this.audioStream);
+      this.recordedAudioChunks = [];
+      this.liveSampledPeaks = [];
+
+      this.mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          this.recordedAudioChunks.push(e.data);
+        }
+      };
+
+      this.mediaRecorder.start(100);
+      this.isRecordingVoiceSignal.set(true);
+      this.recordingDurationSignal.set(0);
+
+      this.recordingTimerInterval = setInterval(() => {
+        this.recordingDurationSignal.update((d) => d + 1);
+      }, 1000);
+
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+      const sampleLoop = () => {
+        if (!this.isRecordingVoiceSignal()) return;
+        analyser.getByteFrequencyData(dataArray);
+
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          sum += dataArray[i];
+        }
+        const avg = sum / dataArray.length;
+        const normalizedPeak = Math.max(15, Math.min(95, Math.round((avg / 255) * 100)));
+        this.liveSampledPeaks.push(normalizedPeak);
+
+        const recentBars = this.liveSampledPeaks.slice(-25);
+        while (recentBars.length < 25) {
+          recentBars.unshift(15);
+        }
+        this.liveWaveformSignal.set(recentBars);
+
+        this.analyserAnimationId = requestAnimationFrame(sampleLoop);
+      };
+      sampleLoop();
+    } catch (err) {
+      console.error('Failed to access microphone:', err);
+      this.mainService.snackbar.error('دسترسی به میکروفون داده نشد', 3000);
+    }
+  }
+
+  cancelVoiceRecording(): void {
+    this.stopRecordingHardware();
+    this.recordedAudioChunks = [];
+    this.liveSampledPeaks = [];
+    this.isRecordingVoiceSignal.set(false);
+    this.recordingDurationSignal.set(0);
+  }
+
+  finishAndSendVoiceRecording(): void {
+    if (!this.mediaRecorder || this.mediaRecorder.state === 'inactive') {
+      this.cancelVoiceRecording();
+      return;
+    }
+
+    const chatId = this.mainService.currentChat?._id;
+    if (!chatId) {
+      this.cancelVoiceRecording();
+      return;
+    }
+
+    this.mediaRecorder.onstop = () => {
+      const mime = this.mediaRecorder?.mimeType || 'audio/webm';
+      const ext = mime.includes('ogg') ? 'ogg' : 'webm';
+      const blob = new Blob(this.recordedAudioChunks, { type: mime });
+      const fileName = `voice_${Date.now()}.${ext}`;
+      const file = new File([blob], fileName, { type: mime });
+      const resampledWaveform = this.resampleWaveform(this.liveSampledPeaks, 38);
+
+      this.stopRecordingHardware();
+      this.isRecordingVoiceSignal.set(false);
+      this.recordingDurationSignal.set(0);
+      this.recordedAudioChunks = [];
+      this.liveSampledPeaks = [];
+
+      this.mainService.sendMediaWithProgress(chatId, file, '', resampledWaveform).pipe(take(1)).subscribe({
+        next: () => {},
+        error: () => {
+          this.mainService.snackbar.error('خطا در ارسال پیام صوتی', 3000);
+        },
+      });
+    };
+
+    this.mediaRecorder.stop();
+  }
+
+  private stopRecordingHardware(): void {
+    if (this.recordingTimerInterval) {
+      clearInterval(this.recordingTimerInterval);
+      this.recordingTimerInterval = null;
+    }
+    if (this.analyserAnimationId) {
+      cancelAnimationFrame(this.analyserAnimationId);
+      this.analyserAnimationId = null;
+    }
+    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+      try {
+        this.mediaRecorder.stop();
+      } catch {}
+    }
+    if (this.audioStream) {
+      this.audioStream.getTracks().forEach((track) => track.stop());
+      this.audioStream = null;
+    }
+    if (this.audioContext && this.audioContext.state !== 'closed') {
+      try {
+        this.audioContext.close();
+      } catch {}
+      this.audioContext = null;
+    }
+  }
+
+  formatRecordingTimer(seconds: number): string {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+  }
+
+  private resampleWaveform(peaks: number[], targetCount = 38): number[] {
+    if (!peaks || peaks.length === 0) {
+      const dummy: number[] = [];
+      for (let i = 0; i < targetCount; i++) {
+        dummy.push(Math.round(20 + Math.sin(i * 0.4) * 35 + Math.random() * 20));
+      }
+      return dummy;
+    }
+
+    if (peaks.length === targetCount) return peaks;
+
+    const resampled: number[] = [];
+    const step = peaks.length / targetCount;
+    for (let i = 0; i < targetCount; i++) {
+      const start = Math.floor(i * step);
+      const end = Math.floor((i + 1) * step);
+      let sum = 0;
+      let count = 0;
+      for (let j = start; j < end && j < peaks.length; j++) {
+        sum += peaks[j];
+        count++;
+      }
+      const val = count > 0 ? Math.round(sum / count) : 20;
+      resampled.push(Math.max(15, Math.min(95, val)));
+    }
+    return resampled;
   }
 }

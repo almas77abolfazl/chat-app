@@ -1032,19 +1032,25 @@ export class MainService {
     return this.httpRequestService.post('message/forward', { messageIds, targetChatId });
   }
 
-  sendMedia(chatId: string, file: File, content: string = ''): Observable<any> {
+  sendMedia(chatId: string, file: File, content: string = '', waveform?: number[]): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('chatId', chatId);
     formData.append('content', content);
+    if (waveform && waveform.length > 0) {
+      formData.append('waveform', JSON.stringify(waveform));
+    }
     return this.httpRequestService.postFile('message/media', formData);
   }
 
-  sendMediaWithProgress(chatId: string, file: File, content: string = ''): Observable<HttpEvent<any>> {
+  sendMediaWithProgress(chatId: string, file: File, content: string = '', waveform?: number[]): Observable<HttpEvent<any>> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('chatId', chatId);
     formData.append('content', content);
+    if (waveform && waveform.length > 0) {
+      formData.append('waveform', JSON.stringify(waveform));
+    }
     return this.httpRequestService.postFileWithProgress('message/media', formData);
   }
 

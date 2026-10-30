@@ -37,4 +37,5 @@ export interface Message {
     image?: string;
     siteName?: string;
   };
+  waveform?: number[];
 }
