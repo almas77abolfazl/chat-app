@@ -39,15 +39,15 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id/avatar')
-  async getUserAvatar(@Param('id') id: string): Promise<{ avatar: string | null }> {
-    const avatar = await this.userService.getUserAvatar(id);
+  async getUserAvatar(@Param('id') id: string, @Req() request: RequestWithUser): Promise<{ avatar: string | null }> {
+    const avatar = await this.userService.getUserAvatar(id, request.user._id.toString());
     return { avatar };
   }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id/avatars')
-  async getUserAvatars(@Param('id') id: string): Promise<string[]> {
-    return this.userService.getUserAvatars(id);
+  async getUserAvatars(@Param('id') id: string, @Req() request: RequestWithUser): Promise<string[]> {
+    return this.userService.getUserAvatars(id, request.user._id.toString());
   }
 
   @UseGuards(JwtAuthGuard)
@@ -89,8 +89,20 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Get(':id/status')
-  async getUserStatus(@Param('id') id: string) {
-    return this.userService.getUserStatus(id);
+  async getUserStatus(@Param('id') id: string, @Req() request: RequestWithUser) {
+    return this.userService.getUserStatus(id, request.user._id.toString());
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('privacy')
+  async getPrivacySettings(@Req() request: RequestWithUser) {
+    return this.userService.getPrivacySettings(request.user._id.toString());
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('privacy')
+  async updatePrivacySettings(@Body() body: any, @Req() request: RequestWithUser) {
+    return this.userService.updatePrivacySettings(request.user._id.toString(), body);
   }
 
   @UseGuards(JwtAuthGuard)

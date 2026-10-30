@@ -7,7 +7,7 @@ import { ContactsComponent } from './contacts/contacts.component';
 import { CreateChatComponent } from './create-chat/create-chat.component';
 import { HttpRequestService } from '../helpers/http-request.service';
 import { BehaviorSubject, firstValueFrom, map, Observable, of, Subject, take, tap, catchError } from 'rxjs';
-import { AdminPermissions, ChatAdmin, ChatListItem, ChatParticipant, TypingUser } from '../models/chat-list-item.model';
+import { AdminPermissions, ChatAdmin, ChatListItem, ChatParticipant, TypingUser, UserPrivacy } from '../models/chat-list-item.model';
 import { StoryGroup } from '../models/story.model';
 import { SocketService } from './socket.service';
 import { HttpEvent, HttpParams } from '@angular/common/http';
@@ -226,6 +226,7 @@ export class MainService {
       updatedAt: chat.updatedAt,
       isOnline: isDirect ? peer?.isOnline : undefined,
       lastSeen: isDirect ? peer?.lastSeen : undefined,
+      privacyStatus: isDirect ? peer?.privacyStatus : undefined,
     } as ChatListItem;
   }
 
@@ -664,7 +665,7 @@ export class MainService {
       });
     });
 
-    this.socketService.on('userStatusChanged', (payload: { userId: string; isOnline: boolean; lastSeen?: string | Date }) => {
+    this.socketService.on('userStatusChanged', (payload: { userId: string; isOnline: boolean; lastSeen?: string | Date; privacyStatus?: 'recently' | 'a_long_time_ago' | null }) => {
       this.zone.run(() => {
         const lastSeenDate = payload.lastSeen ? new Date(payload.lastSeen) : undefined;
         let changed = false;
@@ -672,14 +673,16 @@ export class MainService {
         const updateItem = (item: ChatListItem) => {
           if (!item.isGroup && !item.isChannel && item.peerId === payload.userId) {
             item.isOnline = payload.isOnline;
-            if (lastSeenDate) item.lastSeen = lastSeenDate;
+            item.lastSeen = lastSeenDate;
+            item.privacyStatus = payload.privacyStatus;
             changed = true;
           }
           if (item.participants) {
             const p = item.participants.find((part) => part._id === payload.userId);
             if (p) {
               p.isOnline = payload.isOnline;
-              if (lastSeenDate) p.lastSeen = lastSeenDate;
+              p.lastSeen = lastSeenDate;
+              p.privacyStatus = payload.privacyStatus;
               changed = true;
             }
           }
@@ -1576,5 +1579,13 @@ export class MainService {
 
   updateNotificationSettings(enabled: boolean): Observable<any> {
     return this.httpRequestService.post('user/notifications', { enabled });
+  }
+
+  getPrivacySettings(): Observable<UserPrivacy> {
+    return this.httpRequestService.get('user/privacy');
+  }
+
+  updatePrivacySettings(privacy: Partial<UserPrivacy>): Observable<UserPrivacy> {
+    return this.httpRequestService.post('user/privacy', privacy);
   }
 }

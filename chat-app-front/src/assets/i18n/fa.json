@@ -72,7 +72,21 @@
     "lastSeenAt": "آخرین بازدید {time}",
     "lastSeenToday": "آخرین بازدید امروز ساعت {time}",
     "lastSeenYesterday": "آخرین بازدید دیروز ساعت {time}",
-    "lastSeenRecently": "آخرین بازدید اخیراً"
+    "lastSeenRecently": "آخرین بازدید اخیراً",
+    "lastSeenALongTimeAgo": "آخرین بازدید خیلی وقت پیش"
+  },
+  "privacy": {
+    "title": "حریم خصوصی و امنیت",
+    "description": "کنترل نمایش وضعیت آنلاین و عکس پروفایل برای دیگر کاربران",
+    "lastSeen": "آخرین بازدید و آنلاین بودن",
+    "lastSeenDesc": "چه کسانی می‌توانند آخرین بازدید و وضعیت آنلاین شما را ببینند",
+    "profilePhoto": "عکس پروفایل",
+    "profilePhotoDesc": "چه کسانی می‌توانند عکس پروفایل شما را ببینند",
+    "everybody": "همه",
+    "contacts": "مخاطبین من",
+    "nobody": "هیچ‌کس",
+    "saved": "تنظیمات حریم خصوصی با موفقیت ذخیره شد",
+    "saveError": "خطا در ذخیره تنظیمات حریم خصوصی"
   },
   "contacts": {
     "title": "مخاطبان",

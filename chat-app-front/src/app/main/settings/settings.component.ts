@@ -7,6 +7,7 @@ import { ThemeService, Theme } from '../../helpers/theme.service';
 import { TranslationService, Language } from '../../helpers/translation.service';
 import { MainService } from '../main.service';
 import { I18nPipe } from '../../helpers/i18n.pipe';
+import { PrivacyRule, UserPrivacy } from '../../models/chat-list-item.model';
 import { take } from 'rxjs';
 
 @Component({
@@ -42,6 +43,9 @@ export class SettingsComponent implements OnInit {
   get loadingBlocked(): boolean { return this.loadingBlockedSignal(); }
   set loadingBlocked(v: boolean) { this.loadingBlockedSignal.set(v); }
 
+  readonly privacySignal = signal<UserPrivacy>({ lastSeen: 'everybody', profilePhoto: 'everybody' });
+  get privacy(): UserPrivacy { return this.privacySignal(); }
+
   constructor(
     public dialogRef: MatDialogRef<SettingsComponent>,
     public themeService: ThemeService,
@@ -65,7 +69,44 @@ export class SettingsComponent implements OnInit {
       },
     });
 
+    this.mainService.getPrivacySettings().pipe(take(1)).subscribe({
+      next: (res) => {
+        if (res) {
+          this.privacySignal.set({
+            lastSeen: res.lastSeen || 'everybody',
+            profilePhoto: res.profilePhoto || 'everybody',
+          });
+        }
+      },
+    });
+
     this.loadBlockedUsers();
+  }
+
+  setLastSeenPrivacy(rule: PrivacyRule): void {
+    const updated: UserPrivacy = { ...this.privacy, lastSeen: rule };
+    this.privacySignal.set(updated);
+    this.mainService.updatePrivacySettings({ lastSeen: rule }).pipe(take(1)).subscribe({
+      next: () => {
+        this.mainService.snackbar.success(this.translationService.t('privacy.saved'), 2500);
+      },
+      error: () => {
+        this.mainService.snackbar.error(this.translationService.t('privacy.saveError'), 3000);
+      },
+    });
+  }
+
+  setProfilePhotoPrivacy(rule: PrivacyRule): void {
+    const updated: UserPrivacy = { ...this.privacy, profilePhoto: rule };
+    this.privacySignal.set(updated);
+    this.mainService.updatePrivacySettings({ profilePhoto: rule }).pipe(take(1)).subscribe({
+      next: () => {
+        this.mainService.snackbar.success(this.translationService.t('privacy.saved'), 2500);
+      },
+      error: () => {
+        this.mainService.snackbar.error(this.translationService.t('privacy.saveError'), 3000);
+      },
+    });
   }
 
   loadBlockedUsers(): void {

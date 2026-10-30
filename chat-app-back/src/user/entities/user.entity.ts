@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Types } from 'mongoose';
 import { ISession } from '../interfaces/session.interface';
+import { UserPrivacy } from '../interfaces/user.interface';
 
 export type UserDocument = HydratedDocument<User>;
 
@@ -59,6 +60,19 @@ export class User {
 
   @Prop({ default: true })
   notifications: boolean;
+
+  @Prop({
+    type: {
+      lastSeen: { type: String, default: 'everybody' },
+      profilePhoto: { type: String, default: 'everybody' },
+    },
+    default: {
+      lastSeen: 'everybody',
+      profilePhoto: 'everybody',
+    },
+    _id: false,
+  })
+  privacy?: UserPrivacy;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

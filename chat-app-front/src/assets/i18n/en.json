@@ -72,7 +72,21 @@
     "lastSeenAt": "last seen {time}",
     "lastSeenToday": "last seen today at {time}",
     "lastSeenYesterday": "last seen yesterday at {time}",
-    "lastSeenRecently": "last seen recently"
+    "lastSeenRecently": "last seen recently",
+    "lastSeenALongTimeAgo": "last seen a long time ago"
+  },
+  "privacy": {
+    "title": "Privacy and Security",
+    "description": "Control who can see your online status and profile photo",
+    "lastSeen": "Last Seen & Online",
+    "lastSeenDesc": "Who can see your last seen and online status",
+    "profilePhoto": "Profile Photos",
+    "profilePhotoDesc": "Who can see your profile photos",
+    "everybody": "Everybody",
+    "contacts": "My Contacts",
+    "nobody": "Nobody",
+    "saved": "Privacy settings saved successfully",
+    "saveError": "Failed to save privacy settings"
   },
   "contacts": {
     "title": "Contacts",

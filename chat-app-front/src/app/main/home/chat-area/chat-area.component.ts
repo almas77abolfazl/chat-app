@@ -440,11 +440,18 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
       return this.translationService.t('profile.membersCount', { count: members });
     }
     if (chat?.isOnline) return this.translationService.t('status.online');
-    if (chat?.lastSeen) return this.formatLastSeen(chat.lastSeen);
+    if (chat?.privacyStatus) return this.formatLastSeen(undefined, chat.privacyStatus);
+    if (chat?.lastSeen) return this.formatLastSeen(chat.lastSeen, chat.privacyStatus);
     return '';
   }
 
-  formatLastSeen(lastSeenDate?: Date | string): string {
+  formatLastSeen(lastSeenDate?: Date | string, privacyStatus?: string | null): string {
+    if (privacyStatus === 'a_long_time_ago') {
+      return this.translationService.t('chat.lastSeenALongTimeAgo');
+    }
+    if (privacyStatus === 'recently') {
+      return this.translationService.t('chat.lastSeenRecently');
+    }
     if (!lastSeenDate) return '';
     const date = new Date(lastSeenDate);
     if (isNaN(date.getTime())) return '';

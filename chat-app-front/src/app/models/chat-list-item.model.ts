@@ -18,6 +18,13 @@ export interface ChatAdmin {
   promotedAt?: Date;
 }
 
+export type PrivacyRule = 'everybody' | 'contacts' | 'nobody';
+
+export interface UserPrivacy {
+  lastSeen: PrivacyRule;
+  profilePhoto: PrivacyRule;
+}
+
 export interface ChatParticipant {
   _id: string;
   firstName?: string;
@@ -26,6 +33,7 @@ export interface ChatParticipant {
   status?: string;
   isOnline?: boolean;
   lastSeen?: Date;
+  privacyStatus?: 'recently' | 'a_long_time_ago' | null;
 }
 
 export interface TypingUser {
@@ -59,4 +67,5 @@ export interface ChatListItem {
   messageCount?: number;
   isOnline?: boolean;     // for 1:1 chats: peer's online status
   lastSeen?: Date;        // for 1:1 chats: peer's last seen timestamp
+  privacyStatus?: 'recently' | 'a_long_time_ago' | null;
 }

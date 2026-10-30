@@ -1,6 +1,13 @@
 import { ISession } from './session.interface';
 import { Document, Types } from 'mongoose';
 
+export type PrivacyRule = 'everybody' | 'contacts' | 'nobody';
+
+export interface UserPrivacy {
+  lastSeen: PrivacyRule;
+  profilePhoto: PrivacyRule;
+}
+
 export interface IUser extends Document {
   username?: string;
   phoneNumber: string;
@@ -18,4 +25,5 @@ export interface IUser extends Document {
   isOnline: boolean;
   lastSeen?: Date;
   notifications: boolean;
+  privacy?: UserPrivacy;
 }

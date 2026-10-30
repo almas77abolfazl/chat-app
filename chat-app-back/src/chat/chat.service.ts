@@ -21,7 +21,10 @@ export class ChatService {
         deletedFor: { $ne: userObjectId },
         $or: [{ isGroup: true }, { isChannel: true }, { isSavedMessages: true }, { lastMessage: { $exists: true, $ne: null } }],
       })
-      .populate<{ participants: any[] }>('participants', 'firstName lastName profilePicture avatars status isOnline lastSeen')
+      .populate<{ participants: any[] }>(
+        'participants',
+        'firstName lastName profilePicture avatars status isOnline lastSeen contacts blockedUsers privacy',
+      )
       .populate('lastMessage', 'content sender createdAt')
       .populate('pinnedMessage', 'content sender createdAt status isDeleted')
       .sort({ updatedAt: -1 })
@@ -35,7 +38,10 @@ export class ChatService {
           deletedFor: { $ne: userObjectId },
           $or: [{ isGroup: true }, { isChannel: true }, { isSavedMessages: true }, { lastMessage: { $exists: true, $ne: null } }],
         })
-        .populate<{ participants: any[] }>('participants', 'firstName lastName profilePicture avatars status isOnline lastSeen')
+        .populate<{ participants: any[] }>(
+          'participants',
+          'firstName lastName profilePicture avatars status isOnline lastSeen contacts blockedUsers privacy',
+        )
         .populate('lastMessage', 'content sender createdAt')
         .populate('pinnedMessage', 'content sender createdAt status isDeleted')
         .sort({ updatedAt: -1 })
@@ -67,24 +73,84 @@ export class ChatService {
           promotedBy: a.promotedBy?.toString(),
           promotedAt: a.promotedAt,
         })),
-        participants: chat.participants.map((p) => ({
-          _id: p._id,
-          firstName: p.firstName,
-          lastName: p.lastName,
-          profilePicture: p.profilePicture,
-          avatars: p.avatars || [],
-          status: p.status,
-        })),
-        otherParticipant: otherParticipant
-          ? {
+        participants: chat.participants.map((p) => {
+          if (p._id.toString() === userId) {
+            return {
+              _id: p._id,
+              firstName: p.firstName,
+              lastName: p.lastName,
+              profilePicture: p.profilePicture,
+              avatars: p.avatars || [],
+              status: p.status,
+              isOnline: p.isOnline,
+              lastSeen: p.lastSeen,
+              privacyStatus: null,
+            };
+          }
+          const isBlocked = (p.blockedUsers || []).some((b: any) => b.toString() === userId);
+          if (isBlocked) {
+            return {
+              _id: p._id,
+              firstName: p.firstName,
+              lastName: p.lastName,
+              profilePicture: null,
+              avatars: [],
+              status: p.status,
+              isOnline: false,
+              lastSeen: null,
+              privacyStatus: 'a_long_time_ago',
+            };
+          }
+          const isContact = (p.contacts || []).some((c: any) => c.toString() === userId);
+          const photoRule = p.privacy?.profilePhoto || 'everybody';
+          const lastSeenRule = p.privacy?.lastSeen || 'everybody';
+          const hidePhoto = photoRule === 'nobody' || (photoRule === 'contacts' && !isContact);
+          const hideStatus = lastSeenRule === 'nobody' || (lastSeenRule === 'contacts' && !isContact);
+          return {
+            _id: p._id,
+            firstName: p.firstName,
+            lastName: p.lastName,
+            profilePicture: hidePhoto ? null : p.profilePicture,
+            avatars: hidePhoto ? [] : p.avatars || [],
+            status: p.status,
+            isOnline: hideStatus ? false : p.isOnline,
+            lastSeen: hideStatus ? null : p.lastSeen,
+            privacyStatus: hideStatus ? 'recently' : null,
+          };
+        }),
+        otherParticipant: (() => {
+          if (!otherParticipant) return null;
+          const isBlocked = (otherParticipant.blockedUsers || []).some((b: any) => b.toString() === userId);
+          if (isBlocked) {
+            return {
               _id: otherParticipant._id,
               firstName: otherParticipant.firstName,
               lastName: otherParticipant.lastName,
-              profilePicture: otherParticipant.profilePicture,
-              avatars: otherParticipant.avatars || [],
+              profilePicture: null,
+              avatars: [],
               status: otherParticipant.status,
-            }
-          : null,
+              isOnline: false,
+              lastSeen: null,
+              privacyStatus: 'a_long_time_ago',
+            };
+          }
+          const isContact = (otherParticipant.contacts || []).some((c: any) => c.toString() === userId);
+          const photoRule = otherParticipant.privacy?.profilePhoto || 'everybody';
+          const lastSeenRule = otherParticipant.privacy?.lastSeen || 'everybody';
+          const hidePhoto = photoRule === 'nobody' || (photoRule === 'contacts' && !isContact);
+          const hideStatus = lastSeenRule === 'nobody' || (lastSeenRule === 'contacts' && !isContact);
+          return {
+            _id: otherParticipant._id,
+            firstName: otherParticipant.firstName,
+            lastName: otherParticipant.lastName,
+            profilePicture: hidePhoto ? null : otherParticipant.profilePicture,
+            avatars: hidePhoto ? [] : otherParticipant.avatars || [],
+            status: otherParticipant.status,
+            isOnline: hideStatus ? false : otherParticipant.isOnline,
+            lastSeen: hideStatus ? null : otherParticipant.lastSeen,
+            privacyStatus: hideStatus ? 'recently' : null,
+          };
+        })(),
         lastMessage: chat.lastMessage,
         pinnedMessage: chat.pinnedMessage || null,
         unreadCount,

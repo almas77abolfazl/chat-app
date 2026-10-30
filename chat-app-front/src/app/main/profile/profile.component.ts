@@ -206,6 +206,40 @@ export class ProfileComponent implements OnInit {
     return this.userProfile?.lastSeen || null;
   }
 
+  get privacyStatus(): string | null {
+    return this.userProfile?.privacyStatus || null;
+  }
+
+  get statusText(): string {
+    if (this.isOnline) return this.translationService.t('status.online');
+    if (this.privacyStatus === 'a_long_time_ago') return this.translationService.t('chat.lastSeenALongTimeAgo');
+    if (this.privacyStatus === 'recently') return this.translationService.t('chat.lastSeenRecently');
+    if (this.lastSeen) return this.formatProfileLastSeen(this.lastSeen);
+    return this.translationService.t('status.offline');
+  }
+
+  formatProfileLastSeen(lastSeenDate: Date | string): string {
+    const date = new Date(lastSeenDate);
+    if (isNaN(date.getTime())) return '';
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    if (diffMs < 60000) {
+      return this.translationService.t('chat.lastSeenRecently');
+    }
+    const hours = date.getHours().toString().padStart(2, '0');
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    const timeStr = `${hours}:${minutes}`;
+    if (date.toDateString() === now.toDateString()) {
+      return this.translationService.t('chat.lastSeenToday', { time: timeStr });
+    }
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    if (date.toDateString() === yesterday.toDateString()) {
+      return this.translationService.t('chat.lastSeenYesterday', { time: timeStr });
+    }
+    return this.translationService.t('profile.lastSeen', { time: `${date.toLocaleDateString()} ${timeStr}` });
+  }
+
   get coverColor(): string {
     if (this.isChannel) return 'linear-gradient(135deg, #4f46e5, #7c3aed)';
     if (this.isGroup) return 'linear-gradient(135deg, #7c3aed, #db2777)';

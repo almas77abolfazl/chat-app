@@ -63,10 +63,7 @@ export class MessageGateway {
       await this.userService.updateOnlineStatus(user._id.toString(), true);
 
       this.server.to(user._id.toString()).emit('connected', { userId: user._id, isOnline: true });
-      this.server.emit('userStatusChanged', {
-        userId: user._id.toString(),
-        isOnline: true,
-      });
+      this.broadcastUserStatus(user._id.toString(), true);
     } catch {
       client.disconnect();
     }
@@ -77,13 +74,62 @@ export class MessageGateway {
     if (user) {
       const lastSeen = new Date();
       this.userService.updateOnlineStatus(user._id.toString(), false).catch(() => {});
+      this.broadcastUserStatus(user._id.toString(), false, lastSeen);
+    }
+    console.log(`Client disconnected: ${client.id}`);
+  }
+
+  private async broadcastUserStatus(userId: string, isOnline: boolean, lastSeen?: Date) {
+    try {
+      const user = await this.userService.getUserWithPrivacy(userId);
+      if (!user) return;
+      const blockedIds = (user.blockedUsers || []).map((id: any) => id.toString());
+      const contactIds = (user.contacts || []).map((id: any) => id.toString());
+      const privacyRule = user.privacy?.lastSeen || 'everybody';
+
+      const sockets = await this.server.fetchSockets();
+      for (const s of sockets) {
+        const viewer = s.data?.user as IUser | undefined;
+        if (!viewer) continue;
+        const viewerId = viewer._id.toString();
+        if (viewerId === userId) continue;
+
+        let visibleOnline = false;
+        let visibleLastSeen: Date | undefined = undefined;
+        let privacyStatus: 'recently' | 'a_long_time_ago' | null = null;
+
+        if (blockedIds.includes(viewerId)) {
+          visibleOnline = false;
+          visibleLastSeen = undefined;
+          privacyStatus = 'a_long_time_ago';
+        } else if (privacyRule === 'nobody') {
+          visibleOnline = false;
+          visibleLastSeen = undefined;
+          privacyStatus = 'recently';
+        } else if (privacyRule === 'contacts' && !contactIds.includes(viewerId)) {
+          visibleOnline = false;
+          visibleLastSeen = undefined;
+          privacyStatus = 'recently';
+        } else {
+          visibleOnline = isOnline;
+          visibleLastSeen = lastSeen;
+          privacyStatus = null;
+        }
+
+        s.emit('userStatusChanged', {
+          userId,
+          isOnline: visibleOnline,
+          lastSeen: visibleLastSeen,
+          privacyStatus,
+        });
+      }
+    } catch {
       this.server.emit('userStatusChanged', {
-        userId: user._id.toString(),
-        isOnline: false,
+        userId,
+        isOnline,
         lastSeen,
       });
     }
-    console.log(`Client disconnected: ${client.id}`);
   }
 
   @SubscribeMessage('sendMessage')

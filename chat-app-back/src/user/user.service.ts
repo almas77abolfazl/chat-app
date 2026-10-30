@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException, Logger } from '@nes
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './entities/user.entity';
 import { Model, Types } from 'mongoose';
-import { IUser } from './interfaces/user.interface';
+import { IUser, UserPrivacy } from './interfaces/user.interface';
 import { UpdateUserNamesDto } from './dto/update-user-names.dto';
 import * as fs from 'fs';
 import { join } from 'path';
@@ -79,13 +79,51 @@ export class UserService {
     return user;
   }
 
-  async getUserStatus(userId: string): Promise<{ userId: string; isOnline: boolean; lastSeen?: Date } | null> {
-    const user = await this.userModel.findById(userId).select('isOnline lastSeen _id').exec();
+  async getUserStatus(
+    userId: string,
+    requesterId?: string,
+  ): Promise<{ userId: string; isOnline: boolean; lastSeen?: Date | null; privacyStatus?: 'recently' | 'a_long_time_ago' | null } | null> {
+    const user = await this.userModel.findById(userId).select('isOnline lastSeen _id blockedUsers privacy contacts').exec();
     if (!user) return null;
+
+    if (requesterId && requesterId !== userId) {
+      const isBlocked = (user.blockedUsers || []).some((id: any) => id.toString() === requesterId);
+      if (isBlocked) {
+        return {
+          userId: user._id.toString(),
+          isOnline: false,
+          lastSeen: null,
+          privacyStatus: 'a_long_time_ago',
+        };
+      }
+
+      const lastSeenRule = user.privacy?.lastSeen || 'everybody';
+      if (lastSeenRule === 'nobody') {
+        return {
+          userId: user._id.toString(),
+          isOnline: false,
+          lastSeen: null,
+          privacyStatus: 'recently',
+        };
+      }
+      if (lastSeenRule === 'contacts') {
+        const isContact = (user.contacts || []).some((c: any) => c.toString() === requesterId);
+        if (!isContact) {
+          return {
+            userId: user._id.toString(),
+            isOnline: false,
+            lastSeen: null,
+            privacyStatus: 'recently',
+          };
+        }
+      }
+    }
+
     return {
       userId: user._id.toString(),
       isOnline: user.isOnline,
       lastSeen: user.lastSeen,
+      privacyStatus: null,
     };
   }
 
@@ -151,15 +189,21 @@ export class UserService {
     const user = await this.userModel
       .findById(userId)
       .select(
-        'firstName lastName username phoneNumber bio profilePicture avatars status isOnline lastSeen createdAt phoneKnownContacts phoneSharedWith',
+        'firstName lastName username phoneNumber bio profilePicture avatars status isOnline lastSeen createdAt phoneKnownContacts phoneSharedWith contacts blockedUsers privacy',
       )
       .exec();
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    const avatars = [...(user.avatars || [])];
-    if (user.profilePicture && !avatars.includes(user.profilePicture)) {
-      avatars.unshift(user.profilePicture);
+
+    let isBlockedByTarget = false;
+    let privacyStatus: 'recently' | 'a_long_time_ago' | null = null;
+    let isOnline = user.isOnline;
+    let lastSeen: Date | null = user.lastSeen || null;
+    let profilePicture: string | null = user.profilePicture || null;
+    let avatars: string[] = [...(user.avatars || [])];
+    if (profilePicture && !avatars.includes(profilePicture)) {
+      avatars.unshift(profilePicture);
     }
 
     let canSeePhone = false;
@@ -169,13 +213,36 @@ export class UserService {
       if (requesterId === userId) {
         canSeePhone = true;
       } else {
-        const requester = await this.userModel.findById(requesterId).select('contacts phoneKnownContacts phoneSharedWith').exec();
-        if (requester) {
-          isContact = (requester.contacts || []).some((c: any) => c.toString() === userId);
-          const requesterKnewPhone = (requester.phoneKnownContacts || []).some((c: any) => c.toString() === userId);
-          const targetSharedWithRequester = (user.phoneSharedWith || []).some((c: any) => c.toString() === requesterId);
-          const targetKnewRequesterPhone = (user.phoneKnownContacts || []).some((c: any) => c.toString() === requesterId);
-          canSeePhone = requesterKnewPhone || targetSharedWithRequester || targetKnewRequesterPhone;
+        isBlockedByTarget = (user.blockedUsers || []).some((b: any) => b.toString() === requesterId);
+        if (isBlockedByTarget) {
+          isOnline = false;
+          lastSeen = null;
+          privacyStatus = 'a_long_time_ago';
+          profilePicture = null;
+          avatars = [];
+        } else {
+          const requester = await this.userModel.findById(requesterId).select('contacts phoneKnownContacts phoneSharedWith').exec();
+          if (requester) {
+            isContact = (requester.contacts || []).some((c: any) => c.toString() === userId);
+            const isTargetContact = (user.contacts || []).some((c: any) => c.toString() === requesterId);
+            const requesterKnewPhone = (requester.phoneKnownContacts || []).some((c: any) => c.toString() === userId);
+            const targetSharedWithRequester = (user.phoneSharedWith || []).some((c: any) => c.toString() === requesterId);
+            const targetKnewRequesterPhone = (user.phoneKnownContacts || []).some((c: any) => c.toString() === requesterId);
+            canSeePhone = requesterKnewPhone || targetSharedWithRequester || targetKnewRequesterPhone;
+
+            const photoRule = user.privacy?.profilePhoto || 'everybody';
+            if (photoRule === 'nobody' || (photoRule === 'contacts' && !isTargetContact)) {
+              profilePicture = null;
+              avatars = [];
+            }
+
+            const lastSeenRule = user.privacy?.lastSeen || 'everybody';
+            if (lastSeenRule === 'nobody' || (lastSeenRule === 'contacts' && !isTargetContact)) {
+              isOnline = false;
+              lastSeen = null;
+              privacyStatus = 'recently';
+            }
+          }
         }
       }
     }
@@ -187,19 +254,28 @@ export class UserService {
       username: user.username,
       phoneNumber: canSeePhone ? user.phoneNumber : null,
       bio: user.bio,
-      profilePicture: user.profilePicture,
+      profilePicture,
       avatars,
       status: user.status,
-      isOnline: user.isOnline,
-      lastSeen: user.lastSeen,
+      isOnline,
+      lastSeen,
+      privacyStatus,
+      isBlocked: isBlockedByTarget,
       createdAt: user.createdAt,
       isContact,
     };
   }
 
-  async getUserAvatars(userId: string): Promise<string[]> {
-    const user = await this.userModel.findById(userId).select('avatars profilePicture').exec();
+  async getUserAvatars(userId: string, requesterId?: string): Promise<string[]> {
+    const user = await this.userModel.findById(userId).select('avatars profilePicture blockedUsers privacy contacts').exec();
     if (!user) return [];
+    if (requesterId && requesterId !== userId) {
+      const isBlocked = (user.blockedUsers || []).some((b: any) => b.toString() === requesterId);
+      if (isBlocked) return [];
+      const photoRule = user.privacy?.profilePhoto || 'everybody';
+      const isContact = (user.contacts || []).some((c: any) => c.toString() === requesterId);
+      if (photoRule === 'nobody' || (photoRule === 'contacts' && !isContact)) return [];
+    }
     const list = [...(user.avatars || [])];
     if (user.profilePicture && !list.includes(user.profilePicture)) {
       list.unshift(user.profilePicture);
@@ -227,10 +303,17 @@ export class UserService {
     return user.avatars;
   }
 
-  async getUserAvatar(userId: string): Promise<string | null> {
-    const user = await this.userModel.findById(userId);
+  async getUserAvatar(userId: string, requesterId?: string): Promise<string | null> {
+    const user = await this.userModel.findById(userId).select('profilePicture blockedUsers privacy contacts').exec();
     if (!user || !user.profilePicture) {
       return null;
+    }
+    if (requesterId && requesterId !== userId) {
+      const isBlocked = (user.blockedUsers || []).some((b: any) => b.toString() === requesterId);
+      if (isBlocked) return null;
+      const photoRule = user.privacy?.profilePhoto || 'everybody';
+      const isContact = (user.contacts || []).some((c: any) => c.toString() === requesterId);
+      if (photoRule === 'nobody' || (photoRule === 'contacts' && !isContact)) return null;
     }
     const path = `./uploads/avatars/${user.profilePicture}`;
     if (!fs.existsSync(path)) {
@@ -403,6 +486,27 @@ export class UserService {
     }
     const other = await this.userModel.findById(userB).select('blockedUsers').exec();
     return !!other?.blockedUsers?.some((id: any) => id.toString() === userA);
+  }
+
+  async getPrivacySettings(userId: string): Promise<UserPrivacy> {
+    const user = await this.userModel.findById(userId).select('privacy').exec();
+    if (!user) throw new NotFoundException('User not found');
+    return user.privacy || { lastSeen: 'everybody', profilePhoto: 'everybody' };
+  }
+
+  async updatePrivacySettings(userId: string, privacy: Partial<UserPrivacy>): Promise<UserPrivacy> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) throw new NotFoundException('User not found');
+    user.privacy = {
+      lastSeen: privacy.lastSeen ?? user.privacy?.lastSeen ?? 'everybody',
+      profilePhoto: privacy.profilePhoto ?? user.privacy?.profilePhoto ?? 'everybody',
+    };
+    await user.save();
+    return user.privacy;
+  }
+
+  async getUserWithPrivacy(userId: string): Promise<IUser | null> {
+    return this.userModel.findById(userId).select('privacy contacts blockedUsers isOnline lastSeen').exec();
   }
 
   private async doesUserExist(phoneNumber: string): Promise<boolean> {

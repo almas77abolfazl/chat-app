@@ -62,13 +62,11 @@
         <span class="status-text">{{ 'profile.membersCount' | i18n: { count: chatData?.participants?.length || 0 } }}</span>
         } @else if (isChannel) {
         <span class="status-text">{{ 'profile.publicChannel' | i18n }}</span>
-        } @else if (isOnline) {
-        <span class="online-dot"></span>
-        <span class="status-text online">{{ 'status.online' | i18n }}</span>
-        } @else if (lastSeen) {
-        <span class="status-text">{{ 'profile.lastSeen' | i18n: { time: lastSeen | date: 'short' } }}</span>
         } @else {
-        <span class="status-text">{{ 'status.offline' | i18n }}</span>
+          @if (isOnline) {
+          <span class="online-dot"></span>
+          }
+          <span class="status-text" [class.online]="isOnline">{{ statusText }}</span>
         }
       </div>
     </div>

@@ -145,6 +145,85 @@
       </div>
     </div>
 
+    <!-- Privacy & Security Section -->
+    <div class="settings-section">
+      <div class="section-header">
+        <div class="section-title">
+          <fa-icon [icon]="['fas', 'shield-alt']" class="section-header-icon"></fa-icon>
+          {{ 'privacy.title' | i18n }}
+        </div>
+        <div class="section-desc">{{ 'privacy.description' | i18n }}</div>
+      </div>
+
+      <!-- Last Seen & Online -->
+      <div class="privacy-control-group">
+        <div class="privacy-control-header">
+          <span class="control-label">{{ 'privacy.lastSeen' | i18n }}</span>
+          <span class="control-desc">{{ 'privacy.lastSeenDesc' | i18n }}</span>
+        </div>
+        <div class="segmented-control">
+          <button
+            type="button"
+            class="segment-btn"
+            [class.active]="privacy.lastSeen === 'everybody'"
+            (click)="setLastSeenPrivacy('everybody')"
+          >
+            {{ 'privacy.everybody' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="segment-btn"
+            [class.active]="privacy.lastSeen === 'contacts'"
+            (click)="setLastSeenPrivacy('contacts')"
+          >
+            {{ 'privacy.contacts' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="segment-btn"
+            [class.active]="privacy.lastSeen === 'nobody'"
+            (click)="setLastSeenPrivacy('nobody')"
+          >
+            {{ 'privacy.nobody' | i18n }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Profile Photo -->
+      <div class="privacy-control-group">
+        <div class="privacy-control-header">
+          <span class="control-label">{{ 'privacy.profilePhoto' | i18n }}</span>
+          <span class="control-desc">{{ 'privacy.profilePhotoDesc' | i18n }}</span>
+        </div>
+        <div class="segmented-control">
+          <button
+            type="button"
+            class="segment-btn"
+            [class.active]="privacy.profilePhoto === 'everybody'"
+            (click)="setProfilePhotoPrivacy('everybody')"
+          >
+            {{ 'privacy.everybody' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="segment-btn"
+            [class.active]="privacy.profilePhoto === 'contacts'"
+            (click)="setProfilePhotoPrivacy('contacts')"
+          >
+            {{ 'privacy.contacts' | i18n }}
+          </button>
+          <button
+            type="button"
+            class="segment-btn"
+            [class.active]="privacy.profilePhoto === 'nobody'"
+            (click)="setProfilePhotoPrivacy('nobody')"
+          >
+            {{ 'privacy.nobody' | i18n }}
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Blocked Users Section -->
     <div class="settings-section">
       <div class="section-header">
