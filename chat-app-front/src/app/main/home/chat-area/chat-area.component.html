@@ -263,226 +263,237 @@
   </div>
   }
 
-  <div #chatMessages class="chat-messages" (scroll)="onScroll($event)" (contextmenu)="onChatAreaContextMenu($event)">
+  <cdk-virtual-scroll-viewport
+    #virtualViewport
+    class="chat-messages"
+    [class.is-short-chat]="isShortChat"
+    (scroll)="onScroll($event)"
+    (contextmenu)="onChatAreaContextMenu($event)"
+  >
     <div class="messages-spacer"></div>
 
-    @if (mainService.currentPage > 1 && mainService.totalPages > 1 && !mainService.loadingMessages) {
-    <div class="load-more-trigger" title="اسکرول کنید بالا برای بارگذاری پیام‌های قدیمی">
+    @if (mainService.currentPage < mainService.totalPages && !mainService.loadingMessages) {
+    <div class="load-more-trigger" (click)="loadOlderMessages()" [attr.title]="'chat.loadMore' | i18n">
       <fa-icon [icon]="['fas', 'chevron-up']"></fa-icon>
     </div>
     }
 
-    @for (message of mainService.currentChat?.messages; track (message._id || $index); let i = $index) {
-    @if (i === 0 || shouldShowDateSeparator(i)) {
-    <div class="date-separator">
-      <span>{{ getMessageDate(message) }}</span>
-    </div>
-    }
-    @if (message.mediaType === 'system') {
-    <div class="system-message-row">
-      <span class="system-message-pill">{{ formatSystemMessage(message) }}</span>
-    </div>
-    } @else {
     <div
-      [id]="'msg-' + message._id"
-      class="message"
-      [ngClass]="{
-        'sent': ownMessage(message),
-        'received': !ownMessage(message),
-        'sticker-msg': message.mediaType === 'sticker',
-        'search-match': isSearchHighlighted(message),
-        'search-active-match': isCurrentSearchMatch(message),
-        'is-selected': isMessageSelected(message)
-      }"
-      [style.animation-delay]="($index * 30) + 'ms'"
-      (click)="isSelectionMode ? toggleMessageSelection(message, $event) : null"
-      (contextmenu)="openContextMenu($event, message)"
+      *cdkVirtualFor="let message of (mainService.currentChat?.messages || []); let i = index; trackBy: trackByMessageId"
+      class="virtual-message-item"
+      [appMeasureHeight]="i"
+      (heightMeasured)="onHeightMeasured(i, $event)"
     >
-      @if (isSelectionMode) {
-      <div class="message-select-checkbox" (click)="toggleMessageSelection(message, $event)">
-        <fa-icon [icon]="['fas', isMessageSelected(message) ? 'check-circle' : 'circle']" [class.checked]="isMessageSelected(message)"></fa-icon>
+      @if (i === 0 || shouldShowDateSeparator(i)) {
+      <div class="date-separator">
+        <span>{{ getMessageDate(message) }}</span>
       </div>
       }
-      @if (message.forwardFrom) {
-      <div class="forwarded-header" (click)="openForwardSenderProfile(message, $event)">
-        <fa-icon [icon]="['fas', 'share']" class="forward-header-icon"></fa-icon>
-        <span class="forward-label">{{ 'chat.forwardedFrom' | i18n }}:</span>
-        <span class="forward-author">{{ message.forwardFrom.fromSenderName || 'کاربر' }}</span>
-      </div>
-      }
-      @if (message.toolCalls?.length) {
-      <div class="agent-tools">
-        @for (tool of message.toolCalls; track $index) {
-        <span class="agent-tool-badge">{{ tool.name }}</span>
-        }
-      </div>
-      }
-      @if (mainService.currentChat?.isGroup && !ownMessage(message)) {
-      <div class="message-sender clickable-sender" (click)="openSenderProfile(message)">{{ senderName(message) }}</div>
-      }
-      @if (replyingToId === message._id) {
-      <div class="reply-preview">
-        <fa-icon [icon]="['fas', 'reply']" class="reply-icon"></fa-icon>
-        <span class="reply-text">{{ replyingToPreview }}</span>
-        <button class="reply-cancel" (click)="cancelReply(); $event.stopPropagation()">
-          <fa-icon [icon]="['fas', 'times']"></fa-icon>
-        </button>
-      </div>
-      }
-      @if (!isEditing(message._id)) {
-      <div class="message-actions">
-        @if (!message.isDeleted) {
-        <button class="msg-action pin-btn" (click)="pinMessage(message); $event.stopPropagation()" [attr.title]="'actions.pin' | i18n">
-          <fa-icon [icon]="['fas', 'thumbtack']" size="xs"></fa-icon>
-        </button>
-        }
-        @if (ownMessage(message) && !message.isDeleted) {
-        <button class="msg-action edit-btn" (click)="startEdit(message); $event.stopPropagation()" [attr.title]="'actions.edit' | i18n">
-          <fa-icon [icon]="['fas', 'pen']" size="xs"></fa-icon>
-        </button>
-        <button class="msg-action delete-btn" (click)="deleteMessage(message); $event.stopPropagation()" [attr.title]="'actions.delete' | i18n">
-          <fa-icon [icon]="['fas', 'trash']" size="xs"></fa-icon>
-        </button>
-        }
-        @if (!message.isDeleted) {
-        <button class="msg-action reaction-btn" [class.reacted]="isReactedWith(message, '❤️')" (click)="toggleReaction(message, '❤️'); $event.stopPropagation()" title="❤️">
-          <img [src]="'❤️' | emojiUrl" alt="❤️" class="reaction-hover-img" draggable="false" />
-        </button>
-        <button class="msg-action reaction-btn" [class.reacted]="isReactedWith(message, '👍')" (click)="toggleReaction(message, '👍'); $event.stopPropagation()" title="👍">
-          <img [src]="'👍' | emojiUrl" alt="👍" class="reaction-hover-img" draggable="false" />
-        </button>
-        }
-      </div>
-      }
-      @if (isEditing(message._id)) {
-      <div class="edit-input-wrapper">
-        <textarea class="edit-input" [(ngModel)]="editContent" (keydown.enter)="saveEdit()"></textarea>
-        <div class="edit-actions">
-          <button class="edit-cancel" (click)="cancelEdit()">{{ 'actions.cancel' | i18n }}</button>
-          <button class="edit-save app-button" (click)="saveEdit()">{{ 'actions.save' | i18n }}</button>
-        </div>
+      @if (message.mediaType === 'system') {
+      <div class="system-message-row">
+        <span class="system-message-pill">{{ formatSystemMessage(message) }}</span>
       </div>
       } @else {
-      <div class="message-content">
-        @if (message.isDeleted) {
-        <span class="deleted-msg">{{ 'chat.deletedMessage' | i18n }}</span>
-        } @else if (message.mediaType === 'image' && message.fileUrl) {
-        <img [src]="getMediaUrl(message.fileUrl)" class="msg-image" alt="Image" />
-        @if (message.content) {
-        <div class="msg-caption">{{ message.content }}</div>
-        }
-        } @else if (message.mediaType === 'video' && message.fileUrl) {
-        <video [src]="getMediaUrl(message.fileUrl)" class="msg-video" controls preload="metadata"></video>
-        @if (message.content) {
-        <div class="msg-caption">{{ message.content }}</div>
-        }
-        } @else if (message.mediaType === 'voice' && message.fileUrl) {
-        <app-voice-player
-          [audioUrl]="getMediaUrl(message.fileUrl)"
-          [fileName]="message.fileName"
-          [waveform]="message.waveform"
-          [isSent]="ownMessage(message)"
-        ></app-voice-player>
-        @if (message.content) {
-        <div class="msg-caption">{{ message.content }}</div>
-        }
-        } @else if (message.mediaType === 'file' && message.fileUrl) {
-        <div class="msg-file">
-          <fa-icon [icon]="getFileFaIcon(message.fileName)" class="file-icon"></fa-icon>
-          <div class="file-info">
-            <div class="file-name" [attr.title]="message.fileName">{{ message.fileName }}</div>
-            <div class="file-size">{{ formatFileSize(message.fileSize) }}</div>
-          </div>
-          <a [href]="getMediaUrl(message.fileUrl)" [download]="message.fileName" class="file-download" [attr.title]="'actions.download' | i18n">
-            <fa-icon [icon]="['fas', 'download']"></fa-icon>
-          </a>
+      <div
+        [id]="'msg-' + message._id"
+        class="message"
+        [ngClass]="{
+          'sent': ownMessage(message),
+          'received': !ownMessage(message),
+          'sticker-msg': message.mediaType === 'sticker',
+          'search-match': isSearchHighlighted(message),
+          'search-active-match': isCurrentSearchMatch(message),
+          'is-selected': isMessageSelected(message)
+        }"
+        (click)="isSelectionMode ? toggleMessageSelection(message, $event) : null"
+        (contextmenu)="openContextMenu($event, message)"
+      >
+        @if (isSelectionMode) {
+        <div class="message-select-checkbox" (click)="toggleMessageSelection(message, $event)">
+          <fa-icon [icon]="['fas', isMessageSelected(message) ? 'check-circle' : 'circle']" [class.checked]="isMessageSelected(message)"></fa-icon>
         </div>
-        @if (message.content) {
-        <div class="msg-caption">{{ message.content }}</div>
         }
-        } @else if (message.mediaType === 'gif' && message.fileUrl) {
-        <img [src]="getMediaUrl(message.fileUrl)" class="msg-gif" alt="GIF" />
-        @if (message.content) {
-        <div class="msg-caption">{{ message.content }}</div>
+        @if (message.forwardFrom) {
+        <div class="forwarded-header" (click)="openForwardSenderProfile(message, $event)">
+          <fa-icon [icon]="['fas', 'share']" class="forward-header-icon"></fa-icon>
+          <span class="forward-label">{{ 'chat.forwardedFrom' | i18n }}:</span>
+          <span class="forward-author">{{ message.forwardFrom.fromSenderName || 'کاربر' }}</span>
+        </div>
         }
-        } @else if (message.mediaType === 'sticker' && message.fileUrl) {
-        <img [src]="getMediaUrl(message.fileUrl)" class="msg-sticker" alt="Sticker" />
-        } @else if (message.mediaType === 'emoji' && message.fileUrl) {
-        <img [src]="message.fileUrl | emojiUrl" [alt]="message.fileUrl" class="msg-big-emoji" draggable="false" />
+        @if (message.toolCalls?.length) {
+        <div class="agent-tools">
+          @for (tool of message.toolCalls; track $index) {
+          <span class="agent-tool-badge">{{ tool.name }}</span>
+          }
+        </div>
+        }
+        @if (mainService.currentChat?.isGroup && !ownMessage(message)) {
+        <div class="message-sender clickable-sender" (click)="openSenderProfile(message)">{{ senderName(message) }}</div>
+        }
+        @if (replyingToId === message._id) {
+        <div class="reply-preview">
+          <fa-icon [icon]="['fas', 'reply']" class="reply-icon"></fa-icon>
+          <span class="reply-text">{{ replyingToPreview }}</span>
+          <button class="reply-cancel" (click)="cancelReply(); $event.stopPropagation()">
+            <fa-icon [icon]="['fas', 'times']"></fa-icon>
+          </button>
+        </div>
+        }
+        @if (!isEditing(message._id)) {
+        <div class="message-actions">
+          @if (!message.isDeleted) {
+          <button class="msg-action pin-btn" (click)="pinMessage(message); $event.stopPropagation()" [attr.title]="'actions.pin' | i18n">
+            <fa-icon [icon]="['fas', 'thumbtack']" size="xs"></fa-icon>
+          </button>
+          }
+          @if (ownMessage(message) && !message.isDeleted) {
+          <button class="msg-action edit-btn" (click)="startEdit(message); $event.stopPropagation()" [attr.title]="'actions.edit' | i18n">
+            <fa-icon [icon]="['fas', 'pen']" size="xs"></fa-icon>
+          </button>
+          <button class="msg-action delete-btn" (click)="deleteMessage(message); $event.stopPropagation()" [attr.title]="'actions.delete' | i18n">
+            <fa-icon [icon]="['fas', 'trash']" size="xs"></fa-icon>
+          </button>
+          }
+          @if (!message.isDeleted) {
+          <button class="msg-action reaction-btn" [class.reacted]="isReactedWith(message, '❤️')" (click)="toggleReaction(message, '❤️'); $event.stopPropagation()" title="❤️">
+            <img [src]="'❤️' | emojiUrl" alt="❤️" class="reaction-hover-img" draggable="false" />
+          </button>
+          <button class="msg-action reaction-btn" [class.reacted]="isReactedWith(message, '👍')" (click)="toggleReaction(message, '👍'); $event.stopPropagation()" title="👍">
+            <img [src]="'👍' | emojiUrl" alt="👍" class="reaction-hover-img" draggable="false" />
+          </button>
+          }
+        </div>
+        }
+        @if (isEditing(message._id)) {
+        <div class="edit-input-wrapper">
+          <textarea class="edit-input" [(ngModel)]="editContent" (keydown.enter)="saveEdit()"></textarea>
+          <div class="edit-actions">
+            <button class="edit-cancel" (click)="cancelEdit()">{{ 'actions.cancel' | i18n }}</button>
+            <button class="edit-save app-button" (click)="saveEdit()">{{ 'actions.save' | i18n }}</button>
+          </div>
+        </div>
         } @else {
-        {{ message.content }}
-        @if (message.isStreaming) {
-        <span class="agent-cursor"></span>
-        }
-        @if (message.editedAt) {
-        <span class="edit-badge">{{ 'actions.edited' | i18n }}</span>
-        }
-        }
-        @if (message.linkPreview) {
-        <a
-          [href]="message.linkPreview.url"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="link-preview-card"
-          (click)="$event.stopPropagation()"
-        >
-          <div class="preview-accent-line"></div>
-          <div class="preview-content-col">
-            @if (message.linkPreview.siteName) {
-            <span class="preview-site">{{ message.linkPreview.siteName }}</span>
-            }
-            @if (message.linkPreview.title) {
-            <span class="preview-title">{{ message.linkPreview.title }}</span>
-            }
-            @if (message.linkPreview.description) {
-            <span class="preview-desc">{{ message.linkPreview.description }}</span>
-            }
-          </div>
-          @if (message.linkPreview.image) {
-          <div class="preview-thumb-box">
-            <img [src]="message.linkPreview.image" alt="Preview" class="preview-thumb-img" (error)="$any($event.target).style.display = 'none'" />
-          </div>
+        <div class="message-content">
+          @if (message.isDeleted) {
+          <span class="deleted-msg">{{ 'chat.deletedMessage' | i18n }}</span>
+          } @else if (message.mediaType === 'image' && message.fileUrl) {
+          <img [src]="getMediaUrl(message.fileUrl)" class="msg-image" alt="Image" />
+          @if (message.content) {
+          <div class="msg-caption">{{ message.content }}</div>
           }
-        </a>
-        }
-      </div>
-      }
-      @if (message.reactions && message.reactions.length > 0) {
-      <div class="reactions-bar">
-        @for (reaction of message.reactions; track reaction.emoji) {
-        <div class="reaction-item"
-             [class.reacted]="isReactedWith(message, reaction.emoji)"
-             [attr.title]="isReactedWith(message, reaction.emoji) ? ('chat.you' | i18n) : null"
-             (click)="toggleReaction(message, reaction.emoji); $event.stopPropagation()">
-          <img [src]="reaction.emoji | emojiUrl" [alt]="reaction.emoji" class="reaction-pill-emoji" draggable="false" />
-          <span class="reaction-count">{{ reaction.count }}</span>
+          } @else if (message.mediaType === 'video' && message.fileUrl) {
+          <video [src]="getMediaUrl(message.fileUrl)" class="msg-video" controls preload="metadata"></video>
+          @if (message.content) {
+          <div class="msg-caption">{{ message.content }}</div>
+          }
+          } @else if (message.mediaType === 'voice' && message.fileUrl) {
+          <app-voice-player
+            [audioUrl]="getMediaUrl(message.fileUrl)"
+            [fileName]="message.fileName"
+            [waveform]="message.waveform"
+            [isSent]="ownMessage(message)"
+          ></app-voice-player>
+          @if (message.content) {
+          <div class="msg-caption">{{ message.content }}</div>
+          }
+          } @else if (message.mediaType === 'file' && message.fileUrl) {
+          <div class="msg-file">
+            <fa-icon [icon]="getFileFaIcon(message.fileName)" class="file-icon"></fa-icon>
+            <div class="file-info">
+              <div class="file-name" [attr.title]="message.fileName">{{ message.fileName }}</div>
+              <div class="file-size">{{ formatFileSize(message.fileSize) }}</div>
+            </div>
+            <a [href]="getMediaUrl(message.fileUrl)" [download]="message.fileName" class="file-download" [attr.title]="'actions.download' | i18n">
+              <fa-icon [icon]="['fas', 'download']"></fa-icon>
+            </a>
+          </div>
+          @if (message.content) {
+          <div class="msg-caption">{{ message.content }}</div>
+          }
+          } @else if (message.mediaType === 'gif' && message.fileUrl) {
+          <img [src]="getMediaUrl(message.fileUrl)" class="msg-gif" alt="GIF" />
+          @if (message.content) {
+          <div class="msg-caption">{{ message.content }}</div>
+          }
+          } @else if (message.mediaType === 'sticker' && message.fileUrl) {
+          <img [src]="getMediaUrl(message.fileUrl)" class="msg-sticker" alt="Sticker" />
+          } @else if (message.mediaType === 'emoji' && message.fileUrl) {
+          <img [src]="message.fileUrl | emojiUrl" [alt]="message.fileUrl" class="msg-big-emoji" draggable="false" />
+          } @else {
+          {{ message.content }}
+          @if (message.isStreaming) {
+          <span class="agent-cursor"></span>
+          }
+          @if (message.editedAt) {
+          <span class="edit-badge">{{ 'actions.edited' | i18n }}</span>
+          }
+          }
+          @if (message.linkPreview) {
+          <a
+            [href]="message.linkPreview.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="link-preview-card"
+            (click)="$event.stopPropagation()"
+          >
+            <div class="preview-accent-line"></div>
+            <div class="preview-content-col">
+              @if (message.linkPreview.siteName) {
+              <span class="preview-site">{{ message.linkPreview.siteName }}</span>
+              }
+              @if (message.linkPreview.title) {
+              <span class="preview-title">{{ message.linkPreview.title }}</span>
+              }
+              @if (message.linkPreview.description) {
+              <span class="preview-desc">{{ message.linkPreview.description }}</span>
+              }
+            </div>
+            @if (message.linkPreview.image) {
+            <div class="preview-thumb-box">
+              <img [src]="message.linkPreview.image" alt="Preview" class="preview-thumb-img" (error)="$any($event.target).style.display = 'none'" />
+            </div>
+            }
+          </a>
+          }
         </div>
         }
+        @if (message.reactions && message.reactions.length > 0) {
+        <div class="reactions-bar">
+          @for (reaction of message.reactions; track reaction.emoji) {
+          <div class="reaction-item"
+               [class.reacted]="isReactedWith(message, reaction.emoji)"
+               [attr.title]="isReactedWith(message, reaction.emoji) ? ('chat.you' | i18n) : null"
+               (click)="toggleReaction(message, reaction.emoji); $event.stopPropagation()">
+            <img [src]="reaction.emoji | emojiUrl" [alt]="reaction.emoji" class="reaction-pill-emoji" draggable="false" />
+            <span class="reaction-count">{{ reaction.count }}</span>
+          </div>
+          }
+        </div>
+        }
+        <div class="message-time">
+          {{ getShortTime(message.createdAt) }}
+          @if (ownMessage(message)) {
+          <span class="msg-status"
+            [class.msg-sent]="message.status === 'sent' && !message._pending"
+            [class.msg-delivered]="message.status === 'delivered' && !message._pending"
+            [class.msg-read]="message.status === 'read' && !message._pending"
+            [class.msg-pending]="message._pending">
+            @if (message._pending) {
+            <fa-icon [icon]="['fas', 'clock']" size="xs" [attr.title]="'messages.pending' | i18n"></fa-icon>
+            } @else if (message.status === 'read') {
+            <fa-icon [icon]="['fas', 'check-double']" size="xs" [attr.title]="'messages.read' | i18n"></fa-icon>
+            } @else if (message.status === 'delivered') {
+            <fa-icon [icon]="['fas', 'check-double']" size="xs" [attr.title]="'messages.delivered' | i18n"></fa-icon>
+            } @else {
+            <fa-icon [icon]="['fas', 'check']" size="xs" [attr.title]="'messages.sent' | i18n"></fa-icon>
+            }
+          </span>
+          }
+        </div>
       </div>
       }
-      <div class="message-time">
-        {{ getShortTime(message.createdAt) }}
-        @if (ownMessage(message)) {
-        <span class="msg-status"
-          [class.msg-sent]="message.status === 'sent' && !message._pending"
-          [class.msg-delivered]="message.status === 'delivered' && !message._pending"
-          [class.msg-read]="message.status === 'read' && !message._pending"
-          [class.msg-pending]="message._pending">
-          @if (message._pending) {
-          <fa-icon [icon]="['fas', 'clock']" size="xs" [attr.title]="'messages.pending' | i18n"></fa-icon>
-          } @else if (message.status === 'read') {
-          <fa-icon [icon]="['fas', 'check-double']" size="xs" [attr.title]="'messages.read' | i18n"></fa-icon>
-          } @else if (message.status === 'delivered') {
-          <fa-icon [icon]="['fas', 'check-double']" size="xs" [attr.title]="'messages.delivered' | i18n"></fa-icon>
-          } @else {
-          <fa-icon [icon]="['fas', 'check']" size="xs" [attr.title]="'messages.sent' | i18n"></fa-icon>
-          }
-        </span>
-        }
-      </div>
     </div>
-    }
-    }
+
     @if (mainService.agentWorking && !mainService.agentStreamingMessage) {
     <div class="message received">
       <div class="message-content agent-typing">{{ 'agent.typing' | i18n }}</div>
@@ -505,7 +516,7 @@
       </div>
     </div>
     }
-  </div>
+  </cdk-virtual-scroll-viewport>
 
   <button class="scroll-bottom-btn" [class.show]="showScrollBottom" (click)="scrollToBottom()" [attr.aria-label]="'chat.scrollToBottom' | i18n">
     <fa-icon [icon]="['fas', 'chevron-down']"></fa-icon>

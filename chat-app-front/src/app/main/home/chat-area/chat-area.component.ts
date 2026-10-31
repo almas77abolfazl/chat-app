@@ -2,6 +2,7 @@ import {
   Component,
   OnInit,
   AfterViewInit,
+  DoCheck,
   viewChild,
   ElementRef,
   HostListener,
@@ -11,6 +12,8 @@ import {
   signal,
   DestroyRef,
 } from '@angular/core';
+import { ScrollingModule, CdkVirtualScrollViewport, VIRTUAL_SCROLL_STRATEGY } from '@angular/cdk/scrolling';
+import { DynamicChatVirtualScrollStrategy, MeasureHeightDirective } from './chat-virtual-scroll-strategy';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MainService } from '../../main.service';
@@ -59,12 +62,29 @@ export interface ActiveUpload {
 @Component({
   selector: 'app-chat-area',
   standalone: true,
-  imports: [FontAwesomeModule, NgClass, MatButtonModule, FormsModule, I18nPipe, EmojiUrlPipe, ContentPickerComponent, VoicePlayerComponent],
+  providers: [
+    {
+      provide: VIRTUAL_SCROLL_STRATEGY,
+      useClass: DynamicChatVirtualScrollStrategy,
+    },
+  ],
+  imports: [
+    FontAwesomeModule,
+    NgClass,
+    MatButtonModule,
+    FormsModule,
+    I18nPipe,
+    EmojiUrlPipe,
+    ContentPickerComponent,
+    VoicePlayerComponent,
+    ScrollingModule,
+    MeasureHeightDirective,
+  ],
   templateUrl: './chat-area.component.html',
   styleUrl: './chat-area.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class ChatAreaComponent implements OnInit, AfterViewInit {
+export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
   private readonly destroyRef = inject(DestroyRef);
 
   constructor(
@@ -74,6 +94,54 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
     private cdr: ChangeDetectorRef,
     public translationService: TranslationService
   ) {}
+
+  readonly virtualViewport = viewChild<CdkVirtualScrollViewport>('virtualViewport');
+  readonly scrollStrategy = inject(VIRTUAL_SCROLL_STRATEGY) as DynamicChatVirtualScrollStrategy;
+
+  get isShortChat(): boolean {
+    const vp = this.virtualViewport();
+    const vpSize = vp ? vp.getViewportSize() : 500;
+    return this.scrollStrategy.getTotalContentSize() < vpSize;
+  }
+
+  private lastMessagesLength = 0;
+  private lastChatId?: string;
+
+  ngDoCheck(): void {
+    const currentChat = this.mainService.currentChat;
+    const currentChatId = currentChat?._id;
+    const currentLen = currentChat?.messages?.length || 0;
+
+    if (currentChatId !== this.lastChatId) {
+      this.lastChatId = currentChatId;
+      this.lastMessagesLength = currentLen;
+      this.syncVirtualScrollMessages();
+      this.scrollToBottom('auto');
+    } else if (currentLen !== this.lastMessagesLength) {
+      const isAppend = currentLen > this.lastMessagesLength;
+      this.lastMessagesLength = currentLen;
+      const res = this.scrollStrategy.setMessages(currentChat?.messages || []);
+      if (isAppend && !res.isPrepend) {
+        if (!this.showScrollBottom) {
+          this.scrollToBottom('smooth');
+        }
+      }
+      this.cdr.markForCheck();
+    }
+  }
+
+  syncVirtualScrollMessages(): void {
+    this.scrollStrategy.setMessages(this.mainService.currentChat?.messages || []);
+    this.cdr.markForCheck();
+  }
+
+  trackByMessageId = (index: number, item: Message): string => {
+    return item?._id || ('temp_' + index);
+  };
+
+  onHeightMeasured(index: number, height: number): void {
+    this.scrollStrategy.updateMeasuredHeight(index, height);
+  }
 
   readonly showScrollBottomSignal = signal<boolean>(false);
   get showScrollBottom(): boolean { return this.showScrollBottomSignal(); }
@@ -176,7 +244,6 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
   set replyingToPreview(v: string) { this.replyingToPreviewSignal.set(v); }
 
   readonly fileInput = viewChild<ElementRef<HTMLInputElement>>('fileInput');
-  readonly chatMessages = viewChild<ElementRef<HTMLElement>>('chatMessages');
   readonly element = viewChild<ElementRef<HTMLTextAreaElement>>('element');
   readonly inChatSearchInput = viewChild<ElementRef<HTMLInputElement>>('inChatSearchInput');
 
@@ -279,12 +346,17 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
     }
   }
 
-  scrollToBottom() {
-    const el = this.chatMessages()?.nativeElement;
-    if (el) {
-      el.scrollTop = el.scrollHeight;
-      this.showScrollBottom = false;
-    }
+  scrollToBottom(behavior: ScrollBehavior = 'auto') {
+    this.syncVirtualScrollMessages();
+    requestAnimationFrame(() => {
+      const vp = this.virtualViewport();
+      if (vp) {
+        const total = this.scrollStrategy.getTotalContentSize();
+        vp.scrollToOffset(total + 1000, behavior);
+        this.showScrollBottom = false;
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   adjustTextareaHeight(textarea: HTMLTextAreaElement) {
@@ -570,12 +642,7 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
 
   private scrollToMatch(messageId: string) {
     if (!messageId) return;
-    setTimeout(() => {
-      const el = document.getElementById('msg-' + messageId);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 40);
+    this.scrollToMessage(messageId);
   }
 
   isSearchHighlighted(message: Message): boolean {
@@ -614,26 +681,38 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
   }
 
   onScroll(event?: Event) {
-    const el = event?.target as HTMLElement;
-    if (!el || !this.mainService.currentChat) return;
+    const vp = this.virtualViewport();
+    if (!vp || !this.mainService.currentChat) return;
 
-    const atBottom = el.scrollHeight - el.scrollTop <= el.clientHeight + 8;
-    this.showScrollBottom = !atBottom;
+    const scrollOffset = vp.measureScrollOffset('top');
+    const viewportSize = vp.getViewportSize() || 600;
+    const totalSize = this.scrollStrategy.getTotalContentSize();
 
-    if (el.scrollTop > 50) return;
+    const distanceFromBottom = totalSize - (scrollOffset + viewportSize);
+    this.showScrollBottom = distanceFromBottom > 150;
 
-    if (this.mainService.currentPage < this.mainService.totalPages) {
-      const previousHeight = el.scrollHeight;
-      const currentScrollTop = el.scrollTop;
+    if (scrollOffset > 100) return;
+
+    this.loadOlderMessages();
+  }
+
+  loadOlderMessages(): void {
+    if (this.mainService.currentPage < this.mainService.totalPages && !this.mainService.loadingMessages) {
+      const vp = this.virtualViewport();
+      const prevOffset = vp ? vp.measureScrollOffset('top') : 0;
       this.mainService
         .loadMessages(this.mainService.currentPage + 1)
         .pipe(take(1))
         .subscribe({
           next: () => {
-            requestAnimationFrame(() => {
-              const diff = el.scrollHeight - previousHeight;
-              el.scrollTop = currentScrollTop + diff;
-            });
+            const res = this.scrollStrategy.setMessages(this.mainService.currentChat?.messages || []);
+            if (res.isPrepend && res.prependedHeight > 0 && vp) {
+              requestAnimationFrame(() => {
+                vp.scrollToOffset(prevOffset + res.prependedHeight, 'auto');
+                this.scrollStrategy.updateRenderedRange();
+                this.cdr.markForCheck();
+              });
+            }
           },
           error: () => {},
         });
@@ -925,12 +1004,20 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
 
   scrollToMessage(messageId: string) {
     if (!messageId) return;
-    const el = document.getElementById('msg-' + messageId);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      el.classList.add('highlight-pinned');
-      setTimeout(() => el.classList.remove('highlight-pinned'), 2000);
-    }
+    const messages = this.mainService.currentChat?.messages || [];
+    const index = messages.findIndex((m) => m._id === messageId);
+    if (index === -1) return;
+
+    this.scrollStrategy.scrollToIndex(index, 'smooth');
+
+    setTimeout(() => {
+      const el = document.getElementById('msg-' + messageId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.add('highlight-pinned');
+        setTimeout(() => el.classList.remove('highlight-pinned'), 2000);
+      }
+    }, 120);
   }
 
   openContextMenu(event: MouseEvent, message: Message) {
