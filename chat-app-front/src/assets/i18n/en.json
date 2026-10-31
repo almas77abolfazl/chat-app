@@ -554,7 +554,7 @@
     "insecureTitle": "Secure Connection (HTTPS) Required",
     "insecureDesc": "Browsers restrict microphone and camera access to secure origins (HTTPS or localhost). Please switch to HTTPS to enable permission prompts.",
     "switchToHttps": "Switch to HTTPS",
-    "requestNow": "Request Browser Permission",
+    "requestNow": "Allow Access",
     "retry": "Retry",
     "dismiss": "Dismiss"
   }

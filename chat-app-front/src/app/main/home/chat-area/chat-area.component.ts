@@ -1553,38 +1553,48 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
     }
   }
 
-  onChatInputKeyDown(event: KeyboardEvent, textarea: HTMLTextAreaElement) {
+  async onChatInputKeyDown(event: KeyboardEvent, textarea: HTMLTextAreaElement) {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       const content = textarea.value.trim();
       if (content && this.mainService.currentChat) {
         const linkPreview = this.detectedLinkPreviewSignal();
         const skipLinkPreview = !linkPreview && !!this.dismissedUrlSignal();
-        this.mainService.sendMessage(this.mainService.currentChat, textarea, {
-          linkPreview: linkPreview || undefined,
-          skipLinkPreview,
-        });
         this.detectedLinkPreviewSignal.set(null);
         this.dismissedUrlSignal.set(null);
         textarea.value = '';
         textarea.style.height = 'auto';
+
+        await this.mainService.sendMessage(this.mainService.currentChat, textarea, {
+          content,
+          linkPreview: linkPreview || undefined,
+          skipLinkPreview,
+        });
+        this.showScrollBottom = false;
+        this.scrollToBottom('smooth');
+        this.cdr.markForCheck();
       }
     }
   }
 
-  sendFromButton(textarea: HTMLTextAreaElement) {
+  async sendFromButton(textarea: HTMLTextAreaElement) {
     const content = textarea.value.trim();
     if (content && this.mainService.currentChat) {
       const linkPreview = this.detectedLinkPreviewSignal();
       const skipLinkPreview = !linkPreview && !!this.dismissedUrlSignal();
-      this.mainService.sendMessage(this.mainService.currentChat, textarea, {
-        linkPreview: linkPreview || undefined,
-        skipLinkPreview,
-      });
       this.detectedLinkPreviewSignal.set(null);
       this.dismissedUrlSignal.set(null);
       textarea.value = '';
       textarea.style.height = 'auto';
+
+      await this.mainService.sendMessage(this.mainService.currentChat, textarea, {
+        content,
+        linkPreview: linkPreview || undefined,
+        skipLinkPreview,
+      });
+      this.showScrollBottom = false;
+      this.scrollToBottom('smooth');
+      this.cdr.markForCheck();
     }
   }
 
@@ -1835,8 +1845,9 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
 
   openPermissionDialog(type: 'microphone' | 'camera' | 'media', errorReason?: any): void {
     const dialogRef = this.dialog.open(PermissionDialogComponent, {
-      width: '420px',
+      width: '400px',
       maxWidth: '92vw',
+      panelClass: 'permission-dialog-panel',
       data: { type, errorReason },
     });
     dialogRef.afterClosed().subscribe((granted) => {

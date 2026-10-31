@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { I18nPipe } from '../../helpers/i18n.pipe';
+import { TranslationService } from '../../helpers/translation.service';
 
 export interface PermissionDialogData {
   type: 'microphone' | 'camera' | 'media';
@@ -20,6 +21,7 @@ export interface PermissionDialogData {
 export class PermissionDialogComponent {
   readonly dialogRef = inject(MatDialogRef<PermissionDialogComponent>);
   readonly data: PermissionDialogData = inject(MAT_DIALOG_DATA);
+  readonly translationService = inject(TranslationService);
 
   readonly requesting = signal<boolean>(false);
   readonly errorMessage = signal<string | null>(null);

@@ -383,8 +383,9 @@ export class WebRtcService {
 
     if (errorReason) {
       this.dialog.open(PermissionDialogComponent, {
-        width: '420px',
+        width: '400px',
         maxWidth: '92vw',
+        panelClass: 'permission-dialog-panel',
         data: {
           type: type === 'video' ? 'media' : 'microphone',
           errorReason,

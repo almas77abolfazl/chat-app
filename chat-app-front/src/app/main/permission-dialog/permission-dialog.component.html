@@ -1,15 +1,17 @@
-<div class="permission-dialog-container">
+<div class="permission-dialog-container" [dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
   <div class="permission-dialog-header">
-    <div class="permission-icon-wrap" [class.danger]="isBlocked" [class.warning]="isInsecureContext">
-      @if (isInsecureContext) {
-      <fa-icon [icon]="['fas', 'lock']"></fa-icon>
-      } @else if (isBlocked) {
-      <fa-icon [icon]="['fas', 'ban']"></fa-icon>
-      } @else if (data.type === 'media' || data.type === 'camera') {
-      <fa-icon [icon]="['fas', 'video']"></fa-icon>
-      } @else {
-      <fa-icon [icon]="['fas', 'microphone']"></fa-icon>
-      }
+    <div class="permission-icon-glow-ring" [class.danger]="isBlocked" [class.warning]="isInsecureContext">
+      <div class="permission-icon-wrap" [class.danger]="isBlocked" [class.warning]="isInsecureContext">
+        @if (isInsecureContext) {
+        <fa-icon [icon]="['fas', 'lock']"></fa-icon>
+        } @else if (isBlocked) {
+        <fa-icon [icon]="['fas', 'ban']"></fa-icon>
+        } @else if (data.type === 'media' || data.type === 'camera') {
+        <fa-icon [icon]="['fas', 'video']"></fa-icon>
+        } @else {
+        <fa-icon [icon]="['fas', 'microphone']"></fa-icon>
+        }
+      </div>
     </div>
     <h3 class="permission-dialog-title">
       @if (isInsecureContext) {
@@ -45,10 +47,6 @@
   </div>
 
   <div class="permission-dialog-actions">
-    <button type="button" class="btn-cancel" (click)="dismiss()">
-      {{ 'permission.dismiss' | i18n }}
-    </button>
-
     @if (isInsecureContext) {
     <button type="button" class="btn-primary" (click)="switchToHttps()">
       <fa-icon [icon]="['fas', 'lock']"></fa-icon>
@@ -69,5 +67,9 @@
       <span>{{ (isBlocked ? 'permission.retry' : 'permission.requestNow') | i18n }}</span>
     </button>
     }
+
+    <button type="button" class="btn-cancel" (click)="dismiss()">
+      {{ 'permission.dismiss' | i18n }}
+    </button>
   </div>
 </div>

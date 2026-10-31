@@ -68,17 +68,18 @@ export class DynamicChatVirtualScrollStrategy implements VirtualScrollStrategy {
     let prependedHeight = 0;
 
     const countDiff = newMessages.length - prevCount;
+    const getMsgKey = (m: Message | undefined) => m ? (m._id || m._tempId || '') : '';
 
     if (
       countDiff > 0 &&
       prevCount > 0 &&
-      (newMessages[countDiff]?._id === this.messages[0]?._id ||
-        newMessages[newMessages.length - 1]?._id === this.messages[prevCount - 1]?._id)
+      (getMsgKey(newMessages[countDiff]) === getMsgKey(this.messages[0]) ||
+        getMsgKey(newMessages[newMessages.length - 1]) === getMsgKey(this.messages[prevCount - 1]))
     ) {
       // Older messages were prepended
       isPrepend = true;
       const newHeights: number[] = [];
-      this.messages = newMessages;
+      this.messages = [...newMessages];
       for (let i = 0; i < countDiff; i++) {
         const h = this.estimateHeight(newMessages[i], i);
         newHeights.push(h);
@@ -88,16 +89,16 @@ export class DynamicChatVirtualScrollStrategy implements VirtualScrollStrategy {
     } else if (
       countDiff > 0 &&
       prevCount > 0 &&
-      newMessages[0]?._id === this.messages[0]?._id
+      getMsgKey(newMessages[0]) === getMsgKey(this.messages[0])
     ) {
       // New incoming messages were appended
-      this.messages = newMessages;
+      this.messages = [...newMessages];
       for (let i = prevCount; i < newMessages.length; i++) {
         this.itemHeights.push(this.estimateHeight(newMessages[i], i));
       }
     } else {
       // Full reset or chat changed
-      this.messages = newMessages;
+      this.messages = [...newMessages];
       this.itemHeights = this.messages.map((m, i) => this.estimateHeight(m, i));
     }
 

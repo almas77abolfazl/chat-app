@@ -1499,14 +1499,14 @@ export class MainService {
 
   async sendMessage(
     currentChat: ChatListItem,
-    input: HTMLTextAreaElement,
-    options?: { linkPreview?: any; skipLinkPreview?: boolean },
+    input?: HTMLTextAreaElement | null,
+    options?: { linkPreview?: any; skipLinkPreview?: boolean; content?: string },
   ) {
-    const content = input.value?.trim();
+    const content = options?.content ?? input?.value?.trim();
     if (!content) return;
 
     if (this.isAgentChatSync(currentChat)) {
-      input.value = '';
+      if (input) input.value = '';
       this.sendAgentMessage(content);
       return;
     }
@@ -1562,7 +1562,7 @@ export class MainService {
     currentChat.messages.push(messageData);
     currentChat.lastMessage = messageData;
     currentChat.updatedAt = new Date();
-    input.value = '';
+    if (input) input.value = '';
 
     const itemIdx = this.chatItems.findIndex((c) => c._id === currentChat._id);
     if (itemIdx !== -1) {
@@ -1571,6 +1571,7 @@ export class MainService {
     this.chatItems.unshift(currentChat);
     this.chatItemsSignal.set([...this.chatItems]);
     this.chatListUpdatedSubject.next(this.chatItems);
+    this.messagesLoadedSubject.next();
     this.scrollChatToBottom();
   }
 
@@ -1634,6 +1635,7 @@ export class MainService {
     this.chatItems.unshift(currentChat);
     this.chatItemsSignal.set([...this.chatItems]);
     this.chatListUpdatedSubject.next(this.chatItems);
+    this.messagesLoadedSubject.next();
     this.scrollChatToBottom();
   }
 
@@ -1697,6 +1699,7 @@ export class MainService {
     this.chatItems.unshift(currentChat);
     this.chatItemsSignal.set([...this.chatItems]);
     this.chatListUpdatedSubject.next(this.chatItems);
+    this.messagesLoadedSubject.next();
     this.scrollChatToBottom();
   }
 
