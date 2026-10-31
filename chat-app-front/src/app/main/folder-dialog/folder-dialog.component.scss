@@ -194,6 +194,34 @@
   }
 }
 
+.panel-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.section-heading-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  margin-top: 0.25rem;
+
+  &.chats-heading {
+    margin-top: 0.85rem;
+  }
+
+  .section-subtitle {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  .section-hint {
+    font-size: 0.78rem;
+    color: var(--color-text-secondary);
+  }
+}
+
 .tab-description {
   font-size: 0.82rem;
   color: var(--color-text-secondary);

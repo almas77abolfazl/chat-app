@@ -228,6 +228,7 @@
     "folderNamePlaceholder": "e.g. Work, Family, Crypto",
     "chooseIcon": "Choose Icon",
     "chatTypes": "Chat Types",
+    "specificChats": "Specific Chats",
     "includedChats": "Included Chats",
     "excludedChats": "Excluded Chats",
     "typesDescription": "Choose which types of conversations to include in this folder.",

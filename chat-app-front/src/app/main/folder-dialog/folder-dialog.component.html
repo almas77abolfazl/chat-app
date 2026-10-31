@@ -46,39 +46,26 @@
       </div>
     </div>
 
-    <!-- Section Tabs -->
+    <!-- Section Tabs: Included vs Excluded -->
     <div class="folder-tabs-nav">
       <button
         type="button"
         class="nav-tab-btn"
-        [class.active]="activeTab() === 'types'"
-        (click)="activeTab.set('types')"
-      >
-        <fa-icon [icon]="['fas', 'sliders-h']"></fa-icon>
-        <span>{{ 'folders.chatTypes' | i18n }}</span>
-        @if (includedTypes().length > 0) {
-        <span class="count-pill">{{ includedTypes().length }}</span>
-        }
-      </button>
-
-      <button
-        type="button"
-        class="nav-tab-btn"
-        [class.active]="activeTab() === 'includeChats'"
-        (click)="activeTab.set('includeChats')"
+        [class.active]="activeTab() === 'include'"
+        (click)="setActiveTab('include')"
       >
         <fa-icon [icon]="['fas', 'plus']"></fa-icon>
         <span>{{ 'folders.includedChats' | i18n }}</span>
-        @if (includedChatIds().length > 0) {
-        <span class="count-pill highlight">{{ includedChatIds().length }}</span>
+        @if (includedTypes().length > 0 || includedChatIds().length > 0) {
+        <span class="count-pill highlight">{{ includedTypes().length + includedChatIds().length }}</span>
         }
       </button>
 
       <button
         type="button"
         class="nav-tab-btn"
-        [class.active]="activeTab() === 'excludeChats'"
-        (click)="activeTab.set('excludeChats')"
+        [class.active]="activeTab() === 'exclude'"
+        (click)="setActiveTab('exclude')"
       >
         <fa-icon [icon]="['fas', 'ban']"></fa-icon>
         <span>{{ 'folders.excludedChats' | i18n }}</span>
@@ -88,10 +75,14 @@
       </button>
     </div>
 
-    <!-- Tab 1: Chat Types -->
-    @if (activeTab() === 'types') {
-    <div class="types-selection-panel">
-      <p class="tab-description">{{ 'folders.typesDescription' | i18n }}</p>
+    <!-- Tab 1: Included Types & Chats -->
+    @if (activeTab() === 'include') {
+    <div class="panel-section">
+      <div class="section-heading-wrap">
+        <label class="section-subtitle">{{ 'folders.chatTypes' | i18n }}</label>
+        <span class="section-hint">{{ 'folders.typesDescription' | i18n }}</span>
+      </div>
+
       <div class="types-grid">
         @for (ct of chatTypes; track ct.id) {
         <div
@@ -111,13 +102,11 @@
         </div>
         }
       </div>
-    </div>
-    }
 
-    <!-- Tab 2: Included Chats -->
-    @if (activeTab() === 'includeChats') {
-    <div class="chats-selection-panel">
-      <p class="tab-description">{{ 'folders.includedDescription' | i18n }}</p>
+      <div class="section-heading-wrap chats-heading">
+        <label class="section-subtitle">{{ 'folders.specificChats' | i18n }}</label>
+        <span class="section-hint">{{ 'folders.includedDescription' | i18n }}</span>
+      </div>
 
       <div class="chats-search-box">
         <fa-icon [icon]="['fas', 'search']" class="search-box-icon"></fa-icon>
@@ -126,7 +115,7 @@
           class="search-box-input"
           [placeholder]="'search.placeholder' | i18n"
           [ngModel]="chatSearchQuery()"
-          (ngModelChange)="chatSearchQuery.set($event)"
+          (ngModelChange)="onSearchChange($event)"
         />
       </div>
 
@@ -164,10 +153,13 @@
     </div>
     }
 
-    <!-- Tab 3: Excluded Chats -->
-    @if (activeTab() === 'excludeChats') {
-    <div class="chats-selection-panel">
-      <p class="tab-description">{{ 'folders.excludedDescription' | i18n }}</p>
+    <!-- Tab 2: Excluded Chats -->
+    @if (activeTab() === 'exclude') {
+    <div class="panel-section">
+      <div class="section-heading-wrap">
+        <label class="section-subtitle">{{ 'folders.excludedChats' | i18n }}</label>
+        <span class="section-hint">{{ 'folders.excludedDescription' | i18n }}</span>
+      </div>
 
       <div class="chats-search-box">
         <fa-icon [icon]="['fas', 'search']" class="search-box-icon"></fa-icon>
@@ -176,7 +168,7 @@
           class="search-box-input"
           [placeholder]="'search.placeholder' | i18n"
           [ngModel]="chatSearchQuery()"
-          (ngModelChange)="chatSearchQuery.set($event)"
+          (ngModelChange)="onSearchChange($event)"
         />
       </div>
 
@@ -237,4 +229,3 @@
     </button>
   </div>
 </div>
-
