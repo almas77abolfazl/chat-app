@@ -545,6 +545,144 @@ export class MessageGateway {
     }
   }
 
+  @SubscribeMessage('call:initiate')
+  async handleCallInitiate(
+    @MessageBody() data: { chatId: string; targetUserId: string; callType: 'audio' | 'video'; offer: any },
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      const user = client.data.user as IUser;
+      if (!user) return;
+      const callerId = user._id.toString();
+      const targetUserId = data.targetUserId;
+
+      if (!targetUserId || callerId === targetUserId) {
+        client.emit('call:rejected', { chatId: data.chatId, reason: 'invalid_target', targetUserId });
+        return;
+      }
+
+      // Check privacy: is caller blocked by target or did caller block target
+      const isBlocked = await this.userService.isUserBlocked(callerId, targetUserId);
+      if (isBlocked) {
+        client.emit('call:rejected', { chatId: data.chatId, reason: 'blocked', targetUserId });
+        return;
+      }
+
+      // Check if target has active socket connection
+      const targetRoom = this.server.sockets.adapter.rooms.get(targetUserId);
+      if (!targetRoom || targetRoom.size === 0) {
+        client.emit('call:rejected', { chatId: data.chatId, reason: 'offline', targetUserId });
+        if (data.chatId) {
+          const msg = await this.messageService.recordCallMessage(data.chatId, callerId, targetUserId, data.callType || 'audio', 0, 'CALL_MISSED');
+          await this.broadcastNewMessage(data.chatId, callerId, msg);
+        }
+        return;
+      }
+
+      // Sanitize profile photo privacy of caller for target user
+      const avatarData = await this.userService.getUserAvatar(callerId, targetUserId);
+      const callerAvatar = avatarData ? user.profilePicture : null;
+
+      this.server.to(targetUserId).emit('call:incoming', {
+        chatId: data.chatId,
+        caller: {
+          _id: callerId,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          profilePicture: callerAvatar,
+        },
+        callType: data.callType || 'audio',
+        offer: data.offer,
+      });
+    } catch {
+      client.emit('call:rejected', { chatId: data?.chatId, reason: 'error', targetUserId: data?.targetUserId });
+    }
+  }
+
+  @SubscribeMessage('call:accept')
+  async handleCallAccept(@MessageBody() data: { chatId: string; callerId: string; answer: any }, @ConnectedSocket() client: Socket) {
+    try {
+      const user = client.data.user as IUser;
+      if (!user || !data.callerId) return;
+      this.server.to(data.callerId).emit('call:accepted', {
+        chatId: data.chatId,
+        answer: data.answer,
+        fromUserId: user._id.toString(),
+      });
+    } catch (error) {
+      console.error('Call accept signaling error:', error);
+    }
+  }
+
+  @SubscribeMessage('call:reject')
+  async handleCallReject(
+    @MessageBody() data: { chatId: string; callerId: string; reason?: string; callType?: 'audio' | 'video' },
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      const user = client.data.user as IUser;
+      if (!user || !data.callerId) return;
+      const calleeId = user._id.toString();
+
+      this.server.to(data.callerId).emit('call:rejected', {
+        chatId: data.chatId,
+        reason: data.reason || 'declined',
+        fromUserId: calleeId,
+      });
+
+      if (data.chatId) {
+        const msg = await this.messageService.recordCallMessage(data.chatId, data.callerId, calleeId, data.callType || 'audio', 0, 'CALL_MISSED');
+        await this.broadcastNewMessage(data.chatId, data.callerId, msg);
+      }
+    } catch (error) {
+      console.error('Call reject signaling error:', error);
+    }
+  }
+
+  @SubscribeMessage('call:ice-candidate')
+  async handleCallIceCandidate(@MessageBody() data: { targetUserId: string; candidate: any }, @ConnectedSocket() client: Socket) {
+    try {
+      const user = client.data.user as IUser;
+      if (!user || !data.targetUserId) return;
+      this.server.to(data.targetUserId).emit('call:ice-candidate', {
+        candidate: data.candidate,
+        fromUserId: user._id.toString(),
+      });
+    } catch (error) {
+      console.error('Call ice candidate signaling error:', error);
+    }
+  }
+
+  @SubscribeMessage('call:end')
+  async handleCallEnd(
+    @MessageBody()
+    data: { chatId: string; targetUserId: string; duration?: number; callType?: 'audio' | 'video'; callerId?: string },
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      const user = client.data.user as IUser;
+      if (!user || !data.targetUserId) return;
+      const myId = user._id.toString();
+
+      this.server.to(data.targetUserId).emit('call:ended', {
+        chatId: data.chatId,
+        fromUserId: myId,
+        duration: data.duration,
+      });
+
+      if (data.chatId) {
+        const duration = Number(data.duration) || 0;
+        const action = duration > 0 ? 'CALL_ENDED' : 'CALL_MISSED';
+        const callerId = data.callerId || myId;
+        const targetId = callerId === myId ? data.targetUserId : callerId;
+        const msg = await this.messageService.recordCallMessage(data.chatId, callerId, targetId, data.callType || 'audio', duration, action);
+        await this.broadcastNewMessage(data.chatId, callerId, msg);
+      }
+    } catch (error) {
+      console.error('Call end signaling error:', error);
+    }
+  }
+
   async broadcastNewMessage(chatId: string, senderId: string, msg: any, senderName?: string) {
     if (!this.server) return;
     try {

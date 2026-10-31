@@ -86,6 +86,26 @@
       @if (mainService.isAgentChat(mainService.currentChat)) {
       <fa-icon [icon]="['fas', 'robot']" class="chat-agent-icon" [attr.title]="'agent.title' | i18n"></fa-icon>
       }
+      @if (canMakeCall()) {
+      <button
+        type="button"
+        class="header-action-btn"
+        (click)="startAudioCall()"
+        [attr.data-tooltip]="'call.startVoiceCall' | i18n"
+        data-tooltip-placement="bottom"
+      >
+        <fa-icon [icon]="['fas', 'phone-alt']"></fa-icon>
+      </button>
+      <button
+        type="button"
+        class="header-action-btn"
+        (click)="startVideoCall()"
+        [attr.data-tooltip]="'call.startVideoCall' | i18n"
+        data-tooltip-placement="bottom"
+      >
+        <fa-icon [icon]="['fas', 'video']"></fa-icon>
+      </button>
+      }
       <button
         type="button"
         class="header-action-btn"

@@ -1,0 +1,209 @@
+@if (webrtc.callState() !== 'idle') {
+<div class="call-overlay" [dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
+
+  <!-- 1. INCOMING CALL MODAL -->
+  @if (webrtc.callState() === 'incoming') {
+  <div class="call-card incoming-card">
+    <div class="pulse-ring-container">
+      <div class="pulse-ring ring-1"></div>
+      <div class="pulse-ring ring-2"></div>
+      <div class="avatar-container">
+        @if (partner?.partnerAvatar && !avatarBroken) {
+        <img
+          [src]="mainService.getAvatarUrl(partner!.partnerAvatar!)"
+          alt="Caller Avatar"
+          class="caller-avatar"
+          (error)="avatarBroken = true"
+        />
+        } @else {
+        <div class="caller-avatar-initials" [style.background]="getAvatarBg(partner?.partnerName)">
+          {{ getInitial(partner?.partnerName) }}
+        </div>
+        }
+      </div>
+    </div>
+
+    <div class="caller-meta">
+      <h3 class="caller-name">{{ partner?.partnerName }}</h3>
+      <span class="call-status-label">
+        <fa-icon [icon]="webrtc.callType() === 'video' ? ['fas', 'video'] : ['fas', 'phone']"></fa-icon>
+        {{ (webrtc.callType() === 'video' ? 'call.incomingVideoCall' : 'call.incomingVoiceCall') | i18n }}
+      </span>
+    </div>
+
+    <div class="call-actions-row">
+      <!-- Decline -->
+      <button
+        type="button"
+        class="call-btn btn-decline"
+        (click)="webrtc.rejectCall()"
+        [title]="'call.decline' | i18n"
+      >
+        <fa-icon [icon]="['fas', 'phone-slash']"></fa-icon>
+      </button>
+
+      <!-- Accept -->
+      <button
+        type="button"
+        class="call-btn btn-accept"
+        (click)="webrtc.acceptCall()"
+        [title]="'call.accept' | i18n"
+      >
+        <fa-icon [icon]="webrtc.callType() === 'video' ? ['fas', 'video'] : ['fas', 'phone']"></fa-icon>
+      </button>
+    </div>
+  </div>
+  }
+
+  <!-- 2. CALLING / OUTGOING CARD -->
+  @if (webrtc.callState() === 'calling') {
+  <div class="call-card outgoing-card">
+    <div class="pulse-ring-container">
+      <div class="pulse-ring ring-1"></div>
+      <div class="avatar-container">
+        @if (partner?.partnerAvatar && !avatarBroken) {
+        <img
+          [src]="mainService.getAvatarUrl(partner!.partnerAvatar!)"
+          alt="Avatar"
+          class="caller-avatar"
+          (error)="avatarBroken = true"
+        />
+        } @else {
+        <div class="caller-avatar-initials" [style.background]="getAvatarBg(partner?.partnerName)">
+          {{ getInitial(partner?.partnerName) }}
+        </div>
+        }
+      </div>
+    </div>
+
+    <div class="caller-meta">
+      <h3 class="caller-name">{{ partner?.partnerName }}</h3>
+      <span class="call-status-label">
+        <fa-icon [icon]="webrtc.callType() === 'video' ? ['fas', 'video'] : ['fas', 'phone']"></fa-icon>
+        {{ 'call.ringing' | i18n }}
+      </span>
+    </div>
+
+    <div class="call-actions-row">
+      <button
+        type="button"
+        class="call-btn btn-decline"
+        (click)="webrtc.endCall()"
+        [title]="'call.endCall' | i18n"
+      >
+        <fa-icon [icon]="['fas', 'phone-slash']"></fa-icon>
+      </button>
+    </div>
+  </div>
+  }
+
+  <!-- 3. CONNECTED ACTIVE CALL VIEW -->
+  @if (webrtc.callState() === 'connected') {
+  <div class="active-call-container" [class.video-call]="webrtc.callType() === 'video'">
+
+    <!-- Video Streams Area -->
+    @if (webrtc.callType() === 'video') {
+    <div class="video-stage">
+      <video
+        #remoteVideo
+        autoplay
+        playsinline
+        class="remote-video"
+      ></video>
+
+      <!-- Local PIP Video -->
+      <div class="local-pip-container" [class.hidden]="webrtc.isCameraOff()">
+        <video
+          #localVideo
+          autoplay
+          playsinline
+          muted
+          class="local-video"
+        ></video>
+      </div>
+
+      <!-- Video overlay info bar -->
+      <div class="video-info-bar">
+        <span class="video-partner-name">{{ partner?.partnerName }}</span>
+        <span class="call-timer-badge">{{ webrtc.durationFormatted() }}</span>
+      </div>
+    </div>
+    }
+
+    <!-- Audio Active Call Stage -->
+    @if (webrtc.callType() === 'audio') {
+    <div class="audio-stage">
+      <div class="audio-avatar-wrap">
+        <div class="sound-wave-circle wave-1"></div>
+        <div class="sound-wave-circle wave-2"></div>
+        @if (partner?.partnerAvatar && !avatarBroken) {
+        <img
+          [src]="mainService.getAvatarUrl(partner!.partnerAvatar!)"
+          alt="Avatar"
+          class="caller-avatar"
+          (error)="avatarBroken = true"
+        />
+        } @else {
+        <div class="caller-avatar-initials" [style.background]="getAvatarBg(partner?.partnerName)">
+          {{ getInitial(partner?.partnerName) }}
+        </div>
+        }
+      </div>
+
+      <h3 class="active-partner-name">{{ partner?.partnerName }}</h3>
+      <div class="call-timer-badge audio-timer">{{ webrtc.durationFormatted() }}</div>
+    </div>
+    }
+
+    <!-- Control Toolbar (Bottom) -->
+    <div class="call-controls-bar">
+      <!-- Mute / Unmute Mic -->
+      <button
+        type="button"
+        class="control-btn"
+        [class.active-danger]="webrtc.isMuted()"
+        (click)="webrtc.toggleMute()"
+        [title]="(webrtc.isMuted() ? 'call.unmuteMic' : 'call.muteMic') | i18n"
+      >
+        <fa-icon [icon]="webrtc.isMuted() ? ['fas', 'microphone-slash'] : ['fas', 'microphone']"></fa-icon>
+      </button>
+
+      <!-- Camera Toggle (Video Call) -->
+      @if (webrtc.callType() === 'video') {
+      <button
+        type="button"
+        class="control-btn"
+        [class.active-danger]="webrtc.isCameraOff()"
+        (click)="webrtc.toggleCamera()"
+        [title]="(webrtc.isCameraOff() ? 'call.turnOnCamera' : 'call.turnOffCamera') | i18n"
+      >
+        <fa-icon [icon]="webrtc.isCameraOff() ? ['fas', 'video-slash'] : ['fas', 'video']"></fa-icon>
+      </button>
+
+      <!-- Switch Camera (Selfie / Rear) -->
+      <button
+        type="button"
+        class="control-btn"
+        (click)="webrtc.switchCamera()"
+        [title]="'call.switchCamera' | i18n"
+      >
+        <fa-icon [icon]="['fas', 'camera-rotate']"></fa-icon>
+      </button>
+      }
+
+      <!-- Hangup / End Call -->
+      <button
+        type="button"
+        class="control-btn btn-hangup"
+        (click)="webrtc.endCall()"
+        [title]="'call.endCall' | i18n"
+      >
+        <fa-icon [icon]="['fas', 'phone-slash']"></fa-icon>
+      </button>
+    </div>
+
+  </div>
+  }
+
+</div>
+}

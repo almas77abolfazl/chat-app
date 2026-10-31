@@ -157,6 +157,32 @@ describe('MessageService', () => {
         }),
       );
     });
+    it('creates system message for call record', async () => {
+      const callMsg = { ...mockMessage, _id: new Types.ObjectId(), mediaType: 'system', systemAction: 'CALL_ENDED' };
+      messageModel.create = jest.fn().mockResolvedValue(callMsg);
+      chatModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockChat) });
+      messageModel.findById = jest.fn().mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(callMsg),
+      });
+
+      await messageService.recordCallMessage(mockChat._id.toString(), senderId.toString(), recipientIdValue, 'video', 125, 'CALL_ENDED');
+
+      expect(messageModel.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sender: expect.any(Types.ObjectId),
+          receiver: expect.any(Types.ObjectId),
+          chat: mockChat._id,
+          mediaType: 'system',
+          systemAction: 'CALL_ENDED',
+          metadata: expect.objectContaining({
+            callType: 'video',
+            duration: 125,
+          }),
+        }),
+      );
+      expect(mockChat.save).toHaveBeenCalled();
+    });
   });
 
   describe('markMessageRead', () => {

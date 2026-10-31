@@ -5,13 +5,16 @@ import { openDB, IDBPDatabase } from 'idb';
   providedIn: 'root',
 })
 export class CacheService {
-  private dbPromise: Promise<IDBPDatabase>;
+  private dbPromise: Promise<IDBPDatabase | null>;
 
   constructor() {
     this.dbPromise = this.initDB();
   }
 
-  private async initDB() {
+  private async initDB(): Promise<IDBPDatabase | null> {
+    if (typeof indexedDB === 'undefined') {
+      return null;
+    }
     return openDB('ChatCacheDB', 1, {
       upgrade(db) {
         if (!db.objectStoreNames.contains('messages')) {
@@ -26,6 +29,7 @@ export class CacheService {
 
   async setItem(storeName: string, data: any) {
     const db = await this.dbPromise;
+    if (!db) return;
     const tx = db.transaction(storeName, 'readwrite');
     tx.store.put(data);
     return tx.done;
@@ -33,16 +37,19 @@ export class CacheService {
 
   async getItem(storeName: string, id: string) {
     const db = await this.dbPromise;
+    if (!db) return null;
     return db.transaction(storeName, 'readonly').store.get(id);
   }
 
   async deleteItem(storeName: string, id: string) {
     const db = await this.dbPromise;
+    if (!db) return;
     return db.transaction(storeName, 'readwrite').store.delete(id);
   }
 
   async clearCache() {
     const db = await this.dbPromise;
+    if (!db) return;
     const tx = db.transaction(db.objectStoreNames, 'readwrite');
 
     for (const storeName of db.objectStoreNames) {

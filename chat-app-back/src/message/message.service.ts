@@ -102,6 +102,47 @@ export class MessageService {
     return this.hydrateMessage(populated);
   }
 
+  async recordCallMessage(
+    chatId: string,
+    callerId: string,
+    targetUserId: string,
+    callType: 'audio' | 'video',
+    duration: number,
+    action: 'CALL_ENDED' | 'CALL_MISSED',
+  ): Promise<any> {
+    const chat = await this.findChatForMessage(chatId);
+    const callerObjectId = new Types.ObjectId(callerId);
+    const targetObjectId = new Types.ObjectId(targetUserId);
+
+    const message = await this.messageModel.create({
+      sender: callerObjectId,
+      receiver: targetObjectId,
+      chat: chat._id,
+      content: '',
+      read: false,
+      mediaType: 'system',
+      systemAction: action,
+      metadata: {
+        callType: callType || 'audio',
+        duration: duration || 0,
+        callerId,
+        targetUserId,
+      },
+    });
+
+    chat.messages.push(message._id as unknown as Types.ObjectId);
+    chat.lastMessage = message._id as unknown as Types.ObjectId;
+    chat.updatedAt = new Date();
+
+    const currentUnread = Number(chat.unreadCounts?.get(targetUserId) ?? 0);
+    chat.unreadCounts?.set(targetUserId, currentUnread + 1);
+
+    await chat.save();
+
+    const populated = await this.messageModel.findById(message._id).populate('sender', 'firstName lastName profilePicture').exec();
+    return this.hydrateMessage(populated);
+  }
+
   async markMessageDelivered(messageId: string): Promise<void> {
     const message = await this.messageModel.findById(messageId).exec();
     if (!message) return;

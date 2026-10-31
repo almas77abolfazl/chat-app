@@ -507,6 +507,38 @@
     "COMMON_BAD_REQUEST": "طلب غير صالح",
     "COMMON_FORBIDDEN": "تم رفض الوصول",
     "COMMON_NOT_FOUND": "العنصر المطلوب غير موجود"
+  },
+  "call": {
+    "voiceCall": "مكالمة صوتية",
+    "videoCall": "مكالمة فيديو",
+    "startVoiceCall": "بدء مكالمة صوتية",
+    "startVideoCall": "بدء مكالمة فيديو",
+    "incomingVoiceCall": "مكالمة صوتية واردة...",
+    "incomingVideoCall": "مكالمة فيديو واردة...",
+    "calling": "جارٍ الاتصال...",
+    "ringing": "جارٍ الرنين...",
+    "connected": "متصل",
+    "callEnded": "انتهت المكالمة",
+    "callDeclined": "تم رفض المكالمة",
+    "callFailed": "فشل الاتصال",
+    "userBusy": "المستخدم مشغول حالياً",
+    "userOffline": "المستخدم غير متصل",
+    "userBlocked": "لا يمكن الاتصال بهذا المستخدم",
+    "muteMic": "كتم الميكروفون",
+    "unmuteMic": "تشغيل الميكروفون",
+    "turnOnCamera": "تشغيل الكاميرا",
+    "turnOffCamera": "إيقاف الكاميرا",
+    "switchCamera": "تبديل الكاميرا",
+    "endCall": "إنهاء المكالمة",
+    "accept": "رد",
+    "decline": "رفض",
+    "mediaPermissionDenied": "يلزم منح الإذن للوصول إلى الميكروفون والكاميرا لإجراء مكالمة.",
+    "voiceCallEnded": "انتهت المكالمة الصوتية - {duration}",
+    "videoCallEnded": "انتهت مكالمة الفيديو - {duration}",
+    "missedVoiceCall": "مكالمة صوتية فائتة",
+    "missedVideoCall": "مكالمة فيديو فائتة",
+    "canceledVoiceCall": "مكالمة صوتية ملغاة",
+    "canceledVideoCall": "مكالمة فيديو ملغاة"
   }
 }
 

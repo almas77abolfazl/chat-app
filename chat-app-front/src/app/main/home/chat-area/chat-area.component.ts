@@ -36,6 +36,7 @@ import { ChatBackgroundService, ChatBackground, CHAT_BACKGROUNDS } from '../../c
 import { I18nPipe } from '../../../helpers/i18n.pipe';
 import { EmojiUrlPipe } from '../../../helpers/emoji-url.pipe';
 import { TranslationService } from '../../../helpers/translation.service';
+import { WebRtcService } from '../../../helpers/webrtc.service';
 import { environment } from '../../../../environments/environment';
 
 export interface ContextMenuAction {
@@ -274,6 +275,49 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
   set isPeerBlocked(v: boolean) { this.isPeerBlockedSignal.set(v); }
 
   readonly isSocketConnected = signal<boolean>(true);
+  readonly webrtc = inject(WebRtcService);
+
+  getDirectChatPartner(): any | null {
+    const chat = this.mainService.currentChat;
+    if (!chat || chat.isGroup || chat.isChannel || chat.isSavedMessages || this.mainService.isAgentChat(chat)) {
+      return null;
+    }
+    if (chat.otherParticipant) return chat.otherParticipant;
+    const myId = this.ownId();
+    if (chat.participants) {
+      const p = chat.participants.find((item) => (item._id || (item as any)).toString() !== myId);
+      if (p) return p;
+    }
+    if (chat.peerId) {
+      return {
+        _id: chat.peerId,
+        firstName: chat.firstName,
+        lastName: chat.lastName,
+        profilePicture: chat.avatar,
+      };
+    }
+    return null;
+  }
+
+  canMakeCall(): boolean {
+    return !!this.getDirectChatPartner() && !this.isPeerBlocked;
+  }
+
+  startAudioCall(): void {
+    const partner = this.getDirectChatPartner();
+    const chat = this.mainService.currentChat;
+    if (!partner || !chat) return;
+    const name = `${partner.firstName || ''} ${partner.lastName || ''}`.trim() || this.headerName(chat);
+    this.webrtc.startCall(chat._id, partner._id, name, partner.profilePicture || chat.avatar || null, 'audio');
+  }
+
+  startVideoCall(): void {
+    const partner = this.getDirectChatPartner();
+    const chat = this.mainService.currentChat;
+    if (!partner || !chat) return;
+    const name = `${partner.firstName || ''} ${partner.lastName || ''}`.trim() || this.headerName(chat);
+    this.webrtc.startCall(chat._id, partner._id, name, partner.profilePicture || chat.avatar || null, 'video');
+  }
 
   ngOnInit() {
     this.mainService.socketService.connectionStatus$
@@ -1666,6 +1710,28 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
           return isActorMe
             ? this.translationService.t('system.youLeftGroup')
             : this.translationService.t('system.userLeftGroup', { actor });
+        case 'CALL_ENDED': {
+          const callType = meta['callType'] || 'audio';
+          const durationSec = Number(meta['duration']) || 0;
+          const minutes = Math.floor(durationSec / 60);
+          const seconds = durationSec % 60;
+          const durationStr = `${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+          return callType === 'video'
+            ? this.translationService.t('call.videoCallEnded', { duration: durationStr })
+            : this.translationService.t('call.voiceCallEnded', { duration: durationStr });
+        }
+        case 'CALL_MISSED': {
+          const callType = meta['callType'] || 'audio';
+          const isCallerMe = isActorMe || meta['callerId'] === myId;
+          if (isCallerMe) {
+            return callType === 'video'
+              ? this.translationService.t('call.canceledVideoCall')
+              : this.translationService.t('call.canceledVoiceCall');
+          }
+          return callType === 'video'
+            ? this.translationService.t('call.missedVideoCall')
+            : this.translationService.t('call.missedVoiceCall');
+        }
         default:
           break;
       }

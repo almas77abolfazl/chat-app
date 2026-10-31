@@ -11,6 +11,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { SideBarComponent } from './side-bar/side-bar.component';
 import { ChatListComponent } from './chat-list/chat-list.component';
 import { ChatAreaComponent } from './chat-area/chat-area.component';
+import { CallDialogComponent } from '../call-dialog/call-dialog.component';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MainService } from '../main.service';
@@ -26,6 +27,7 @@ import { I18nPipe } from '../../helpers/i18n.pipe';
     SideBarComponent,
     ChatListComponent,
     ChatAreaComponent,
+    CallDialogComponent,
     MatDialogModule,
     MatSnackBarModule,
     I18nPipe,

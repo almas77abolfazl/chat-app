@@ -88,6 +88,16 @@
         <fa-icon [icon]="['fas', isContact ? 'user-check' : 'user-plus']"></fa-icon>
         <span>{{ (isContact ? 'contacts.removeFromContacts' : 'contacts.addToContacts') | i18n }}</span>
       </button>
+
+      <button type="button" class="btn contact-action-btn" (click)="startAudioCall()">
+        <fa-icon [icon]="['fas', 'phone-alt']"></fa-icon>
+        <span>{{ 'call.voiceCall' | i18n }}</span>
+      </button>
+
+      <button type="button" class="btn contact-action-btn" (click)="startVideoCall()">
+        <fa-icon [icon]="['fas', 'video']"></fa-icon>
+        <span>{{ 'call.videoCall' | i18n }}</span>
+      </button>
     </div>
     }
 

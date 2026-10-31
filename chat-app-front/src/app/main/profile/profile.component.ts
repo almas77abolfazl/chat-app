@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectionStrategy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -8,6 +8,7 @@ import { EditProfileComponent } from '../edit-profile/edit-profile.component';
 import { AdminManagementDialogComponent } from '../admin-management-dialog/admin-management-dialog.component';
 import { MainService } from '../main.service';
 import { TranslationService } from '../../helpers/translation.service';
+import { WebRtcService } from '../../helpers/webrtc.service';
 import { I18nPipe } from '../../helpers/i18n.pipe';
 import { take } from 'rxjs';
 
@@ -97,6 +98,7 @@ export class ProfileComponent implements OnInit {
   set copiedUsername(v: boolean) { this.copiedUsernameSignal.set(v); }
 
   readonly isTargetUserBlockedSignal = signal<boolean>(false);
+  readonly webrtc = inject(WebRtcService);
   get isTargetUserBlocked(): boolean { return this.isTargetUserBlockedSignal(); }
   set isTargetUserBlocked(v: boolean) { this.isTargetUserBlockedSignal.set(v); }
 
@@ -427,6 +429,26 @@ export class ProfileComponent implements OnInit {
           this.mainService.openChat(chat);
         });
     }
+  }
+
+  startAudioCall(): void {
+    const targetId = this.targetUserId || this.chatData?.peerId || this.chatData?.otherParticipant?._id;
+    if (!targetId || this.isCurrentUser || this.isGroup || this.isChannel) return;
+    const name = this.displayName;
+    const chatId = this.chatData?._id || '';
+    const avatar = this.activeAvatarUrl;
+    this.dialogRef.close();
+    this.webrtc.startCall(chatId, targetId, name, avatar, 'audio');
+  }
+
+  startVideoCall(): void {
+    const targetId = this.targetUserId || this.chatData?.peerId || this.chatData?.otherParticipant?._id;
+    if (!targetId || this.isCurrentUser || this.isGroup || this.isChannel) return;
+    const name = this.displayName;
+    const chatId = this.chatData?._id || '';
+    const avatar = this.activeAvatarUrl;
+    this.dialogRef.close();
+    this.webrtc.startCall(chatId, targetId, name, avatar, 'video');
   }
 
   editProfile(): void {
