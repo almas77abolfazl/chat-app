@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { I18nPipe } from '../../../../helpers/i18n.pipe';
+import { EmojiUrlPipe } from '../../../../helpers/emoji-url.pipe';
 import { EMOJI_CATEGORIES, EmojiCategory } from './emojis.data';
 import { STICKERS, STICKER_PACKS, StickerItem, StickerPack } from './stickers.data';
 import { GIFS, GIF_CATEGORIES, GifItem } from './gifs.data';
@@ -12,7 +13,7 @@ export type PickerTab = 'emoji' | 'stickers' | 'gifs';
 @Component({
   selector: 'app-content-picker',
   standalone: true,
-  imports: [CommonModule, FormsModule, FontAwesomeModule, I18nPipe],
+  imports: [CommonModule, FormsModule, FontAwesomeModule, I18nPipe, EmojiUrlPipe],
   templateUrl: './content-picker.component.html',
   styleUrl: './content-picker.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -262,11 +262,28 @@
       font-size: 1.45rem;
       border-radius: var(--radius-md);
       cursor: pointer;
+      padding: 0.2rem;
       transition: transform var(--transition-fast), background var(--transition-fast);
+
+      .picker-emoji-img {
+        width: 1.65rem;
+        height: 1.65rem;
+        object-fit: contain;
+        pointer-events: none;
+        transition: transform var(--transition-fast);
+      }
 
       &:hover {
         background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-        transform: scale(1.22);
+        transform: scale(1.18);
+
+        .picker-emoji-img {
+          transform: scale(1.12);
+        }
+      }
+
+      &:active {
+        transform: scale(0.95);
       }
     }
   }

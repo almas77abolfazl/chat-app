@@ -738,6 +738,16 @@ input, button, textarea, select {
   }
 }
 
+.reaction-pill-emoji {
+  width: 1.15rem;
+  height: 1.15rem;
+  object-fit: contain;
+  display: inline-block;
+  vertical-align: middle;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
 .reaction-emoji {
   font-size: 0.95rem;
   line-height: 1;

@@ -134,7 +134,7 @@
               (click)="selectEmoji(emoji, $event)"
               [attr.title]="emoji"
             >
-              {{ emoji }}
+              <img [src]="emoji | emojiUrl" [alt]="emoji" class="picker-emoji-img" loading="lazy" draggable="false" />
             </button>
             }
           </div>

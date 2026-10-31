@@ -1,114 +1,110 @@
 {
-    "$schema":  "./node_modules/@angular/cli/lib/config/schema.json",
-    "version":  1,
-    "newProjectRoot":  "projects",
-    "projects":  {
-                     "chat-app-front":  {
-                                            "projectType":  "application",
-                                            "schematics":  {
-                                                               "@schematics/angular:component":  {
-                                                                                                     "style":  "scss"
-                                                                                                 }
-                                                           },
-                                            "root":  "",
-                                            "sourceRoot":  "src",
-                                            "prefix":  "app",
-                                            "architect":  {
-                                                              "build":  {
-                                                                            "builder":  "@angular/build:application",
-                                                                            "options":  {
-                                                                                            "outputPath":  "dist/chat-app-front",
-                                                                                            "index":  "src/index.html",
-                                                                                            "browser":  "src/main.ts",
-                                                                                            "polyfills":  [
-
-                                                                                                          ],
-                                                                                            "tsConfig":  "tsconfig.app.json",
-                                                                                            "inlineStyleLanguage":  "scss",
-                                                                                            "assets":  [
-                                                                                                           {
-                                                                                                               "glob":  "**/*",
-                                                                                                               "input":  "public"
-                                                                                                           },
-                                                                                                           {
-                                                                                                               "glob":  "**/*",
-                                                                                                               "input":  "src/assets/i18n",
-                                                                                                               "output":  "/assets/i18n/"
-                                                                                                           },
-                                                                                                           {
-                                                                                                               "glob":  "manifest.webmanifest",
-                                                                                                               "input":  "src",
-                                                                                                               "output":  "/"
-                                                                                                           }
-                                                                                                       ],
-                                                                                            "styles":  [
-                                                                                                           "@angular/material/prebuilt-themes/azure-blue.css",
-                                                                                                           "src/styles.scss"
-                                                                                                       ],
-                                                                                            "scripts":  [
-
-                                                                                                        ]
-                                                                                        },
-                                                                            "configurations":  {
-                                                                                                   "production":  {
-                                                                                                                      "budgets":  [
-                                                                                                                                      {
-                                                                                                                                          "type":  "initial",
-                                                                                                                                          "maximumWarning":  "700kB",
-                                                                                                                                          "maximumError":  "2MB"
-                                                                                                                                      },
-                                                                                                                                      {
-                                                                                                                                          "type":  "anyComponentStyle",
-                                                                                                                                          "maximumWarning":  "35kB",
-                                                                                                                                          "maximumError":  "50kB"
-                                                                                                                                      }
-                                                                                                                                  ],
-                                                                                                                      "outputHashing":  "all",
-                                                                                                                      "optimization":  {
-                                                                                                                                           "styles":  true,
-                                                                                                                                           "fonts":  false,
-                                                                                                                                           "scripts":  true
-                                                                                                                                       }
-                                                                                                                  },
-                                                                                                   "development":  {
-                                                                                                                       "optimization":  false,
-                                                                                                                       "extractLicenses":  false,
-                                                                                                                       "sourceMap":  true,
-                                                                                                                       "fileReplacements":  [
-                                                                                                                                                {
-                                                                                                                                                    "replace":  "src/environments/environment.ts",
-                                                                                                                                                    "with":  "src/environments/environment.development.ts"
-                                                                                                                                                }
-                                                                                                                                            ]
-                                                                                                                   }
-                                                                                               },
-                                                                            "defaultConfiguration":  "production"
-                                                                        },
-                                                              "serve":  {
-                                                                            "builder":  "@angular/build:dev-server",
-                                                                            "configurations":  {
-                                                                                                   "production":  {
-                                                                                                                      "buildTarget":  "chat-app-front:build:production"
-                                                                                                                  },
-                                                                                                   "development":  {
-                                                                                                                       "buildTarget":  "chat-app-front:build:development"
-                                                                                                                   }
-                                                                                               },
-                                                                            "defaultConfiguration":  "development"
-                                                                        },
-                                                              "extract-i18n":  {
-                                                                                   "builder":  "@angular/build:extract-i18n"
-                                                                               },
-                                                              "test":  {
-                                                                           "options":  {
-                                                                                           "tsConfig":  "tsconfig.spec.json"
-                                                                                       },
-                                                                           "builder":  "@angular/build:unit-test"
-                                                                       }
-                                                          }
-                                        }
-                 },
-    "cli":  {
-                "analytics":  "03c60e8d-4dad-4604-b968-7d59ae31db37"
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "chat-app-front": {
+      "projectType": "application",
+      "schematics": {
+        "@schematics/angular:component": {
+          "style": "scss"
+        }
+      },
+      "root": "",
+      "sourceRoot": "src",
+      "prefix": "app",
+      "architect": {
+        "build": {
+          "builder": "@angular/build:application",
+          "options": {
+            "outputPath": "dist/chat-app-front",
+            "index": "src/index.html",
+            "browser": "src/main.ts",
+            "polyfills": [],
+            "tsConfig": "tsconfig.app.json",
+            "inlineStyleLanguage": "scss",
+            "assets": [
+              {
+                "glob": "**/*",
+                "input": "public"
+              },
+              {
+                "glob": "**/*",
+                "input": "src/assets/i18n",
+                "output": "/assets/i18n/"
+              },
+              {
+                "glob": "manifest.webmanifest",
+                "input": "src",
+                "output": "/"
+              }
+            ],
+            "styles": [
+              "@angular/material/prebuilt-themes/azure-blue.css",
+              "src/styles.scss"
+            ],
+            "scripts": []
+          },
+          "configurations": {
+            "production": {
+              "budgets": [
+                {
+                  "type": "initial",
+                  "maximumWarning": "1.5MB",
+                  "maximumError": "3MB"
+                },
+                {
+                  "type": "anyComponentStyle",
+                  "maximumWarning": "60kB",
+                  "maximumError": "100kB"
+                }
+              ],
+              "outputHashing": "all",
+              "optimization": {
+                "styles": true,
+                "fonts": false,
+                "scripts": true
+              }
+            },
+            "development": {
+              "optimization": false,
+              "extractLicenses": false,
+              "sourceMap": true,
+              "fileReplacements": [
+                {
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.development.ts"
+                }
+              ]
             }
+          },
+          "defaultConfiguration": "production"
+        },
+        "serve": {
+          "builder": "@angular/build:dev-server",
+          "configurations": {
+            "production": {
+              "buildTarget": "chat-app-front:build:production"
+            },
+            "development": {
+              "buildTarget": "chat-app-front:build:development"
+            }
+          },
+          "defaultConfiguration": "development"
+        },
+        "extract-i18n": {
+          "builder": "@angular/build:extract-i18n"
+        },
+        "test": {
+          "options": {
+            "tsConfig": "tsconfig.spec.json"
+          },
+          "builder": "@angular/build:unit-test"
+        }
+      }
+    }
+  },
+  "cli": {
+    "analytics": "03c60e8d-4dad-4604-b968-7d59ae31db37"
+  }
 }

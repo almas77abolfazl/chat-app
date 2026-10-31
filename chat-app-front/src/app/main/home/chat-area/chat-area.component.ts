@@ -31,6 +31,7 @@ import { Message } from '../../../models/message.model';
 import { ChatListItem, TypingUser } from '../../../models/chat-list-item.model';
 import { ChatBackgroundService, ChatBackground, CHAT_BACKGROUNDS } from '../../chat-background/chat-background.service';
 import { I18nPipe } from '../../../helpers/i18n.pipe';
+import { EmojiUrlPipe } from '../../../helpers/emoji-url.pipe';
 import { TranslationService } from '../../../helpers/translation.service';
 import { environment } from '../../../../environments/environment';
 
@@ -58,7 +59,7 @@ export interface ActiveUpload {
 @Component({
   selector: 'app-chat-area',
   standalone: true,
-  imports: [FontAwesomeModule, NgClass, MatButtonModule, FormsModule, I18nPipe, ContentPickerComponent, VoicePlayerComponent],
+  imports: [FontAwesomeModule, NgClass, MatButtonModule, FormsModule, I18nPipe, EmojiUrlPipe, ContentPickerComponent, VoicePlayerComponent],
   templateUrl: './chat-area.component.html',
   styleUrl: './chat-area.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
