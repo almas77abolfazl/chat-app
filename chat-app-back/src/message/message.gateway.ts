@@ -407,19 +407,27 @@ export class MessageGateway {
         await this.reactionService.addReaction(data.messageId, user._id.toString(), data.emoji);
       }
       const updated = await this.reactionService.getReactionCounts(data.messageId);
-      const message = await this.messageModel.findById(data.messageId).exec();
-      if (message) {
+      await this.broadcastReactionUpdate(data.messageId, updated);
+    } catch (error) {
+      client.emit('messageError', { message: error?.message ?? 'Failed to add reaction' });
+    }
+  }
+
+  async broadcastReactionUpdate(messageId: string, reactions: { emoji: string; count: number; users: string[] }[]) {
+    try {
+      const message = await this.messageModel.findById(messageId).exec();
+      if (message && this.server) {
         const chatId = message.chat.toString();
         const participantIds = await this.chatService.getParticipantIds(chatId);
         for (const pid of participantIds) {
           this.server.to(pid).emit('messageReactionUpdated', {
-            messageId: data.messageId,
-            reactions: updated,
+            messageId,
+            reactions,
           });
         }
       }
     } catch (error) {
-      client.emit('messageError', { message: error?.message ?? 'Failed to add reaction' });
+      console.error('Failed to broadcast reaction update:', error);
     }
   }
 

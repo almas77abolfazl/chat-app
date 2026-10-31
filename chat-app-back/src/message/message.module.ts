@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { ChatModule } from 'src/chat/chat.module';
 import { MessageService } from './message.service';
 import { MessageController } from './message.controller';
@@ -18,13 +18,13 @@ import { ReactionSchema } from './reaction/reaction.entity';
     AgentModule,
     ChatModule,
     UserModule,
-    ReactionModule,
+    forwardRef(() => ReactionModule),
     MongooseModule.forFeature([{ name: 'Message', schema: MessageSchema }]),
     MongooseModule.forFeature([{ name: 'Chat', schema: ChatSchema }]),
     MongooseModule.forFeature([{ name: 'Reaction', schema: ReactionSchema }]),
   ],
   controllers: [MessageController],
   providers: [MessageService, MessageGateway],
-  exports: [MessageService],
+  exports: [MessageService, MessageGateway],
 })
 export class MessageModule {}

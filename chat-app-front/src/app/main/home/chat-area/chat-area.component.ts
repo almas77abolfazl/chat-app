@@ -220,6 +220,14 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
       this.typingUsers = chatId ? typingMap.get(chatId) || [] : [];
       this.cdr.markForCheck();
     });
+
+    this.mainService.reactionUpdated$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((payload) => {
+      const msg = this.mainService.currentChat?.messages?.find((m) => m._id === payload.messageId);
+      if (msg) {
+        msg.reactions = payload.reactions;
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   ngAfterViewInit() {
@@ -814,8 +822,14 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
   }
 
   getUserReaction(message: Message): string | undefined {
-    const own = this.ownId();
-    const found = (message.reactions || []).find((r) => r.users?.includes(own));
+    const own = this.ownId()?.toString();
+    if (!own) return undefined;
+    const found = (message.reactions || []).find((r) =>
+      r.users?.some((u: any) => {
+        const id = typeof u === 'string' ? u : u?._id?.toString() ?? u?.toString();
+        return id === own;
+      }),
+    );
     return found?.emoji || this.userReactions.get(message._id);
   }
 
@@ -827,13 +841,69 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
     const messageId = message._id;
     if (!messageId) return;
 
+    const ownId = this.ownId()?.toString();
+    if (!ownId) return;
+
+    // Snapshot previous reactions for rollback on failure
+    const previousReactions = JSON.parse(JSON.stringify(message.reactions || []));
+
+    // Optimistic update
+    const currentReactions: any[] = JSON.parse(JSON.stringify(message.reactions || []));
+    const matchUserId = (u: any) => (typeof u === 'string' ? u : u?._id?.toString() ?? u?.toString()) === ownId;
+    const existingIndex = currentReactions.findIndex(
+      (r: any) => Array.isArray(r.users) && r.users.some(matchUserId),
+    );
+
+    if (existingIndex !== -1 && currentReactions[existingIndex].emoji === emoji) {
+      // Toggle off: remove user from this emoji
+      const target = currentReactions[existingIndex];
+      target.users = target.users.filter((u: any) => !matchUserId(u));
+      target.count = target.users.length;
+      if (target.count === 0) {
+        currentReactions.splice(existingIndex, 1);
+      }
+    } else {
+      // Remove from previous emoji if user had reacted with another one
+      if (existingIndex !== -1) {
+        const prevTarget = currentReactions[existingIndex];
+        prevTarget.users = prevTarget.users.filter((u: any) => !matchUserId(u));
+        prevTarget.count = prevTarget.users.length;
+        if (prevTarget.count === 0) {
+          currentReactions.splice(existingIndex, 1);
+        }
+      }
+
+      // Add to selected emoji
+      const targetIndex = currentReactions.findIndex((r: any) => r.emoji === emoji);
+      if (targetIndex !== -1) {
+        const target = currentReactions[targetIndex];
+        target.users = target.users || [];
+        if (!target.users.some(matchUserId)) {
+          target.users.push(ownId);
+        }
+        target.count = target.users.length;
+      } else {
+        currentReactions.push({
+          emoji,
+          count: 1,
+          users: [ownId],
+        });
+      }
+    }
+
+    message.reactions = currentReactions;
+    this.cdr.markForCheck();
+
     this.mainService.addReaction(messageId, emoji).pipe(take(1)).subscribe({
       next: (res: any) => {
         if (Array.isArray(res)) {
           message.reactions = res;
+          this.cdr.markForCheck();
         }
       },
       error: () => {
+        message.reactions = previousReactions;
+        this.cdr.markForCheck();
         this.mainService.snackbar.error('امکان ثبت واکنش وجود ندارد', 3000);
       },
     });

@@ -1,11 +1,16 @@
-import { Controller, Post, Delete, Get, Body, Param, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Delete, Get, Body, Param, UseGuards, Req, Inject, forwardRef } from '@nestjs/common';
 import { ReactionService } from './reaction.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RequestWithUser } from 'src/auth/interfaces/request-with-user.model';
+import { MessageGateway } from '../message.gateway';
 
 @Controller('message')
 export class ReactionController {
-  constructor(private readonly reactionService: ReactionService) {}
+  constructor(
+    private readonly reactionService: ReactionService,
+    @Inject(forwardRef(() => MessageGateway))
+    private readonly messageGateway: MessageGateway,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post(':messageId/reaction')
@@ -20,14 +25,18 @@ export class ReactionController {
     } else {
       await this.reactionService.addReaction(messageId, userId, body.emoji);
     }
-    return this.reactionService.getReactionCounts(messageId);
+    const updated = await this.reactionService.getReactionCounts(messageId);
+    await this.messageGateway.broadcastReactionUpdate(messageId, updated);
+    return updated;
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete(':messageId/reaction')
   async removeReaction(@Param('messageId') messageId: string, @Req() request: RequestWithUser) {
     await this.reactionService.removeReaction(messageId, request.user._id.toString());
-    return this.reactionService.getReactionCounts(messageId);
+    const updated = await this.reactionService.getReactionCounts(messageId);
+    await this.messageGateway.broadcastReactionUpdate(messageId, updated);
+    return updated;
   }
 
   @UseGuards(JwtAuthGuard)

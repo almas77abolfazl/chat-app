@@ -157,6 +157,8 @@ export class MainService {
   chatListUpdated$ = this.chatListUpdatedSubject.asObservable();
   private messagesLoadedSubject = new Subject<void>();
   messagesLoaded$ = this.messagesLoadedSubject.asObservable();
+  private reactionUpdatedSubject = new Subject<{ messageId: string; reactions: any[] }>();
+  reactionUpdated$ = this.reactionUpdatedSubject.asObservable();
 
   file: any;
 
@@ -635,20 +637,21 @@ export class MainService {
 
     this.socketService.on('messageReactionUpdated', (payload: { messageId: string; reactions: any[] }) => {
       this.zone.run(() => {
+        if (this.currentChat?.messages) {
+          const cIdx = this.currentChat.messages.findIndex((m) => m._id === payload.messageId);
+          if (cIdx !== -1) {
+            this.currentChat.messages[cIdx].reactions = payload.reactions;
+          }
+        }
         this.chatItems.forEach((chatItem) => {
-          chatItem.messages = chatItem.messages || [];
-          const msg = chatItem.messages.find((m) => m._id === payload.messageId);
-          if (msg) {
-            msg.reactions = payload.reactions;
-            if (this.currentChat?._id === chatItem._id) {
-              this.currentChat.messages = this.currentChat.messages || [];
-              const cIdx = this.currentChat.messages.findIndex((m) => m._id === payload.messageId);
-              if (cIdx !== -1) {
-                this.currentChat.messages[cIdx].reactions = payload.reactions;
-              }
+          if (chatItem.messages) {
+            const msg = chatItem.messages.find((m) => m._id === payload.messageId);
+            if (msg) {
+              msg.reactions = payload.reactions;
             }
           }
         });
+        this.reactionUpdatedSubject.next(payload);
       });
     });
 
