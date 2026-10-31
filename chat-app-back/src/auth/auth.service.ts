@@ -88,12 +88,15 @@ export class AuthService {
   }
 
   async refreshToken(dto: RefreshTokenDto): Promise<{ access_token: string; refreshToken: string }> {
+    if (!dto?.refreshToken) {
+      throw new UnauthorizedException('Refresh token is required');
+    }
     const user = await this.userService.findUserByRefreshToken(dto.refreshToken);
     if (!user) {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    const session = user.sessions.find((s) => s.token === dto.refreshToken);
+    const session = (user.sessions || []).find((s) => s.token === dto.refreshToken);
     if (!session || session.expiresAt < Date.now() / 1000) {
       throw new UnauthorizedException('Refresh token expired');
     }

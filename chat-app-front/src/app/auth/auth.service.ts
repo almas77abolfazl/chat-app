@@ -43,7 +43,7 @@ export class AuthService {
     return { token, userId, firstName, lastName, phoneNumber };
   }
 
-  private syncUserSignal(): void {
+  public syncUserSignal(): void {
     this.currentUser.set(this.readInitialUser());
   }
 

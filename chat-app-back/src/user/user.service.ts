@@ -45,8 +45,12 @@ export class UserService {
     return user;
   }
 
-  async update(id: string, user: IUser) {
-    const updatedUser = await this.userModel.findByIdAndUpdate(id, user, { new: true }).exec();
+  async update(id: string, user: any) {
+    if (user && typeof user.save === 'function') {
+      user.markModified?.('sessions');
+      return await user.save();
+    }
+    const updatedUser = await this.userModel.findByIdAndUpdate(id, { $set: user }, { new: true }).exec();
 
     if (!updatedUser) {
       throw new NotFoundException(`User with ID ${id} not found`);
@@ -128,6 +132,7 @@ export class UserService {
   }
 
   async findUserByRefreshToken(refreshToken: string): Promise<IUser | null> {
+    if (!refreshToken || typeof refreshToken !== 'string') return null;
     const user = await this.userModel.findOne({ 'sessions.token': refreshToken }).exec();
     return user ?? null;
   }
