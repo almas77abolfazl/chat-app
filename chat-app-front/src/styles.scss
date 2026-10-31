@@ -969,3 +969,41 @@ input, button, textarea, select {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ---------- Virtual Scrolling Chat Messages ---------- */
+cdk-virtual-scroll-viewport.chat-messages {
+  display: block;
+  position: relative;
+  flex: 1 1 auto;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  .cdk-virtual-scroll-content-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 1rem 0.75rem 1.5rem !important;
+  }
+
+  &.is-short-chat {
+    .cdk-virtual-scroll-content-wrapper {
+      min-height: 100% !important;
+      justify-content: flex-end !important;
+    }
+
+    .messages-spacer {
+      margin-top: auto !important;
+      flex: 1 1 auto !important;
+      pointer-events: none !important;
+      min-height: 1px !important;
+    }
+  }
+
+  &:not(.is-short-chat) .messages-spacer {
+    display: none !important;
+  }
+}

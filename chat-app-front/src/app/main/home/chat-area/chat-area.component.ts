@@ -99,9 +99,13 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
   readonly scrollStrategy = inject(VIRTUAL_SCROLL_STRATEGY) as DynamicChatVirtualScrollStrategy;
 
   get isShortChat(): boolean {
+    const messages = this.mainService.currentChat?.messages;
+    if (!messages || messages.length === 0) return true;
     const vp = this.virtualViewport();
-    const vpSize = vp ? vp.getViewportSize() : 500;
-    return this.scrollStrategy.getTotalContentSize() < vpSize;
+    const vpEl = vp?.elementRef?.nativeElement;
+    const vpHeight = (vp && vp.getViewportSize() > 0) ? vp.getViewportSize() : (vpEl?.clientHeight || 600);
+    const totalContentSize = this.scrollStrategy.getTotalContentSize();
+    return totalContentSize < (vpHeight - 30);
   }
 
   private lastMessagesLength = 0;
