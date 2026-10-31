@@ -542,5 +542,20 @@
     "missedVideoCall": "Missed video call",
     "canceledVoiceCall": "Canceled voice call",
     "canceledVideoCall": "Canceled video call"
+  },
+  "permission": {
+    "title": "Browser Permission Request",
+    "requestMicTitle": "Microphone Access",
+    "requestMediaTitle": "Microphone & Camera Access",
+    "requestMicDesc": "Microphone access is required to record voice messages. Please click the button below and select Allow in the browser prompt.",
+    "requestMediaDesc": "Microphone and camera access are required for calls. Please click the button below and allow access.",
+    "blockedTitle": "Permission Blocked in Browser",
+    "blockedDesc": "Microphone or camera access was previously blocked. Please click the lock icon in your browser address bar, set permissions to Allow, and try again.",
+    "insecureTitle": "Secure Connection (HTTPS) Required",
+    "insecureDesc": "Browsers restrict microphone and camera access to secure origins (HTTPS or localhost). Please switch to HTTPS to enable permission prompts.",
+    "switchToHttps": "Switch to HTTPS",
+    "requestNow": "Request Browser Permission",
+    "retry": "Retry",
+    "dismiss": "Dismiss"
   }
 }

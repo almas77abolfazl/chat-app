@@ -1,0 +1,73 @@
+<div class="permission-dialog-container">
+  <div class="permission-dialog-header">
+    <div class="permission-icon-wrap" [class.danger]="isBlocked" [class.warning]="isInsecureContext">
+      @if (isInsecureContext) {
+      <fa-icon [icon]="['fas', 'lock']"></fa-icon>
+      } @else if (isBlocked) {
+      <fa-icon [icon]="['fas', 'ban']"></fa-icon>
+      } @else if (data.type === 'media' || data.type === 'camera') {
+      <fa-icon [icon]="['fas', 'video']"></fa-icon>
+      } @else {
+      <fa-icon [icon]="['fas', 'microphone']"></fa-icon>
+      }
+    </div>
+    <h3 class="permission-dialog-title">
+      @if (isInsecureContext) {
+      {{ 'permission.insecureTitle' | i18n }}
+      } @else if (isBlocked) {
+      {{ 'permission.blockedTitle' | i18n }}
+      } @else if (data.type === 'media') {
+      {{ 'permission.requestMediaTitle' | i18n }}
+      } @else {
+      {{ 'permission.requestMicTitle' | i18n }}
+      }
+    </h3>
+  </div>
+
+  <div class="permission-dialog-body">
+    <p class="permission-dialog-desc">
+      @if (isInsecureContext) {
+      {{ 'permission.insecureDesc' | i18n }}
+      } @else if (isBlocked) {
+      {{ 'permission.blockedDesc' | i18n }}
+      } @else if (data.type === 'media') {
+      {{ 'permission.requestMediaDesc' | i18n }}
+      } @else {
+      {{ 'permission.requestMicDesc' | i18n }}
+      }
+    </p>
+
+    @if (errorMessage()) {
+    <div class="permission-error-alert">
+      {{ errorMessage() }}
+    </div>
+    }
+  </div>
+
+  <div class="permission-dialog-actions">
+    <button type="button" class="btn-cancel" (click)="dismiss()">
+      {{ 'permission.dismiss' | i18n }}
+    </button>
+
+    @if (isInsecureContext) {
+    <button type="button" class="btn-primary" (click)="switchToHttps()">
+      <fa-icon [icon]="['fas', 'lock']"></fa-icon>
+      <span>{{ 'permission.switchToHttps' | i18n }}</span>
+    </button>
+    } @else {
+    <button
+      type="button"
+      class="btn-primary"
+      (click)="requestPermission()"
+      [disabled]="requesting()"
+    >
+      @if (data.type === 'media' || data.type === 'camera') {
+      <fa-icon [icon]="['fas', 'video']"></fa-icon>
+      } @else {
+      <fa-icon [icon]="['fas', 'microphone']"></fa-icon>
+      }
+      <span>{{ (isBlocked ? 'permission.retry' : 'permission.requestNow') | i18n }}</span>
+    </button>
+    }
+  </div>
+</div>

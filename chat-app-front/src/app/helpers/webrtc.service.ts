@@ -1,7 +1,9 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { SocketService } from '../main/socket.service';
 import { SnackbarService } from './snackbar/snackbar.service';
 import { TranslationService } from './translation.service';
+import { PermissionDialogComponent, PermissionDialogData } from '../main/permission-dialog/permission-dialog.component';
 
 export type CallState = 'idle' | 'calling' | 'incoming' | 'connected';
 export type CallType = 'audio' | 'video';
@@ -21,6 +23,7 @@ export class WebRtcService {
   private socketService = inject(SocketService);
   private snackbar = inject(SnackbarService);
   private translationService = inject(TranslationService);
+  private dialog = inject(MatDialog);
 
   readonly callState = signal<CallState>('idle');
   readonly callType = signal<CallType>('audio');
@@ -178,7 +181,7 @@ export class WebRtcService {
     try {
       await this.acquireUserMedia(callType);
     } catch (err) {
-      this.handleMediaAcquisitionError(err);
+      this.handleMediaAcquisitionError(err, callType);
       this.cleanup();
       return;
     }
@@ -216,7 +219,7 @@ export class WebRtcService {
     try {
       await this.acquireUserMedia(this.callType());
     } catch (err) {
-      this.handleMediaAcquisitionError(err);
+      this.handleMediaAcquisitionError(err, this.callType());
       this.rejectCall('permission_denied');
       return;
     }
@@ -330,11 +333,14 @@ export class WebRtcService {
   }
 
   private async acquireUserMedia(type: CallType): Promise<void> {
-    if (typeof window !== 'undefined' && !window.isSecureContext) {
-      throw new Error('INSECURE_CONTEXT');
-    }
+    const getUserMedia = navigator.mediaDevices?.getUserMedia?.bind(navigator.mediaDevices)
+      || (navigator as any).webkitGetUserMedia?.bind(navigator)
+      || (navigator as any).mozGetUserMedia?.bind(navigator);
 
-    if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    if (!getUserMedia) {
+      if (typeof window !== 'undefined' && !window.isSecureContext && location.protocol !== 'https:') {
+        throw new Error('INSECURE_CONTEXT');
+      }
       throw new Error('NOT_SUPPORTED');
     }
 
@@ -343,7 +349,7 @@ export class WebRtcService {
         audio: true,
         video: type === 'video' ? { facingMode: 'user' } : false,
       };
-      this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
+      this.localStream = await getUserMedia(constraints);
     } catch (err: any) {
       console.warn('Primary getUserMedia failed:', err);
       // Fallback: If video failed on device without webcam, fallback to audio call
@@ -352,7 +358,7 @@ export class WebRtcService {
         (err?.name === 'NotFoundError' || err?.name === 'OverconstrainedError' || err?.name === 'DevicesNotFoundError')
       ) {
         try {
-          this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          this.localStream = await getUserMedia({ audio: true });
           this.callType.set('audio');
           return;
         } catch {
@@ -363,14 +369,27 @@ export class WebRtcService {
     }
   }
 
-  private handleMediaAcquisitionError(err: any): void {
+  private handleMediaAcquisitionError(err: any, type: CallType = 'audio'): void {
     console.error('Call media error detail:', err);
-    if (err?.message === 'INSECURE_CONTEXT') {
-      this.snackbar.error(this.translationService.t('call.insecureContext'));
+    let errorReason: PermissionDialogData['errorReason'] = undefined;
+
+    if (err?.message === 'INSECURE_CONTEXT' || (typeof window !== 'undefined' && !window.isSecureContext && location.protocol !== 'https:')) {
+      errorReason = 'insecure_context';
     } else if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
-      this.snackbar.error(this.translationService.t('call.mediaBlockedInBrowser'));
+      errorReason = 'denied';
     } else if (err?.name === 'NotFoundError' || err?.name === 'DevicesNotFoundError') {
-      this.snackbar.error(this.translationService.t('call.mediaDeviceNotFound'));
+      errorReason = 'device_not_found';
+    }
+
+    if (errorReason) {
+      this.dialog.open(PermissionDialogComponent, {
+        width: '420px',
+        maxWidth: '92vw',
+        data: {
+          type: type === 'video' ? 'media' : 'microphone',
+          errorReason,
+        },
+      });
     } else {
       this.snackbar.error(this.translationService.t('call.mediaPermissionDenied'));
     }

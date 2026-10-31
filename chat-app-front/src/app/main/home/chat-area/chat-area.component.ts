@@ -21,6 +21,7 @@ import { NgClass } from '@angular/common';
 import { HttpEvent, HttpEventType } from '@angular/common/http';
 import { take, Subscription } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
+import { PermissionDialogComponent } from '../../permission-dialog/permission-dialog.component';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 import { ProfileComponent } from '../../profile/profile.component';
@@ -87,14 +88,13 @@ export interface ActiveUpload {
 })
 export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
   private readonly destroyRef = inject(DestroyRef);
+  public readonly mainService = inject(MainService);
+  private readonly dialog = inject(MatDialog);
+  public readonly chatBgService = inject(ChatBackgroundService);
+  private readonly cdr = inject(ChangeDetectorRef);
+  public readonly translationService = inject(TranslationService);
 
-  constructor(
-    public mainService: MainService,
-    private dialog: MatDialog,
-    public chatBgService: ChatBackgroundService,
-    private cdr: ChangeDetectorRef,
-    public translationService: TranslationService
-  ) {}
+  constructor() {}
 
   readonly virtualViewport = viewChild<CdkVirtualScrollViewport>('virtualViewport');
   readonly scrollStrategy = inject(VIRTUAL_SCROLL_STRATEGY) as DynamicChatVirtualScrollStrategy;
@@ -1755,13 +1755,21 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
   }
 
   async startVoiceRecording(): Promise<void> {
-    if (!navigator.mediaDevices?.getUserMedia) {
-      this.mainService.snackbar.error('chat.micNotSupported', 3000);
+    const getUserMedia = navigator.mediaDevices?.getUserMedia?.bind(navigator.mediaDevices)
+      || (navigator as any).webkitGetUserMedia?.bind(navigator)
+      || (navigator as any).mozGetUserMedia?.bind(navigator);
+
+    if (!getUserMedia) {
+      if (typeof window !== 'undefined' && !window.isSecureContext && location.protocol !== 'https:') {
+        this.openPermissionDialog('microphone', 'insecure_context');
+      } else {
+        this.mainService.snackbar.error(this.translationService.t('chat.micNotSupported'), 3000);
+      }
       return;
     }
 
     try {
-      this.audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.audioStream = await getUserMedia({ audio: true });
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const source = this.audioContext.createMediaStreamSource(this.audioStream);
       const analyser = this.audioContext.createAnalyser();
@@ -1813,10 +1821,29 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
         this.analyserAnimationId = requestAnimationFrame(sampleLoop);
       };
       sampleLoop();
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to access microphone:', err);
-      this.mainService.snackbar.error('chat.micPermissionDenied', 3000);
+      if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
+        this.openPermissionDialog('microphone', 'denied');
+      } else if (err?.name === 'NotFoundError' || err?.name === 'DevicesNotFoundError') {
+        this.openPermissionDialog('microphone', 'device_not_found');
+      } else {
+        this.mainService.snackbar.error(this.translationService.t('chat.micPermissionDenied'), 3000);
+      }
     }
+  }
+
+  openPermissionDialog(type: 'microphone' | 'camera' | 'media', errorReason?: any): void {
+    const dialogRef = this.dialog.open(PermissionDialogComponent, {
+      width: '420px',
+      maxWidth: '92vw',
+      data: { type, errorReason },
+    });
+    dialogRef.afterClosed().subscribe((granted) => {
+      if (granted && type === 'microphone') {
+        this.startVoiceRecording();
+      }
+    });
   }
 
   cancelVoiceRecording(): void {

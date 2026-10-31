@@ -1,4 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { MatDialog } from '@angular/material/dialog';
+import { of } from 'rxjs';
 import { WebRtcService } from './webrtc.service';
 import { SocketService } from '../main/socket.service';
 import { SnackbarService } from './snackbar/snackbar.service';
@@ -38,6 +40,7 @@ describe('WebRtcService', () => {
         { provide: SocketService, useValue: mockSocketService },
         { provide: SnackbarService, useValue: mockSnackbar },
         { provide: TranslationService, useValue: mockTranslationService },
+        { provide: MatDialog, useValue: { open: () => ({ afterClosed: () => of(false) }) } },
       ],
     });
 
