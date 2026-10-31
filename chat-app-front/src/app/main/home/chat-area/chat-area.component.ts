@@ -143,7 +143,7 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
   }
 
   trackByMessageId = (index: number, item: Message): string => {
-    return item?._id || ('temp_' + index);
+    return item?._id || item?._tempId || ('temp_' + index);
   };
 
   onHeightMeasured(index: number, height: number): void {

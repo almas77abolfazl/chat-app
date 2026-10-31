@@ -842,9 +842,14 @@ export class MainService {
         const msg = payload.message;
         const messages = [...(chatItem.messages || [])];
         const pendingIdx = messages.findIndex(
-          (m) => (payload.tempId && m._tempId === payload.tempId) || m._pending === true,
+          (m) => (payload.tempId && m._tempId === payload.tempId) ||
+                 (m._pending === true && m.content === msg.content) ||
+                 (m._pending === true && m.senderId === msg.senderId) ||
+                 m._pending === true,
         );
-        if (pendingIdx !== -1) chatItem.messages.splice(pendingIdx, 1);
+        if (pendingIdx !== -1) {
+          messages.splice(pendingIdx, 1);
+        }
         this.removeFromOutbox(payload.tempId, payload.chatId);
 
         const exists = messages.some((m) => m._id === msg._id);
