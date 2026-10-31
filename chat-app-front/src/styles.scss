@@ -1020,13 +1020,15 @@ mat-icon,
 /* ---------- Online/agent status dots ---------- */
 .status-dot {
   position: absolute;
-  inset-block-end: -2px;
-  inset-inline-end: -2px;
+  inset-block-end: 0;
+  inset-inline-end: 0;
   width: 0.85rem;
   height: 0.85rem;
   border-radius: var(--radius-full);
   border: 2px solid var(--color-surface-solid);
   box-shadow: var(--shadow-sm);
+  z-index: 5;
+  pointer-events: none;
 
   &.online { background: var(--color-success); box-shadow: 0 0 8px color-mix(in srgb, var(--color-success) 40%, transparent); }
   &.agent { background: var(--color-primary); box-shadow: 0 0 8px color-mix(in srgb, var(--color-primary) 40%, transparent); }
