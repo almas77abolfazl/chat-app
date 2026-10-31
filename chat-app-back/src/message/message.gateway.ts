@@ -139,7 +139,8 @@ export class MessageGateway {
       const senderId = sender._id.toString();
       let chatId = messageData?.chatId as string | undefined;
       const content: string = typeof messageData?.content === 'string' ? messageData.content : '';
-      const media = messageData?.media as { mediaType: string; fileUrl: string; fileName?: string; fileSize?: number } | undefined;
+      const media = messageData?.media as
+        { mediaType: string; fileUrl: string; fileName?: string; fileSize?: number; waveform?: number[] } | undefined;
 
       if (!content.trim() && !media && !messageData?.receiver) {
         client.emit('messageError', { message: 'content or media is required' });

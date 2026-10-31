@@ -30,12 +30,14 @@
       },
       "isBackground": true,
       "problemMatcher": {
-        "owner": "ng-watch",
-        "pattern": { "name": "ng-error", "owner": "ng-watch", "file": "^.*$", "message": ".*" },
+        "owner": "custom",
+        "pattern": {
+          "regexp": "^$"
+        },
         "background": {
           "activeOnStart": true,
-          "beginsPattern": "(Building\\.\\.\\.|Generating|Watch mode enabled)",
-          "endsPattern": "(Watch mode enabled|Local:\\s+http)"
+          "beginsPattern": "^.*(Building|Generating|Compiling).*$",
+          "endsPattern": "^.*(Watch mode enabled|Application bundle generation complete|Local:\\s+http).*$"
         }
       }
     }
