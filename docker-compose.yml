@@ -23,13 +23,16 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    env_file:
+      - path: ./chat-app-back/.env
+        required: false
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 3000
       MONGO_URI: mongodb://mongo:27017/chat-app
       JWT_SECRET: ${JWT_SECRET:-dev-only-insecure-do-not-use-in-production}
-      LLM_API_KEY: ${LLM_API_KEY:-}
-      LLM_BASE_URL: ${LLM_BASE_URL:-https://generativelanguage.googleapis.com/v1beta/openai/}
+    volumes:
+      - uploads-data:/usr/src/app/uploads
     depends_on:
       mongo:
         condition: service_healthy
@@ -42,10 +45,9 @@ services:
     restart: unless-stopped
     ports:
       - "80:80"
-    environment:
-      API_URL: http://localhost:3000
     depends_on:
       - api
 
 volumes:
   mongo-data:
+  uploads-data:
