@@ -1,4 +1,4 @@
-import { Injectable, OnDestroy } from '@angular/core';
+import { Injectable, OnDestroy, inject, signal } from '@angular/core';
 import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 import { AuthService } from '../auth/auth.service';
@@ -13,9 +13,10 @@ export class SocketService implements OnDestroy {
   private maxReconnectAttempts = 10;
 
   readonly reconnected$ = new Subject<number>();
+  private readonly authService = inject(AuthService);
   readonly connectionStatus$ = new BehaviorSubject<boolean>(false);
 
-  constructor(private authService: AuthService) {}
+  constructor() {}
 
   init(): void {
     if (this.socket?.connected) return;

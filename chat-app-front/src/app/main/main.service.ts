@@ -1,4 +1,4 @@
-import { Inject, Injectable, NgZone, signal, computed } from '@angular/core';
+import { Inject, Injectable, NgZone, signal, computed, inject } from '@angular/core';
 import { EditProfileComponent } from './edit-profile/edit-profile.component';
 import { SettingsComponent } from './settings/settings.component';
 import { MatDialog } from '@angular/material/dialog';
@@ -192,17 +192,17 @@ export class MainService {
   private typingUsersSubject = new BehaviorSubject<Map<string, TypingUser[]>>(new Map());
   typingUsers$ = this.typingUsersSubject.asObservable();
 
-  constructor(
-    public authService: AuthService,
-    public httpRequestService: HttpRequestService,
-    private dialog: MatDialog,
-    public socketService: SocketService,
-    private cacheService: CacheService,
-    public snackbar: SnackbarService,
-    private zone: NgZone,
-    public translationService: TranslationService
-  ) {
-    this.getAvatar(authService.getUserId()).then((avatar: string) => {
+  public readonly authService = inject(AuthService);
+  public readonly httpRequestService = inject(HttpRequestService);
+  private readonly dialog = inject(MatDialog);
+  public readonly socketService = inject(SocketService);
+  private readonly cacheService = inject(CacheService);
+  public readonly snackbar = inject(SnackbarService);
+  private readonly zone = inject(NgZone);
+  public readonly translationService = inject(TranslationService);
+
+  constructor() {
+    this.getAvatar(this.authService.getUserId()).then((avatar: string) => {
       if (avatar) this.pictureSrc = avatar;
     });
     this.loadSyncTimestamps();

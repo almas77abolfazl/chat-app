@@ -1,6 +1,18 @@
 <div class="chat-list-container">
   <div class="chat-list-header">
-    <div class="chat-list-title">{{ 'chat.title' | i18n }}</div>
+    <div class="header-top-row">
+      @if (isMobile()) {
+      <button
+        type="button"
+        class="header-menu-btn"
+        (click)="openMenu.emit()"
+        [attr.aria-label]="'chat.menu' | i18n"
+      >
+        <fa-icon [icon]="['fas', 'bars']"></fa-icon>
+      </button>
+      }
+      <div class="chat-list-title">{{ 'chat.title' | i18n }}</div>
+    </div>
     <div class="search-container">
       <input
         type="text"

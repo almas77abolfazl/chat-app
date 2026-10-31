@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { toObservable } from '@angular/core/rxjs-interop';
@@ -25,7 +25,9 @@ export class TranslationService {
   private activeLoadPromise: Promise<void> | null = null;
   private activeLoadLang: Language | null = null;
 
-  constructor(private http: HttpClient) {
+  private readonly http = inject(HttpClient);
+
+  constructor() {
     const initialLang = this.currentLang();
     if (typeof document !== 'undefined') {
       document.documentElement.dir = RTL_LANGUAGES.has(initialLang) ? 'rtl' : 'ltr';

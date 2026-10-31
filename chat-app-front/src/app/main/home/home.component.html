@@ -6,21 +6,11 @@
     (close)="closeMobileMenu()"
   ></app-side-bar>
 
-  @if (!mainService.currentChat && isMobile()) {
-  <button
-    class="mobile-menu-btn"
-    (click)="toggleMobileMenu()"
-    [attr.aria-label]="'chat.menu' | i18n"
-  >
-    <fa-icon [icon]="['fas', 'bars']"></fa-icon>
-  </button>
-  }
-
   @if (mobileMenuOpen() && isMobile()) {
   <div class="mobile-overlay" (click)="closeMobileMenu()"></div>
   }
 
-  <app-chat-list class="chat-list" (selectChat)="closeMobileMenu()"></app-chat-list>
+  <app-chat-list class="chat-list" (selectChat)="closeMobileMenu()" (openMenu)="toggleMobileMenu()"></app-chat-list>
   <app-chat-area class="chat-area"></app-chat-area>
   <app-call-dialog></app-call-dialog>
 </div>

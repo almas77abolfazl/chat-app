@@ -46,6 +46,16 @@ export interface ChatContextMenuTarget {
 })
 export class ChatListComponent implements OnInit {
   readonly selectChat = output<void>();
+  readonly openMenu = output<void>();
+
+  readonly isMobile = signal<boolean>(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
+
+  @HostListener('window:resize')
+  onResize() {
+    if (typeof window !== 'undefined') {
+      this.isMobile.set(window.innerWidth <= 768);
+    }
+  }
 
   readonly searchQuery = signal<string>('');
   readonly searchResults = signal<any[]>([]);

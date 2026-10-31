@@ -17,7 +17,6 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MainService } from '../main.service';
 import { SocketService } from '../socket.service';
 import { ThemeService } from '../../helpers/theme.service';
-import { I18nPipe } from '../../helpers/i18n.pipe';
 
 @Component({
   selector: 'app-home',
@@ -30,7 +29,6 @@ import { I18nPipe } from '../../helpers/i18n.pipe';
     CallDialogComponent,
     MatDialogModule,
     MatSnackBarModule,
-    I18nPipe,
   ],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
@@ -40,19 +38,18 @@ export class HomeComponent {
   readonly mobileMenuOpen = signal(false);
   readonly isMobile = signal(typeof window !== 'undefined' && window.innerWidth <= 768);
   private readonly destroyRef = inject(DestroyRef);
+  readonly mainService = inject(MainService);
+  readonly themeService = inject(ThemeService);
+  private readonly socketService = inject(SocketService);
 
-  constructor(
-    socketService: SocketService,
-    public mainService: MainService,
-    public themeService: ThemeService
-  ) {
-    mainService.closeCurrentChat();
-    socketService.init();
-    mainService.listenToMessages();
-    mainService.loadAgentStatus();
-    mainService.listenToAgentEvents();
+  constructor() {
+    this.mainService.closeCurrentChat();
+    this.socketService.init();
+    this.mainService.listenToMessages();
+    this.mainService.loadAgentStatus();
+    this.mainService.listenToAgentEvents();
 
-    mainService.chatOpened$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+    this.mainService.chatOpened$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.mobileMenuOpen.set(false);
     });
   }

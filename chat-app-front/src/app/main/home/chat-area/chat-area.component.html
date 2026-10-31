@@ -1,4 +1,4 @@
-<div class="chat-area-container" (contextmenu)="onChatAreaContextMenu($event)" (paste)="onPaste($event)">
+<div class="chat-area-container" [dir]="translationService.isRTL() ? 'rtl' : 'ltr'" (contextmenu)="onChatAreaContextMenu($event)" (paste)="onPaste($event)">
   @if (mainService.currentChat) {
 
   @if (isSelectionMode) {

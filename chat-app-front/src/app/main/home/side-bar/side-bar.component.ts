@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, input, output, signal } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, output, signal, inject } from '@angular/core';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MainService } from '../../main.service';
 import { ThemeService } from '../../../helpers/theme.service';
@@ -26,11 +26,11 @@ export class SideBarComponent {
   readonly notificationsEnabled = signal(true);
   readonly agentHistory = signal<{ chatId: string; summary: string }[]>([]);
 
-  constructor(
-    public mainService: MainService,
-    public themeService: ThemeService,
-    public translationService: TranslationService
-  ) {
+  readonly mainService = inject(MainService);
+  readonly themeService = inject(ThemeService);
+  readonly translationService = inject(TranslationService);
+
+  constructor() {
     this.loadNotificationSettings();
     this.loadAgentHistory();
   }

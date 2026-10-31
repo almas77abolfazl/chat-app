@@ -20,7 +20,31 @@
     transform: none;
     background: var(--color-surface-solid);
     box-shadow: none;
-    padding-top: 1.5rem;
+    padding: 1.5rem 1rem 1rem;
+
+    .sidebar-brand span,
+    .menu-item span {
+      display: inline-block !important;
+    }
+
+    .menu-item {
+      justify-content: flex-start !important;
+      padding: 0.75rem 0.85rem !important;
+      gap: 0.85rem !important;
+
+      span {
+        display: inline-block !important;
+      }
+    }
+
+    .sidebar-footer .menu-item {
+      justify-content: flex-start !important;
+      padding: 0.75rem 0.85rem !important;
+
+      span {
+        display: inline-block !important;
+      }
+    }
   }
 
   .sidebar-header {
@@ -206,7 +230,7 @@
     }
   }
 
-  @media (max-width: 60rem) {
+  @media (min-width: 769px) and (max-width: 60rem) {
     .sidebar-header {
       padding: 0.75rem 0.25rem 0.75rem;
     }

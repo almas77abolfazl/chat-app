@@ -91,17 +91,19 @@
     }
 
     app-chat-list {
-      flex: 1 1 100%;
-      width: 100%;
-      min-width: 0;
+      flex: 1 1 100% !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
       transform: translateX(0);
       transition: transform var(--transition);
     }
 
     app-chat-area {
-      flex: 1 1 100%;
-      width: 100%;
-      min-width: 0;
+      flex: 1 1 100% !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      min-width: 0 !important;
     }
 
     &.chat-open {
@@ -117,31 +119,6 @@
     &:not(.chat-open) {
       app-chat-area {
         display: none;
-      }
-    }
-
-    .mobile-menu-btn {
-      position: absolute;
-      top: 0.9rem;
-      inset-inline-start: 0.9rem;
-      z-index: 25;
-      width: 2.5rem;
-      height: 2.5rem;
-      border-radius: var(--radius-full);
-      background: var(--color-surface-solid);
-      border: 1px solid var(--color-border);
-      color: var(--color-text);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      box-shadow: var(--shadow-sm);
-      font-size: 0.95rem;
-      transition: background var(--transition), color var(--transition), transform var(--transition-fast);
-
-      &:hover {
-        background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-        color: var(--color-primary-dark);
       }
     }
 

@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { Observable, take } from 'rxjs';
 import { Router } from '@angular/router';
 import { HttpRequestService } from '../helpers/http-request.service';
@@ -26,11 +26,9 @@ export class AuthService {
 
   private loggingOut = false;
 
-  constructor(
-    private httpRequestService: HttpRequestService,
-    private router: Router,
-    private cacheService: CacheService
-  ) {}
+  private readonly httpRequestService = inject(HttpRequestService);
+  private readonly router = inject(Router);
+  private readonly cacheService = inject(CacheService);
 
   private readInitialUser(): AuthUserData | null {
     if (typeof localStorage === 'undefined') return null;
