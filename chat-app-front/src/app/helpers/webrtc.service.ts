@@ -177,8 +177,8 @@ export class WebRtcService {
 
     try {
       await this.acquireUserMedia(callType);
-    } catch {
-      this.snackbar.error(this.translationService.t('call.mediaPermissionDenied'));
+    } catch (err) {
+      this.handleMediaAcquisitionError(err);
       this.cleanup();
       return;
     }
@@ -215,8 +215,8 @@ export class WebRtcService {
     const info = this.partnerInfo()!;
     try {
       await this.acquireUserMedia(this.callType());
-    } catch {
-      this.snackbar.error(this.translationService.t('call.mediaPermissionDenied'));
+    } catch (err) {
+      this.handleMediaAcquisitionError(err);
       this.rejectCall('permission_denied');
       return;
     }
@@ -330,16 +330,50 @@ export class WebRtcService {
   }
 
   private async acquireUserMedia(type: CallType): Promise<void> {
-    const constraints: MediaStreamConstraints = {
-      audio: {
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
-      },
-      video: type === 'video' ? { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } : false,
-    };
+    if (typeof window !== 'undefined' && !window.isSecureContext) {
+      throw new Error('INSECURE_CONTEXT');
+    }
 
-    this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('NOT_SUPPORTED');
+    }
+
+    try {
+      const constraints: MediaStreamConstraints = {
+        audio: true,
+        video: type === 'video' ? { facingMode: 'user' } : false,
+      };
+      this.localStream = await navigator.mediaDevices.getUserMedia(constraints);
+    } catch (err: any) {
+      console.warn('Primary getUserMedia failed:', err);
+      // Fallback: If video failed on device without webcam, fallback to audio call
+      if (
+        type === 'video' &&
+        (err?.name === 'NotFoundError' || err?.name === 'OverconstrainedError' || err?.name === 'DevicesNotFoundError')
+      ) {
+        try {
+          this.localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          this.callType.set('audio');
+          return;
+        } catch {
+          throw err;
+        }
+      }
+      throw err;
+    }
+  }
+
+  private handleMediaAcquisitionError(err: any): void {
+    console.error('Call media error detail:', err);
+    if (err?.message === 'INSECURE_CONTEXT') {
+      this.snackbar.error(this.translationService.t('call.insecureContext'));
+    } else if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
+      this.snackbar.error(this.translationService.t('call.mediaBlockedInBrowser'));
+    } else if (err?.name === 'NotFoundError' || err?.name === 'DevicesNotFoundError') {
+      this.snackbar.error(this.translationService.t('call.mediaDeviceNotFound'));
+    } else {
+      this.snackbar.error(this.translationService.t('call.mediaPermissionDenied'));
+    }
   }
 
   private createPeerConnection(partnerId: string): void {
