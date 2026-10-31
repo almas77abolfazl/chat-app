@@ -155,6 +155,32 @@
         <span class="folder-badge">{{ mainService.getFolderUnreadCount('bots') }}</span>
         }
       </button>
+
+      @for (folder of mainService.userFolders; track folder._id) {
+      <button
+        type="button"
+        class="folder-tab custom-folder-tab"
+        [class.active]="mainService.chatFilter === folder._id"
+        (click)="mainService.setChatFilter(folder._id!)"
+        (contextmenu)="openFolderContextMenu($event, folder)"
+        [title]="folder.name"
+      >
+        <fa-icon [icon]="getFolderIcon(folder.icon)" class="folder-tab-icon"></fa-icon>
+        <span>{{ folder.name }}</span>
+        @if (mainService.getFolderUnreadCount(folder._id!) > 0) {
+        <span class="folder-badge">{{ mainService.getFolderUnreadCount(folder._id!) }}</span>
+        }
+      </button>
+      }
+
+      <button
+        type="button"
+        class="folder-tab add-folder-tab-btn"
+        (click)="openCreateFolderDialog()"
+        [title]="'folders.createFolder' | i18n"
+      >
+        <fa-icon [icon]="['fas', 'folder-plus']"></fa-icon>
+      </button>
     </div>
     }
   </div>
@@ -290,5 +316,23 @@
     <span>{{ 'chat.delete' | i18n }}</span>
   </button>
   }
+</div>
+}
+
+@if (showFolderContextMenu() && folderContextMenuTarget()) {
+<div
+  class="context-menu folder-context-menu"
+  [style.left.px]="folderContextMenuX()"
+  [style.top.px]="folderContextMenuY()"
+  (click)="$event.stopPropagation()"
+>
+  <button class="context-menu-item" (click)="openEditFolderDialog(folderContextMenuTarget()!)">
+    <fa-icon [icon]="['fas', 'pen']"></fa-icon>
+    <span>{{ 'folders.editFolder' | i18n }}</span>
+  </button>
+  <button class="context-menu-item danger" (click)="deleteFolder(folderContextMenuTarget()!)">
+    <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+    <span>{{ 'folders.deleteFolder' | i18n }}</span>
+  </button>
 </div>
 }

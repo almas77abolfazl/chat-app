@@ -1,0 +1,239 @@
+<div class="folder-dialog">
+  <div class="dialog-header">
+    <div class="header-title-wrap">
+      <fa-icon [icon]="['fas', 'folder-plus']" class="header-icon"></fa-icon>
+      <h2 class="dialog-title">
+        {{ (isEdit ? 'folders.editFolder' : 'folders.createFolder') | i18n }}
+      </h2>
+    </div>
+    <button type="button" class="btn-icon close-btn" (click)="cancel()">
+      <fa-icon [icon]="['fas', 'xmark']"></fa-icon>
+    </button>
+  </div>
+
+  <div class="dialog-body">
+    <!-- Folder Name & Icon Row -->
+    <div class="form-group">
+      <label class="form-label">{{ 'folders.folderName' | i18n }}</label>
+      <div class="input-icon-wrap">
+        <input
+          type="text"
+          class="text-input"
+          [placeholder]="'folders.folderNamePlaceholder' | i18n"
+          [ngModel]="name()"
+          (ngModelChange)="name.set($event)"
+          maxlength="30"
+          autofocus
+        />
+      </div>
+    </div>
+
+    <!-- Icon Selector -->
+    <div class="form-group">
+      <label class="form-label">{{ 'folders.chooseIcon' | i18n }}</label>
+      <div class="icon-selector-grid">
+        @for (opt of iconsList; track opt.id) {
+        <button
+          type="button"
+          class="icon-choice-btn"
+          [class.selected]="selectedIcon() === opt.id"
+          (click)="selectedIcon.set(opt.id)"
+          [title]="opt.label"
+        >
+          <fa-icon [icon]="opt.icon"></fa-icon>
+        </button>
+        }
+      </div>
+    </div>
+
+    <!-- Section Tabs -->
+    <div class="folder-tabs-nav">
+      <button
+        type="button"
+        class="nav-tab-btn"
+        [class.active]="activeTab() === 'types'"
+        (click)="activeTab.set('types')"
+      >
+        <fa-icon [icon]="['fas', 'sliders-h']"></fa-icon>
+        <span>{{ 'folders.chatTypes' | i18n }}</span>
+        @if (includedTypes().length > 0) {
+        <span class="count-pill">{{ includedTypes().length }}</span>
+        }
+      </button>
+
+      <button
+        type="button"
+        class="nav-tab-btn"
+        [class.active]="activeTab() === 'includeChats'"
+        (click)="activeTab.set('includeChats')"
+      >
+        <fa-icon [icon]="['fas', 'plus']"></fa-icon>
+        <span>{{ 'folders.includedChats' | i18n }}</span>
+        @if (includedChatIds().length > 0) {
+        <span class="count-pill highlight">{{ includedChatIds().length }}</span>
+        }
+      </button>
+
+      <button
+        type="button"
+        class="nav-tab-btn"
+        [class.active]="activeTab() === 'excludeChats'"
+        (click)="activeTab.set('excludeChats')"
+      >
+        <fa-icon [icon]="['fas', 'ban']"></fa-icon>
+        <span>{{ 'folders.excludedChats' | i18n }}</span>
+        @if (excludedChatIds().length > 0) {
+        <span class="count-pill danger">{{ excludedChatIds().length }}</span>
+        }
+      </button>
+    </div>
+
+    <!-- Tab 1: Chat Types -->
+    @if (activeTab() === 'types') {
+    <div class="types-selection-panel">
+      <p class="tab-description">{{ 'folders.typesDescription' | i18n }}</p>
+      <div class="types-grid">
+        @for (ct of chatTypes; track ct.id) {
+        <div
+          class="type-card"
+          [class.active]="isTypeIncluded(ct.id)"
+          (click)="toggleType(ct.id)"
+        >
+          <div class="type-icon-circle">
+            <fa-icon [icon]="ct.icon"></fa-icon>
+          </div>
+          <span class="type-title">{{ ct.labelKey | i18n }}</span>
+          <div class="checkbox-indicator" [class.checked]="isTypeIncluded(ct.id)">
+            @if (isTypeIncluded(ct.id)) {
+            <fa-icon [icon]="['fas', 'check']"></fa-icon>
+            }
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- Tab 2: Included Chats -->
+    @if (activeTab() === 'includeChats') {
+    <div class="chats-selection-panel">
+      <p class="tab-description">{{ 'folders.includedDescription' | i18n }}</p>
+
+      <div class="chats-search-box">
+        <fa-icon [icon]="['fas', 'search']" class="search-box-icon"></fa-icon>
+        <input
+          type="text"
+          class="search-box-input"
+          [placeholder]="'search.placeholder' | i18n"
+          [ngModel]="chatSearchQuery()"
+          (ngModelChange)="chatSearchQuery.set($event)"
+        />
+      </div>
+
+      <div class="chats-scroll-list">
+        @if (filteredChats().length === 0) {
+        <div class="empty-list">{{ 'chat.noChatsFound' | i18n }}</div>
+        }
+        @for (chat of filteredChats(); track chat._id) {
+        <div
+          class="chat-select-item"
+          [class.selected]="isChatIncluded(chat._id)"
+          (click)="toggleChatIncluded(chat._id)"
+        >
+          <div class="chat-select-avatar">
+            @if (chat.avatar) {
+            <img [src]="chat.avatar" [alt]="getChatDisplayName(chat)" class="avatar-img" />
+            } @else {
+            <div class="avatar-fallback">{{ getChatDisplayName(chat).slice(0, 2).toUpperCase() }}</div>
+            }
+          </div>
+          <div class="chat-select-info">
+            <span class="chat-name">{{ getChatDisplayName(chat) }}</span>
+            <span class="chat-type-label">
+              {{ (chat.isGroup ? 'folders.groups' : chat.isChannel ? 'folders.channels' : 'folders.direct') | i18n }}
+            </span>
+          </div>
+          <div class="checkbox-indicator" [class.checked]="isChatIncluded(chat._id)">
+            @if (isChatIncluded(chat._id)) {
+            <fa-icon [icon]="['fas', 'check']"></fa-icon>
+            }
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- Tab 3: Excluded Chats -->
+    @if (activeTab() === 'excludeChats') {
+    <div class="chats-selection-panel">
+      <p class="tab-description">{{ 'folders.excludedDescription' | i18n }}</p>
+
+      <div class="chats-search-box">
+        <fa-icon [icon]="['fas', 'search']" class="search-box-icon"></fa-icon>
+        <input
+          type="text"
+          class="search-box-input"
+          [placeholder]="'search.placeholder' | i18n"
+          [ngModel]="chatSearchQuery()"
+          (ngModelChange)="chatSearchQuery.set($event)"
+        />
+      </div>
+
+      <div class="chats-scroll-list">
+        @if (filteredChats().length === 0) {
+        <div class="empty-list">{{ 'chat.noChatsFound' | i18n }}</div>
+        }
+        @for (chat of filteredChats(); track chat._id) {
+        <div
+          class="chat-select-item"
+          [class.selected]="isChatExcluded(chat._id)"
+          (click)="toggleChatExcluded(chat._id)"
+        >
+          <div class="chat-select-avatar">
+            @if (chat.avatar) {
+            <img [src]="chat.avatar" [alt]="getChatDisplayName(chat)" class="avatar-img" />
+            } @else {
+            <div class="avatar-fallback">{{ getChatDisplayName(chat).slice(0, 2).toUpperCase() }}</div>
+            }
+          </div>
+          <div class="chat-select-info">
+            <span class="chat-name">{{ getChatDisplayName(chat) }}</span>
+            <span class="chat-type-label">
+              {{ (chat.isGroup ? 'folders.groups' : chat.isChannel ? 'folders.channels' : 'folders.direct') | i18n }}
+            </span>
+          </div>
+          <div class="checkbox-indicator danger-check" [class.checked]="isChatExcluded(chat._id)">
+            @if (isChatExcluded(chat._id)) {
+            <fa-icon [icon]="['fas', 'ban']"></fa-icon>
+            }
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+
+  <div class="dialog-actions">
+    @if (isEdit) {
+    <button type="button" class="btn btn-danger" (click)="deleteFolder()">
+      <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+      <span>{{ 'folders.deleteFolder' | i18n }}</span>
+    </button>
+    }
+    <div class="actions-spacer"></div>
+    <button type="button" class="btn btn-secondary" (click)="cancel()">
+      {{ 'common.cancel' | i18n }}
+    </button>
+    <button
+      type="button"
+      class="btn btn-primary"
+      [disabled]="!name().trim()"
+      (click)="save()"
+    >
+      <fa-icon [icon]="['fas', 'check']"></fa-icon>
+      <span>{{ 'common.save' | i18n }}</span>
+    </button>
+  </div>
+</div>

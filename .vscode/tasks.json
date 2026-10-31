@@ -30,7 +30,8 @@
       },
       "isBackground": true,
       "problemMatcher": {
-        "owner": "custom",
+        "owner": "typescript",
+        "fileLocation": "relative",
         "pattern": {
           "regexp": "^$"
         },

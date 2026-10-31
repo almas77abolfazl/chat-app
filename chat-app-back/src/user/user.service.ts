@@ -514,6 +514,70 @@ export class UserService {
     return this.userModel.findById(userId).select('privacy contacts blockedUsers isOnline lastSeen').exec();
   }
 
+  async getFolders(userId: string): Promise<any[]> {
+    const user = await this.userModel.findById(userId).select('folders').exec();
+    if (!user) throw new NotFoundException('User not found');
+    return user.folders || [];
+  }
+
+  async createFolder(
+    userId: string,
+    dto: { name: string; icon?: string; includedChatIds?: string[]; excludedChatIds?: string[]; includedTypes?: string[] },
+  ): Promise<any[]> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) throw new NotFoundException('User not found');
+    const folder = {
+      _id: new Types.ObjectId(),
+      name: (dto.name || '').trim(),
+      icon: dto.icon || 'folder',
+      includedChatIds: (dto.includedChatIds || []).filter((id) => Types.ObjectId.isValid(id)).map((id) => new Types.ObjectId(id)),
+      excludedChatIds: (dto.excludedChatIds || []).filter((id) => Types.ObjectId.isValid(id)).map((id) => new Types.ObjectId(id)),
+      includedTypes: dto.includedTypes || [],
+    };
+    user.folders = user.folders || [];
+    user.folders.push(folder as any);
+    await user.save();
+    return user.folders;
+  }
+
+  async updateFolder(
+    userId: string,
+    folderId: string,
+    dto: { name?: string; icon?: string; includedChatIds?: string[]; excludedChatIds?: string[]; includedTypes?: string[] },
+  ): Promise<any[]> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) throw new NotFoundException('User not found');
+    user.folders = user.folders || [];
+    const idx = user.folders.findIndex((f: any) => f._id.toString() === folderId);
+    if (idx === -1) {
+      throw new NotFoundException('Folder not found');
+    }
+    const current = user.folders[idx] as any;
+    if (dto.name !== undefined) current.name = dto.name.trim();
+    if (dto.icon !== undefined) current.icon = dto.icon;
+    if (dto.includedChatIds !== undefined) {
+      current.includedChatIds = dto.includedChatIds.filter((id) => Types.ObjectId.isValid(id)).map((id) => new Types.ObjectId(id));
+    }
+    if (dto.excludedChatIds !== undefined) {
+      current.excludedChatIds = dto.excludedChatIds.filter((id) => Types.ObjectId.isValid(id)).map((id) => new Types.ObjectId(id));
+    }
+    if (dto.includedTypes !== undefined) current.includedTypes = dto.includedTypes;
+
+    user.folders[idx] = current;
+    user.markModified('folders');
+    await user.save();
+    return user.folders;
+  }
+
+  async deleteFolder(userId: string, folderId: string): Promise<any[]> {
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) throw new NotFoundException('User not found');
+    user.folders = (user.folders || []).filter((f: any) => f._id.toString() !== folderId);
+    user.markModified('folders');
+    await user.save();
+    return user.folders;
+  }
+
   private async doesUserExist(phoneNumber: string): Promise<boolean> {
     const user = await this.userModel.findOne({ phoneNumber });
     return !!user;

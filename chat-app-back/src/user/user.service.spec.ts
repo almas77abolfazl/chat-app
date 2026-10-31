@@ -224,4 +224,82 @@ describe('UserService - Online Status', () => {
       expect(isBlocked).toBe(true);
     });
   });
+
+  describe('Folders CRUD', () => {
+    it('should get user folders', async () => {
+      const mockUser = {
+        _id: 'user-123',
+        folders: [{ _id: 'f1', name: 'Work', icon: 'briefcase', includedChatIds: [], excludedChatIds: [], includedTypes: ['direct'] }],
+      };
+      jest.spyOn(userModel, 'findById').mockReturnValue({
+        select: jest.fn().mockReturnValue({
+          exec: jest.fn().mockResolvedValue(mockUser),
+        }),
+      } as any);
+
+      const folders = await service.getFolders('user-123');
+      expect(folders.length).toBe(1);
+      expect(folders[0].name).toBe('Work');
+    });
+
+    it('should create a new folder', async () => {
+      const mockUser = {
+        _id: 'user-123',
+        folders: [],
+        save: jest.fn().mockResolvedValue({}),
+      };
+      jest.spyOn(userModel, 'findById').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockUser),
+      } as any);
+
+      const folders = await service.createFolder('user-123', {
+        name: 'Friends',
+        icon: 'users',
+        includedTypes: ['groups'],
+      });
+      expect(folders.length).toBe(1);
+      expect(folders[0].name).toBe('Friends');
+      expect(mockUser.save).toHaveBeenCalled();
+    });
+
+    it('should update an existing folder', async () => {
+      const folderId = '507f1f77bcf86cd799439011';
+      const mockUser = {
+        _id: 'user-123',
+        folders: [{ _id: { toString: () => folderId }, name: 'Old', icon: 'folder', includedChatIds: [], excludedChatIds: [], includedTypes: [] }],
+        markModified: jest.fn(),
+        save: jest.fn().mockResolvedValue({}),
+      };
+      jest.spyOn(userModel, 'findById').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockUser),
+      } as any);
+
+      const folders = await service.updateFolder('user-123', folderId, {
+        name: 'New Name',
+        icon: 'star',
+      });
+      expect(folders[0].name).toBe('New Name');
+      expect(folders[0].icon).toBe('star');
+      expect(mockUser.markModified).toHaveBeenCalledWith('folders');
+      expect(mockUser.save).toHaveBeenCalled();
+    });
+
+    it('should delete a folder', async () => {
+      const folderId = '507f1f77bcf86cd799439011';
+      const mockUser = {
+        _id: 'user-123',
+        folders: [{ _id: { toString: () => folderId }, name: 'To Delete' }],
+        markModified: jest.fn(),
+        save: jest.fn().mockResolvedValue({}),
+      };
+      jest.spyOn(userModel, 'findById').mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockUser),
+      } as any);
+
+      const folders = await service.deleteFolder('user-123', folderId);
+      expect(folders.length).toBe(0);
+      expect(mockUser.markModified).toHaveBeenCalledWith('folders');
+      expect(mockUser.save).toHaveBeenCalled();
+    });
+  });
 });

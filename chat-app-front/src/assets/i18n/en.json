@@ -220,7 +220,21 @@
     "direct": "Personal",
     "groups": "Groups",
     "channels": "Channels",
-    "bots": "Bots"
+    "bots": "Bots",
+    "createFolder": "Create Folder",
+    "editFolder": "Edit Folder",
+    "deleteFolder": "Delete Folder",
+    "folderName": "Folder Name",
+    "folderNamePlaceholder": "e.g. Work, Family, Crypto",
+    "chooseIcon": "Choose Icon",
+    "chatTypes": "Chat Types",
+    "includedChats": "Included Chats",
+    "excludedChats": "Excluded Chats",
+    "typesDescription": "Choose which types of conversations to include in this folder.",
+    "includedDescription": "Explicitly include specific conversations in this folder.",
+    "excludedDescription": "Explicitly exclude specific conversations from this folder.",
+    "deleteConfirm": "Are you sure you want to delete this folder? Conversations will not be deleted.",
+    "deletedSuccess": "Folder deleted successfully"
   },
   "search": {
     "placeholder": "Search...",

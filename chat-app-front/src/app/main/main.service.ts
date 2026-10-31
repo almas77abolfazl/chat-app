@@ -8,6 +8,7 @@ import { CreateChatComponent } from './create-chat/create-chat.component';
 import { HttpRequestService } from '../helpers/http-request.service';
 import { BehaviorSubject, firstValueFrom, map, Observable, of, Subject, take, tap, catchError } from 'rxjs';
 import { AdminPermissions, ChatAdmin, ChatListItem, ChatParticipant, TypingUser, UserPrivacy } from '../models/chat-list-item.model';
+import { ChatFolder } from '../models/chat-folder.model';
 import { StoryGroup } from '../models/story.model';
 import { SocketService } from './socket.service';
 import { HttpEvent, HttpParams } from '@angular/common/http';
@@ -34,12 +35,17 @@ export class MainService {
     this.chatItemsSignal.set(value);
   }
 
-  readonly chatFilterSignal = signal<'all' | 'direct' | 'groups' | 'channels' | 'bots'>('all');
-  get chatFilter(): 'all' | 'direct' | 'groups' | 'channels' | 'bots' {
+  readonly chatFilterSignal = signal<string>('all');
+  get chatFilter(): string {
     return this.chatFilterSignal();
   }
-  set chatFilter(value: 'all' | 'direct' | 'groups' | 'channels' | 'bots') {
+  set chatFilter(value: string) {
     this.chatFilterSignal.set(value);
+  }
+
+  readonly userFoldersSignal = signal<ChatFolder[]>([]);
+  get userFolders(): ChatFolder[] {
+    return this.userFoldersSignal();
   }
 
   readonly storiesSignal = signal<StoryGroup[]>([]);
@@ -142,13 +148,15 @@ export class MainService {
     const filter = this.chatFilterSignal();
     const items = this.chatItemsSignal();
     if (filter === 'all') return items;
-    return items.filter((item) => {
-      if (filter === 'direct') return !item.isGroup && !item.isChannel && !item.isSavedMessages;
-      if (filter === 'groups') return !!item.isGroup;
-      if (filter === 'channels') return !!item.isChannel;
-      if (filter === 'bots') return item._id === this.botChatIdSignal();
-      return true;
-    });
+    if (filter === 'direct') return items.filter((item) => !item.isGroup && !item.isChannel && !item.isSavedMessages && !this.isAgentChatSync(item));
+    if (filter === 'groups') return items.filter((item) => !!item.isGroup);
+    if (filter === 'channels') return items.filter((item) => !!item.isChannel);
+    if (filter === 'bots') return items.filter((item) => this.isAgentChatSync(item));
+    const folder = this.userFoldersSignal().find((f) => f._id === filter);
+    if (folder) {
+      return this.filterChatsByFolder(items, folder);
+    }
+    return items;
   });
 
   private chatOpenedSubject = new BehaviorSubject<void>(null);
@@ -351,19 +359,51 @@ export class MainService {
     return this.chatItems.find((x) => x._id === chatId);
   }
 
+  filterChatsByFolder(items: ChatListItem[], folder: ChatFolder): ChatListItem[] {
+    const incIds = new Set(folder.includedChatIds || []);
+    const excIds = new Set(folder.excludedChatIds || []);
+    const types = folder.includedTypes || [];
+
+    return items.filter((c) => {
+      if (excIds.has(c._id)) return false;
+      if (incIds.has(c._id)) return true;
+      if (types.length > 0) {
+        if (types.includes('direct') && !c.isGroup && !c.isChannel && !c.isSavedMessages && !this.isAgentChatSync(c)) {
+          return true;
+        }
+        if (types.includes('groups') && c.isGroup) {
+          return true;
+        }
+        if (types.includes('channels') && c.isChannel) {
+          return true;
+        }
+        if (types.includes('bots') && this.isAgentChatSync(c)) {
+          return true;
+        }
+      }
+      return false;
+    });
+  }
+
   visibleChats(): ChatListItem[] {
     const filter = this.chatFilterSignal();
     const items = this.chatItemsSignal();
+    if (filter === 'all') return items;
     if (filter === 'direct') {
       return items.filter((c) => !c.isGroup && !c.isChannel && !c.isSavedMessages && !this.isAgentChatSync(c));
     }
     if (filter === 'groups') return items.filter((c) => c.isGroup);
     if (filter === 'channels') return items.filter((c) => c.isChannel);
     if (filter === 'bots') return items.filter((c) => this.isAgentChatSync(c));
+
+    const folder = this.userFoldersSignal().find((f) => f._id === filter);
+    if (folder) {
+      return this.filterChatsByFolder(items, folder);
+    }
     return items;
   }
 
-  setChatFilter(filter: 'all' | 'direct' | 'groups' | 'channels' | 'bots') {
+  setChatFilter(filter: string) {
     this.chatFilter = filter;
   }
 
@@ -374,7 +414,56 @@ export class MainService {
     else if (folder === 'groups') list = this.chatItems.filter((c) => c.isGroup);
     else if (folder === 'channels') list = this.chatItems.filter((c) => c.isChannel);
     else if (folder === 'bots') list = this.chatItems.filter((c) => this.isAgentChatSync(c));
+    else {
+      const customFolder = this.userFoldersSignal().find((f) => f._id === folder);
+      if (customFolder) {
+        list = this.filterChatsByFolder(this.chatItems, customFolder);
+      }
+    }
     return list.reduce((acc, c) => acc + (c.messageCount || 0), 0);
+  }
+
+  loadUserFolders(): Observable<ChatFolder[]> {
+    return this.httpRequestService.get('user/folders').pipe(
+      map((res: any) => (Array.isArray(res) ? res : [])),
+      tap((folders: ChatFolder[]) => {
+        this.userFoldersSignal.set(folders);
+      }),
+      catchError(() => of([]))
+    );
+  }
+
+  createFolder(folder: Partial<ChatFolder>): Observable<ChatFolder[]> {
+    return this.httpRequestService.post('user/folders', folder).pipe(
+      tap((folders: any) => {
+        if (Array.isArray(folders)) {
+          this.userFoldersSignal.set(folders);
+        }
+      })
+    );
+  }
+
+  updateFolder(folderId: string, folder: Partial<ChatFolder>): Observable<ChatFolder[]> {
+    return this.httpRequestService.put('user/folders', folderId, folder).pipe(
+      tap((folders: any) => {
+        if (Array.isArray(folders)) {
+          this.userFoldersSignal.set(folders);
+        }
+      })
+    );
+  }
+
+  deleteFolder(folderId: string): Observable<ChatFolder[]> {
+    return this.httpRequestService.delete('user/folders', folderId).pipe(
+      tap((folders: any) => {
+        if (Array.isArray(folders)) {
+          this.userFoldersSignal.set(folders);
+        }
+        if (this.chatFilter === folderId) {
+          this.chatFilter = 'all';
+        }
+      })
+    );
   }
 
   async openSavedMessages(): Promise<ChatListItem> {

@@ -17,13 +17,16 @@ import { MainService } from '../../main.service';
 import { FormsModule } from '@angular/forms';
 import { debounceTime, Subject, take } from 'rxjs';
 import { ChatListItem, TypingUser } from '../../../models/chat-list-item.model';
+import { ChatFolder } from '../../../models/chat-folder.model';
 import { StoryGroup } from '../../../models/story.model';
 import { I18nPipe } from '../../../helpers/i18n.pipe';
 import { TranslationService } from '../../../helpers/translation.service';
 import { DeleteChatDialogComponent } from '../../delete-chat-dialog/delete-chat-dialog.component';
+import { FolderDialogComponent } from '../../folder-dialog/folder-dialog.component';
 import { StoryCreateDialogComponent } from '../../story-create/story-create-dialog.component';
 import { StoryViewerDialogComponent } from '../../story-viewer/story-viewer-dialog.component';
 import { getTelegramGradient, getInitials } from '../../../helpers/avatar.helper';
+import { IconProp } from '@fortawesome/fontawesome-svg-core';
 
 export interface ChatContextMenuTarget {
   chat: ChatListItem;
@@ -55,6 +58,11 @@ export class ChatListComponent implements OnInit {
   readonly chatContextMenuX = signal<number>(0);
   readonly chatContextMenuY = signal<number>(0);
   readonly chatContextMenuTarget = signal<ChatListItem | null>(null);
+
+  readonly showFolderContextMenu = signal<boolean>(false);
+  readonly folderContextMenuX = signal<number>(0);
+  readonly folderContextMenuY = signal<number>(0);
+  readonly folderContextMenuTarget = signal<ChatFolder | null>(null);
 
   readonly filteredSearchResults = computed(() => {
     const filter = this.searchTypeFilter();
@@ -112,12 +120,14 @@ export class ChatListComponent implements OnInit {
 
   ngOnInit() {
     this.mainService.getChatList();
+    this.mainService.loadUserFolders().pipe(take(1)).subscribe();
     this.mainService.loadStories().pipe(take(1)).subscribe();
   }
 
   @HostListener('document:click')
   onDocumentClick() {
     this.showChatContextMenu.set(false);
+    this.showFolderContextMenu.set(false);
   }
 
   onSearchChange(query: string) {
@@ -366,5 +376,104 @@ export class ChatListComponent implements OnInit {
         break;
     }
     this.closeChatContextMenu();
+  }
+
+  getFolderIcon(iconName?: string): IconProp {
+    switch (iconName) {
+      case 'briefcase':
+        return ['fas', 'briefcase'];
+      case 'star':
+        return ['fas', 'star'];
+      case 'heart':
+        return ['fas', 'heart'];
+      case 'comments':
+        return ['fas', 'comments'];
+      case 'users':
+        return ['fas', 'users'];
+      case 'broadcast-tower':
+        return ['fas', 'broadcast-tower'];
+      case 'robot':
+        return ['fas', 'robot'];
+      case 'book':
+        return ['fas', 'book'];
+      case 'bookmark':
+        return ['fas', 'bookmark'];
+      case 'tag':
+        return ['fas', 'tag'];
+      default:
+        return ['fas', 'folder'];
+    }
+  }
+
+  openFolderContextMenu(event: MouseEvent, folder: ChatFolder) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.showChatContextMenu.set(false);
+    this.folderContextMenuTarget.set(folder);
+
+    let x = event.clientX;
+    let y = event.clientY;
+    const menuWidth = 160;
+    const menuHeight = 90;
+    const padding = 12;
+
+    if (x + menuWidth > window.innerWidth - padding) {
+      x = window.innerWidth - menuWidth - padding;
+    }
+    if (x < padding) x = padding;
+    if (y + menuHeight > window.innerHeight - padding) {
+      y = window.innerHeight - menuHeight - padding;
+    }
+    if (y < padding) y = padding;
+
+    this.folderContextMenuX.set(Math.round(x));
+    this.folderContextMenuY.set(Math.round(y));
+    this.showFolderContextMenu.set(true);
+  }
+
+  closeFolderContextMenu() {
+    this.showFolderContextMenu.set(false);
+    this.folderContextMenuTarget.set(null);
+  }
+
+  openCreateFolderDialog() {
+    this.closeFolderContextMenu();
+    const dialogRef = this.dialog.open(FolderDialogComponent, {
+      width: '480px',
+      maxWidth: '94vw',
+      panelClass: 'rtl-dialog',
+    });
+    dialogRef.afterClosed().pipe(take(1)).subscribe((res) => {
+      if (res) {
+        this.mainService.loadUserFolders().subscribe();
+      }
+    });
+  }
+
+  openEditFolderDialog(folder: ChatFolder) {
+    this.closeFolderContextMenu();
+    const dialogRef = this.dialog.open(FolderDialogComponent, {
+      width: '480px',
+      maxWidth: '94vw',
+      panelClass: 'rtl-dialog',
+      data: { folder },
+    });
+    dialogRef.afterClosed().pipe(take(1)).subscribe((res) => {
+      if (res) {
+        this.mainService.loadUserFolders().subscribe();
+      }
+    });
+  }
+
+  deleteFolder(folder: ChatFolder) {
+    this.closeFolderContextMenu();
+    if (!folder._id) return;
+    if (confirm(this.translationService.t('folders.deleteConfirm'))) {
+      this.mainService.deleteFolder(folder._id).pipe(take(1)).subscribe({
+        next: () => {
+          this.mainService.snackbar.success(this.translationService.t('folders.deletedSuccess'), 3000);
+        },
+      });
+    }
   }
 }

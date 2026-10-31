@@ -210,6 +210,23 @@
           font-weight: 700;
         }
 
+        .folder-tab-icon {
+          font-size: 0.8rem;
+          opacity: 0.85;
+        }
+
+        &.add-folder-tab-btn {
+          padding: 0.35rem 0.6rem;
+          color: var(--color-text-faint);
+          border: 1px dashed var(--color-border);
+
+          &:hover {
+            color: var(--color-primary);
+            border-color: var(--color-primary);
+            background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+          }
+        }
+
         .folder-badge {
           display: inline-flex;
           align-items: center;

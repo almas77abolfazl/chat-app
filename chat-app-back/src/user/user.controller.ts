@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Post, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserNamesDto } from './dto/update-user-names.dto';
 import { AddContactByPhoneDto } from './dto/add-contact-by-phone.dto';
+import { CreateFolderDto, UpdateFolderDto } from './dto/create-folder.dto';
 import { IUser } from './interfaces/user.interface';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RequestWithUser } from 'src/auth/interfaces/request-with-user.model';
@@ -35,6 +36,30 @@ export class UserController {
   @Delete('avatar/:filename')
   async deleteAvatar(@Req() request: RequestWithUser, @Param('filename') filename: string) {
     return this.userService.deleteAvatar(request.user._id.toString(), filename);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('folders')
+  async getFolders(@Req() request: RequestWithUser) {
+    return this.userService.getFolders(request.user._id.toString());
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('folders')
+  async createFolder(@Body() dto: CreateFolderDto, @Req() request: RequestWithUser) {
+    return this.userService.createFolder(request.user._id.toString(), dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Put('folders/:folderId')
+  async updateFolder(@Param('folderId') folderId: string, @Body() dto: UpdateFolderDto, @Req() request: RequestWithUser) {
+    return this.userService.updateFolder(request.user._id.toString(), folderId, dto);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('folders/:folderId')
+  async deleteFolder(@Param('folderId') folderId: string, @Req() request: RequestWithUser) {
+    return this.userService.deleteFolder(request.user._id.toString(), folderId);
   }
 
   @UseGuards(JwtAuthGuard)

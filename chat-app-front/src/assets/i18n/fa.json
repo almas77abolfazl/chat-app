@@ -220,7 +220,21 @@
     "direct": "شخصی",
     "groups": "گروه‌ها",
     "channels": "کانال‌ها",
-    "bots": "ربات‌ها"
+    "bots": "ربات‌ها",
+    "createFolder": "پوشه جدید",
+    "editFolder": "ویرایش پوشه",
+    "deleteFolder": "حذف پوشه",
+    "folderName": "نام پوشه",
+    "folderNamePlaceholder": "مثلاً کاری، خانواده، پروژه‌ها",
+    "chooseIcon": "انتخاب آیکون",
+    "chatTypes": "انواع گفتگو",
+    "includedChats": "گفتگوهای اضافه‌شده",
+    "excludedChats": "گفتگوهای مستثنی",
+    "typesDescription": "انواع گفتگوهایی که می‌خواهید در این پوشه قرار گیرند را انتخاب کنید.",
+    "includedDescription": "گفتگوهای خاصی که مایلید همیشه در این پوشه باشند را مشخص کنید.",
+    "excludedDescription": "گفتگوهایی که مایلید هرگز در این پوشه نمایش داده نشوند را انتخاب کنید.",
+    "deleteConfirm": "آیا از حذف این پوشه اطمینان دارید؟ گفتگوهای داخل آن حذف نخواهند شد.",
+    "deletedSuccess": "پوشه با موفقیت حذف شد"
   },
   "search": {
     "placeholder": "جستجو...",

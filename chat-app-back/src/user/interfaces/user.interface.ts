@@ -8,6 +8,15 @@ export interface UserPrivacy {
   profilePhoto: PrivacyRule;
 }
 
+export interface IChatFolder {
+  _id?: Types.ObjectId | string;
+  name: string;
+  icon?: string;
+  includedChatIds?: (Types.ObjectId | string)[];
+  excludedChatIds?: (Types.ObjectId | string)[];
+  includedTypes?: string[];
+}
+
 export interface IUser extends Document {
   username?: string;
   phoneNumber: string;
@@ -26,4 +35,5 @@ export interface IUser extends Document {
   lastSeen?: Date;
   notifications: boolean;
   privacy?: UserPrivacy;
+  folders?: IChatFolder[];
 }

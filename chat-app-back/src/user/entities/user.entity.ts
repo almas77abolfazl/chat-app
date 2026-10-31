@@ -73,6 +73,28 @@ export class User {
     _id: false,
   })
   privacy?: UserPrivacy;
+
+  @Prop({
+    type: [
+      {
+        _id: { type: Types.ObjectId, default: () => new Types.ObjectId() },
+        name: { type: String, required: true },
+        icon: { type: String, default: 'folder' },
+        includedChatIds: [{ type: Types.ObjectId, ref: 'Chat' }],
+        excludedChatIds: [{ type: Types.ObjectId, ref: 'Chat' }],
+        includedTypes: [{ type: String, default: [] }],
+      },
+    ],
+    default: [],
+  })
+  folders?: {
+    _id?: Types.ObjectId;
+    name: string;
+    icon?: string;
+    includedChatIds?: Types.ObjectId[];
+    excludedChatIds?: Types.ObjectId[];
+    includedTypes?: string[];
+  }[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
