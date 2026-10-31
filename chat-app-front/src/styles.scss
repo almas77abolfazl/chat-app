@@ -802,13 +802,17 @@ input, button, textarea, select {
   overflow-x: hidden;
   text-align: start;
 
+  &[dir="rtl"],
   [dir="rtl"] &,
   html[dir="rtl"] & {
+    direction: rtl;
     text-align: right;
   }
 
+  &[dir="ltr"],
   [dir="ltr"] &,
   html[dir="ltr"] & {
+    direction: ltr;
     text-align: left;
   }
 }
@@ -829,41 +833,82 @@ input, button, textarea, select {
   width: 100%;
   text-align: start;
 
-  [dir="rtl"] &,
-  html[dir="rtl"] & {
+  [dir="rtl"] & {
+    direction: rtl;
     text-align: right;
   }
 
-  [dir="ltr"] &,
-  html[dir="ltr"] & {
+  [dir="ltr"] & {
+    direction: ltr;
     text-align: left;
   }
 
-  &:hover {
-    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-    color: var(--color-primary-dark);
-  }
-
-  &.danger {
-    color: var(--color-danger);
-    &:hover {
-      background: color-mix(in srgb, var(--color-danger) 8%, transparent);
-      color: var(--color-danger);
-    }
+  span {
+    color: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    line-height: 1.25;
   }
 
   fa-icon,
   mat-icon {
     font-size: 0.95rem;
     width: 1.25rem;
+    height: 1.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     color: var(--color-text-secondary);
     flex-shrink: 0;
+
+    svg {
+      width: 1em !important;
+      height: 1em !important;
+      display: block;
+      fill: currentColor;
+    }
   }
 
-  &:hover fa-icon,
-  &:hover mat-icon {
-    color: inherit;
+  &:hover {
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    color: var(--color-primary-dark);
+
+    span {
+      color: var(--color-primary-dark);
+    }
+
+    fa-icon,
+    mat-icon {
+      color: var(--color-primary-dark);
+    }
+  }
+
+  &.danger {
+    color: var(--color-danger);
+
+    span {
+      color: var(--color-danger);
+    }
+
+    fa-icon,
+    mat-icon {
+      color: var(--color-danger);
+    }
+
+    &:hover {
+      background: color-mix(in srgb, var(--color-danger) 8%, transparent);
+      color: var(--color-danger);
+
+      span {
+        color: var(--color-danger);
+      }
+
+      fa-icon,
+      mat-icon {
+        color: var(--color-danger);
+      }
+    }
   }
 }
 

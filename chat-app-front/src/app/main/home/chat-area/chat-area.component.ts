@@ -461,6 +461,11 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
     return senderId?.toString() === this.ownId();
   }
 
+  canEditMessage(message: Message | null): boolean {
+    if (!message) return false;
+    return this.ownMessage(message) && !message.isDeleted && !message.mediaType;
+  }
+
   senderName(message: any): string {
     if (this.ownMessage(message)) return '';
     const s = message.sender || {};

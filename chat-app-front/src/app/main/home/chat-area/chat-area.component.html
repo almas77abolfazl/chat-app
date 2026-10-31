@@ -694,7 +694,7 @@
   }
 
   @if (showContextMenu && contextMenuTarget) {
-  <div class="context-menu" [style.left.px]="contextMenuX" [style.top.px]="contextMenuY" (click)="$event.stopPropagation()">
+  <div class="context-menu" [dir]="translationService.isRTL() ? 'rtl' : 'ltr'" [style.left.px]="contextMenuX" [style.top.px]="contextMenuY" (click)="$event.stopPropagation()">
     @if (!contextMenuTarget.isDeleted) {
     <div class="context-reactions-bar">
       <button type="button" class="context-reaction-btn" [class.active]="isReactedWith(contextMenuTarget, '❤️')" (click)="addContextMenuReaction('❤️'); $event.stopPropagation()" title="❤️">
@@ -739,7 +739,7 @@
     </button>
     }
 
-    @if (ownMessage(contextMenuTarget) && !contextMenuTarget.isDeleted && !contextMenuTarget.mediaType) {
+    @if (canEditMessage(contextMenuTarget)) {
     <button type="button" class="context-menu-item" (click)="onContextMenuAction('edit')">
       <fa-icon [icon]="['fas', 'pen']"></fa-icon>
       <span>{{ 'actions.edit' | i18n }}</span>
