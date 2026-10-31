@@ -1383,7 +1383,11 @@ export class MainService {
   }
 
   openCreateChat(): void {
-    this.dialog.open(CreateChatComponent, { width: '420px', panelClass: 'rtl-dialog' });
+    this.dialog.open(CreateChatComponent, {
+      width: '460px',
+      maxWidth: '94vw',
+      panelClass: 'create-chat-dialog-panel',
+    });
   }
 
   showContacts() {

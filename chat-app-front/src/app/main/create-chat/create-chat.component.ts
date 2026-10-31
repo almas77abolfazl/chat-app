@@ -1,9 +1,10 @@
-import { Component, ChangeDetectionStrategy, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef } from '@angular/material/dialog';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MainService } from '../main.service';
+import { TranslationService } from '../../helpers/translation.service';
 import { I18nPipe } from '../../helpers/i18n.pipe';
 import { take } from 'rxjs';
 
@@ -14,7 +15,7 @@ type Mode = 'direct' | 'group' | 'channel';
   standalone: true,
   imports: [CommonModule, FormsModule, FontAwesomeModule, I18nPipe],
   template: `
-    <div class="create-chat-dialog">
+    <div class="create-chat-dialog" [dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
       <div class="dialog-header">
         <h2 class="dialog-title">{{ 'chat.newChat' | i18n }}</h2>
         <button class="dialog-close-btn" (click)="cancel()">
@@ -178,10 +179,11 @@ export class CreateChatComponent {
     return true;
   });
 
-  constructor(
-    private dialogRef: MatDialogRef<CreateChatComponent>,
-    private mainService: MainService
-  ) {}
+  private readonly dialogRef = inject(MatDialogRef<CreateChatComponent>);
+  public readonly mainService = inject(MainService);
+  public readonly translationService = inject(TranslationService);
+
+  constructor() {}
 
   setMode(m: Mode) {
     this.mode.set(m);

@@ -113,6 +113,27 @@ body.theme-dark {
   }
 }
 
+.create-chat-dialog-panel {
+  max-width: 460px !important;
+  width: 94vw !important;
+
+  .mat-mdc-dialog-container {
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: transparent !important;
+    box-shadow: none !important;
+
+    .mdc-dialog__surface {
+      padding: 0 !important;
+      background: var(--color-surface-solid) !important;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28) !important;
+      border-radius: var(--radius-2xl) !important;
+      overflow: hidden !important;
+      border: 1px solid color-mix(in srgb, var(--color-border) 45%, transparent) !important;
+    }
+  }
+}
+
 @font-face {
   font-family: "Shabnam";
   src: url("/Shabnam.ttf") format("truetype");
