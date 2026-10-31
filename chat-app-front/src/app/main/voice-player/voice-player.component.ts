@@ -14,11 +14,12 @@ import {
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { VoicePlayerService } from './voice-player.service';
+import { I18nPipe } from '../../helpers/i18n.pipe';
 
 @Component({
   selector: 'app-voice-player',
   standalone: true,
-  imports: [CommonModule, FontAwesomeModule],
+  imports: [CommonModule, FontAwesomeModule, I18nPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="voice-player-container" [class.is-sent]="isSent" [class.is-playing]="isPlaying">
@@ -26,7 +27,7 @@ import { VoicePlayerService } from './voice-player.service';
         type="button"
         class="play-toggle-btn"
         (click)="togglePlay(); $event.stopPropagation()"
-        [attr.title]="(isPlaying ? 'actions.pause' : 'actions.play')"
+        [attr.title]="(isPlaying ? 'actions.pause' : 'actions.play') | i18n"
       >
         <fa-icon [icon]="['fas', isPlaying ? 'pause' : 'play']" class="play-icon"></fa-icon>
       </button>
@@ -54,7 +55,7 @@ import { VoicePlayerService } from './voice-player.service';
             type="button"
             class="speed-toggle-btn"
             (click)="toggleSpeed(); $event.stopPropagation()"
-            [attr.title]="'Playback speed: ' + playbackRate + 'x'"
+            [attr.title]="('voice.playbackSpeed' | i18n) + ': ' + playbackRate + 'x'"
           >
             {{ playbackRate }}X
           </button>

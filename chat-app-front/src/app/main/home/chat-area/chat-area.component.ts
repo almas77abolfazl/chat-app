@@ -911,7 +911,7 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
 
   deleteMessage(message: Message) {
     if (!this.ownMessage(message)) return;
-    if (confirm('آیا از حذف این پیام اطمینان دارید؟')) {
+    if (confirm(this.translationService.t('actions.confirmDelete'))) {
       this.mainService.deleteMessage(message._id).pipe(take(1)).subscribe({
         next: () => {},
         error: () => {},
@@ -1002,7 +1002,7 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
       error: () => {
         message.reactions = previousReactions;
         this.cdr.markForCheck();
-        this.mainService.snackbar.error('امکان ثبت واکنش وجود ندارد', 3000);
+        this.mainService.snackbar.error('chat.reactionError', 3000);
       },
     });
   }
@@ -1173,7 +1173,7 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
         break;
       case 'copy':
         navigator.clipboard.writeText(this.contextMenuTarget!.content || '');
-        this.mainService.snackbar.success('کپی شد', 2000);
+        this.mainService.snackbar.success('actions.copied', 2000);
         break;
     }
     this.closeContextMenu();
@@ -1452,10 +1452,10 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
                 this.mainService.currentChat.messages = [];
               }
               this.mainService.getChatList();
-              this.mainService.snackbar.success('پیام‌های ذخیره‌شده پاک شدند', 3000);
+              this.mainService.snackbar.success('chat.savedMessagesCleared', 3000);
             },
             error: () => {
-              this.mainService.snackbar.error('خطا در پاک کردن پیام‌ها', 3000);
+              this.mainService.snackbar.error('chat.clearMessagesError', 3000);
             },
           });
       }
@@ -1487,7 +1487,7 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
               this.mainService.getChatList();
             },
             error: () => {
-              this.mainService.snackbar.error('خطا در حذف گفتگو', 3000);
+              this.mainService.snackbar.error('chat.deleteChatError', 3000);
             },
           });
       });
@@ -1496,14 +1496,14 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
   leaveCurrentChat() {
     const chat = this.mainService.currentChat;
     if (!chat) return;
-    if (confirm('آیا از خروج از این گفتگو مطمئن هستید؟')) {
+    if (confirm(this.translationService.t('chat.confirmLeaveChat'))) {
       this.mainService.leaveChat(chat._id as string).pipe(take(1)).subscribe({
         next: () => {
           this.mainService.closeCurrentChat();
           this.mainService.getChatList();
         },
         error: () => {
-          this.mainService.snackbar.error('خطا در خروج از گفتگو', 3000);
+          this.mainService.snackbar.error('chat.leaveChatError', 3000);
         },
       });
     }
@@ -1599,7 +1599,7 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
         }
       },
       error: () => {
-        this.mainService.snackbar.error('خطا در ارسال گیف', 3000);
+        this.mainService.snackbar.error('chat.gifSendError', 3000);
       },
     });
     this.showContentPicker = false;
@@ -1630,20 +1630,67 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
   }
 
   formatSystemMessage(message: Message): string {
-    const content = message.content || '';
+    const myId = this.mainService.authService.getUserId();
     const myName = `${this.mainService.authService.getFirstName() || ''} ${this.mainService.authService.getLastName() || ''}`.trim();
 
+    // 1. Modern language-agnostic structured system actions
+    if (message.systemAction) {
+      const meta = message.metadata || {};
+      const actorId = meta['actorId'];
+      const actorName = meta['actorName'];
+      const targetId = meta['targetId'];
+      const targetName = meta['targetName'];
+      const targetNames = meta['targetNames'];
+
+      const isActorMe = (actorId && actorId === myId) || (message.sender?._id || message.sender) === myId;
+      const actor = isActorMe ? this.translationService.t('chat.you') : (actorName || this.translationService.t('admin.roleAdmin'));
+
+      switch (message.systemAction) {
+        case 'GROUP_CREATED':
+          return isActorMe
+            ? this.translationService.t('system.youCreatedGroup')
+            : this.translationService.t('system.userCreatedGroup', { actor });
+        case 'MEMBER_ADDED': {
+          const isTargetMe = (targetId && targetId === myId) ||
+            (Array.isArray(targetNames) && myName && targetNames.includes(myName)) ||
+            (targetName && myName && targetName === myName);
+          if (isTargetMe) {
+            return this.translationService.t('system.youWereAdded', { actor });
+          }
+          const targets = Array.isArray(targetNames) && targetNames.length > 0
+            ? targetNames.join(', ')
+            : (targetName || this.translationService.t('chat.user'));
+          return this.translationService.t('system.userAddedUser', { actor, targets });
+        }
+        case 'MEMBER_LEFT':
+          return isActorMe
+            ? this.translationService.t('system.youLeftGroup')
+            : this.translationService.t('system.userLeftGroup', { actor });
+        default:
+          break;
+      }
+    }
+
+    // 2. Legacy string parsing fallback
+    const content = message.content || '';
     if (myName && content.includes(myName) && content.includes('اضافه کرد')) {
       const parts = content.split('،');
-      const author = parts[0] || 'مدیر';
-      return `شما توسط ${author} به گروه اضافه شدید`;
+      const author = parts[0] || this.translationService.t('admin.roleAdmin');
+      return this.translationService.t('system.youWereAdded', { actor: author });
+    }
+    if (content.includes('گروه را ایجاد کرد')) {
+      const actor = content.replace('گروه را ایجاد کرد', '').trim();
+      const isActorMe = actor === 'شما' || (myName && actor === myName);
+      return isActorMe
+        ? this.translationService.t('system.youCreatedGroup')
+        : this.translationService.t('system.userCreatedGroup', { actor });
     }
     return content;
   }
 
   async startVoiceRecording(): Promise<void> {
     if (!navigator.mediaDevices?.getUserMedia) {
-      this.mainService.snackbar.error('مرورگر شما از ضبط صدا پشتیبانی نمی‌کند', 3000);
+      this.mainService.snackbar.error('chat.micNotSupported', 3000);
       return;
     }
 
@@ -1702,7 +1749,7 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
       sampleLoop();
     } catch (err) {
       console.error('Failed to access microphone:', err);
-      this.mainService.snackbar.error('دسترسی به میکروفون داده نشد', 3000);
+      this.mainService.snackbar.error('chat.micPermissionDenied', 3000);
     }
   }
 
@@ -1743,7 +1790,7 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
       this.mainService.sendMediaWithProgress(chatId, file, '', resampledWaveform).pipe(take(1)).subscribe({
         next: () => {},
         error: () => {
-          this.mainService.snackbar.error('خطا در ارسال پیام صوتی', 3000);
+          this.mainService.snackbar.error('chat.voiceSendError', 3000);
         },
       });
     };

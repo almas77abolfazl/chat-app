@@ -1,6 +1,7 @@
 export interface StickerItem {
   id: string;
   name: string;
+  nameKey?: string;
   pack: string;
   url: string;
 }
@@ -8,14 +9,15 @@ export interface StickerItem {
 export interface StickerPack {
   id: string;
   name: string;
+  nameKey?: string;
   icon: string;
 }
 
 export const STICKER_PACKS: StickerPack[] = [
-  { id: 'all', name: 'همه', icon: '🌟' },
-  { id: 'panda', name: 'پاندا', icon: '🐼' },
-  { id: 'cat', name: 'گربه', icon: '🐱' },
-  { id: 'reactions', name: 'واکنش‌ها', icon: '🔥' },
+  { id: 'all', name: 'همه', nameKey: 'stickers.pack.all', icon: '🌟' },
+  { id: 'panda', name: 'پاندا', nameKey: 'stickers.pack.panda', icon: '🐼' },
+  { id: 'cat', name: 'گربه', nameKey: 'stickers.pack.cat', icon: '🐱' },
+  { id: 'reactions', name: 'واکنش‌ها', nameKey: 'stickers.pack.reactions', icon: '🔥' },
 ];
 
 function svgDataUrl(svg: string): string {

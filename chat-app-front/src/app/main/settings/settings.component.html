@@ -124,6 +124,25 @@
           </div>
           }
         </div>
+
+        <div
+          class="language-row"
+          [class.active]="translationService.currentLang() === 'ar'"
+          (click)="selectLanguage('ar')"
+        >
+          <div class="lang-info">
+            <span class="lang-flag">🇸🇦</span>
+            <div class="lang-text">
+              <span class="lang-primary">العربية</span>
+              <span class="lang-secondary">Arabic (RTL)</span>
+            </div>
+          </div>
+          @if (translationService.currentLang() === 'ar') {
+          <div class="check-badge">
+            <fa-icon [icon]="['fas', 'check']"></fa-icon>
+          </div>
+          }
+        </div>
       </div>
     </div>
 

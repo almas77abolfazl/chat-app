@@ -126,10 +126,10 @@ export class SettingsComponent implements OnInit {
     this.mainService.unblockUser(user._id).pipe(take(1)).subscribe({
       next: () => {
         this.blockedUsers = this.blockedUsers.filter((u) => u._id !== user._id);
-        this.mainService.snackbar.success('کاربر از مسدودیت خارج شد', 3000);
+        this.mainService.snackbar.success('block.unblockUser', 3000);
       },
       error: () => {
-        this.mainService.snackbar.error('خطا در رفع مسدودیت', 3000);
+        this.mainService.snackbar.error('block.unblockError', 3000);
       },
     });
   }
@@ -153,7 +153,7 @@ export class SettingsComponent implements OnInit {
     this.mainService.updateNotificationSettings(this.notificationsEnabled).pipe(take(1)).subscribe({
       error: () => {
         this.notificationsEnabled = !this.notificationsEnabled;
-        this.mainService.snackbar.error('خطا در ذخیره تنظیمات', 3000);
+        this.mainService.snackbar.error('settings.saveError', 3000);
       },
     });
   }

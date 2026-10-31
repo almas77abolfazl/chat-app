@@ -33,7 +33,7 @@ export class DeleteChatDialogComponent {
   get peerName(): string {
     const c = this.data.chat;
     if (c.isGroup || c.isChannel) return c.name || '';
-    return `${c.firstName || ''} ${c.lastName || ''}`.trim() || 'طرف مقابل';
+    return `${c.firstName || ''} ${c.lastName || ''}`.trim() || this.translationService.t('chat.user');
   }
 
   get alsoDeleteLabel(): string {

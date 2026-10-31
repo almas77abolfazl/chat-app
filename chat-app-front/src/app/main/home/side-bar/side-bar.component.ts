@@ -84,7 +84,7 @@ export class SideBarComponent {
     this.mainService.updateNotificationSettings(next).pipe(take(1)).subscribe({
       error: () => {
         this.notificationsEnabled.set(!next);
-        this.mainService.snackbar.error('خطا در ذخیره تنظیمات', 3000);
+        this.mainService.snackbar.error('settings.saveError', 3000);
       },
     });
   }

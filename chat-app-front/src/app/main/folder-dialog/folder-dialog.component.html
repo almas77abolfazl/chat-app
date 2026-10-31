@@ -38,7 +38,7 @@
           class="icon-choice-btn"
           [class.selected]="selectedIcon() === opt.id"
           (click)="selectedIcon.set(opt.id)"
-          [title]="opt.label"
+          [title]="('folders.icons.' + opt.id) | i18n"
         >
           <fa-icon [icon]="opt.icon"></fa-icon>
         </button>

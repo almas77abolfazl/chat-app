@@ -321,7 +321,7 @@
         <div class="forwarded-header" (click)="openForwardSenderProfile(message, $event)">
           <fa-icon [icon]="['fas', 'share']" class="forward-header-icon"></fa-icon>
           <span class="forward-label">{{ 'chat.forwardedFrom' | i18n }}:</span>
-          <span class="forward-author">{{ message.forwardFrom.fromSenderName || 'کاربر' }}</span>
+          <span class="forward-author">{{ message.forwardFrom.fromSenderName || ('chat.user' | i18n) }}</span>
         </div>
         }
         @if (message.toolCalls?.length) {

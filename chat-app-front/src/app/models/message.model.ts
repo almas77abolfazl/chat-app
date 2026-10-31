@@ -21,6 +21,8 @@ export interface Message {
   isDeleted?: boolean;
   deletedForEveryone?: boolean;
   mediaType?: 'image' | 'video' | 'file' | 'voice' | 'sticker' | 'gif' | 'emoji' | 'system';
+  systemAction?: string;
+  metadata?: Record<string, any>;
   fileUrl?: string;
   fileName?: string;
   fileSize?: number;

@@ -74,7 +74,28 @@
     "lastSeenToday": "last seen today at {time}",
     "lastSeenYesterday": "last seen yesterday at {time}",
     "lastSeenRecently": "last seen recently",
-    "lastSeenALongTimeAgo": "last seen a long time ago"
+    "lastSeenALongTimeAgo": "last seen a long time ago",
+    "reactionError": "Unable to add reaction",
+    "micNotSupported": "Your browser does not support voice recording",
+    "micPermissionDenied": "Microphone access was denied",
+    "voiceSendError": "Failed to send voice message",
+    "gifSendError": "Failed to send GIF",
+    "savedMessagesCleared": "Saved messages cleared",
+    "clearMessagesError": "Failed to clear messages",
+    "deleteChatError": "Failed to delete chat",
+    "leaveChatError": "Failed to leave chat",
+    "confirmLeaveChat": "Are you sure you want to leave this conversation?",
+    "startChatError": "Failed to start conversation",
+    "createChatError": "Failed to create conversation",
+    "loadError": "Failed to load chats",
+    "searchPlaceholder": "Search contacts or users...",
+    "searchPrompt": "Type a name or username to start chatting",
+    "directChat": "Direct Chat",
+    "user": "User",
+    "all": "All"
+  },
+  "voice": {
+    "playbackSpeed": "Playback speed"
   },
   "privacy": {
     "title": "Privacy and Security",
@@ -103,10 +124,30 @@
     "noContacts": "No saved contacts",
     "phoneNumber": "Phone number",
     "firstName": "First name",
-    "lastName": "Last name"
+    "lastName": "Last name",
+    "contactAdded": "Contact added successfully",
+    "contactRemoved": "Contact removed",
+    "removeError": "Failed to remove contact",
+    "addError": "Failed to add contact"
   },
-  "groups": "Groups",
-  "channels": "Channels",
+  "groups": {
+    "title": "Groups",
+    "newGroup": "New Group",
+    "groupName": "Group Name",
+    "groupNamePlaceholder": "Enter group name...",
+    "addMembers": "Add Members",
+    "searchMembers": "Search people to add to group...",
+    "createGroup": "Create Group",
+    "confirmLeave": "Are you sure you want to leave this group?",
+    "leaveError": "Failed to leave group"
+  },
+  "channels": {
+    "title": "Channels",
+    "newChannel": "New Channel",
+    "channelName": "Channel Name",
+    "channelNamePlaceholder": "Enter channel name...",
+    "createChannel": "Create Channel"
+  },
   "new": "New",
   "members": "members",
   "publicChannel": "Public Channel",
@@ -121,6 +162,7 @@
     "save": "Save",
     "close": "Close",
     "copy": "Copy",
+    "copied": "Copied",
     "pin": "Pin",
     "unpin": "Unpin",
     "confirmDelete": "Are you sure you want to delete this message?",
@@ -131,7 +173,10 @@
     "prev": "Previous",
     "next": "Next",
     "retry": "Retry",
-    "download": "Download"
+    "download": "Download",
+    "play": "Play",
+    "pause": "Pause",
+    "send": "Send"
   },
   "profile": {
     "editProfile": "Edit Profile",
@@ -170,6 +215,9 @@
     "phone": "Phone",
     "deleteAvatar": "Delete this photo",
     "avatarDeleted": "Profile photo deleted",
+    "avatarDeleteError": "Failed to delete photo",
+    "avatarSaveError": "Failed to save avatar",
+    "profileUpdateError": "Failed to update profile",
     "nextPhoto": "Next photo",
     "prevPhoto": "Previous photo",
     "openPhoto": "Enlarge photo",
@@ -183,7 +231,8 @@
     "replySuggest": "Reply suggestion",
     "typing": "Assistant is responding",
     "history": "Assistance",
-    "startConversation": "Start a new conversation"
+    "startConversation": "Start a new conversation",
+    "openError": "Failed to open assistant chat"
   },
   "brand": {
     "name": "ChatApp"
@@ -236,7 +285,20 @@
     "includedDescription": "Explicitly include specific conversations in this folder.",
     "excludedDescription": "Explicitly exclude specific conversations from this folder.",
     "deleteConfirm": "Are you sure you want to delete this folder? Conversations will not be deleted.",
-    "deletedSuccess": "Folder deleted successfully"
+    "deletedSuccess": "Folder deleted successfully",
+    "icons": {
+      "folder": "Folder",
+      "briefcase": "Work",
+      "star": "Starred",
+      "heart": "Personal",
+      "comments": "Chats",
+      "users": "Groups",
+      "broadcast-tower": "Channels",
+      "robot": "Bots",
+      "book": "Study",
+      "bookmark": "Saved",
+      "tag": "Label"
+    }
   },
   "search": {
     "placeholder": "Search...",
@@ -278,12 +340,14 @@
     "languageDesc": "Choose application display language",
     "persian": "فارسی (Persian)",
     "english": "English (US)",
+    "arabic": "العربية (Arabic)",
     "notifications": "Notifications",
     "notificationsDesc": "Receive notifications for new messages",
     "account": "Account",
     "editProfile": "Edit Profile",
     "about": "About ChatApp",
-    "version": "Version 1.0.0"
+    "version": "Version 1.0.0",
+    "saveError": "Failed to save settings"
   },
   "deleteDialog": {
     "title": "Delete Chat",
@@ -311,7 +375,9 @@
     "canInviteUsers": "Add Members",
     "canPinMessages": "Pin Messages",
     "canManageAdmins": "Add New Admins",
-    "save": "Save Changes"
+    "save": "Save Changes",
+    "adminSaved": "Admin appointed successfully",
+    "adminDismissed": "Admin access removed"
   },
   "block": {
     "blockUser": "Block User",
@@ -319,7 +385,9 @@
     "userBlockedBanner": "You have blocked this user.",
     "blockedList": "Blocked Users",
     "noBlocked": "No blocked users.",
-    "confirmBlock": "Are you sure you want to block this user?"
+    "confirmBlock": "Are you sure you want to block this user?",
+    "blockError": "Failed to block user",
+    "unblockError": "Failed to unblock user"
   },
   "story": {
     "yourStory": "Your Story",
@@ -331,10 +399,113 @@
     "viewers": "Viewers",
     "noViewers": "No views yet",
     "deleteStory": "Delete Story",
-    "storyDeleted": "Story deleted successfully"
+    "storyDeleted": "Story deleted successfully",
+    "clickToSelect": "Click to select a photo",
+    "confirmDelete": "Are you sure you want to delete this story?",
+    "storyPostedSuccess": "Story shared successfully"
   },
   "common": {
     "cancel": "Cancel",
-    "save": "Save"
+    "save": "Save",
+    "close": "Close",
+    "contact": "Contact",
+    "user": "User"
+  },
+  "system": {
+    "youCreatedGroup": "You created the group",
+    "userCreatedGroup": "{actor} created the group",
+    "youWereAdded": "You were added to the group by {actor}",
+    "userAddedUser": "{actor} added {targets} to the group",
+    "youLeftGroup": "You left the group",
+    "userLeftGroup": "{actor} left the group"
+  },
+  "stickers": {
+    "all": "All",
+    "pack": {
+      "all": "All",
+      "panda": "Panda",
+      "cat": "Cat",
+      "reactions": "Reactions"
+    }
+  },
+  "emoji": {
+    "smileys": "Smileys & Emotion",
+    "gestures": "Gestures & Hands",
+    "animals": "Animals & Nature",
+    "food": "Food & Drink",
+    "activities": "Sports & Activities",
+    "objects": "Objects & Symbols"
+  },
+  "gifs": {
+    "category": {
+      "happy": "Joy & Laughs",
+      "dance": "Dance & Party",
+      "love": "Love",
+      "cats": "Animals"
+    }
+  },
+  "errors": {
+    "AUTH_USER_NOT_FOUND": "User not found",
+    "AUTH_REFRESH_TOKEN_REQUIRED": "Refresh token is required",
+    "AUTH_INVALID_REFRESH_TOKEN": "Invalid refresh token",
+    "AUTH_REFRESH_TOKEN_EXPIRED": "Refresh token expired",
+    "AUTH_CODE_EXPIRED": "Verification code expired",
+    "AUTH_INVALID_CODE": "Invalid verification code",
+    "AUTH_RATE_LIMIT_EXCEEDED": "Too many requests. Please try again after 1 minute.",
+    "AUTH_UNAUTHORIZED": "Unauthorized access",
+    "AUTH_MISSING_TOKEN": "Authentication token missing",
+    "CHAT_NOT_FOUND": "Chat not found",
+    "CHAT_NOT_MEMBER": "You are not a member of this chat",
+    "CHAT_NOT_PARTICIPANT": "You are not a participant of this chat",
+    "CHAT_GROUP_NAME_REQUIRED": "Group name is required",
+    "CHAT_GROUP_MIN_MEMBERS": "A group needs at least 2 members",
+    "CHAT_CHANNEL_NAME_REQUIRED": "Channel name is required",
+    "CHAT_NOT_A_GROUP": "This chat is not a group",
+    "CHAT_NOT_A_CHANNEL": "This chat is not a channel",
+    "CHAT_ONLY_ADMIN_ADD_MEMBERS": "Only group admin can add members",
+    "CHAT_ONLY_OWNER_PIN": "Only channel owner can pin messages",
+    "CHAT_ONLY_OWNER_UNPIN": "Only channel owner can unpin messages",
+    "CHAT_CANNOT_AVATAR_DIRECT": "Cannot set avatar on a direct chat",
+    "CHAT_ONLY_OWNER_AVATAR": "Only the chat owner can update avatar",
+    "CHAT_ADMINS_ONLY_GROUPS_CHANNELS": "Admins can only be added to groups or channels",
+    "CHAT_ONLY_ADMIN_MANAGE_ADMINS": "Only owner or admins with management permissions can manage admins",
+    "CHAT_USER_MUST_BE_MEMBER": "User must be a member of the chat before becoming an admin",
+    "CHAT_CANNOT_REMOVE_OWNER": "Cannot remove the chat owner",
+    "CHAT_SAVED_MESSAGES_CANNOT_BE_DELETED": "Cannot delete saved messages chat",
+    "CHAT_DIRECT_PEER_REQUIRED": "Contact identifier is required for direct chat",
+    "CHAT_UNKNOWN_TYPE": "Unknown chat type",
+    "CHAT_NO_FILE_UPLOADED": "No file uploaded!",
+    "CHANNEL_NOT_FOUND": "Channel not found",
+    "CHANNEL_ALREADY_SUBSCRIBED": "Already subscribed to this channel",
+    "CHANNEL_OWNER_CANNOT_LEAVE": "Channel owner cannot leave",
+    "CHANNEL_ONLY_ADMIN_POST": "Only channel admins can post in this channel",
+    "GROUP_NOT_FOUND": "Group not found",
+    "GROUP_ADMIN_CANNOT_LEAVE": "Admin cannot leave the group",
+    "GROUP_ONLY_ADMIN_REMOVE": "Only group admin can remove members",
+    "GROUP_ONLY_ADMIN_ADD": "Only group admin can add members",
+    "MESSAGE_NOT_FOUND": "Message not found",
+    "MESSAGE_ONLY_EDIT_OWN": "You can only edit your own messages",
+    "MESSAGE_CANNOT_EDIT_DELETED": "Cannot edit a deleted message",
+    "MESSAGE_NO_PERMISSION_DELETE": "You do not have permission to delete this message",
+    "MESSAGE_TARGET_NOT_PARTICIPANT": "You are not a participant of the target chat",
+    "MESSAGE_USERS_BLOCKED": "Cannot send message: conversation is blocked",
+    "MESSAGE_IDS_REQUIRED": "Message IDs are required",
+    "MESSAGE_TARGET_CHAT_REQUIRED": "Target chat is required",
+    "MESSAGE_FILE_REQUIRED": "File is required",
+    "MESSAGE_URL_REQUIRED": "URL parameter is required",
+    "MESSAGE_CHAT_ID_REQUIRED": "Chat ID is required",
+    "USER_NOT_FOUND": "User not found",
+    "USER_PHONE_NOT_REGISTERED": "No user registered with this phone number",
+    "USER_CANNOT_ADD_SELF_CONTACT": "You cannot add yourself as a contact",
+    "USER_FOLDER_NOT_FOUND": "Folder not found",
+    "STORY_NOT_FOUND": "Story not found",
+    "STORY_MEDIA_REQUIRED": "Media file or URL is required for stories",
+    "STORY_ONLY_AUTHOR_DELETE": "Only the author can delete this story",
+    "STORY_ONLY_AUTHOR_VIEWERS": "Only the author can view story viewers",
+    "COMMON_INTERNAL_ERROR": "An error occurred. Please try again.",
+    "COMMON_VALIDATION_FAILED": "Validation failed",
+    "COMMON_BAD_REQUEST": "Invalid request",
+    "COMMON_FORBIDDEN": "Access denied",
+    "COMMON_NOT_FOUND": "Requested item not found"
   }
 }

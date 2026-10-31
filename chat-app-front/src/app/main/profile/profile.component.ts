@@ -399,7 +399,7 @@ export class ProfileComponent implements OnInit {
           this.mainService.snackbar.success(this.translationService.t('profile.avatarDeleted'), 3000);
         },
         error: () => {
-          this.mainService.snackbar.error('خطا در حذف عکس', 3000);
+          this.mainService.snackbar.error('profile.avatarDeleteError', 3000);
         },
       });
   }
@@ -500,7 +500,7 @@ export class ProfileComponent implements OnInit {
               this.mainService.snackbar.success(this.translationService.t('block.userBlockedBanner'), 3000);
             },
             error: () => {
-              this.mainService.snackbar.error('خطا در مسدود کردن کاربر', 3000);
+              this.mainService.snackbar.error('block.blockError', 3000);
             },
           });
       }
@@ -514,7 +514,7 @@ export class ProfileComponent implements OnInit {
             this.mainService.snackbar.success(this.translationService.t('block.unblockUser'), 3000);
           },
           error: () => {
-            this.mainService.snackbar.error('خطا در رفع مسدودیت کاربر', 3000);
+            this.mainService.snackbar.error('block.unblockError', 3000);
           },
         });
     }
@@ -533,7 +533,7 @@ export class ProfileComponent implements OnInit {
             this.mainService.getContacts().pipe(take(1)).subscribe();
           },
           error: () => {
-            this.mainService.snackbar.error('خطا در حذف از مخاطبین', 3000);
+            this.mainService.snackbar.error('contacts.removeError', 3000);
           },
         });
     } else {
@@ -547,7 +547,7 @@ export class ProfileComponent implements OnInit {
             this.mainService.getContacts().pipe(take(1)).subscribe();
           },
           error: () => {
-            this.mainService.snackbar.error('خطا در افزودن به مخاطبین', 3000);
+            this.mainService.snackbar.error('contacts.addError', 3000);
           },
         });
     }
@@ -584,10 +584,10 @@ export class ProfileComponent implements OnInit {
           .subscribe({
             next: (updatedChat: any) => {
               this.chatData!.admins = updatedChat.admins;
-              this.mainService.snackbar.success('مدیر با موفقیت ثبت شد', 3000);
+              this.mainService.snackbar.success('admin.adminSaved', 3000);
             },
             error: (err: any) => {
-              this.mainService.snackbar.error(err?.error?.message || 'خطا در ثبت مدیر', 3000);
+              this.mainService.snackbar.error(err, 3000);
             },
           });
       } else if (result.action === 'dismiss') {
@@ -597,10 +597,10 @@ export class ProfileComponent implements OnInit {
           .subscribe({
             next: (updatedChat: any) => {
               this.chatData!.admins = updatedChat.admins;
-              this.mainService.snackbar.success('دسترسی مدیریت حذف شد', 3000);
+              this.mainService.snackbar.success('admin.adminDismissed', 3000);
             },
             error: (err: any) => {
-              this.mainService.snackbar.error(err?.error?.message || 'خطا در حذف مدیر', 3000);
+              this.mainService.snackbar.error(err, 3000);
             },
           });
       }

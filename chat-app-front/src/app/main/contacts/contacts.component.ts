@@ -110,12 +110,11 @@ export class ContactsComponent implements OnInit {
             const filtered = list.filter((c) => c._id !== newContact._id);
             return [...filtered, newContact];
           });
-          this.mainService.snackbar.success('مخاطب با موفقیت افزوده شد', 3000);
+          this.mainService.snackbar.success('contacts.contactAdded', 3000);
           this.cancelNewContact();
         },
         error: (err) => {
-          const msg = err?.error?.message || 'کاربری با این شماره تلفن در برنامه ثبت‌نام نکرده است';
-          this.mainService.snackbar.error(Array.isArray(msg) ? msg[0] : msg, 3500);
+          this.mainService.snackbar.error(err, 3500);
         },
       });
   }
@@ -131,10 +130,10 @@ export class ContactsComponent implements OnInit {
     this.mainService.removeContact(user._id).pipe(take(1)).subscribe({
       next: () => {
         this.contacts.update((list) => list.filter((c) => c._id !== user._id));
-        this.mainService.snackbar.success('مخاطب حذف شد', 2500);
+        this.mainService.snackbar.success('contacts.contactRemoved', 2500);
       },
       error: () => {
-        this.mainService.snackbar.error('خطا در حذف مخاطب', 3000);
+        this.mainService.snackbar.error('contacts.removeError', 3000);
       },
     });
   }

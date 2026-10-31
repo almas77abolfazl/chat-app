@@ -1,6 +1,7 @@
 export interface EmojiCategory {
   id: string;
   name: string;
+  nameKey?: string;
   icon: string;
   emojis: string[];
 }
@@ -9,6 +10,7 @@ export const EMOJI_CATEGORIES: EmojiCategory[] = [
   {
     id: 'smileys',
     name: 'خندان و احساسات',
+    nameKey: 'emoji.smileys',
     icon: 'smile',
     emojis: [
       '😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇',
@@ -23,6 +25,7 @@ export const EMOJI_CATEGORIES: EmojiCategory[] = [
   {
     id: 'gestures',
     name: 'حرکات و دست‌ها',
+    nameKey: 'emoji.gestures',
     icon: 'hand',
     emojis: [
       '👍', '👎', '👊', '✊', '🤛', '🤜', '🤞', '✌️', '🤟', '🤘', '👌', '🤏', '👈',
@@ -33,6 +36,7 @@ export const EMOJI_CATEGORIES: EmojiCategory[] = [
   {
     id: 'animals',
     name: 'حیوانات و طبیعت',
+    nameKey: 'emoji.animals',
     icon: 'cat',
     emojis: [
       '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷',
@@ -45,6 +49,7 @@ export const EMOJI_CATEGORIES: EmojiCategory[] = [
   {
     id: 'food',
     name: 'غذا و نوشیدنی',
+    nameKey: 'emoji.food',
     icon: 'food',
     emojis: [
       '🍏', '🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐', '🍈', '🍒', '🍑',
@@ -57,6 +62,7 @@ export const EMOJI_CATEGORIES: EmojiCategory[] = [
   {
     id: 'activities',
     name: 'ورزش و فعالیت‌ها',
+    nameKey: 'emoji.activities',
     icon: 'football',
     emojis: [
       '⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🥏', '🎱', '🪀', '🏓', '🏸',
@@ -67,6 +73,7 @@ export const EMOJI_CATEGORIES: EmojiCategory[] = [
   {
     id: 'objects',
     name: 'اشیاء و نمادها',
+    nameKey: 'emoji.objects',
     icon: 'heart',
     emojis: [
       '🎉', '🎊', '🎈', '🎁', '🎀', '💡', '🔦', '🕯️', '💸', '💵', '💰', '💳', '💎',

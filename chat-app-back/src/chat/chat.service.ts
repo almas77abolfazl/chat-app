@@ -254,6 +254,8 @@ export class ChatService {
           chat: chat._id,
           content: `${adminName} گروه را ایجاد کرد`,
           mediaType: 'system',
+          systemAction: 'GROUP_CREATED',
+          metadata: { actorId: admin, actorName: adminName },
           read: true,
           status: 'sent',
         });
@@ -264,6 +266,8 @@ export class ChatService {
             chat: chat._id,
             content: `${adminName}، ${addedNames.join(' و ')} را به گروه اضافه کرد`,
             mediaType: 'system',
+            systemAction: 'MEMBER_ADDED',
+            metadata: { actorId: admin, actorName: adminName, targetNames: addedNames },
             read: true,
             status: 'sent',
           });
@@ -319,6 +323,8 @@ export class ChatService {
             chat: chat._id,
             content: `${requesterName}، ${addedUserName} را به گروه اضافه کرد`,
             mediaType: 'system',
+            systemAction: 'MEMBER_ADDED',
+            metadata: { actorId: requesterId, actorName: requesterName, targetId: userId, targetName: addedUserName },
             read: true,
             status: 'sent',
           });

@@ -52,6 +52,12 @@ export class Message {
   @Prop({ enum: ['image', 'video', 'file', 'voice', 'sticker', 'gif', 'emoji', 'system'], default: null })
   mediaType: string;
 
+  @Prop({ type: String, default: null })
+  systemAction?: string;
+
+  @Prop({ type: Object, default: null })
+  metadata?: Record<string, any>;
+
   @Prop()
   fileUrl: string;
 

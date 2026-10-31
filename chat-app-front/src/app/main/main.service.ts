@@ -16,6 +16,7 @@ import { Message } from '../models/message.model';
 import { CacheService } from '../helpers/cache.service';
 import { environment } from '../../environments/environment';
 import { SnackbarService } from '../helpers/snackbar/snackbar.service';
+import { TranslationService } from '../helpers/translation.service';
 
 export interface OutboxItem {
   tempId: string;
@@ -198,7 +199,8 @@ export class MainService {
     public socketService: SocketService,
     private cacheService: CacheService,
     public snackbar: SnackbarService,
-    private zone: NgZone
+    private zone: NgZone,
+    public translationService: TranslationService
   ) {
     this.getAvatar(authService.getUserId()).then((avatar: string) => {
       if (avatar) this.pictureSrc = avatar;
@@ -403,7 +405,7 @@ export class MainService {
             this.chatListUpdatedSubject.next(this.chatItems);
           });
         },
-        error: (error) => this.snackbar.error('خطا در بارگذاری لیست چت', 5000),
+        error: (error) => this.snackbar.error('chat.loadError', 5000),
       });
   }
 
@@ -752,7 +754,7 @@ export class MainService {
       this.getChatList();
     } catch (e) {
       console.error('Could not open agent chat', e);
-      this.snackbar.error('خطا در باز کردن چت دستیار', 3000);
+      this.snackbar.error('agent.openError', 3000);
     }
   }
 
@@ -926,13 +928,13 @@ export class MainService {
           const idx = chatItem.messages.findIndex((m) => m._id === payload.messageId);
           if (idx !== -1) {
             chatItem.messages[idx].isDeleted = true;
-            chatItem.messages[idx].content = 'این پیام حذف شد';
+            chatItem.messages[idx].content = '';
             if (this.currentChat?._id === chatItem._id) {
               this.currentChat.messages = this.currentChat.messages || [];
               const cIdx = this.currentChat.messages.findIndex((m) => m._id === payload.messageId);
               if (cIdx !== -1) {
                 this.currentChat.messages[cIdx].isDeleted = true;
-                this.currentChat.messages[cIdx].content = 'این پیام حذف شد';
+                this.currentChat.messages[cIdx].content = '';
               }
             }
           }
@@ -1300,7 +1302,7 @@ export class MainService {
             localStorage.setItem('user-avatar', this.pictureSrc);
           }
         },
-        error: (err) => this.snackbar.error('خطا در ذخیره آواتار', 3000),
+        error: (err) => this.snackbar.error('profile.avatarSaveError', 3000),
       });
   }
 
@@ -1308,12 +1310,19 @@ export class MainService {
     const chat = this.currentChat;
     const withName = chat ? `${chat.firstName ?? ''} ${chat.lastName ?? ''}`.trim() : '';
     const groupName = chat?.name;
-    const subject = withName || groupName || 'این گفتگو';
-    const prompts = {
-      summarize: `گفتگو من در "${subject}" را خلاصه کن`,
-      tasks: `از پیام‌های "${subject}" تسک‌های عملیاتی استخراج کن`,
-      reply: `برای آخرین پیام "${subject}" یک پیشنهاد پاسخ کوتاه بنویس`,
-    };
+    const isEn = this.translationService.currentLang() === 'en';
+    const subject = withName || groupName || (isEn ? 'this conversation' : 'این گفتگو');
+    const prompts = isEn
+      ? {
+          summarize: `Summarize my conversation in "${subject}"`,
+          tasks: `Extract actionable tasks from "${subject}" messages`,
+          reply: `Suggest a brief reply for the latest message in "${subject}"`,
+        }
+      : {
+          summarize: `گفتگو من در "${subject}" را خلاصه کن`,
+          tasks: `از پیام‌های "${subject}" تسک‌های عملیاتی استخراج کن`,
+          reply: `برای آخرین پیام "${subject}" یک پیشنهاد پاسخ کوتاه بنویس`,
+        };
     this.sendAgentMessage(prompts[action]);
   }
 
@@ -1366,7 +1375,7 @@ export class MainService {
               localStorage.setItem('user-lastName', result.lastName || '');
               localStorage.setItem('user-bio', result.bio || '');
             },
-            error: (err) => this.snackbar.error('خطا در به‌روزرسانی پروفایل', 3000),
+            error: (err) => this.snackbar.error('profile.profileUpdateError', 3000),
           });
 
         if (this.file) this.saveAvatar();

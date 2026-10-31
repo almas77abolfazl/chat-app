@@ -290,7 +290,7 @@ export class ChatListComponent implements OnInit {
       if (result?.formData) {
         this.mainService.createStory(result.formData).pipe(take(1)).subscribe({
           next: () => {
-            this.mainService.snackbar.success('استوری با موفقیت ثبت شد', 3000);
+            this.mainService.snackbar.success('story.storyPostedSuccess', 3000);
           },
         });
       }
@@ -340,7 +340,7 @@ export class ChatListComponent implements OnInit {
                 this.mainService.getChatList();
               },
               error: () => {
-                this.mainService.snackbar.error('خطا در حذف گفتگو', 3000);
+                this.mainService.snackbar.error('chat.deleteChatError', 3000);
               },
             });
         });
@@ -357,17 +357,17 @@ export class ChatListComponent implements OnInit {
                   this.mainService.currentChat.messages = [];
                 }
                 this.mainService.getChatList();
-                this.mainService.snackbar.success('پیام‌های ذخیره‌شده پاک شدند', 3000);
+                this.mainService.snackbar.success('chat.savedMessagesCleared', 3000);
               },
               error: () => {
-                this.mainService.snackbar.error('خطا در پاک کردن پیام‌ها', 3000);
+                this.mainService.snackbar.error('chat.clearMessagesError', 3000);
               },
             });
         }
         break;
       }
       case 'leave':
-        if (confirm('آیا از خروج از این گروه مطمئن هستید؟')) {
+        if (confirm(this.translationService.t('groups.confirmLeave'))) {
           this.mainService
             .leaveChat(chat._id as string)
             .pipe(take(1))
@@ -379,7 +379,7 @@ export class ChatListComponent implements OnInit {
                 this.mainService.getChatList();
               },
               error: () => {
-                this.mainService.snackbar.error('خطا در خروج از گروه', 3000);
+                this.mainService.snackbar.error('groups.leaveError', 3000);
               },
             });
         }

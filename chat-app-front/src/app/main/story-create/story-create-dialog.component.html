@@ -35,7 +35,7 @@
       } @else {
       <div class="picker-placeholder">
         <fa-icon [icon]="['fas', 'camera']" class="placeholder-icon"></fa-icon>
-        <span class="placeholder-text">برای انتخاب عکس کلیک کنید</span>
+        <span class="placeholder-text">{{ 'story.clickToSelect' | i18n }}</span>
       </div>
       }
       <input #fileInput type="file" accept="image/*" (change)="onFileSelected($event)" style="display: none" />
@@ -52,7 +52,7 @@
       <textarea
         [(ngModel)]="textContent"
         class="text-story-textarea"
-        placeholder="متن استوری خود را بنویسید..."
+        [placeholder]="'story.captionPlaceholder' | i18n"
         rows="4"
       ></textarea>
     </div>

@@ -244,7 +244,7 @@ export class StoryViewerDialogComponent implements OnInit, OnDestroy {
   deleteCurrentStory() {
     const story = this.currentStory;
     if (!story) return;
-    if (confirm('آیا از حذف این استوری مطمئن هستید؟')) {
+    if (confirm(this.translationService.t('story.confirmDelete'))) {
       this.mainService.deleteStory(story._id).subscribe({
         next: () => {
           this.data.group.stories.splice(this.currentIndex, 1);

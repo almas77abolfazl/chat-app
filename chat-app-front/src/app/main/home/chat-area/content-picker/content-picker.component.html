@@ -65,7 +65,7 @@
         [class.active]="selectedEmojiCategory() === 'all'"
         (click)="selectedEmojiCategory.set('all')"
       >
-        🌟 همه
+        🌟 {{ 'stickers.all' | i18n }}
       </button>
       @for (cat of emojiCategories; track cat.id) {
       <button
@@ -74,7 +74,7 @@
         [class.active]="selectedEmojiCategory() === cat.id"
         (click)="selectedEmojiCategory.set(cat.id)"
       >
-        {{ cat.name }}
+        {{ cat.nameKey ? (cat.nameKey | i18n) : cat.name }}
       </button>
       }
     }
@@ -88,7 +88,7 @@
         (click)="selectedStickerPack.set(pack.id)"
       >
         <span>{{ pack.icon }}</span>
-        <span>{{ pack.name }}</span>
+        <span>{{ pack.nameKey ? (pack.nameKey | i18n) : pack.name }}</span>
       </button>
       }
     }
@@ -106,7 +106,7 @@
         [class.active]="selectedGifCategory() === cat.id"
         (click)="selectedGifCategory.set(cat.id)"
       >
-        {{ cat.name }}
+        {{ cat.nameKey ? (cat.nameKey | i18n) : cat.name }}
       </button>
       }
     }
@@ -125,7 +125,7 @@
       } @else {
         @for (category of filteredEmojiCategories(); track category.id) {
         <div class="emoji-group">
-          <div class="group-title">{{ category.name }}</div>
+          <div class="group-title">{{ category.nameKey ? (category.nameKey | i18n) : category.name }}</div>
           <div class="emoji-grid">
             @for (emoji of category.emojis; track emoji) {
             <button

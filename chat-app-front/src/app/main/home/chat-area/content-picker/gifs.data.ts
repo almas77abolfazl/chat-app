@@ -8,12 +8,12 @@ export interface GifItem {
 }
 
 export const GIF_CATEGORIES = [
-  { id: 'all', name: 'همه' },
-  { id: 'happy', name: 'خنده و شادی' },
-  { id: 'dance', name: 'رقص و جشن' },
-  { id: 'reactions', name: 'واکنش‌ها' },
-  { id: 'love', name: 'عشق' },
-  { id: 'cats', name: 'حیوانات' },
+  { id: 'all', name: 'همه', nameKey: 'stickers.pack.all' },
+  { id: 'happy', name: 'خنده و شادی', nameKey: 'gifs.category.happy' },
+  { id: 'dance', name: 'رقص و جشن', nameKey: 'gifs.category.dance' },
+  { id: 'reactions', name: 'واکنش‌ها', nameKey: 'stickers.pack.reactions' },
+  { id: 'love', name: 'عشق', nameKey: 'gifs.category.love' },
+  { id: 'cats', name: 'حیوانات', nameKey: 'gifs.category.cats' },
 ];
 
 function animatedSvgDataUrl(svg: string): string {
