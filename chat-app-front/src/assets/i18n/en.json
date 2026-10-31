@@ -4,6 +4,7 @@
     "noChat": "No chat selected",
     "selectOrStart": "Select a chat or try smart assistant",
     "empty": "You have no chats",
+    "noChatsFound": "No chats found",
     "newChat": "New chat",
     "lastMessage": "No messages yet",
     "noMessages": "No messages yet",
@@ -330,5 +331,9 @@
     "noViewers": "No views yet",
     "deleteStory": "Delete Story",
     "storyDeleted": "Story deleted successfully"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "save": "Save"
   }
 }

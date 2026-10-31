@@ -512,6 +512,9 @@ export class ChatListComponent implements OnInit {
       maxWidth: '94vw',
       panelClass: 'rtl-dialog',
     });
+    dialogRef.afterOpened().pipe(take(1)).subscribe(() => {
+      dialogRef.componentInstance?.forceRender();
+    });
     dialogRef.afterClosed().pipe(take(1)).subscribe((res) => {
       if (res) {
         this.mainService.loadUserFolders().subscribe();
@@ -526,6 +529,9 @@ export class ChatListComponent implements OnInit {
       maxWidth: '94vw',
       panelClass: 'rtl-dialog',
       data: { folder },
+    });
+    dialogRef.afterOpened().pipe(take(1)).subscribe(() => {
+      dialogRef.componentInstance?.forceRender();
     });
     dialogRef.afterClosed().pipe(take(1)).subscribe((res) => {
       if (res) {

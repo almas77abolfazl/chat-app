@@ -2,11 +2,14 @@ import {
   Component,
   Inject,
   OnInit,
-  ChangeDetectionStrategy,
   signal,
   computed,
   ChangeDetectorRef,
+  ApplicationRef,
+  DestroyRef,
+  inject,
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
@@ -34,7 +37,6 @@ interface IconOption {
   imports: [CommonModule, FormsModule, MatDialogModule, FontAwesomeModule, I18nPipe],
   templateUrl: './folder-dialog.component.html',
   styleUrl: './folder-dialog.component.scss',
-  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class FolderDialogComponent implements OnInit {
   isEdit = false;
@@ -48,6 +50,8 @@ export class FolderDialogComponent implements OnInit {
 
   activeTab = signal<'include' | 'exclude'>('include');
   chatSearchQuery = signal<string>('');
+
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly iconsList: IconOption[] = [
     { id: 'folder', icon: ['fas', 'folder'], label: 'Folder' },
@@ -90,7 +94,14 @@ export class FolderDialogComponent implements OnInit {
     public mainService: MainService,
     public translationService: TranslationService,
     private cdr: ChangeDetectorRef,
-  ) {}
+    private appRef: ApplicationRef,
+  ) {
+    this.mainService.chatListUpdated$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.forceRender();
+      });
+  }
 
   ngOnInit(): void {
     if (this.mainService.chatItemsSignal().length === 0) {
@@ -106,17 +117,26 @@ export class FolderDialogComponent implements OnInit {
       this.includedChatIds.set([...(this.data.folder.includedChatIds || [])]);
       this.excludedChatIds.set([...(this.data.folder.excludedChatIds || [])]);
     }
-    this.cdr.markForCheck();
+
+    this.forceRender();
+    setTimeout(() => this.forceRender(), 0);
+  }
+
+  forceRender(): void {
+    try {
+      this.cdr.detectChanges();
+      this.appRef.tick();
+    } catch {}
   }
 
   setActiveTab(tab: 'include' | 'exclude'): void {
     this.activeTab.set(tab);
-    this.cdr.markForCheck();
+    this.forceRender();
   }
 
   onSearchChange(q: string): void {
     this.chatSearchQuery.set(q);
-    this.cdr.markForCheck();
+    this.forceRender();
   }
 
   getChatDisplayName(chat: ChatListItem): string {
@@ -136,7 +156,7 @@ export class FolderDialogComponent implements OnInit {
     } else {
       this.includedTypes.set([...current, type]);
     }
-    this.cdr.markForCheck();
+    this.forceRender();
   }
 
   isChatIncluded(chatId: string): boolean {
@@ -151,7 +171,7 @@ export class FolderDialogComponent implements OnInit {
       this.includedChatIds.set([...current, chatId]);
       this.excludedChatIds.set(this.excludedChatIds().filter((id) => id !== chatId));
     }
-    this.cdr.markForCheck();
+    this.forceRender();
   }
 
   isChatExcluded(chatId: string): boolean {
@@ -166,7 +186,7 @@ export class FolderDialogComponent implements OnInit {
       this.excludedChatIds.set([...current, chatId]);
       this.includedChatIds.set(this.includedChatIds().filter((id) => id !== chatId));
     }
-    this.cdr.markForCheck();
+    this.forceRender();
   }
 
   save(): void {
