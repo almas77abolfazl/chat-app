@@ -764,7 +764,7 @@ export class MainService {
       .receiveMessages()
       .subscribe((payload: { chatId: string; message: Message }) => {
         this.zone.run(() => {
-          const chatItem = this.findChatById(payload.chatId);
+          const chatItem = this.findChatById(payload.chatId) || (this.currentChat?._id === payload.chatId ? this.currentChat : null);
           if (!chatItem) {
             this.getChatList();
             return;
@@ -775,27 +775,43 @@ export class MainService {
             msg.sender = sender;
             msg.senderId = sender?._id?.toString();
           }
-          chatItem.messages = chatItem.messages || [];
-          const pendingIdx = chatItem.messages.findIndex((m) => m._pending === true);
+          const messages = [...(chatItem.messages || [])];
+          const pendingIdx = messages.findIndex((m) => m._pending === true);
           if (pendingIdx !== -1) {
-            chatItem.messages.splice(pendingIdx, 1);
+            messages.splice(pendingIdx, 1);
           }
-          chatItem.messages.push(msg);
+          const exists = messages.some((m) => m._id === msg._id);
+          if (!exists) {
+            messages.push(msg);
+          }
+          chatItem.messages = messages;
           chatItem.lastMessage = msg;
           chatItem.updatedAt = new Date(msg.createdAt);
           this.updateLastMessageTimestamp(payload.chatId, msg.createdAt, msg._id);
-          if (this.currentChat?._id === chatItem._id) {
+
+          const isCurrent = this.currentChat?._id === chatItem._id;
+          if (isCurrent) {
             chatItem.messageCount = 0;
-            this.messagesLoadedSubject.next();
-            this.scrollChatToBottom();
           } else {
             chatItem.messageCount = (chatItem.messageCount || 0) + 1;
           }
+
+          const updatedChat: ChatListItem = {
+            ...chatItem,
+            messages: [...messages],
+          };
+
+          if (isCurrent) {
+            this.currentChatSignal.set(updatedChat);
+            this.messagesLoadedSubject.next();
+            this.scrollChatToBottom();
+          }
+
           const itemIdx = this.chatItems.findIndex((c) => c._id === chatItem._id);
           if (itemIdx !== -1) {
             this.chatItems.splice(itemIdx, 1);
           }
-          this.chatItems.unshift(chatItem);
+          this.chatItems.unshift(updatedChat);
           this.chatItemsSignal.set([...this.chatItems]);
           this.chatListUpdatedSubject.next(this.chatItems);
 
@@ -821,24 +837,32 @@ export class MainService {
 
     this.socketService.on('messageSent', (payload: { chatId: string; message: Message; tempId?: string }) => {
       this.zone.run(() => {
-        const chatItem = this.findChatById(payload.chatId);
+        const chatItem = this.findChatById(payload.chatId) || (this.currentChat?._id === payload.chatId ? this.currentChat : null);
         if (!chatItem) return;
         const msg = payload.message;
-        chatItem.messages = chatItem.messages || [];
-        const pendingIdx = chatItem.messages.findIndex(
+        const messages = [...(chatItem.messages || [])];
+        const pendingIdx = messages.findIndex(
           (m) => (payload.tempId && m._tempId === payload.tempId) || m._pending === true,
         );
         if (pendingIdx !== -1) chatItem.messages.splice(pendingIdx, 1);
         this.removeFromOutbox(payload.tempId, payload.chatId);
 
-        const exists = chatItem.messages.some((m) => m._id === msg._id);
+        const exists = messages.some((m) => m._id === msg._id);
         if (!exists) {
-          chatItem.messages.push(msg);
-          chatItem.lastMessage = msg;
-          chatItem.updatedAt = new Date(msg.createdAt);
-          this.updateLastMessageTimestamp(payload.chatId, msg.createdAt, msg._id);
+          messages.push(msg);
         }
+        chatItem.messages = messages;
+        chatItem.lastMessage = msg;
+        chatItem.updatedAt = new Date(msg.createdAt);
+        this.updateLastMessageTimestamp(payload.chatId, msg.createdAt, msg._id);
+
+        const updatedChat: ChatListItem = {
+          ...chatItem,
+          messages: [...messages],
+        };
+
         if (this.currentChat?._id === chatItem._id) {
+          this.currentChatSignal.set(updatedChat);
           this.messagesLoadedSubject.next();
           this.scrollChatToBottom();
         }
@@ -846,7 +870,7 @@ export class MainService {
         if (itemIdx !== -1) {
           this.chatItems.splice(itemIdx, 1);
         }
-        this.chatItems.unshift(chatItem);
+        this.chatItems.unshift(updatedChat);
         this.chatItemsSignal.set([...this.chatItems]);
         this.chatListUpdatedSubject.next(this.chatItems);
       });
@@ -1562,18 +1586,25 @@ export class MainService {
       });
     }
 
-    currentChat.messages = currentChat.messages || [];
-    currentChat.messages.push(messageData);
+    const updatedMessages = [...(currentChat.messages || []), messageData];
+    const updatedChat: ChatListItem = {
+      ...currentChat,
+      messages: updatedMessages,
+      lastMessage: messageData,
+      updatedAt: new Date(),
+    };
+    currentChat.messages = updatedMessages;
     currentChat.lastMessage = messageData;
-    currentChat.updatedAt = new Date();
+    currentChat.updatedAt = updatedChat.updatedAt;
     if (input) input.value = '';
 
     const itemIdx = this.chatItems.findIndex((c) => c._id === currentChat._id);
     if (itemIdx !== -1) {
       this.chatItems.splice(itemIdx, 1);
     }
-    this.chatItems.unshift(currentChat);
+    this.chatItems.unshift(updatedChat);
     this.chatItemsSignal.set([...this.chatItems]);
+    this.currentChatSignal.set(updatedChat);
     this.chatListUpdatedSubject.next(this.chatItems);
     this.messagesLoadedSubject.next();
     this.scrollChatToBottom();
@@ -1627,17 +1658,24 @@ export class MainService {
       this.socketService.sendMessage({ chatId, content: '', media, tempId });
     }
 
-    currentChat.messages = currentChat.messages || [];
-    currentChat.messages.push(messageData);
+    const updatedMessages = [...(currentChat.messages || []), messageData];
+    const updatedChat: ChatListItem = {
+      ...currentChat,
+      messages: updatedMessages,
+      lastMessage: messageData,
+      updatedAt: new Date(),
+    };
+    currentChat.messages = updatedMessages;
     currentChat.lastMessage = messageData;
-    currentChat.updatedAt = new Date();
+    currentChat.updatedAt = updatedChat.updatedAt;
 
     const itemIdx = this.chatItems.findIndex((c) => c._id === currentChat._id);
     if (itemIdx !== -1) {
       this.chatItems.splice(itemIdx, 1);
     }
-    this.chatItems.unshift(currentChat);
+    this.chatItems.unshift(updatedChat);
     this.chatItemsSignal.set([...this.chatItems]);
+    this.currentChatSignal.set(updatedChat);
     this.chatListUpdatedSubject.next(this.chatItems);
     this.messagesLoadedSubject.next();
     this.scrollChatToBottom();
@@ -1691,17 +1729,24 @@ export class MainService {
       this.socketService.sendMessage({ chatId, content: caption, media, tempId });
     }
 
-    currentChat.messages = currentChat.messages || [];
-    currentChat.messages.push(messageData);
+    const updatedMessages = [...(currentChat.messages || []), messageData];
+    const updatedChat: ChatListItem = {
+      ...currentChat,
+      messages: updatedMessages,
+      lastMessage: messageData,
+      updatedAt: new Date(),
+    };
+    currentChat.messages = updatedMessages;
     currentChat.lastMessage = messageData;
-    currentChat.updatedAt = new Date();
+    currentChat.updatedAt = updatedChat.updatedAt;
 
     const itemIdx = this.chatItems.findIndex((c) => c._id === currentChat._id);
     if (itemIdx !== -1) {
       this.chatItems.splice(itemIdx, 1);
     }
-    this.chatItems.unshift(currentChat);
+    this.chatItems.unshift(updatedChat);
     this.chatItemsSignal.set([...this.chatItems]);
+    this.currentChatSignal.set(updatedChat);
     this.chatListUpdatedSubject.next(this.chatItems);
     this.messagesLoadedSubject.next();
     this.scrollChatToBottom();
@@ -1741,6 +1786,7 @@ export class MainService {
         }
         this.currentPage = response.currentPage;
         this.totalPages = response.totalPages;
+        this.currentChatSignal.set({ ...this.currentChat, messages: [...this.currentChat.messages] });
         if (response.currentPage <= 1) {
           this.messagesLoadedSubject.next();
         }

@@ -137,7 +137,14 @@ export class HttpExceptionFilter implements ExceptionFilter {
     // Localize message if known in ERROR_MESSAGES
     if (errorCode in ERROR_MESSAGES) {
       const dict = ERROR_MESSAGES[errorCode as ErrorCode];
-      message = dict[lang] || message;
+      const isGeneric = !message || message === 'Bad Request' || message === 'Bad request' || message === 'Http Exception';
+      if (isGeneric || errorCode !== ErrorCode.COMMON_BAD_REQUEST) {
+        message = dict[lang] || message;
+      }
+    }
+
+    if (status >= 400 && status < 500) {
+      this.logger.warn(`Client Error [${status}] (${errorCode}): ${message}`);
     }
 
     const errorPayload: StructuredErrorResponse = {

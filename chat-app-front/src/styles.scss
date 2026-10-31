@@ -1133,16 +1133,5 @@ cdk-virtual-scroll-viewport.chat-messages {
       min-height: 100% !important;
       justify-content: flex-end !important;
     }
-
-    .messages-spacer {
-      margin-top: auto !important;
-      flex: 1 1 auto !important;
-      pointer-events: none !important;
-      min-height: 1px !important;
-    }
-  }
-
-  &:not(.is-short-chat) .messages-spacer {
-    display: none !important;
   }
 }

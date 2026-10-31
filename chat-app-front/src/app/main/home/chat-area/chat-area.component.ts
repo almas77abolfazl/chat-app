@@ -136,7 +136,9 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
   }
 
   syncVirtualScrollMessages(): void {
-    this.scrollStrategy.setMessages(this.mainService.currentChat?.messages || []);
+    const msgs = this.mainService.currentChat?.messages || [];
+    this.lastMessagesLength = msgs.length;
+    this.scrollStrategy.setMessages(msgs);
     this.cdr.markForCheck();
   }
 
@@ -336,6 +338,7 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
     });
 
     this.mainService.messagesLoaded$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.syncVirtualScrollMessages();
       this.scrollToBottom();
       this.cdr.markForCheck();
     });
@@ -1297,6 +1300,15 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
   }
 
   async startUpload(chatId: string, file: File, caption: string, shouldCompress: boolean): Promise<void> {
+    const currentChat = this.mainService.currentChat;
+    if (currentChat && (currentChat.isDraft || String(chatId).startsWith('draft_'))) {
+      const realChat = await this.mainService.ensureRealDirectChat(currentChat.peerId!);
+      currentChat._id = realChat._id;
+      currentChat.isDraft = false;
+      this.mainService.currentChat = currentChat;
+      chatId = realChat._id;
+    }
+
     const uploadId = `up_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     let previewUrl: string | undefined;
     if (file.type.startsWith('image/')) {
@@ -1344,6 +1356,22 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
               URL.revokeObjectURL(uploadItem.previewUrl);
             }
             this.activeUploadsSignal.update((list) => list.filter((u) => u.id !== uploadId));
+            const savedMsg = event.body;
+            if (savedMsg && savedMsg._id && this.mainService.currentChat?._id === chatId) {
+              const curChat = this.mainService.currentChat;
+              const exists = (curChat.messages || []).some((m) => m._id === savedMsg._id);
+              if (!exists) {
+                const updatedChat = {
+                  ...curChat,
+                  messages: [...(curChat.messages || []), savedMsg],
+                  lastMessage: savedMsg,
+                  updatedAt: new Date(),
+                };
+                this.mainService.currentChat = updatedChat;
+                this.syncVirtualScrollMessages();
+                this.scrollToBottom('smooth');
+              }
+            }
             this.cdr.markForCheck();
           }
         },

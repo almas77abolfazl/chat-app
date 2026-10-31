@@ -33,7 +33,8 @@ export class MessageService {
     const chat = await this.findChatForMessage(chatId);
     const senderObjectId = new Types.ObjectId(senderId);
 
-    if (!chat.participants.includes(senderObjectId)) {
+    const isParticipant = chat.participants.some((p: any) => (p?._id || p).toString() === senderId);
+    if (!isParticipant) {
       throw new ForbiddenException('You are not a participant of this chat');
     }
 

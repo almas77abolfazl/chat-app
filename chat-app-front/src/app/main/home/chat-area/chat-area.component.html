@@ -294,8 +294,6 @@
     (scroll)="onScroll($event)"
     (contextmenu)="onChatAreaContextMenu($event)"
   >
-    <div class="messages-spacer"></div>
-
     @if (mainService.currentPage < mainService.totalPages && !mainService.loadingMessages) {
     <div class="load-more-trigger" (click)="loadOlderMessages()" [attr.title]="'chat.loadMore' | i18n">
       <fa-icon [icon]="['fas', 'chevron-up']"></fa-icon>
