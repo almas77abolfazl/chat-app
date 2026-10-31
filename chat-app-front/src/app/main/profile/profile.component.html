@@ -1,4 +1,4 @@
-<div class="profile-sheet">
+<div class="profile-sheet" [dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
   <!-- Cover Header -->
   <header class="profile-cover" [style.background]="coverColor">
     <div class="cover-glow"></div>
@@ -73,35 +73,45 @@
 
     <!-- Quick Action: Message & Contact Buttons (if not own profile) -->
     @if (!isCurrentUser && !isGroup && !isChannel) {
-    <div class="primary-actions">
-      <button class="btn btn-primary message-action-btn" (click)="sendMessage()">
-        <fa-icon [icon]="['fas', 'paper-plane']"></fa-icon>
-        <span>{{ 'profile.message' | i18n }}</span>
+    <div class="primary-actions-grid">
+      <button type="button" class="action-item-btn" (click)="sendMessage()" [attr.title]="'profile.message' | i18n">
+        <div class="action-icon-circle message-circle">
+          <fa-icon [icon]="['fas', 'paper-plane']"></fa-icon>
+        </div>
+        <span class="action-item-label">{{ 'profile.message' | i18n }}</span>
+      </button>
+
+      <button type="button" class="action-item-btn" (click)="startAudioCall()" [attr.title]="'call.voiceCall' | i18n">
+        <div class="action-icon-circle call-circle">
+          <fa-icon [icon]="['fas', 'phone-alt']"></fa-icon>
+        </div>
+        <span class="action-item-label">{{ 'call.voiceCall' | i18n }}</span>
+      </button>
+
+      <button type="button" class="action-item-btn" (click)="startVideoCall()" [attr.title]="'call.videoCall' | i18n">
+        <div class="action-icon-circle video-circle">
+          <fa-icon [icon]="['fas', 'video']"></fa-icon>
+        </div>
+        <span class="action-item-label">{{ 'call.videoCall' | i18n }}</span>
       </button>
 
       <button
         type="button"
-        class="btn contact-action-btn"
+        class="action-item-btn"
         [class.is-contact]="isContact"
         (click)="toggleContact()"
+        [attr.title]="(isContact ? 'contacts.removeFromContacts' : 'contacts.addToContacts') | i18n"
       >
-        <fa-icon [icon]="['fas', isContact ? 'user-check' : 'user-plus']"></fa-icon>
-        <span>{{ (isContact ? 'contacts.removeFromContacts' : 'contacts.addToContacts') | i18n }}</span>
-      </button>
-
-      <button type="button" class="btn contact-action-btn" (click)="startAudioCall()">
-        <fa-icon [icon]="['fas', 'phone-alt']"></fa-icon>
-        <span>{{ 'call.voiceCall' | i18n }}</span>
-      </button>
-
-      <button type="button" class="btn contact-action-btn" (click)="startVideoCall()">
-        <fa-icon [icon]="['fas', 'video']"></fa-icon>
-        <span>{{ 'call.videoCall' | i18n }}</span>
+        <div class="action-icon-circle contact-circle" [class.active-contact]="isContact">
+          <fa-icon [icon]="['fas', isContact ? 'user-check' : 'user-plus']"></fa-icon>
+        </div>
+        <span class="action-item-label">{{ (isContact ? 'contacts.added' : 'contacts.addToContacts') | i18n }}</span>
       </button>
     </div>
     }
 
     <!-- Info Cards Section -->
+    @if (username || phoneNumber || bio) {
     <section class="info-section">
       @if (username) {
       <div class="info-card" (click)="copyUsername()">
@@ -141,21 +151,23 @@
         </div>
       </div>
       }
-
-      @if (!isGroup && !isChannel && !isCurrentUser && targetUserId) {
-      <div class="user-block-row">
-        <button
-          type="button"
-          class="block-btn"
-          [class.blocked]="isTargetUserBlocked"
-          (click)="toggleBlockUser()"
-        >
-          <fa-icon [icon]="['fas', isTargetUserBlocked ? 'check' : 'ban']"></fa-icon>
-          <span>{{ (isTargetUserBlocked ? 'block.unblockUser' : 'block.blockUser') | i18n }}</span>
-        </button>
-      </div>
-      }
     </section>
+    }
+
+    <!-- Block / Unblock User Action -->
+    @if (!isGroup && !isChannel && !isCurrentUser && targetUserId) {
+    <div class="user-block-section">
+      <button
+        type="button"
+        class="block-btn"
+        [class.blocked]="isTargetUserBlocked"
+        (click)="toggleBlockUser()"
+      >
+        <fa-icon [icon]="['fas', isTargetUserBlocked ? 'check' : 'ban']"></fa-icon>
+        <span>{{ (isTargetUserBlocked ? 'block.unblockUser' : 'block.blockUser') | i18n }}</span>
+      </button>
+    </div>
+    }
 
     <!-- Telegram-style Media Summary Tabs -->
     @if (chatData?._id) {

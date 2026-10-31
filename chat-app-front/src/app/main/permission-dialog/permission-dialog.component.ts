@@ -78,3 +78,4 @@ export class PermissionDialogComponent {
     this.dialogRef.close(false);
   }
 }
+

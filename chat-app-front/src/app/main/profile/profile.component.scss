@@ -1,13 +1,13 @@
 .profile-sheet {
-  direction: rtl;
   display: flex;
   flex-direction: column;
-  max-height: 88vh;
+  max-height: 90vh;
   background: var(--color-surface);
   color: var(--color-text);
   overflow: hidden;
   border-radius: var(--radius-2xl);
-  box-shadow: none;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.28);
+  font-family: var(--font-family, "Vazirmatn", "Shabnam", sans-serif);
 }
 
 /* Cover Header */
@@ -31,9 +31,9 @@
 
 .cover-actions {
   position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
-  right: 0.75rem;
+  top: 0.85rem;
+  inset-inline-start: 0.85rem;
+  inset-inline-end: 0.85rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -180,8 +180,9 @@
 
 /* Profile Body */
 .profile-body {
-  padding: 3rem 1.25rem 1.25rem;
+  padding: 3.25rem 1.25rem 1.5rem;
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
@@ -223,59 +224,126 @@
   }
 }
 
-.primary-actions {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.75rem;
+/* Telegram-Style 4-Column Quick Actions */
+.primary-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+  width: 100%;
+  margin: 0.25rem 0;
 
-  .message-action-btn {
-    display: inline-flex;
+  .action-item-btn {
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.65rem 1.6rem;
-    border-radius: var(--radius-full);
-    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-gradient-end));
-    color: var(--color-on-primary);
-    font-size: 0.92rem;
-    font-weight: 600;
+    gap: 0.4rem;
+    padding: 0.5rem 0.25rem;
+    background: transparent;
     border: none;
+    border-radius: var(--radius-lg);
     cursor: pointer;
-    box-shadow: var(--shadow-sm);
-    transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+    transition: background-color var(--transition-fast), transform var(--transition-fast);
+    user-select: none;
 
     &:hover {
-      transform: translateY(-1px);
-      box-shadow: var(--shadow-glow-primary);
+      background: var(--color-surface-hover);
+
+      .action-icon-circle {
+        transform: translateY(-2px);
+      }
+    }
+
+    &:active {
+      transform: scale(0.97);
+    }
+
+    .action-icon-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.05rem;
+      transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+      box-shadow: var(--shadow-sm);
+
+      &.message-circle {
+        background: linear-gradient(135deg, var(--color-primary), var(--color-primary-gradient-end));
+        color: var(--color-on-primary);
+      }
+
+      &.call-circle {
+        background: color-mix(in srgb, #10b981 16%, var(--color-surface-elevated));
+        color: #10b981;
+      }
+
+      &.video-circle {
+        background: color-mix(in srgb, #0ea5e9 16%, var(--color-surface-elevated));
+        color: #0ea5e9;
+      }
+
+      &.contact-circle {
+        background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface-elevated));
+        color: var(--color-primary);
+
+        &.active-contact {
+          background: color-mix(in srgb, #8b5cf6 16%, var(--color-surface-elevated));
+          color: #8b5cf6;
+        }
+      }
+    }
+
+    .action-item-label {
+      font-size: 0.74rem;
+      font-weight: 500;
+      color: var(--color-text-secondary);
+      text-align: center;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      line-height: 1.2;
+    }
+
+    &.is-contact .action-item-label {
+      color: var(--color-text);
+      font-weight: 600;
     }
   }
+}
 
-  .contact-action-btn {
+/* User Block Section */
+.user-block-section {
+  display: flex;
+  justify-content: center;
+  padding: 0.25rem 0;
+
+  .block-btn {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    padding: 0.65rem 1.35rem;
+    padding: 0.55rem 1.4rem;
     border-radius: var(--radius-full);
-    background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-    color: var(--color-primary-dark);
-    font-size: 0.92rem;
+    border: none;
+    font-size: 0.85rem;
     font-weight: 600;
-    border: 1px solid color-mix(in srgb, var(--color-primary) 28%, transparent);
     cursor: pointer;
+    background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+    color: var(--color-danger);
     transition: all var(--transition-fast);
 
     &:hover {
-      background: color-mix(in srgb, var(--color-primary) 20%, transparent);
+      background: color-mix(in srgb, var(--color-danger) 22%, transparent);
       transform: translateY(-1px);
     }
 
-    &.is-contact {
-      background: color-mix(in srgb, var(--color-danger) 10%, transparent);
-      color: var(--color-danger);
-      border-color: color-mix(in srgb, var(--color-danger) 25%, transparent);
+    &.blocked {
+      background: color-mix(in srgb, #10b981 12%, transparent);
+      color: #10b981;
 
       &:hover {
-        background: color-mix(in srgb, var(--color-danger) 18%, transparent);
+        background: color-mix(in srgb, #10b981 22%, transparent);
       }
     }
   }
@@ -361,41 +429,6 @@
 
       &.copied {
         color: #10b981;
-      }
-    }
-  }
-
-  .user-block-row {
-    margin-top: 1rem;
-    display: flex;
-    justify-content: center;
-
-    .block-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.55rem 1.4rem;
-      border-radius: var(--radius-full);
-      border: none;
-      font-size: 0.88rem;
-      font-weight: 600;
-      cursor: pointer;
-      background: color-mix(in srgb, var(--color-danger) 12%, transparent);
-      color: var(--color-danger);
-      transition: all var(--transition-fast);
-
-      &:hover {
-        background: color-mix(in srgb, var(--color-danger) 22%, transparent);
-        transform: translateY(-1px);
-      }
-
-      &.blocked {
-        background: color-mix(in srgb, #10b981 12%, transparent);
-        color: #10b981;
-
-        &:hover {
-          background: color-mix(in srgb, #10b981 22%, transparent);
-        }
       }
     }
   }

@@ -106,14 +106,13 @@ export class ProfileComponent implements OnInit {
   get isContact(): boolean { return this.isContactSignal(); }
   set isContact(v: boolean) { this.isContactSignal.set(v); }
 
-  constructor(
-    public dialogRef: MatDialogRef<ProfileComponent>,
-    private dialog: MatDialog,
-    public mainService: MainService,
-    public translationService: TranslationService,
-    @Inject(MAT_DIALOG_DATA)
-    public data: ProfileDialogData
-  ) {}
+  public readonly dialogRef = inject(MatDialogRef<ProfileComponent>);
+  private readonly dialog = inject(MatDialog);
+  public readonly mainService = inject(MainService);
+  public readonly translationService = inject(TranslationService);
+  public readonly data: ProfileDialogData = inject(MAT_DIALOG_DATA);
+
+  constructor() {}
 
   ngOnInit(): void {
     this.initData();
