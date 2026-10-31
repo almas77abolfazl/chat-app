@@ -210,9 +210,49 @@ export class ChatListComponent implements OnInit {
     event.preventDefault();
     event.stopPropagation();
     this.chatContextMenuTarget.set(chat);
-    this.chatContextMenuX.set(event.clientX);
-    this.chatContextMenuY.set(event.clientY);
+
+    const menuEstimatedWidth = 200;
+    const menuEstimatedHeight = 160;
+    const padding = 12;
+
+    let x = event.clientX;
+    let y = event.clientY;
+
+    if (x + menuEstimatedWidth > window.innerWidth - padding) {
+      x = Math.max(padding, x - menuEstimatedWidth);
+    }
+    if (y + menuEstimatedHeight > window.innerHeight - padding) {
+      y = Math.max(padding, y - menuEstimatedHeight);
+    }
+
+    this.chatContextMenuX.set(Math.max(padding, Math.min(x, window.innerWidth - menuEstimatedWidth - padding)));
+    this.chatContextMenuY.set(Math.max(padding, Math.min(y, window.innerHeight - menuEstimatedHeight - padding)));
     this.showChatContextMenu.set(true);
+
+    requestAnimationFrame(() => {
+      const el = document.querySelector('.chat-list-container .context-menu, div.context-menu') as HTMLElement;
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        let adjX = this.chatContextMenuX();
+        let adjY = this.chatContextMenuY();
+
+        if (rect.right > window.innerWidth - padding) {
+          adjX -= (rect.right - (window.innerWidth - padding));
+        }
+        if (rect.left < padding) {
+          adjX = padding;
+        }
+        if (rect.bottom > window.innerHeight - padding) {
+          adjY -= (rect.bottom - (window.innerHeight - padding));
+        }
+        if (rect.top < padding) {
+          adjY = padding;
+        }
+
+        this.chatContextMenuX.set(Math.round(adjX));
+        this.chatContextMenuY.set(Math.round(adjY));
+      }
+    });
   }
 
   closeChatContextMenu() {

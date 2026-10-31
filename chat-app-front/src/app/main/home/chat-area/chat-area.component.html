@@ -450,12 +450,12 @@
       @if (message.reactions && message.reactions.length > 0) {
       <div class="reactions-bar">
         @for (reaction of message.reactions; track reaction.emoji) {
-        <div class="reaction-item" [class.reacted]="isReactedWith(message, reaction.emoji)" (click)="toggleReaction(message, reaction.emoji); $event.stopPropagation()">
+        <div class="reaction-item"
+             [class.reacted]="isReactedWith(message, reaction.emoji)"
+             [attr.title]="isReactedWith(message, reaction.emoji) ? ('chat.you' | i18n) : null"
+             (click)="toggleReaction(message, reaction.emoji); $event.stopPropagation()">
           <span class="reaction-emoji">{{ reaction.emoji }}</span>
           <span class="reaction-count">{{ reaction.count }}</span>
-          @if (reaction.users.includes(ownId())) {
-          <span class="reaction-user-you">{{ 'chat.you' | i18n }}</span>
-          }
         </div>
         }
       </div>
@@ -686,12 +686,12 @@
   <div class="context-menu" [style.left.px]="contextMenuX" [style.top.px]="contextMenuY" (click)="$event.stopPropagation()">
     @if (!contextMenuTarget.isDeleted) {
     <div class="context-reactions-bar">
-      <button type="button" class="context-reaction-btn" (click)="addContextMenuReaction('❤️'); $event.stopPropagation()">❤️</button>
-      <button type="button" class="context-reaction-btn" (click)="addContextMenuReaction('👍'); $event.stopPropagation()">👍</button>
-      <button type="button" class="context-reaction-btn" (click)="addContextMenuReaction('😂'); $event.stopPropagation()">😂</button>
-      <button type="button" class="context-reaction-btn" (click)="addContextMenuReaction('🔥'); $event.stopPropagation()">🔥</button>
-      <button type="button" class="context-reaction-btn" (click)="addContextMenuReaction('🎉'); $event.stopPropagation()">🎉</button>
-      <button type="button" class="context-reaction-btn" (click)="addContextMenuReaction('👏'); $event.stopPropagation()">👏</button>
+      <button type="button" class="context-reaction-btn" [class.active]="isReactedWith(contextMenuTarget, '❤️')" (click)="addContextMenuReaction('❤️'); $event.stopPropagation()" title="❤️">❤️</button>
+      <button type="button" class="context-reaction-btn" [class.active]="isReactedWith(contextMenuTarget, '👍')" (click)="addContextMenuReaction('👍'); $event.stopPropagation()" title="👍">👍</button>
+      <button type="button" class="context-reaction-btn" [class.active]="isReactedWith(contextMenuTarget, '😂')" (click)="addContextMenuReaction('😂'); $event.stopPropagation()" title="😂">😂</button>
+      <button type="button" class="context-reaction-btn" [class.active]="isReactedWith(contextMenuTarget, '🔥')" (click)="addContextMenuReaction('🔥'); $event.stopPropagation()" title="🔥">🔥</button>
+      <button type="button" class="context-reaction-btn" [class.active]="isReactedWith(contextMenuTarget, '🎉')" (click)="addContextMenuReaction('🎉'); $event.stopPropagation()" title="🎉">🎉</button>
+      <button type="button" class="context-reaction-btn" [class.active]="isReactedWith(contextMenuTarget, '👏')" (click)="addContextMenuReaction('👏'); $event.stopPropagation()" title="👏">👏</button>
     </div>
     <div class="context-menu-divider"></div>
     }

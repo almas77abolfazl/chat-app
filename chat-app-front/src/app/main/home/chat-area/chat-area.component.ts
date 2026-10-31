@@ -936,12 +936,56 @@ export class ChatAreaComponent implements OnInit, AfterViewInit {
     event.preventDefault();
     event.stopPropagation();
     this.contextMenuTarget = message;
-    const menuWidth = 190;
-    const menuHeight = 280;
-    this.contextMenuX = Math.max(10, Math.min(event.clientX, window.innerWidth - menuWidth - 10));
-    this.contextMenuY = Math.max(10, Math.min(event.clientY, window.innerHeight - menuHeight - 10));
+
+    const menuEstimatedWidth = 220;
+    const menuEstimatedHeight = 320;
+    const padding = 12;
+
+    let x = event.clientX;
+    let y = event.clientY;
+
+    if (x + menuEstimatedWidth > window.innerWidth - padding) {
+      x = Math.max(padding, x - menuEstimatedWidth);
+    }
+    if (y + menuEstimatedHeight > window.innerHeight - padding) {
+      y = Math.max(padding, y - menuEstimatedHeight);
+    }
+
+    this.contextMenuX = Math.max(padding, Math.min(x, window.innerWidth - menuEstimatedWidth - padding));
+    this.contextMenuY = Math.max(padding, Math.min(y, window.innerHeight - menuEstimatedHeight - padding));
     this.showContextMenu = true;
     this.showContentPicker = false;
+    this.cdr.markForCheck();
+
+    requestAnimationFrame(() => {
+      const menuEl = document.querySelector('.chat-area-container .context-menu, div.context-menu') as HTMLElement;
+      if (menuEl) {
+        const rect = menuEl.getBoundingClientRect();
+        let adjX = this.contextMenuX;
+        let adjY = this.contextMenuY;
+
+        if (rect.right > window.innerWidth - padding) {
+          adjX -= (rect.right - (window.innerWidth - padding));
+        }
+        if (rect.left < padding) {
+          adjX = padding;
+        }
+        if (rect.bottom > window.innerHeight - padding) {
+          adjY -= (rect.bottom - (window.innerHeight - padding));
+        }
+        if (rect.top < padding) {
+          adjY = padding;
+        }
+
+        const roundedX = Math.round(adjX);
+        const roundedY = Math.round(adjY);
+        if (roundedX !== this.contextMenuX || roundedY !== this.contextMenuY) {
+          this.contextMenuX = roundedX;
+          this.contextMenuY = roundedY;
+          this.cdr.markForCheck();
+        }
+      }
+    });
   }
 
   onChatAreaContextMenu(event: MouseEvent) {

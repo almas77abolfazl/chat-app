@@ -940,49 +940,68 @@
       .reactions-bar {
         display: flex;
         flex-wrap: wrap;
-        gap: 0.3rem;
+        gap: 0.35rem;
         margin-top: 0.35rem;
         margin-bottom: 0.15rem;
 
         .reaction-item {
           display: inline-flex;
           align-items: center;
-          gap: 0.25rem;
-          padding: 0.15rem 0.45rem;
+          gap: 0.3rem;
+          padding: 0.18rem 0.55rem;
           background: rgba(0, 0, 0, 0.08);
-          border: 1px solid rgba(255, 255, 255, 0.15);
+          border: 1px solid rgba(255, 255, 255, 0.18);
           border-radius: var(--radius-full);
           font-size: 0.75rem;
           cursor: pointer;
           user-select: none;
-          transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+          transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
 
           &:hover {
-            transform: scale(1.1);
-            background: rgba(0, 0, 0, 0.15);
+            transform: scale(1.08) translateY(-1px);
+            background: rgba(0, 0, 0, 0.14);
+          }
+
+          &:active {
+            transform: scale(0.95);
           }
 
           &.reacted {
-            border-color: var(--color-primary);
-            background: color-mix(in srgb, var(--color-primary) 20%, transparent);
-            box-shadow: var(--shadow-glow-primary);
+            border-color: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.28);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            font-weight: 700;
           }
 
           .reaction-emoji {
-            font-size: 0.85rem;
+            font-size: 0.95rem;
             line-height: 1;
+            display: inline-block;
           }
 
           .reaction-count {
-            font-size: 0.7rem;
+            font-size: 0.72rem;
             font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
           }
+        }
+      }
 
-          .reaction-user-you {
-            font-size: 0.65rem;
-            opacity: 0.8;
-            margin-inline-start: 0.15rem;
-          }
+      &.received .reactions-bar .reaction-item {
+        background: color-mix(in srgb, var(--color-surface) 90%, var(--color-text) 5%);
+        border: 1px solid color-mix(in srgb, var(--color-border) 80%, transparent);
+        color: var(--color-text);
+
+        &:hover {
+          background: color-mix(in srgb, var(--color-surface) 80%, var(--color-text) 10%);
+        }
+
+        &.reacted {
+          background: color-mix(in srgb, var(--color-primary) 16%, var(--color-surface));
+          border-color: var(--color-primary);
+          color: var(--color-primary-dark);
+          box-shadow: 0 2px 6px color-mix(in srgb, var(--color-primary) 22%, transparent);
         }
       }
 
@@ -2029,37 +2048,69 @@
   .context-menu {
     position: fixed;
     z-index: 2000;
-    min-width: 180px;
+    min-width: 190px;
+    max-width: min(280px, calc(100vw - 24px));
+    max-height: calc(100vh - 24px);
     background: var(--color-surface-solid);
     border: 1px solid var(--color-border);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-xl);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.08);
     padding: 0.35rem 0;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    animation: menu-in var(--transition-fast) ease both;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    animation: menu-in var(--transition-fast) cubic-bezier(0.16, 1, 0.3, 1) both;
     user-select: none;
+    overflow-y: auto;
+    overflow-x: hidden;
+    text-align: start;
+
+    [dir="rtl"] &,
+    html[dir="rtl"] & {
+      text-align: right;
+    }
+
+    [dir="ltr"] &,
+    html[dir="ltr"] & {
+      text-align: left;
+    }
   }
 
   .context-reactions-bar {
     display: flex;
     align-items: center;
     justify-content: space-around;
-    padding: 0.25rem 0.5rem 0.4rem;
-    gap: 0.2rem;
+    padding: 0.35rem 0.5rem;
+    margin: 0.2rem 0.45rem 0.35rem;
+    background: color-mix(in srgb, var(--color-surface-hover) 60%, transparent);
+    border-radius: var(--radius-full);
+    border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+    gap: 0.25rem;
 
     .context-reaction-btn {
       background: none;
       border: none;
       font-size: 1.25rem;
       cursor: pointer;
-      padding: 0.2rem 0.25rem;
-      border-radius: var(--radius-sm);
-      transition: transform var(--transition-fast), background var(--transition-fast);
+      width: 2.1rem;
+      height: 2.1rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-full);
+      transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), background var(--transition-fast);
 
       &:hover {
-        background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-        transform: scale(1.28);
+        background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+        transform: scale(1.32) translateY(-2px);
+      }
+
+      &:active {
+        transform: scale(0.95);
+      }
+
+      &.active {
+        background: color-mix(in srgb, var(--color-primary) 24%, transparent);
+        box-shadow: inset 0 0 0 1.5px var(--color-primary);
       }
     }
   }
@@ -2079,36 +2130,54 @@
     font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
-    transition: background var(--transition-fast);
+    transition: background var(--transition-fast), color var(--transition-fast);
     white-space: nowrap;
     border: none;
     background: none;
     width: 100%;
-    text-align: left;
+    text-align: start;
+
+    [dir="rtl"] &,
+    html[dir="rtl"] & {
+      text-align: right;
+    }
+
+    [dir="ltr"] &,
+    html[dir="ltr"] & {
+      text-align: left;
+    }
+
+    fa-icon,
+    mat-icon {
+      font-size: 0.95rem;
+      width: 1.25rem;
+      text-align: center;
+      color: var(--color-text-secondary);
+      flex-shrink: 0;
+    }
 
     &:hover {
       background: color-mix(in srgb, var(--color-primary) 8%, transparent);
       color: var(--color-primary-dark);
+
+      fa-icon,
+      mat-icon {
+        color: var(--color-primary-dark);
+      }
     }
 
     &.danger {
       color: var(--color-danger);
 
+      fa-icon,
+      mat-icon {
+        color: var(--color-danger);
+      }
+
       &:hover {
         background: color-mix(in srgb, var(--color-danger) 8%, transparent);
         color: var(--color-danger);
       }
-    }
-
-    fa-icon {
-      font-size: 0.9rem;
-      width: 1.2rem;
-      text-align: center;
-      color: var(--color-text-secondary);
-    }
-
-    &:hover fa-icon {
-      color: inherit;
     }
   }
 
