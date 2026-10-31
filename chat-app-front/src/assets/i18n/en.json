@@ -247,7 +247,8 @@
   "status": {
     "online": "Online",
     "offline": "Offline",
-    "lastSeen": "Last seen"
+    "lastSeen": "Last seen",
+    "connecting": "Connecting..."
   },
   "messages": {
     "typing": "typing...",

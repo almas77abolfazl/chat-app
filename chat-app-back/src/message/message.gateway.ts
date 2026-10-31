@@ -171,7 +171,7 @@ export class MessageGateway {
       const participantIds = await this.chatService.getParticipantIds(chatId);
       for (const pid of participantIds) {
         if (pid === senderId) {
-          client.emit('messageSent', { chatId, message: msg });
+          client.emit('messageSent', { chatId, message: msg, tempId: messageData?.tempId });
         } else {
           this.server.to(pid).emit('receiveMessage', { chatId, message: msg });
           this.server.to(pid).emit('notification', {
@@ -186,6 +186,60 @@ export class MessageGateway {
       client.emit('messageError', {
         message: error?.message ?? 'Failed to send message',
       });
+    }
+  }
+
+  @SubscribeMessage('syncMissedMessages')
+  async handleSyncMissedMessages(
+    @MessageBody()
+    data: {
+      chats?: { chatId: string; lastMessageTimestamp?: string | Date; lastMessageId?: string }[];
+      chatId?: string;
+      lastMessageTimestamp?: string | Date;
+      lastMessageId?: string;
+    },
+    @ConnectedSocket() client: Socket,
+  ) {
+    try {
+      const user = client.data.user as IUser;
+      if (!user) {
+        client.emit('messageError', { message: 'Unauthorized' });
+        return { success: false, error: 'Unauthorized' };
+      }
+
+      const requests: { chatId: string; lastMessageTimestamp?: string | Date; lastMessageId?: string }[] = [];
+      if (Array.isArray(data?.chats)) {
+        requests.push(...data.chats);
+      } else if (data?.chatId) {
+        requests.push({
+          chatId: data.chatId,
+          lastMessageTimestamp: data.lastMessageTimestamp,
+          lastMessageId: data.lastMessageId,
+        });
+      }
+
+      const results = await this.messageService.getMissedMessages(user._id.toString(), requests);
+
+      for (const res of results) {
+        for (const msg of res.messages) {
+          if (msg.senderId !== user._id.toString() && msg.status === 'sent') {
+            await this.messageService.markMessageDelivered(msg._id.toString());
+            if (msg.senderId) {
+              this.server.to(msg.senderId).emit('messageStatusUpdated', {
+                messageId: msg._id,
+                status: 'delivered',
+                userId: user._id.toString(),
+              });
+            }
+          }
+        }
+      }
+
+      client.emit('missedMessagesSynced', { results });
+      return { success: true, results };
+    } catch (error) {
+      client.emit('messageError', { message: error?.message ?? 'Failed to sync missed messages' });
+      return { success: false, error: error?.message };
     }
   }
 

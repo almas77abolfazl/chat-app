@@ -71,6 +71,10 @@
           </span>
           <span>{{ headerTypingText }}</span>
         </div>
+        } @else if (!isSocketConnected()) {
+        <div class="chat-subtitle is-connecting">
+          <span>{{ 'status.connecting' | i18n }}</span>
+        </div>
         } @else if (headerSubtitle(mainService.currentChat)) {
         <div class="chat-subtitle" [class.is-online]="isHeaderOnline(mainService.currentChat)">
           {{ headerSubtitle(mainService.currentChat) }}

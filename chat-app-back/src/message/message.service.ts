@@ -364,6 +364,74 @@ export class MessageService {
     };
   }
 
+  async getMissedMessages(
+    userId: string,
+    requests: { chatId: string; lastMessageTimestamp?: string | Date; lastMessageId?: string }[],
+  ): Promise<{ chatId: string; messages: any[] }[]> {
+    if (!Array.isArray(requests) || requests.length === 0) {
+      return [];
+    }
+
+    const results: { chatId: string; messages: any[] }[] = [];
+
+    for (const req of requests) {
+      if (!req.chatId) continue;
+      try {
+        const chat = await this.chatModel.findById(req.chatId).exec();
+        if (!chat || !chat.participants.some((p) => p.toString() === userId)) {
+          continue;
+        }
+
+        let sinceDate: Date | null = null;
+        if (req.lastMessageTimestamp) {
+          const parsed = new Date(req.lastMessageTimestamp);
+          if (!isNaN(parsed.getTime())) {
+            sinceDate = parsed;
+          }
+        } else if (req.lastMessageId && Types.ObjectId.isValid(req.lastMessageId)) {
+          const anchor = await this.messageModel.findById(req.lastMessageId).select('createdAt').exec();
+          if (anchor?.createdAt) {
+            sinceDate = anchor.createdAt;
+          }
+        }
+
+        const filter: any = {
+          chat: new Types.ObjectId(req.chatId),
+        };
+        if (sinceDate) {
+          filter.createdAt = { $gt: sinceDate };
+        }
+
+        const messages = await this.messageModel
+          .find(filter)
+          .sort({ createdAt: 1 })
+          .limit(100)
+          .populate('sender', 'firstName lastName profilePicture')
+          .exec();
+
+        let reactionMap: Record<string, { emoji: string; count: number; users: string[] }[]> = {};
+        if (this.reactionService && messages.length > 0) {
+          try {
+            const messageIds = messages.map((m) => m._id.toString());
+            reactionMap = await this.reactionService.getReactionCountsForMessages(messageIds);
+          } catch {
+            reactionMap = {};
+          }
+        }
+
+        const hydrated = messages.map((m) => this.hydrateMessage(m, reactionMap[m._id.toString()] ?? []));
+        results.push({
+          chatId: req.chatId,
+          messages: hydrated,
+        });
+      } catch {
+        // Skip individual chat failure in batch
+      }
+    }
+
+    return results;
+  }
+
   hydrateMessage(message: any, reactions?: any[]): any {
     if (!message) return null;
     const sender = message.sender;

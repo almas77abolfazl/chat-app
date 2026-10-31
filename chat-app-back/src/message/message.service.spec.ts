@@ -398,4 +398,64 @@ describe('MessageService', () => {
       await expect(messageService.getChatMediaSummary(chatId, senderIdValue)).rejects.toThrow(ForbiddenException);
     });
   });
+
+  describe('getMissedMessages', () => {
+    it('returns empty array if requests are empty', async () => {
+      const res = await messageService.getMissedMessages(senderIdValue, []);
+      expect(res).toEqual([]);
+    });
+
+    it('returns missed messages since lastMessageTimestamp for participant', async () => {
+      const chatId = new Types.ObjectId().toString();
+      const mockChat = {
+        _id: new Types.ObjectId(chatId),
+        participants: mockParticipates([senderId, otherParticipant]),
+      };
+      chatModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockChat),
+      });
+
+      const missedMsg = {
+        _id: new Types.ObjectId(),
+        chat: new Types.ObjectId(chatId),
+        sender: otherParticipant,
+        content: 'Missed message',
+        createdAt: new Date(),
+        status: 'sent',
+      };
+
+      messageModel.find.mockReturnValue({
+        sort: jest.fn().mockReturnValue({
+          limit: jest.fn().mockReturnValue({
+            populate: jest.fn().mockReturnValue({
+              exec: jest.fn().mockResolvedValue([missedMsg]),
+            }),
+          }),
+        }),
+      });
+
+      const lastTimestamp = new Date(Date.now() - 60000).toISOString();
+      const res = await messageService.getMissedMessages(senderIdValue, [{ chatId, lastMessageTimestamp: lastTimestamp }]);
+
+      expect(res.length).toBe(1);
+      expect(res[0].chatId).toBe(chatId);
+      expect(res[0].messages.length).toBe(1);
+      expect(res[0].messages[0].content).toBe('Missed message');
+    });
+
+    it('skips chat if user is not participant', async () => {
+      const chatId = new Types.ObjectId().toString();
+      const mockChat = {
+        _id: new Types.ObjectId(chatId),
+        participants: mockParticipates([otherParticipant]),
+      };
+      chatModel.findById.mockReturnValue({
+        exec: jest.fn().mockResolvedValue(mockChat),
+      });
+
+      const res = await messageService.getMissedMessages(senderIdValue, [{ chatId, lastMessageTimestamp: new Date().toISOString() }]);
+
+      expect(res).toEqual([]);
+    });
+  });
 });

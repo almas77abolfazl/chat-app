@@ -247,7 +247,8 @@
   "status": {
     "online": "آنلاین",
     "offline": "آفلاین",
-    "lastSeen": "آخرین بازدید"
+    "lastSeen": "آخرین بازدید",
+    "connecting": "در حال اتصال..."
   },
   "messages": {
     "typing": "در حال نوشتن...",

@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy } from '@angular/core';
-import { Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 import { AuthService } from '../auth/auth.service';
 import { environment } from '../../environments/environment';
@@ -10,7 +10,10 @@ import { environment } from '../../environments/environment';
 export class SocketService implements OnDestroy {
   private socket: Socket;
   private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
+  private maxReconnectAttempts = 10;
+
+  readonly reconnected$ = new Subject<number>();
+  readonly connectionStatus$ = new BehaviorSubject<boolean>(false);
 
   constructor(private authService: AuthService) {}
 
@@ -33,15 +36,18 @@ export class SocketService implements OnDestroy {
     this.socket.on('connect', () => {
       console.log('Connected to WebSocket server');
       this.reconnectAttempts = 0;
+      this.connectionStatus$.next(true);
     });
     this.socket.on('disconnect', (reason) => {
       console.log('Disconnected from WebSocket server:', reason);
+      this.connectionStatus$.next(false);
       if (reason === 'io server disconnect') {
         this.reconnectAttempts = this.maxReconnectAttempts;
       }
     });
     this.socket.on('connect_error', (error) => {
       console.error('WebSocket connection error:', error.message);
+      this.connectionStatus$.next(false);
       this.reconnectAttempts++;
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
         console.error('Max reconnection attempts reached');
@@ -50,12 +56,15 @@ export class SocketService implements OnDestroy {
     this.socket.on('reconnect_attempt', (attemptNumber) => {
       console.log('Reconnection attempt:', attemptNumber);
     });
-    this.socket.on('reconnect', () => {
+    this.socket.on('reconnect', (attemptNumber?: any) => {
       console.log('Reconnected to WebSocket server');
       this.reconnectAttempts = 0;
+      this.connectionStatus$.next(true);
+      this.reconnected$.next(typeof attemptNumber === 'number' ? attemptNumber : 1);
     });
     this.socket.on('reconnect_failed', () => {
       console.error('Reconnection failed');
+      this.connectionStatus$.next(false);
     });
   }
 
@@ -65,6 +74,15 @@ export class SocketService implements OnDestroy {
 
   sendMessage(message: any): void {
     this.socket?.emit('sendMessage', message);
+  }
+
+  syncMissedMessages(payload: {
+    chats?: { chatId: string; lastMessageTimestamp?: string; lastMessageId?: string }[];
+    chatId?: string;
+    lastMessageTimestamp?: string;
+    lastMessageId?: string;
+  }): void {
+    this.socket?.emit('syncMissedMessages', payload);
   }
 
   emit(event: string, payload: any): void {

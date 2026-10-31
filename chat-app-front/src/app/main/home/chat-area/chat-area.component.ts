@@ -273,7 +273,16 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
   get isPeerBlocked(): boolean { return this.isPeerBlockedSignal(); }
   set isPeerBlocked(v: boolean) { this.isPeerBlockedSignal.set(v); }
 
+  readonly isSocketConnected = signal<boolean>(true);
+
   ngOnInit() {
+    this.mainService.socketService.connectionStatus$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((connected) => {
+        this.isSocketConnected.set(connected);
+        this.cdr.markForCheck();
+      });
+
     this.mainService.chatOpened$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.closeInChatSearch();
       this.checkPeerBlocked();

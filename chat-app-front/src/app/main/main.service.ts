@@ -17,8 +17,23 @@ import { CacheService } from '../helpers/cache.service';
 import { environment } from '../../environments/environment';
 import { SnackbarService } from '../helpers/snackbar/snackbar.service';
 
+export interface OutboxItem {
+  tempId: string;
+  chatId: string;
+  content: string;
+  media?: any;
+  linkPreview?: any;
+  skipLinkPreview?: boolean;
+  createdAt: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class MainService {
+  private lastMessageTimestamps = new Map<string, string>();
+  private readonly SYNC_TIMESTAMPS_KEY = 'chat_sync_timestamps';
+  private readonly OUTBOX_QUEUE_KEY = 'chat_offline_outbox';
+  private outboxQueue: OutboxItem[] = [];
+  private reconnectSubscription?: any;
   readonly currentChatSignal = signal<ChatListItem | null>(null);
   get currentChat(): ChatListItem | null {
     return this.currentChatSignal();
@@ -188,6 +203,187 @@ export class MainService {
     this.getAvatar(authService.getUserId()).then((avatar: string) => {
       if (avatar) this.pictureSrc = avatar;
     });
+    this.loadSyncTimestamps();
+    this.loadOutboxQueue();
+  }
+
+  private getStorageKey(base: string): string {
+    const uid = this.authService.getUserId() || 'anon';
+    return `${base}_${uid}`;
+  }
+
+  updateLastMessageTimestamp(chatId: string, timestamp: Date | string, messageId?: string) {
+    if (!chatId || !timestamp) return;
+    try {
+      const iso = new Date(timestamp).toISOString();
+      const current = this.lastMessageTimestamps.get(chatId);
+      if (!current || new Date(iso).getTime() > new Date(current).getTime()) {
+        this.lastMessageTimestamps.set(chatId, iso);
+        this.persistSyncTimestamps();
+      }
+    } catch {}
+  }
+
+  getLastKnownMessageTimestamp(chatId: string): string | undefined {
+    return this.lastMessageTimestamps.get(chatId);
+  }
+
+  getLastKnownMessageId(chat: ChatListItem | null | undefined): string | undefined {
+    if (!chat?.messages?.length) return undefined;
+    for (let i = chat.messages.length - 1; i >= 0; i--) {
+      const m = chat.messages[i];
+      if (m._id && !m._pending) return m._id;
+    }
+    return undefined;
+  }
+
+  private persistSyncTimestamps() {
+    try {
+      const obj: Record<string, string> = {};
+      this.lastMessageTimestamps.forEach((val, key) => {
+        obj[key] = val;
+      });
+      localStorage.setItem(this.getStorageKey(this.SYNC_TIMESTAMPS_KEY), JSON.stringify(obj));
+    } catch {}
+  }
+
+  private loadSyncTimestamps() {
+    try {
+      const raw = localStorage.getItem(this.getStorageKey(this.SYNC_TIMESTAMPS_KEY));
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        Object.keys(parsed).forEach((key) => {
+          this.lastMessageTimestamps.set(key, parsed[key]);
+        });
+      }
+    } catch {}
+  }
+
+  private persistOutboxQueue() {
+    try {
+      localStorage.setItem(this.getStorageKey(this.OUTBOX_QUEUE_KEY), JSON.stringify(this.outboxQueue));
+    } catch {}
+  }
+
+  private loadOutboxQueue() {
+    try {
+      const raw = localStorage.getItem(this.getStorageKey(this.OUTBOX_QUEUE_KEY));
+      if (raw) {
+        this.outboxQueue = JSON.parse(raw) || [];
+      }
+    } catch {}
+  }
+
+  enqueueOutbox(item: OutboxItem) {
+    this.outboxQueue.push(item);
+    this.persistOutboxQueue();
+  }
+
+  removeFromOutbox(tempId?: string, chatId?: string) {
+    if (!tempId && !chatId) return;
+    if (tempId) {
+      this.outboxQueue = this.outboxQueue.filter((o) => o.tempId !== tempId);
+    } else if (chatId) {
+      const idx = this.outboxQueue.findIndex((o) => o.chatId === chatId);
+      if (idx !== -1) this.outboxQueue.splice(idx, 1);
+    }
+    this.persistOutboxQueue();
+  }
+
+  getOutboxQueue(): OutboxItem[] {
+    return [...this.outboxQueue];
+  }
+
+  flushOutboxQueue() {
+    if (!this.socketService.isConnected() || this.outboxQueue.length === 0) return;
+    const queueCopy = [...this.outboxQueue];
+    for (const item of queueCopy) {
+      this.socketService.sendMessage({
+        chatId: item.chatId,
+        content: item.content,
+        media: item.media,
+        linkPreview: item.linkPreview,
+        skipLinkPreview: item.skipLinkPreview,
+        tempId: item.tempId,
+      });
+    }
+  }
+
+  syncOfflineMessages(): void {
+    this.flushOutboxQueue();
+
+    const requests: { chatId: string; lastMessageTimestamp?: string; lastMessageId?: string }[] = [];
+
+    if (this.currentChat?._id && !this.currentChat.isDraft) {
+      const lastTime = this.getLastKnownMessageTimestamp(this.currentChat._id);
+      const lastId = this.getLastKnownMessageId(this.currentChat);
+      requests.push({
+        chatId: this.currentChat._id,
+        lastMessageTimestamp: lastTime,
+        lastMessageId: lastId,
+      });
+    }
+
+    for (const c of this.chatItems) {
+      if (c._id && c._id !== this.currentChat?._id && !c.isDraft) {
+        const lastTime = this.getLastKnownMessageTimestamp(c._id);
+        const lastId = this.getLastKnownMessageId(c);
+        requests.push({
+          chatId: c._id,
+          lastMessageTimestamp: lastTime,
+          lastMessageId: lastId,
+        });
+      }
+    }
+
+    if (requests.length > 0) {
+      this.socketService.syncMissedMessages({ chats: requests });
+    }
+
+    this.getChatList();
+  }
+
+  handleMissedMessagesSynced(results: { chatId: string; messages: Message[] }[]): void {
+    if (!Array.isArray(results) || results.length === 0) return;
+    let currentChatUpdated = false;
+
+    for (const res of results) {
+      if (!res?.chatId || !res?.messages?.length) continue;
+      const chatItem = this.findChatById(res.chatId);
+      if (!chatItem) continue;
+
+      chatItem.messages = chatItem.messages || [];
+      const existingIds = new Set(chatItem.messages.map((m) => m._id).filter(Boolean));
+      const incoming = res.messages.filter((m) => !existingIds.has(m._id));
+      if (incoming.length === 0) continue;
+
+      const pending = chatItem.messages.filter((m) => m._pending);
+      const confirmed = chatItem.messages.filter((m) => !m._pending);
+      const merged = [...confirmed, ...incoming];
+      merged.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      chatItem.messages = [...merged, ...pending];
+
+      const latest = merged[merged.length - 1];
+      if (latest) {
+        chatItem.lastMessage = latest;
+        chatItem.updatedAt = new Date(latest.createdAt);
+        this.updateLastMessageTimestamp(res.chatId, latest.createdAt, latest._id);
+      }
+
+      if (this.currentChat?._id === res.chatId) {
+        currentChatUpdated = true;
+      } else {
+        chatItem.messageCount = (chatItem.messageCount || 0) + incoming.length;
+      }
+      this.refreshItem(chatItem);
+    }
+
+    if (currentChatUpdated) {
+      this.messagesLoadedSubject.next();
+      this.scrollChatToBottom();
+    }
+    this.chatItemsSignal.set([...this.chatItems]);
+    this.chatListUpdatedSubject.next(this.chatItems);
   }
 
   /** Returns a chat list item for the current user, keyed by Chat._id. */
@@ -585,6 +781,7 @@ export class MainService {
           chatItem.messages.push(msg);
           chatItem.lastMessage = msg;
           chatItem.updatedAt = new Date(msg.createdAt);
+          this.updateLastMessageTimestamp(payload.chatId, msg.createdAt, msg._id);
           if (this.currentChat?._id === chatItem._id) {
             chatItem.messageCount = 0;
             this.messagesLoadedSubject.next();
@@ -606,19 +803,38 @@ export class MainService {
         });
       });
 
-    this.socketService.on('messageSent', (payload: { chatId: string; message: Message }) => {
+    if (!this.reconnectSubscription) {
+      this.reconnectSubscription = this.socketService.reconnected$.subscribe(() => {
+        this.zone.run(() => {
+          this.syncOfflineMessages();
+        });
+      });
+    }
+
+    this.socketService.on('missedMessagesSynced', (payload: { results: { chatId: string; messages: Message[] }[] }) => {
+      this.zone.run(() => {
+        this.handleMissedMessagesSynced(payload?.results || []);
+      });
+    });
+
+    this.socketService.on('messageSent', (payload: { chatId: string; message: Message; tempId?: string }) => {
       this.zone.run(() => {
         const chatItem = this.findChatById(payload.chatId);
         if (!chatItem) return;
         const msg = payload.message;
         chatItem.messages = chatItem.messages || [];
-        const pendingIdx = chatItem.messages.findIndex((m) => m._pending === true);
+        const pendingIdx = chatItem.messages.findIndex(
+          (m) => (payload.tempId && m._tempId === payload.tempId) || m._pending === true,
+        );
         if (pendingIdx !== -1) chatItem.messages.splice(pendingIdx, 1);
+        this.removeFromOutbox(payload.tempId, payload.chatId);
+
         const exists = chatItem.messages.some((m) => m._id === msg._id);
         if (!exists) {
           chatItem.messages.push(msg);
           chatItem.lastMessage = msg;
           chatItem.updatedAt = new Date(msg.createdAt);
+          this.updateLastMessageTimestamp(payload.chatId, msg.createdAt, msg._id);
         }
         if (this.currentChat?._id === chatItem._id) {
           this.messagesLoadedSubject.next();
@@ -1293,10 +1509,12 @@ export class MainService {
       this.currentChat = currentChat;
     }
 
+    const tempId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const messageData: Message = {
-      _id: null,
+      _id: null as any,
       _pending: true,
-      status: 'sent',
+      _tempId: tempId,
+      status: 'pending',
       senderId: this.authService.getUserId(),
       sender: {
         _id: this.authService.getUserId(),
@@ -1311,12 +1529,25 @@ export class MainService {
     };
     const chatId = currentChat._id as string;
     this.stopTyping(chatId);
-    this.socketService.sendMessage({
+
+    this.enqueueOutbox({
+      tempId,
       chatId,
       content,
       linkPreview: options?.linkPreview,
       skipLinkPreview: options?.skipLinkPreview,
+      createdAt: new Date().toISOString(),
     });
+
+    if (this.socketService.isConnected()) {
+      this.socketService.sendMessage({
+        chatId,
+        content,
+        linkPreview: options?.linkPreview,
+        skipLinkPreview: options?.skipLinkPreview,
+        tempId,
+      });
+    }
 
     currentChat.messages = currentChat.messages || [];
     currentChat.messages.push(messageData);
@@ -1343,6 +1574,7 @@ export class MainService {
       this.currentChat = currentChat;
     }
     const chatId = currentChat._id as string;
+    const tempId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const media = {
       mediaType: 'sticker',
       fileUrl: stickerUrl,
@@ -1350,9 +1582,10 @@ export class MainService {
       fileSize: 0,
     };
     const messageData: Message = {
-      _id: null,
+      _id: null as any,
       _pending: true,
-      status: 'sent',
+      _tempId: tempId,
+      status: 'pending',
       senderId: this.authService.getUserId(),
       sender: {
         _id: this.authService.getUserId(),
@@ -1367,7 +1600,19 @@ export class MainService {
       fileName: stickerName,
       createdAt: new Date(),
     };
-    this.socketService.sendMessage({ chatId, content: '', media });
+
+    this.enqueueOutbox({
+      tempId,
+      chatId,
+      content: '',
+      media,
+      createdAt: new Date().toISOString(),
+    });
+
+    if (this.socketService.isConnected()) {
+      this.socketService.sendMessage({ chatId, content: '', media, tempId });
+    }
+
     currentChat.messages = currentChat.messages || [];
     currentChat.messages.push(messageData);
     currentChat.lastMessage = messageData;
@@ -1392,6 +1637,7 @@ export class MainService {
       this.currentChat = currentChat;
     }
     const chatId = currentChat._id as string;
+    const tempId = `temp_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const media = {
       mediaType: 'gif',
       fileUrl: gifUrl,
@@ -1399,9 +1645,10 @@ export class MainService {
       fileSize: 0,
     };
     const messageData: Message = {
-      _id: null,
+      _id: null as any,
       _pending: true,
-      status: 'sent',
+      _tempId: tempId,
+      status: 'pending',
       senderId: this.authService.getUserId(),
       sender: {
         _id: this.authService.getUserId(),
@@ -1416,7 +1663,19 @@ export class MainService {
       fileName: 'animation.gif',
       createdAt: new Date(),
     };
-    this.socketService.sendMessage({ chatId, content: caption, media });
+
+    this.enqueueOutbox({
+      tempId,
+      chatId,
+      content: caption,
+      media,
+      createdAt: new Date().toISOString(),
+    });
+
+    if (this.socketService.isConnected()) {
+      this.socketService.sendMessage({ chatId, content: caption, media, tempId });
+    }
+
     currentChat.messages = currentChat.messages || [];
     currentChat.messages.push(messageData);
     currentChat.lastMessage = messageData;
@@ -1448,6 +1707,12 @@ export class MainService {
       tap((response: { messages: Message[]; totalMessages: number; currentPage: number; totalPages: number }) => {
         if (!this.currentChat || this.currentChat._id !== chatId) return;
         const serverMessages = response.messages || [];
+        if (serverMessages.length > 0) {
+          const latest = serverMessages[0];
+          if (latest) {
+            this.updateLastMessageTimestamp(chatId, latest.createdAt, latest._id);
+          }
+        }
         if (response.currentPage <= 1) {
           // Server is source of truth for first page; keep local pending messages on top
           const pending = (this.currentChat.messages || []).filter((m) => m._pending);

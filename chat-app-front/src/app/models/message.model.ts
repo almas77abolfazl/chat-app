@@ -11,6 +11,7 @@ export interface Message {
   isStreaming?: boolean;
   toolCalls?: { name: string; arguments: any }[];
   _pending?: boolean;
+  _tempId?: string;
   status?: 'pending' | 'sent' | 'delivered' | 'read';
   read?: boolean;
   readAt?: Date;
