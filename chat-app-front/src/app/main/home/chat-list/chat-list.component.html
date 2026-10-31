@@ -99,12 +99,21 @@
       }
     </div>
 
-    <div class="folders-bar">
+    <div
+      #foldersBar
+      class="folders-bar"
+      [class.is-dragging]="isDraggingFolders()"
+      (mousedown)="onFoldersMouseDown($event)"
+      (mousemove)="onFoldersMouseMove($event)"
+      (mouseup)="onFoldersMouseUp()"
+      (mouseleave)="onFoldersMouseLeave()"
+      (wheel)="onFoldersWheel($event)"
+    >
       <button
         type="button"
         class="folder-tab"
         [class.active]="mainService.chatFilter === 'all'"
-        (click)="mainService.setChatFilter('all')"
+        (click)="selectFolderTab($event, 'all')"
       >
         <span>{{ 'folders.all' | i18n }}</span>
         @if (mainService.getFolderUnreadCount('all') > 0) {
@@ -115,7 +124,7 @@
         type="button"
         class="folder-tab"
         [class.active]="mainService.chatFilter === 'direct'"
-        (click)="mainService.setChatFilter('direct')"
+        (click)="selectFolderTab($event, 'direct')"
       >
         <span>{{ 'folders.direct' | i18n }}</span>
         @if (mainService.getFolderUnreadCount('direct') > 0) {
@@ -126,7 +135,7 @@
         type="button"
         class="folder-tab"
         [class.active]="mainService.chatFilter === 'groups'"
-        (click)="mainService.setChatFilter('groups')"
+        (click)="selectFolderTab($event, 'groups')"
       >
         <span>{{ 'folders.groups' | i18n }}</span>
         @if (mainService.getFolderUnreadCount('groups') > 0) {
@@ -137,7 +146,7 @@
         type="button"
         class="folder-tab"
         [class.active]="mainService.chatFilter === 'channels'"
-        (click)="mainService.setChatFilter('channels')"
+        (click)="selectFolderTab($event, 'channels')"
       >
         <span>{{ 'folders.channels' | i18n }}</span>
         @if (mainService.getFolderUnreadCount('channels') > 0) {
@@ -148,7 +157,7 @@
         type="button"
         class="folder-tab"
         [class.active]="mainService.chatFilter === 'bots'"
-        (click)="mainService.setChatFilter('bots')"
+        (click)="selectFolderTab($event, 'bots')"
       >
         <span>{{ 'folders.bots' | i18n }}</span>
         @if (mainService.getFolderUnreadCount('bots') > 0) {
@@ -161,7 +170,7 @@
         type="button"
         class="folder-tab custom-folder-tab"
         [class.active]="mainService.chatFilter === folder._id"
-        (click)="mainService.setChatFilter(folder._id!)"
+        (click)="selectFolderTab($event, folder._id!)"
         (contextmenu)="openFolderContextMenu($event, folder)"
         [title]="folder.name"
       >

@@ -43,3 +43,4 @@ export class UpdateFolderDto {
   @IsOptional()
   includedTypes?: string[];
 }
+

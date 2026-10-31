@@ -182,6 +182,19 @@
         display: none;
       }
       padding-bottom: 2px;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: pan-y;
+
+      &.is-dragging {
+        cursor: grabbing;
+        cursor: -webkit-grabbing;
+
+        .folder-tab {
+          pointer-events: none;
+        }
+      }
 
       .folder-tab {
         display: inline-flex;
@@ -196,6 +209,8 @@
         font-weight: 600;
         cursor: pointer;
         white-space: nowrap;
+        user-select: none;
+        -webkit-user-drag: none;
         transition: all var(--transition-fast);
 
         &:hover {

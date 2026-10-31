@@ -8,6 +8,8 @@ import {
   signal,
   computed,
   DestroyRef,
+  ElementRef,
+  ViewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
@@ -63,6 +65,14 @@ export class ChatListComponent implements OnInit {
   readonly folderContextMenuX = signal<number>(0);
   readonly folderContextMenuY = signal<number>(0);
   readonly folderContextMenuTarget = signal<ChatFolder | null>(null);
+
+  @ViewChild('foldersBar') foldersBarRef?: ElementRef<HTMLDivElement>;
+
+  readonly isDraggingFolders = signal<boolean>(false);
+  private isFolderMouseDown = false;
+  private folderStartX = 0;
+  private folderScrollLeft = 0;
+  private hasDraggedFolders = false;
 
   readonly filteredSearchResults = computed(() => {
     const filter = this.searchTypeFilter();
@@ -436,7 +446,66 @@ export class ChatListComponent implements OnInit {
     this.folderContextMenuTarget.set(null);
   }
 
+  onFoldersMouseDown(e: MouseEvent) {
+    if (e.button !== 0) return;
+    const el = this.foldersBarRef?.nativeElement;
+    if (!el) return;
+    this.isFolderMouseDown = true;
+    this.hasDraggedFolders = false;
+    this.folderStartX = e.pageX;
+    this.folderScrollLeft = el.scrollLeft;
+  }
+
+  onFoldersMouseMove(e: MouseEvent) {
+    if (!this.isFolderMouseDown) return;
+    const el = this.foldersBarRef?.nativeElement;
+    if (!el) return;
+    const deltaX = e.pageX - this.folderStartX;
+    if (Math.abs(deltaX) > 5) {
+      this.hasDraggedFolders = true;
+      this.isDraggingFolders.set(true);
+      el.scrollLeft = this.folderScrollLeft - deltaX;
+    }
+  }
+
+  onFoldersMouseUp() {
+    if (this.isFolderMouseDown) {
+      this.isFolderMouseDown = false;
+      setTimeout(() => {
+        this.isDraggingFolders.set(false);
+        this.hasDraggedFolders = false;
+      }, 50);
+    }
+  }
+
+  onFoldersMouseLeave() {
+    if (this.isFolderMouseDown) {
+      this.isFolderMouseDown = false;
+      this.isDraggingFolders.set(false);
+      this.hasDraggedFolders = false;
+    }
+  }
+
+  onFoldersWheel(e: WheelEvent) {
+    const el = this.foldersBarRef?.nativeElement;
+    if (!el) return;
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+      e.preventDefault();
+      el.scrollBy({ left: e.deltaY, behavior: 'auto' });
+    }
+  }
+
+  selectFolderTab(e: MouseEvent, filterId: string) {
+    if (this.hasDraggedFolders) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    this.mainService.setChatFilter(filterId);
+  }
+
   openCreateFolderDialog() {
+    if (this.hasDraggedFolders) return;
     this.closeFolderContextMenu();
     const dialogRef = this.dialog.open(FolderDialogComponent, {
       width: '480px',

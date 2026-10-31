@@ -6,3 +6,4 @@ export interface ChatFolder {
   excludedChatIds?: string[];
   includedTypes?: ('direct' | 'groups' | 'channels' | 'bots')[];
 }
+
