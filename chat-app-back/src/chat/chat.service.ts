@@ -1,3 +1,6 @@
+import { resizeAvatar } from 'src/helpers/avatar-resize';
+import * as fs from 'fs';
+import { join } from 'path';
 import { BadRequestException, Injectable, ForbiddenException, NotFoundException, Optional } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
@@ -388,9 +391,21 @@ export class ChatService {
     if (chat.avatar && !chat.avatars.includes(chat.avatar)) {
       chat.avatars.unshift(chat.avatar);
     }
-    chat.avatars.unshift(filename);
+    const inputPath = join('./uploads/avatars', filename);
+    let targetFilename = filename;
+    if (fs.existsSync(inputPath)) {
+      try {
+        const resizedFilename = 'resized_' + filename;
+        const outputPath = join('./uploads/avatars', resizedFilename);
+        await resizeAvatar(inputPath, outputPath);
+        if (fs.existsSync(outputPath)) {
+          targetFilename = resizedFilename;
+        }
+      } catch {}
+    }
+    chat.avatars.unshift(targetFilename);
     chat.avatars = Array.from(new Set(chat.avatars)).slice(0, 20);
-    chat.avatar = filename;
+    chat.avatar = targetFilename;
     await chat.save();
     return chat;
   }

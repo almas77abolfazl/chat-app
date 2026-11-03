@@ -73,7 +73,7 @@ describe('resizeAvatar', () => {
     });
   });
 
-  it('should use default dimensions 200x200', async () => {
+  it('should use default dimensions 500x500', async () => {
     const inputPath = path.join(testDir, 'default.jpg');
     const outputPath = path.join(testDir, 'resized-default.jpg');
     fs.writeFileSync(inputPath, Buffer.from('fake-image-data'));
@@ -81,7 +81,7 @@ describe('resizeAvatar', () => {
     await resizeAvatar(inputPath, outputPath);
 
     const mockInstance = lastMockInstance;
-    expect(mockInstance.resize).toHaveBeenCalledWith(200, 200, {
+    expect(mockInstance.resize).toHaveBeenCalledWith(500, 500, {
       fit: 'cover',
       position: 'centre',
     });

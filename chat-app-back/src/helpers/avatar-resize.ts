@@ -1,4 +1,4 @@
-import sharp from 'sharp';
+import * as sharp from 'sharp';
 import * as fs from 'fs';
 import { extname } from 'path';
 
@@ -9,9 +9,11 @@ export interface ResizeOptions {
 }
 
 export async function resizeAvatar(inputPath: string, outputPath: string, options: ResizeOptions = {}): Promise<void> {
-  const { width = 200, height = 200, quality = 85 } = options;
+  const { width = 500, height = 500, quality = 85 } = options;
 
-  const pipeline = sharp(inputPath).resize(width, height, {
+  const sharpModule: any = sharp;
+  const sharpFn = typeof sharpModule === 'function' ? sharpModule : sharpModule.default;
+  const pipeline = sharpFn(inputPath).resize(width, height, {
     fit: 'cover',
     position: 'centre',
   });
@@ -26,5 +28,9 @@ export async function resizeAvatar(inputPath: string, outputPath: string, option
   }
 
   await pipeline.toFile(outputPath);
-  fs.unlinkSync(inputPath);
+  try {
+    if (fs.existsSync(inputPath) && inputPath !== outputPath) {
+      fs.unlinkSync(inputPath);
+    }
+  } catch {}
 }
