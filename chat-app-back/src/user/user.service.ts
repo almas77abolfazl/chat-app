@@ -207,8 +207,8 @@ export class UserService {
     let lastSeen: Date | null = user.lastSeen || null;
     let profilePicture: string | null = user.profilePicture || null;
     let avatars: string[] = [...(user.avatars || [])];
-    if (profilePicture && !avatars.includes(profilePicture)) {
-      avatars.unshift(profilePicture);
+    if (profilePicture) {
+      avatars = [profilePicture, ...avatars.filter((a) => a !== profilePicture)];
     }
 
     let canSeePhone = false;

@@ -204,9 +204,20 @@ export class MainService {
   public readonly translationService = inject(TranslationService);
 
   constructor() {
-    this.getAvatar(this.authService.getUserId()).then((avatar: string) => {
-      if (avatar) this.pictureSrc = avatar;
-    });
+    const cachedAvatar = typeof localStorage !== 'undefined' ? localStorage.getItem('user-avatar') : null;
+    if (cachedAvatar) {
+      this.pictureSrc = cachedAvatar;
+    }
+    const myId = this.authService.getUserId();
+    if (myId) {
+      this.getUserProfile(myId).pipe(take(1)).subscribe({
+        next: (profile: any) => {
+          if (profile?.profilePicture) {
+            this.updateAvatarInState(myId, profile.profilePicture);
+          }
+        },
+      });
+    }
     this.loadSyncTimestamps();
     this.loadOutboxQueue();
   }
@@ -1304,6 +1315,59 @@ export class MainService {
     this.scrollChatToBottom();
   }
 
+  updateAvatarInState(userId: string, avatarFilename: string) {
+    if (!userId) return;
+    const myId = this.authService.getUserId();
+    const isMe = userId === myId;
+    if (isMe) {
+      this.pictureSrc = avatarFilename;
+      if (avatarFilename) {
+        localStorage.setItem('user-avatar', avatarFilename);
+      } else {
+        localStorage.removeItem('user-avatar');
+      }
+      this.cacheService.deleteItem('avatars', myId);
+    }
+
+    const formattedUrl = this.getAvatarUrl(avatarFilename);
+
+    // Update in stories
+    const currentStories = this.storiesSignal();
+    const updatedStories = currentStories.map((sg) => {
+      if (sg.user._id === userId || (isMe && sg.isCurrentUser)) {
+        return {
+          ...sg,
+          user: {
+            ...sg.user,
+            avatar: formattedUrl || '',
+            profilePicture: avatarFilename,
+          },
+        };
+      }
+      return sg;
+    });
+    this.storiesSignal.set(updatedStories);
+
+    // Update in chat items
+    let chatChanged = false;
+    const updatedChats = this.chatItems.map((c) => {
+      if (c.peerId === userId || (isMe && c.isSavedMessages)) {
+        chatChanged = true;
+        return { ...c, avatar: formattedUrl };
+      }
+      return c;
+    });
+    if (chatChanged) {
+      this.chatItems = updatedChats;
+      this.chatListUpdatedSubject.next(this.chatItems);
+    }
+
+    // Update in currentChat
+    if (this.currentChat && (this.currentChat.peerId === userId || (isMe && this.currentChat.isSavedMessages))) {
+      this.currentChat = { ...this.currentChat, avatar: formattedUrl };
+    }
+  }
+
   saveAvatar(file?: any): Observable<any> {
     const avatarFile = file || this.file;
     if (!avatarFile) return of(null);
@@ -1315,8 +1379,13 @@ export class MainService {
         next: (res: any) => {
           const avatarFilename = res?.profilePicture || res?.avatar;
           if (avatarFilename) {
-            this.pictureSrc = avatarFilename;
-            localStorage.setItem('user-avatar', this.pictureSrc);
+            const myId = this.authService.getUserId();
+            if (myId) {
+              this.updateAvatarInState(myId, avatarFilename);
+            } else {
+              this.pictureSrc = avatarFilename;
+              localStorage.setItem('user-avatar', this.pictureSrc);
+            }
             this.snackbar.success('profile.avatarSaved', 2500);
           }
         },
@@ -1342,7 +1411,12 @@ export class MainService {
             if (data.file) {
               this.saveAvatar(data.file).subscribe();
             } else if (data.pictureSrc) {
-              this.pictureSrc = data.pictureSrc;
+              const myId = this.authService.getUserId();
+              if (myId) {
+                this.updateAvatarInState(myId, data.pictureSrc);
+              } else {
+                this.pictureSrc = data.pictureSrc;
+              }
             }
             this.snackbar.success('profile.profileUpdated', 2500);
           },

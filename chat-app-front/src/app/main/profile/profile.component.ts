@@ -307,13 +307,15 @@ export class ProfileComponent implements OnInit {
           this.isContact = !!profile.isContact;
           this.loadingProfile = false;
           const rawAvatars: string[] = [];
+          if (profile.profilePicture) {
+            rawAvatars.push(profile.profilePicture);
+          }
           if (profile.avatars && Array.isArray(profile.avatars)) {
-            rawAvatars.push(...profile.avatars);
+            for (const av of profile.avatars) {
+              if (!rawAvatars.includes(av)) rawAvatars.push(av);
+            }
           }
-          if (profile.profilePicture && !rawAvatars.includes(profile.profilePicture)) {
-            rawAvatars.unshift(profile.profilePicture);
-          }
-          this.avatars = Array.from(new Set(rawAvatars)).filter(Boolean);
+          this.avatars = rawAvatars.filter(Boolean);
           this.activeAvatarIndex = 0;
           this.avatarLoadError = false;
         },
@@ -407,8 +409,18 @@ export class ProfileComponent implements OnInit {
       .subscribe({
         next: (updatedList: string[]) => {
           this.avatars = updatedList || [];
-          this.activeAvatarIndex = Math.max(0, Math.min(this.activeAvatarIndex, this.avatars.length - 1));
-          this.mainService.pictureSrc = this.activeAvatarUrl || '';
+          this.activeAvatarIndex = 0;
+          const newAvatar = this.avatars[0] || '';
+          this.mainService.pictureSrc = newAvatar;
+          if (newAvatar) {
+            localStorage.setItem('user-avatar', newAvatar);
+          } else {
+            localStorage.removeItem('user-avatar');
+          }
+          const myId = this.mainService.authService.getUserId();
+          if (myId) {
+            this.mainService.updateAvatarInState(myId, newAvatar);
+          }
           this.mainService.snackbar.success(this.translationService.t('profile.avatarDeleted'), 3000);
         },
         error: () => {

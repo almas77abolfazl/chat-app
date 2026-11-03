@@ -10,6 +10,7 @@ import {
   DestroyRef,
   ElementRef,
   ViewChild,
+  effect,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
@@ -108,6 +109,12 @@ export class ChatListComponent implements OnInit {
     public translationService: TranslationService,
     private dialog: MatDialog
   ) {
+    effect(() => {
+      // Whenever the user's avatar changes, reset broken flag so it tries loading
+      this.mainService.pictureSrcSignal();
+      this.myAvatarBroken.set(false);
+    });
+
     this.searchSubject
       .pipe(debounceTime(300), takeUntilDestroyed(this.destroyRef))
       .subscribe((query) => this.performSearch(query));
