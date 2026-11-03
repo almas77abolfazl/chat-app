@@ -67,11 +67,12 @@
         (click)="userOwnStory() && userOwnStory()!.stories.length > 0 ? openStoryViewer(userOwnStory()!) : openStoryCreate()"
       >
         <div class="story-avatar-wrap" [class.has-stories]="userOwnStory() && userOwnStory()!.stories.length > 0">
-          @if (mainService.userProfile?.avatar) {
+          @if (mainService.userProfile?.avatar && !myAvatarBroken()) {
           <img
             [src]="mainService.userProfile?.avatar"
             class="story-avatar"
             alt="My Story"
+            (error)="myAvatarBroken.set(true)"
           />
           } @else {
           <div class="story-avatar-placeholder" [style.background]="myAvatarBg()">

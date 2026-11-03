@@ -1315,7 +1315,7 @@ export class MainService {
         next: (res: any) => {
           const avatarFilename = res?.profilePicture || res?.avatar;
           if (avatarFilename) {
-            this.pictureSrc = `${environment.uploadUrl}/${avatarFilename}`;
+            this.pictureSrc = avatarFilename;
             localStorage.setItem('user-avatar', this.pictureSrc);
             this.snackbar.success('profile.avatarSaved', 2500);
           }
@@ -1339,11 +1339,10 @@ export class MainService {
             localStorage.setItem('user-firstName', data.firstName || '');
             localStorage.setItem('user-lastName', data.lastName || '');
             localStorage.setItem('user-bio', data.bio || '');
-            if (data.pictureSrc) {
-              this.pictureSrc = data.pictureSrc;
-            }
             if (data.file) {
               this.saveAvatar(data.file).subscribe();
+            } else if (data.pictureSrc) {
+              this.pictureSrc = data.pictureSrc;
             }
             this.snackbar.success('profile.profileUpdated', 2500);
           },
@@ -1860,12 +1859,10 @@ export class MainService {
     }
     const clean = avatar.replace(/^[\/\\]+/, '');
     if (clean.startsWith('uploads/avatars/')) {
-      const base = environment.apiUrl.replace('/v1', '');
-      return `${base}/${clean}`;
+      return `${environment.uploadUrl}/avatars/${clean.replace(/^uploads\/avatars\//, '')}`;
     }
     if (clean.startsWith('uploads/')) {
-      const base = environment.apiUrl.replace('/v1', '');
-      return `${base}/${clean}`;
+      return `${environment.uploadUrl}/${clean.replace(/^uploads\//, '')}`;
     }
     if (clean.startsWith('avatars/')) {
       return `${environment.uploadUrl}/${clean}`;

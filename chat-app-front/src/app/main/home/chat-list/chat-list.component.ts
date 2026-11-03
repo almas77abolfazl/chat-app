@@ -61,6 +61,7 @@ export class ChatListComponent implements OnInit {
   readonly searchResults = signal<any[]>([]);
   readonly searchTypeFilter = signal<'all' | 'users' | 'groups' | 'channels'>('all');
   readonly brokenAvatars = new Set<string>();
+  readonly myAvatarBroken = signal<boolean>(false);
 
   private readonly searchSubject = new Subject<string>();
   private readonly destroyRef = inject(DestroyRef);
