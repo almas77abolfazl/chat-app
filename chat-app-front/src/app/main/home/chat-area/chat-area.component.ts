@@ -39,6 +39,7 @@ import { EmojiUrlPipe } from '../../../helpers/emoji-url.pipe';
 import { TranslationService } from '../../../helpers/translation.service';
 import { WebRtcService } from '../../../helpers/webrtc.service';
 import { environment } from '../../../../environments/environment';
+import { getTelegramGradient, getInitials } from '../../../helpers/avatar.helper';
 
 export interface ContextMenuAction {
   label: string;
@@ -727,19 +728,14 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
 
   avatarBg(chat: ChatListItem): string {
     if (!chat) return '#0088cc';
-    const hue = chat._id ? Number(String(chat._id).charCodeAt(0)) % 60 + 240 : 264;
-    return `linear-gradient(135deg, hsl(${hue} 70% 55%), hsl(${(hue - 10) % 360} 65% 50%))`;
+    const seed = chat._id || chat.name || chat.firstName || 'chat';
+    return getTelegramGradient(seed);
   }
 
   initials(chat: ChatListItem): string {
-    if (!chat) return '?';
+    if (!chat) return '؟';
     if (chat.isGroup || chat.isChannel) return '';
-    const first = (chat.firstName ?? '').trim();
-    const last = (chat.lastName ?? '').trim();
-    if (first && last) return `${first.charAt(0)}${last.charAt(0)}`;
-    if (first) return first.charAt(0);
-    if (last) return last.charAt(0);
-    return '?';
+    return getInitials(chat.firstName, chat.lastName, '؟');
   }
 
   avatarBroken(chatId: string): boolean {

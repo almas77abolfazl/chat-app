@@ -1,4 +1,4 @@
-import { Component, Inject, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, Inject, ChangeDetectionStrategy, signal, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -6,6 +6,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { I18nPipe } from '../../helpers/i18n.pipe';
 import { MainService } from '../main.service';
+import { getTelegramGradient, getInitials } from '../../helpers/avatar.helper';
 
 @Component({
   selector: 'app-edit-profile',
@@ -18,6 +19,8 @@ import { MainService } from '../main.service';
 export class EditProfileComponent {
   file: any;
   readonly imageError = signal(false);
+  readonly previewUrl = signal<string | null>(null);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   constructor(
     public dialogRef: MatDialogRef<EditProfileComponent>,
@@ -33,17 +36,18 @@ export class EditProfileComponent {
   ) {}
 
   get avatarDisplaySrc(): string | null {
+    if (this.previewUrl()) return this.previewUrl();
     if (this.imageError() || !this.data?.pictureSrc) return null;
     return this.mainService.getAvatarUrl(this.data.pictureSrc);
   }
 
   get initials(): string {
-    const f = (this.data?.firstName || '').trim();
-    const l = (this.data?.lastName || '').trim();
-    if (f && l) return `${f.charAt(0)}${l.charAt(0)}`;
-    if (f) return f.charAt(0);
-    if (l) return l.charAt(0);
-    return '?';
+    return getInitials(this.data?.firstName, this.data?.lastName, '؟');
+  }
+
+  get avatarBg(): string {
+    const id = this.mainService.authService.getUserId() || this.data?.firstName || 'user';
+    return getTelegramGradient(id);
   }
 
   onImageError(): void {
@@ -60,7 +64,7 @@ export class EditProfileComponent {
       lastName: this.data.lastName,
       bio: this.data.bio,
       file: this.file,
-      pictureSrc: this.data.pictureSrc,
+      pictureSrc: this.previewUrl() || this.data.pictureSrc,
     });
   }
 
@@ -71,7 +75,10 @@ export class EditProfileComponent {
       this.imageError.set(false);
       const reader = new FileReader();
       reader.onload = () => {
-        this.data.pictureSrc = reader.result as string;
+        const result = reader.result as string;
+        this.previewUrl.set(result);
+        this.data.pictureSrc = result;
+        this.cdr.markForCheck();
       };
       reader.readAsDataURL(this.file);
     }

@@ -8,6 +8,7 @@ import { TranslationService, Language } from '../../helpers/translation.service'
 import { MainService } from '../main.service';
 import { I18nPipe } from '../../helpers/i18n.pipe';
 import { PrivacyRule, UserPrivacy } from '../../models/chat-list-item.model';
+import { getTelegramGradient, getInitials } from '../../helpers/avatar.helper';
 import { take } from 'rxjs';
 
 @Component({
@@ -163,11 +164,14 @@ export class SettingsComponent implements OnInit {
     this.mainService.openEditProfileModal();
   }
 
+  get userAvatarBg(): string {
+    const id = this.mainService.authService.getUserId() || this.userName || 'me';
+    return getTelegramGradient(id);
+  }
+
   getUserInitials(): string {
     const first = (this.mainService.authService.getFirstName() || '').trim();
     const last = (this.mainService.authService.getLastName() || '').trim();
-    if (first && last) return `${first.charAt(0)}${last.charAt(0)}`;
-    if (first) return first.charAt(0);
-    return '?';
+    return getInitials(first, last, '؟');
   }
 }

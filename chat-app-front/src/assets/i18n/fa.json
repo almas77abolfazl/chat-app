@@ -222,6 +222,8 @@
     "avatarDeleted": "عکس پروفایل حذف شد",
     "avatarDeleteError": "خطا در حذف عکس",
     "avatarSaveError": "خطا در ذخیره آواتار",
+    "avatarSaved": "عکس پروفایل با موفقیت ذخیره شد",
+    "profileUpdated": "پروفایل با موفقیت به‌روزرسانی شد",
     "profileUpdateError": "خطا در به‌روزرسانی پروفایل",
     "nextPhoto": "عکس بعدی",
     "prevPhoto": "عکس قبلی",

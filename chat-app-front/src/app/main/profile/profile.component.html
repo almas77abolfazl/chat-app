@@ -17,7 +17,7 @@
 
     <!-- Avatar Carousel -->
     <div class="avatar-container">
-      <div class="avatar-card" (click)="openFullscreenAvatar()">
+      <div class="avatar-card" [style.background]="avatarBg" (click)="openFullscreenAvatar()">
         @if (activeAvatarUrl) {
         <img [src]="activeAvatarUrl" (error)="onAvatarError()" alt="Avatar" class="avatar-img" />
         } @else if (isGroup || isChannel) {

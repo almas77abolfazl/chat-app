@@ -12,7 +12,7 @@
   <div class="settings-body">
     <!-- User Account Card -->
     <div class="settings-card user-account-card">
-      <div class="user-avatar-wrap">
+      <div class="user-avatar-wrap" [style.background]="userAvatarBg">
         @if (userAvatar) {
         <img [src]="userAvatar" (error)="userAvatar = ''" alt="Avatar" class="user-avatar" />
         } @else {

@@ -2,7 +2,7 @@
   <h2 class="edit-profile-title">{{ 'profile.editProfile' | i18n }}</h2>
   <div class="profile-header">
     <div class="avatar-edit-wrapper">
-      <div class="avatar-circle">
+      <div class="avatar-circle" [style.background]="avatarBg">
         @if (avatarDisplaySrc) {
           <img [src]="avatarDisplaySrc" (error)="onImageError()" alt="Profile Picture" />
         } @else {

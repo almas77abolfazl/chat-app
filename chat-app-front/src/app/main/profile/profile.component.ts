@@ -10,6 +10,7 @@ import { MainService } from '../main.service';
 import { TranslationService } from '../../helpers/translation.service';
 import { WebRtcService } from '../../helpers/webrtc.service';
 import { I18nPipe } from '../../helpers/i18n.pipe';
+import { getTelegramGradient, getInitials } from '../../helpers/avatar.helper';
 import { take } from 'rxjs';
 
 export interface ProfileDialogData {
@@ -244,7 +245,13 @@ export class ProfileComponent implements OnInit {
   get coverColor(): string {
     if (this.isChannel) return 'linear-gradient(135deg, #4f46e5, #7c3aed)';
     if (this.isGroup) return 'linear-gradient(135deg, #7c3aed, #db2777)';
-    return 'linear-gradient(135deg, #2563eb, #7c3aed)';
+    const seed = this.targetUserId || this.chatData?._id || this.displayName || 'user';
+    return getTelegramGradient(seed);
+  }
+
+  get avatarBg(): string {
+    const seed = this.targetUserId || this.chatData?._id || this.displayName || 'user';
+    return getTelegramGradient(seed);
   }
 
   get activeAvatarUrl(): string | null {
@@ -253,8 +260,13 @@ export class ProfileComponent implements OnInit {
   }
 
   get initials(): string {
+    const f = this.userProfile?.firstName || this.chatData?.firstName;
+    const l = this.userProfile?.lastName || this.chatData?.lastName;
+    if (f || l) {
+      return getInitials(f, l, '؟');
+    }
     const name = this.displayName.trim();
-    if (!name) return '?';
+    if (!name) return '؟';
     const parts = name.split(/\s+/);
     if (parts.length >= 2) {
       return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
@@ -451,8 +463,7 @@ export class ProfileComponent implements OnInit {
   }
 
   editProfile(): void {
-    this.dialogRef.close();
-    this.dialog.open(EditProfileComponent, {
+    const dialogRef = this.dialog.open(EditProfileComponent, {
       width: '440px',
       maxWidth: '96vw',
       panelClass: 'rtl-dialog',
@@ -463,6 +474,21 @@ export class ProfileComponent implements OnInit {
         pictureSrc: this.activeAvatarUrl || this.mainService.pictureSrc || '',
       },
     });
+
+    dialogRef
+      .afterClosed()
+      .pipe(take(1))
+      .subscribe((result) => {
+        if (!result) return;
+        this.mainService.updateUserProfile(result).subscribe({
+          next: () => {
+            const myId = this.mainService.authService.getUserId();
+            if (myId) {
+              this.loadUserProfile(myId);
+            }
+          },
+        });
+      });
   }
 
   viewMemberProfile(member: any): void {

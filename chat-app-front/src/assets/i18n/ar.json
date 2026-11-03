@@ -222,6 +222,8 @@
     "avatarDeleted": "تم حذف الصورة الشخصية",
     "avatarDeleteError": "فشل حذف الصورة",
     "avatarSaveError": "فشل حفظ الصورة الشخصية",
+    "avatarSaved": "تم تحديث الصورة الشخصية بنجاح",
+    "profileUpdated": "تم تحديث الملف الشخصي بنجاح",
     "profileUpdateError": "فشل تحديث الملف الشخصي",
     "nextPhoto": "الصورة التالية",
     "prevPhoto": "الصورة السابقة",

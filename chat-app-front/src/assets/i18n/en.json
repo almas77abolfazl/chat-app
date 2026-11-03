@@ -222,6 +222,8 @@
     "avatarDeleted": "Profile photo deleted",
     "avatarDeleteError": "Failed to delete photo",
     "avatarSaveError": "Failed to save avatar",
+    "avatarSaved": "Profile photo updated successfully",
+    "profileUpdated": "Profile updated successfully",
     "profileUpdateError": "Failed to update profile",
     "nextPhoto": "Next photo",
     "prevPhoto": "Previous photo",

@@ -1304,22 +1304,52 @@ export class MainService {
     this.scrollChatToBottom();
   }
 
-  private saveAvatar() {
-    if (!this.file) return;
+  saveAvatar(file?: any): Observable<any> {
+    const avatarFile = file || this.file;
+    if (!avatarFile) return of(null);
     const formData = new FormData();
-    formData.append('avatar', this.file);
-    this.httpRequestService
-      .post('user/upload-avatar', formData)
-      .pipe(take(1))
-      .subscribe({
+    formData.append('avatar', avatarFile);
+    return this.httpRequestService.post('user/upload-avatar', formData).pipe(
+      take(1),
+      tap({
         next: (res: any) => {
-          if (res?.avatar) {
-            this.pictureSrc = `${environment.uploadUrl}/${res.avatar}`;
+          const avatarFilename = res?.profilePicture || res?.avatar;
+          if (avatarFilename) {
+            this.pictureSrc = `${environment.uploadUrl}/${avatarFilename}`;
             localStorage.setItem('user-avatar', this.pictureSrc);
+            this.snackbar.success('profile.avatarSaved', 2500);
           }
         },
-        error: (err) => this.snackbar.error('profile.avatarSaveError', 3000),
-      });
+        error: () => this.snackbar.error('profile.avatarSaveError', 3000),
+      })
+    );
+  }
+
+  updateUserProfile(data: { firstName: string; lastName: string; bio: string; file?: any; pictureSrc?: string }): Observable<any> {
+    return this.httpRequestService
+      .post('user/updateUserNames', {
+        firstName: data.firstName,
+        lastName: data.lastName,
+        bio: data.bio,
+      })
+      .pipe(
+        take(1),
+        tap({
+          next: () => {
+            localStorage.setItem('user-firstName', data.firstName || '');
+            localStorage.setItem('user-lastName', data.lastName || '');
+            localStorage.setItem('user-bio', data.bio || '');
+            if (data.pictureSrc) {
+              this.pictureSrc = data.pictureSrc;
+            }
+            if (data.file) {
+              this.saveAvatar(data.file).subscribe();
+            }
+            this.snackbar.success('profile.profileUpdated', 2500);
+          },
+          error: () => this.snackbar.error('profile.profileUpdateError', 3000),
+        })
+      );
   }
 
   agentQuickAction(action: 'summarize' | 'tasks' | 'reply') {
@@ -1375,26 +1405,7 @@ export class MainService {
       .pipe(take(1))
       .subscribe((result) => {
         if (!result) return;
-        this.pictureSrc = result.pictureSrc || this.pictureSrc;
-        this.file = result.file;
-
-        this.httpRequestService
-          .post('user/updateUserNames', {
-            firstName: result.firstName,
-            lastName: result.lastName,
-            bio: result.bio,
-          })
-          .pipe(take(1))
-          .subscribe({
-            next: () => {
-              localStorage.setItem('user-firstName', result.firstName || '');
-              localStorage.setItem('user-lastName', result.lastName || '');
-              localStorage.setItem('user-bio', result.bio || '');
-            },
-            error: (err) => this.snackbar.error('profile.profileUpdateError', 3000),
-          });
-
-        if (this.file) this.saveAvatar();
+        this.updateUserProfile(result).subscribe();
       });
   }
 
