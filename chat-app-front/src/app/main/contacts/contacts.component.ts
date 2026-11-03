@@ -10,6 +10,7 @@ import { take } from 'rxjs';
 import { MainService } from '../main.service';
 import { I18nPipe } from '../../helpers/i18n.pipe';
 import { getTelegramGradient, getInitials } from '../../helpers/avatar.helper';
+import { normalizePhoneNumber } from '../../helpers/phone-normalizer';
 
 export interface ContactUser {
   _id: string;
@@ -96,8 +97,9 @@ export class ContactsComponent implements OnInit {
   }
 
   addNewContact() {
-    const phone = this.newContactPhone().trim();
-    if (!phone) return;
+    const rawPhone = this.newContactPhone().trim();
+    if (!rawPhone) return;
+    const phone = normalizePhoneNumber(rawPhone);
     const firstName = this.newContactFirstName().trim();
     const lastName = this.newContactLastName().trim();
 
@@ -153,7 +155,28 @@ export class ContactsComponent implements OnInit {
     return getTelegramGradient(contact._id || contact.firstName || contact.phoneNumber);
   }
 
+  getContactDisplayName(contact: ContactUser): string {
+    const fn = (contact.firstName || '').trim();
+    const ln = (contact.lastName || '').trim();
+    const fullName = `${fn} ${ln}`.trim();
+    if (fullName) return fullName;
+    if (contact.username) return `@${contact.username}`;
+    if (contact.phoneNumber) return contact.phoneNumber;
+    return 'کاربر';
+  }
+
   getContactInitial(contact: ContactUser): string {
-    return getInitials(contact.firstName, contact.lastName, '؟');
+    const fn = (contact.firstName || '').trim();
+    const ln = (contact.lastName || '').trim();
+    if (fn || ln) {
+      return getInitials(fn, ln, '؟');
+    }
+    if (contact.username) {
+      return contact.username.charAt(0).toUpperCase();
+    }
+    if (contact.phoneNumber) {
+      return contact.phoneNumber.slice(-2);
+    }
+    return '؟';
   }
 }

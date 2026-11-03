@@ -63,7 +63,7 @@
         }
       </div>
       <div class="contact-info">
-        <div class="contact-name">{{ contact.firstName }} {{ contact.lastName }}</div>
+        <div class="contact-name">{{ getContactDisplayName(contact) }}</div>
         <div class="contact-status">
           @if (contact.isOnline) {
           <span class="status-online">{{ 'status.online' | i18n }}</span>

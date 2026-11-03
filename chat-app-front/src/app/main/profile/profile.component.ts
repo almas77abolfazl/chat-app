@@ -11,6 +11,7 @@ import { TranslationService } from '../../helpers/translation.service';
 import { WebRtcService } from '../../helpers/webrtc.service';
 import { I18nPipe } from '../../helpers/i18n.pipe';
 import { getTelegramGradient, getInitials } from '../../helpers/avatar.helper';
+import { copyToClipboard } from '../../helpers/clipboard.helper';
 import { take } from 'rxjs';
 
 export interface ProfileDialogData {
@@ -431,12 +432,15 @@ export class ProfileComponent implements OnInit {
 
   copyUsername(): void {
     if (!this.username) return;
-    navigator.clipboard?.writeText(`@${this.username}`);
-    this.copiedUsername = true;
-    this.mainService.snackbar.success(this.translationService.t('profile.copied'), 2000);
-    setTimeout(() => {
-      this.copiedUsername = false;
-    }, 2000);
+    copyToClipboard(`@${this.username}`).then((success) => {
+      if (success) {
+        this.copiedUsername = true;
+        this.mainService.snackbar.success(this.translationService.t('profile.copied'), 2000);
+        setTimeout(() => {
+          this.copiedUsername = false;
+        }, 2000);
+      }
+    });
   }
 
   sendMessage(): void {

@@ -6,6 +6,7 @@ import { AuthService } from '../auth.service';
 import { I18nPipe } from '../../helpers/i18n.pipe';
 import { TranslationService } from '../../helpers/translation.service';
 import { ThemeService } from '../../helpers/theme.service';
+import { normalizePhoneNumber } from '../../helpers/phone-normalizer';
 
 export interface CountryInfo {
   code: string;
@@ -130,21 +131,9 @@ export class LoginComponent {
     if (!rawNumber) return;
 
     const cleanCode = this.countryCodeSignal().replace(/\D/g, '') || '98';
-    let fullNumber: string;
+    const normalized = normalizePhoneNumber(rawNumber, cleanCode);
+    if (!normalized) return;
 
-    if (cleanCode === '98') {
-      if (rawNumber.startsWith('0')) {
-        fullNumber = rawNumber;
-      } else if (rawNumber.startsWith('9')) {
-        fullNumber = '0' + rawNumber;
-      } else {
-        fullNumber = rawNumber;
-      }
-    } else {
-      const cleanPhone = rawNumber.replace(/^0+/, '');
-      fullNumber = `+${cleanCode}${cleanPhone}`;
-    }
-
-    this.authService.sendCode(fullNumber);
+    this.authService.sendCode(normalized);
   }
 }

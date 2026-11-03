@@ -41,6 +41,7 @@ import { TranslationService } from '../../../helpers/translation.service';
 import { WebRtcService } from '../../../helpers/webrtc.service';
 import { environment } from '../../../../environments/environment';
 import { getTelegramGradient, getInitials } from '../../../helpers/avatar.helper';
+import { copyToClipboard } from '../../../helpers/clipboard.helper';
 
 export interface ContextMenuAction {
   label: string;
@@ -1286,10 +1287,15 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
       case 'select':
         this.enterSelectionMode(this.contextMenuTarget!);
         break;
-      case 'copy':
-        navigator.clipboard.writeText(this.contextMenuTarget!.content || '');
-        this.mainService.snackbar.success('actions.copied', 2000);
+      case 'copy': {
+        const textToCopy = this.contextMenuTarget?.content || this.contextMenuTarget?.fileName || '';
+        copyToClipboard(textToCopy).then((success) => {
+          if (success) {
+            this.mainService.snackbar.success('actions.copied', 2000);
+          }
+        });
         break;
+      }
     }
     this.closeContextMenu();
   }

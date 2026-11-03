@@ -7,20 +7,23 @@ import { UpdateUserNamesDto } from './dto/update-user-names.dto';
 import * as fs from 'fs';
 import { join } from 'path';
 import { resizeAvatar } from 'src/helpers/avatar-resize';
+import { normalizePhoneNumber, getPhoneLookupCandidates } from 'src/helpers/phone-normalizer';
 
 @Injectable()
 export class UserService {
   constructor(@InjectModel(User.name) private readonly userModel: Model<UserDocument>) {}
 
   async createUser(phoneNumber: string): Promise<User> {
-    const doesUserExist = await this.doesUserExist(phoneNumber);
+    const canonicalPhone = normalizePhoneNumber(phoneNumber);
+    const doesUserExist = await this.doesUserExist(canonicalPhone);
     if (doesUserExist) return null;
-    const createdUser = new this.userModel({ phoneNumber });
+    const createdUser = new this.userModel({ phoneNumber: canonicalPhone });
     return await createdUser.save();
   }
 
   async findUserByPhoneNumber(phoneNumber: string): Promise<IUser | null> {
-    return this.userModel.findOne({ phoneNumber }).exec();
+    const candidates = getPhoneLookupCandidates(phoneNumber);
+    return this.userModel.findOne({ phoneNumber: { $in: candidates } }).exec();
   }
 
   async updateUserNames(dto: UpdateUserNamesDto, userId: string): Promise<IUser | null> {
@@ -367,21 +370,7 @@ export class UserService {
     const user = await this.userModel.findById(userId).exec();
     if (!user) throw new NotFoundException('User not found');
 
-    const cleanDigits = rawPhone.replace(/\D/g, '');
-    const candidates = [rawPhone.trim(), cleanDigits, '+' + cleanDigits];
-    if (cleanDigits.startsWith('98')) {
-      candidates.push('0' + cleanDigits.slice(2));
-      candidates.push(cleanDigits.slice(2));
-    } else if (cleanDigits.startsWith('09')) {
-      candidates.push('98' + cleanDigits.slice(1));
-      candidates.push('+98' + cleanDigits.slice(1));
-      candidates.push(cleanDigits.slice(1));
-    } else if (cleanDigits.startsWith('9') && cleanDigits.length === 10) {
-      candidates.push('0' + cleanDigits);
-      candidates.push('98' + cleanDigits);
-      candidates.push('+98' + cleanDigits);
-    }
-
+    const candidates = getPhoneLookupCandidates(rawPhone);
     const targetUser = await this.userModel.findOne({ phoneNumber: { $in: candidates } }).exec();
     if (!targetUser) {
       throw new NotFoundException('کاربری با این شماره تلفن در برنامه ثبت‌نام نکرده است');
@@ -579,7 +568,8 @@ export class UserService {
   }
 
   private async doesUserExist(phoneNumber: string): Promise<boolean> {
-    const user = await this.userModel.findOne({ phoneNumber });
+    const candidates = getPhoneLookupCandidates(phoneNumber);
+    const user = await this.userModel.findOne({ phoneNumber: { $in: candidates } });
     return !!user;
   }
 }

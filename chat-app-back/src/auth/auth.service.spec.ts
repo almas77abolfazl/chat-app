@@ -25,7 +25,7 @@ describe('AuthService', () => {
 
   const baseUser = {
     _id: 'user-1',
-    phoneNumber: '09120000001',
+    phoneNumber: '+989120000001',
     firstName: 'Ali',
     lastName: 'Ahmadi',
   };
@@ -57,16 +57,16 @@ describe('AuthService', () => {
 
   describe('sendVerificationCode', () => {
     it('creates the user and does not leak the code in the response', async () => {
-      const result = await authService.sendVerificationCode('09120000001');
+      const result = await authService.sendVerificationCode('+989120000001');
 
-      expect(userService.createUser).toHaveBeenCalledWith('09120000001');
+      expect(userService.createUser).toHaveBeenCalledWith('+989120000001');
       expect(result).toEqual({ sent: true });
       expect(JSON.stringify(result)).not.toContain('code');
     });
 
     it('generates a 6 digit code', async () => {
-      await authService.sendVerificationCode('09120000001');
-      const stored = (authService as any).verificationCodes.get('09120000001');
+      await authService.sendVerificationCode('+989120000001');
+      const stored = (authService as any).verificationCodes.get('+989120000001');
       expect(stored.code).toMatch(/^\d{6}$/);
       expect(stored.expiresAt).toBeGreaterThan(Date.now() / 1000);
     });
@@ -76,20 +76,20 @@ describe('AuthService', () => {
     const readStoredCode = (phone: string) => (authService as any).verificationCodes.get(phone).code;
 
     it('rejects a wrong code with 400', async () => {
-      await authService.sendVerificationCode('09120000001');
+      await authService.sendVerificationCode('+989120000001');
 
-      await expect(authService.verifyCode({ phoneNumber: '09120000001', code: '000000' } as any, 'device')).rejects.toThrow(BadRequestException);
+      await expect(authService.verifyCode({ phoneNumber: '+989120000001', code: '000000' } as any, 'device')).rejects.toThrow(BadRequestException);
     });
 
     it('rejects an unknown code with 400', async () => {
-      await expect(authService.verifyCode({ phoneNumber: '09120000000', code: '123456' } as any, 'device')).rejects.toThrow(BadRequestException);
+      await expect(authService.verifyCode({ phoneNumber: '+989120000000', code: '123456' } as any, 'device')).rejects.toThrow(BadRequestException);
     });
 
     it('signs a token that only carries phoneNumber and sub', async () => {
-      await authService.sendVerificationCode('09120000001');
-      const code = readStoredCode('09120000001');
+      await authService.sendVerificationCode('+989120000001');
+      const code = readStoredCode('+989120000001');
 
-      const result = await authService.verifyCode({ phoneNumber: '09120000001', code } as any, 'device');
+      const result = await authService.verifyCode({ phoneNumber: '+989120000001', code } as any, 'device');
 
       expect(jwtService.sign).toHaveBeenCalledWith({
         phoneNumber: user.phoneNumber,
@@ -100,10 +100,10 @@ describe('AuthService', () => {
     });
 
     it('saves the refresh session for the device', async () => {
-      await authService.sendVerificationCode('09120000001');
-      const code = readStoredCode('09120000001');
+      await authService.sendVerificationCode('+989120000001');
+      const code = readStoredCode('+989120000001');
 
-      await authService.verifyCode({ phoneNumber: '09120000001', code } as any, 'my-device');
+      await authService.verifyCode({ phoneNumber: '+989120000001', code } as any, 'my-device');
 
       expect(userService.update).toHaveBeenCalledWith(
         user._id,
@@ -114,12 +114,12 @@ describe('AuthService', () => {
     });
 
     it('invalidates the code after successful verification', async () => {
-      await authService.sendVerificationCode('09120000001');
-      const code = readStoredCode('09120000001');
+      await authService.sendVerificationCode('+989120000001');
+      const code = readStoredCode('+989120000001');
 
-      await authService.verifyCode({ phoneNumber: '09120000001', code } as any, 'device');
+      await authService.verifyCode({ phoneNumber: '+989120000001', code } as any, 'device');
 
-      expect((authService as any).verificationCodes.has('09120000001')).toBe(false);
+      expect((authService as any).verificationCodes.has('+989120000001')).toBe(false);
     });
   });
 

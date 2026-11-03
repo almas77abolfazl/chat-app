@@ -3,6 +3,7 @@ import { Observable, take } from 'rxjs';
 import { Router } from '@angular/router';
 import { HttpRequestService } from '../helpers/http-request.service';
 import { CacheService } from '../helpers/cache.service';
+import { normalizePhoneNumber } from '../helpers/phone-normalizer';
 
 export interface AuthUserData {
   userId: string;
@@ -46,15 +47,16 @@ export class AuthService {
   }
 
   sendCode(phoneNumber: string) {
+    const normalized = normalizePhoneNumber(phoneNumber);
     this.httpRequestService
-      .post('auth/send-code', { phoneNumber })
+      .post('auth/send-code', { phoneNumber: normalized })
       .pipe(take(1))
       .subscribe({
         next: (response) => {
-          localStorage.setItem('phoneNumber', phoneNumber);
+          localStorage.setItem('phoneNumber', normalized);
           this.syncUserSignal();
           this.router.navigate(['/verify-code'], {
-            queryParams: { phoneNumber },
+            queryParams: { phoneNumber: normalized },
           });
         },
         error: (error) => {
@@ -64,8 +66,9 @@ export class AuthService {
   }
 
   verifyCode(code: string, phoneNumber: string) {
+    const normalized = normalizePhoneNumber(phoneNumber);
     this.httpRequestService
-      .post('auth/verify-code', { code, phoneNumber })
+      .post('auth/verify-code', { code, phoneNumber: normalized })
       .pipe(take(1))
       .subscribe({
         next: (response) => {

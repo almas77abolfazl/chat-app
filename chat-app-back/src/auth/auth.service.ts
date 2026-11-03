@@ -7,6 +7,7 @@ import * as crypto from 'crypto';
 import { IUser } from 'src/user/interfaces/user.interface';
 import { SmsService } from 'src/sms/sms.service';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { normalizePhoneNumber, getPhoneLookupCandidates } from 'src/helpers/phone-normalizer';
 
 interface IVerificationEntry {
   code: string;
@@ -25,14 +26,15 @@ export class AuthService {
   ) {}
 
   async sendVerificationCode(phoneNumber: string): Promise<{ sent: true }> {
-    await this.userService.createUser(phoneNumber);
+    const canonicalPhone = normalizePhoneNumber(phoneNumber);
+    await this.userService.createUser(canonicalPhone);
 
     const code = this.generateVerificationCode();
-    this.verificationCodes.set(phoneNumber, {
+    this.verificationCodes.set(canonicalPhone, {
       code,
       expiresAt: Date.now() / 1000 + this.verificationCodeTtlSeconds,
     });
-    await this.smsService.sendVerificationCode(phoneNumber, code);
+    await this.smsService.sendVerificationCode(canonicalPhone, code);
 
     return { sent: true };
   }
@@ -47,9 +49,10 @@ export class AuthService {
     firstName: string;
     lastName: string;
   }> {
-    this.assertVerificationCode(verifyCodeDto.phoneNumber, verifyCodeDto.code);
+    const canonicalPhone = normalizePhoneNumber(verifyCodeDto.phoneNumber);
+    this.assertVerificationCode(canonicalPhone, verifyCodeDto.code);
 
-    const user = await this.userService.findUserByPhoneNumber(verifyCodeDto.phoneNumber);
+    const user = await this.userService.findUserByPhoneNumber(canonicalPhone);
     if (!user) {
       throw new BadRequestException('User not found');
     }
@@ -60,7 +63,7 @@ export class AuthService {
     });
     const refreshToken = this.generateRefreshToken();
     await this.saveSessionToDatabase(user, refreshToken, deviceName);
-    this.verificationCodes.delete(verifyCodeDto.phoneNumber);
+    this.verificationCodes.delete(canonicalPhone);
 
     return {
       access_token: accessToken,
@@ -122,9 +125,21 @@ export class AuthService {
   }
 
   private assertVerificationCode(phoneNumber: string, code: string): void {
-    const entry = this.verificationCodes.get(phoneNumber);
+    const candidates = getPhoneLookupCandidates(phoneNumber);
+    let entry: IVerificationEntry | undefined;
+    let matchedKey: string | undefined;
+
+    for (const cand of candidates) {
+      const e = this.verificationCodes.get(cand);
+      if (e) {
+        entry = e;
+        matchedKey = cand;
+        break;
+      }
+    }
+
     if (!entry || entry.expiresAt < Date.now() / 1000) {
-      this.verificationCodes.delete(phoneNumber);
+      if (matchedKey) this.verificationCodes.delete(matchedKey);
       throw new BadRequestException('Verification code expired');
     }
     if (entry.code !== code) {

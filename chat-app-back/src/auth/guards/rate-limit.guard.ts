@@ -1,4 +1,5 @@
 import { Injectable, CanActivate, ExecutionContext, HttpException, HttpStatus } from '@nestjs/common';
+import { normalizePhoneNumber } from 'src/helpers/phone-normalizer';
 
 interface RateLimitEntry {
   count: number;
@@ -13,8 +14,10 @@ export class RateLimitGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
-    const phoneNumber = request.body?.phoneNumber || request.ip || 'unknown';
-    const key = `send-code:${phoneNumber}`;
+    const rawPhone = request.body?.phoneNumber;
+    const normalizedPhone = rawPhone ? normalizePhoneNumber(rawPhone) : null;
+    const identifier = normalizedPhone || request.ip || 'unknown';
+    const key = `send-code:${identifier}`;
     const now = Date.now();
 
     const entry = this.attempts.get(key);

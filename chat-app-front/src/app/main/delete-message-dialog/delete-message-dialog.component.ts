@@ -61,3 +61,4 @@ export class DeleteMessageDialogComponent {
     this.dialogRef.close({ confirmed: false, forEveryone: false });
   }
 }
+

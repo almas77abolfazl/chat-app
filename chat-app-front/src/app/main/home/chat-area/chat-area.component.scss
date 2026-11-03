@@ -1154,6 +1154,8 @@
         word-break: break-word;
         font-family: "Shabnam", "Helvetica Neue", sans-serif;
         margin-bottom: 0.25rem;
+        user-select: text;
+        -webkit-user-select: text;
 
         .msg-caption {
           margin-top: 0.35rem;
