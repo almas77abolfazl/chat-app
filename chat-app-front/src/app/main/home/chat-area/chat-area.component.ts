@@ -356,6 +356,11 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
         this.cdr.markForCheck();
       }
     });
+
+    this.mainService.messageDeleted$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.syncVirtualScrollMessages();
+      this.cdr.markForCheck();
+    });
   }
 
   ngAfterViewInit() {
@@ -842,15 +847,11 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
         .pipe(take(1))
         .subscribe({
           next: () => {
-            if (this.mainService.currentChat?.messages) {
-              for (const id of ids) {
-                const target = this.mainService.currentChat.messages.find((m) => m._id === id);
-                if (target) {
-                  target.isDeleted = true;
-                  target.content = 'این پیام حذف شد';
-                }
-              }
+            for (const id of ids) {
+              this.mainService.applyMessageDeleted(id);
             }
+            this.syncVirtualScrollMessages();
+            this.cdr.markForCheck();
             this.mainService.snackbar.success(this.translationService.t('chat.deleteSuccess'), 2500);
             this.cancelSelection();
           },
@@ -960,7 +961,11 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
     if (!this.ownMessage(message)) return;
     if (confirm(this.translationService.t('actions.confirmDelete'))) {
       this.mainService.deleteMessage(message._id).pipe(take(1)).subscribe({
-        next: () => {},
+        next: () => {
+          this.mainService.applyMessageDeleted(message._id);
+          this.syncVirtualScrollMessages();
+          this.cdr.markForCheck();
+        },
         error: () => {},
       });
     }
@@ -1279,7 +1284,24 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
     return ['fas', 'file'];
   }
 
+  private readonly DANGEROUS_EXTENSIONS = ['.exe', '.bat', '.cmd', '.sh', '.vbs', '.msi', '.com', '.scr', '.pif', '.reg', '.app'];
+
+  private isDangerousFile(file: File): boolean {
+    const name = (file.name || '').toLowerCase();
+    return this.DANGEROUS_EXTENSIONS.some((ext) => name.endsWith(ext));
+  }
+
   openMediaSendDialog(file: File): void {
+    if (this.isDangerousFile(file)) {
+      this.mainService.snackbar.error(
+        this.translationService.isRTL()
+          ? 'ارسال این فایل مجاز نیست (فایل‌های اجرایی به دلایل امنیتی مسدود شده‌اند).'
+          : 'Executable files are not allowed for security reasons.',
+        6000,
+      );
+      return;
+    }
+
     const chatId = this.mainService.currentChat?._id;
     if (!chatId) return;
 
@@ -1376,18 +1398,35 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
           }
         },
         error: (err) => {
+          const errMsg = err?.error?.message || err?.message || '';
+          const isSecurityBlock = errMsg.includes('Executable files') || errMsg.includes('security');
+          if (isSecurityBlock) {
+            this.cancelUpload(uploadItem);
+            this.mainService.snackbar.error(
+              this.translationService.isRTL()
+                ? 'ارسال این فایل مجاز نیست (فایل‌های اجرایی به دلایل امنیتی مسدود شده‌اند).'
+                : 'Executable files are not allowed for security reasons.',
+              6000,
+            );
+            return;
+          }
+
           uploadItem.status = 'error';
           this.activeUploadsSignal.update((list) => [...list]);
           this.cdr.markForCheck();
-          this.mainService.snackbar.error(this.translationService.translate('chat.uploadFailed'), 3000);
+          this.mainService.snackbar.error(this.translationService.translate('chat.uploadFailed'), 5000);
         },
       });
   }
 
   cancelUpload(upload: ActiveUpload): void {
-    upload.subscription?.unsubscribe();
+    try {
+      upload.subscription?.unsubscribe();
+    } catch {}
     if (upload.previewUrl) {
-      URL.revokeObjectURL(upload.previewUrl);
+      try {
+        URL.revokeObjectURL(upload.previewUrl);
+      } catch {}
     }
     this.activeUploadsSignal.update((list) => list.filter((u) => u.id !== upload.id));
     this.cdr.markForCheck();

@@ -99,7 +99,11 @@ export class MessageController {
     if (!Array.isArray(body?.messageIds) || body.messageIds.length === 0) {
       throw new BadRequestException('messageIds array is required');
     }
-    return this.messageService.deleteMessagesBulk(body.messageIds, request.user._id.toString());
+    const result = await this.messageService.deleteMessagesBulk(body.messageIds, request.user._id.toString());
+    for (const id of result.deletedIds) {
+      await this.messageGateway.broadcastMessageDeleted(id);
+    }
+    return result;
   }
 
   @Post('forward')
@@ -117,7 +121,9 @@ export class MessageController {
   @Delete(':messageId')
   @UseGuards(JwtAuthGuard)
   async deleteMessage(@Req() request: RequestWithUser, @Param('messageId') messageId: string) {
-    return this.messageService.deleteMessage(messageId, request.user._id.toString());
+    const result = await this.messageService.deleteMessage(messageId, request.user._id.toString());
+    await this.messageGateway.broadcastMessageDeleted(messageId);
+    return result;
   }
 
   @Post('media')

@@ -485,6 +485,28 @@ export class MessageGateway {
     }
   }
 
+  async broadcastMessageDeleted(messageId: string, chatId?: string) {
+    try {
+      let resolvedChatId = chatId;
+      if (!resolvedChatId) {
+        const message = await this.messageModel.findById(messageId).exec();
+        if (message?.chat) {
+          resolvedChatId = message.chat.toString();
+        }
+      }
+      if (resolvedChatId && this.server) {
+        const participantIds = await this.chatService.getParticipantIds(resolvedChatId);
+        for (const pid of participantIds) {
+          this.server.to(pid).emit('messageDeleted', { messageId, chatId: resolvedChatId });
+        }
+      } else if (this.server) {
+        this.server.emit('messageDeleted', { messageId });
+      }
+    } catch (error) {
+      console.error('Failed to broadcast message deleted:', error);
+    }
+  }
+
   @SubscribeMessage('pinMessage')
   async handlePinMessage(@MessageBody() data: { chatId: string; messageId: string }, @ConnectedSocket() client: Socket) {
     try {

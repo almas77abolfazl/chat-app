@@ -561,4 +561,29 @@ export class ChatListComponent implements OnInit {
       });
     }
   }
+
+  getLastMessageMedia(chat: ChatListItem): { icon: string; text: string } | null {
+    const msg = chat?.lastMessage;
+    if (!msg || msg.isDeleted || msg.deletedForEveryone) return null;
+
+    const mediaType = msg.mediaType || (msg.fileUrl ? 'file' : null);
+    if (!mediaType) return null;
+
+    switch (mediaType) {
+      case 'image':
+        return { icon: 'image', text: msg.content?.trim() || this.translationService.t('chat.photo') || 'عکس' };
+      case 'video':
+        return { icon: 'video', text: msg.content?.trim() || this.translationService.t('chat.video') || 'ویدیو' };
+      case 'voice':
+        return { icon: 'microphone', text: msg.content?.trim() || this.translationService.t('chat.voiceMessage') || 'پیام صوتی' };
+      case 'file':
+        return { icon: 'file', text: msg.fileName || msg.content?.trim() || this.translationService.t('chat.file') || 'فایل' };
+      case 'sticker':
+        return { icon: 'smile', text: this.translationService.t('chat.sticker') || 'استیکر' };
+      case 'gif':
+        return { icon: 'image', text: 'GIF' };
+      default:
+        return null;
+    }
+  }
 }

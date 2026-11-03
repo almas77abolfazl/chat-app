@@ -279,6 +279,11 @@
               <fa-icon [icon]="['fas', 'trash']" class="deleted-icon"></fa-icon>
               {{ 'chat.deletedMessage' | i18n }}
             </span>
+            } @else if (getLastMessageMedia(chat); as media) {
+            <span class="media-msg-label">
+              <fa-icon [icon]="['fas', media.icon]" class="media-icon"></fa-icon>
+              {{ media.text }}
+            </span>
             } @else {
             {{ chat.lastMessage?.content || '' }}
             }

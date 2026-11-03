@@ -22,7 +22,20 @@ export class Message {
   @Prop({ type: Types.ObjectId, ref: 'Channel', required: false })
   channel: Types.ObjectId;
 
-  @Prop({ required: true })
+  @Prop({
+    type: String,
+    default: '',
+    validate: {
+      validator: function (this: Message, val: string) {
+        // Content is required only if there is no media/file attached
+        if (!val || !val.trim()) {
+          return !!(this.fileUrl || this.mediaType);
+        }
+        return true;
+      },
+      message: 'Message must have content or media',
+    },
+  })
   content: string;
 
   @Prop({ default: Date.now })

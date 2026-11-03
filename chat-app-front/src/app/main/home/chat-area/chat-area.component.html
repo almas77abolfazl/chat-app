@@ -595,11 +595,11 @@
         </div>
         <div class="upload-actions">
           @if (upload.status === 'error') {
-          <button type="button" class="upload-action-btn retry" (click)="retryUpload(upload)" [attr.title]="'actions.retry' | i18n">
+          <button type="button" class="upload-action-btn retry" (click)="retryUpload(upload); $event.stopPropagation()" [attr.title]="'actions.retry' | i18n">
             <fa-icon [icon]="['fas', 'redo']"></fa-icon>
           </button>
           }
-          <button type="button" class="upload-action-btn cancel" (click)="cancelUpload(upload)" [attr.title]="'actions.cancel' | i18n">
+          <button type="button" class="upload-action-btn cancel" (click)="cancelUpload(upload); $event.stopPropagation()" [attr.title]="'actions.cancel' | i18n">
             <fa-icon [icon]="['fas', 'times']"></fa-icon>
           </button>
         </div>

@@ -1,5 +1,5 @@
 import { Injectable, OnDestroy, inject, signal } from '@angular/core';
-import { BehaviorSubject, Observable, Subject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, take } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 import { AuthService } from '../auth/auth.service';
 import { environment } from '../../environments/environment';
@@ -18,6 +18,8 @@ export class SocketService implements OnDestroy {
 
   constructor() {}
 
+  private isRefreshingToken = false;
+
   init(): void {
     if (this.socket?.connected) return;
 
@@ -27,8 +29,11 @@ export class SocketService implements OnDestroy {
     this.socket = io(environment.socketUrl, {
       transports: ['websocket', 'polling'],
       query: { token },
+      auth: (cb) => {
+        cb({ token: this.authService.getAuthToken() });
+      },
       reconnection: true,
-      reconnectionAttempts: this.maxReconnectAttempts,
+      reconnectionAttempts: Infinity,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
       timeout: 10000,
@@ -37,36 +42,93 @@ export class SocketService implements OnDestroy {
     this.socket.on('connect', () => {
       console.log('Connected to WebSocket server');
       this.reconnectAttempts = 0;
+      this.isRefreshingToken = false;
       this.connectionStatus$.next(true);
     });
     this.socket.on('disconnect', (reason) => {
       console.log('Disconnected from WebSocket server:', reason);
       this.connectionStatus$.next(false);
       if (reason === 'io server disconnect') {
-        this.reconnectAttempts = this.maxReconnectAttempts;
+        // Server disconnected the socket (possibly token expired), refresh token and reconnect
+        this.handleTokenExpirationOrDisconnect();
       }
     });
     this.socket.on('connect_error', (error) => {
       console.error('WebSocket connection error:', error.message);
       this.connectionStatus$.next(false);
       this.reconnectAttempts++;
-      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-        console.error('Max reconnection attempts reached');
+      if (error?.message?.includes('Unauthorized') || error?.message?.includes('token') || error?.message?.includes('jwt')) {
+        this.handleTokenExpirationOrDisconnect();
       }
     });
     this.socket.on('reconnect_attempt', (attemptNumber) => {
       console.log('Reconnection attempt:', attemptNumber);
+      const freshToken = this.authService.getAuthToken();
+      if (this.socket && freshToken) {
+        (this.socket.io.opts as any).query = { token: freshToken };
+      }
     });
     this.socket.on('reconnect', (attemptNumber?: any) => {
       console.log('Reconnected to WebSocket server');
       this.reconnectAttempts = 0;
+      this.isRefreshingToken = false;
       this.connectionStatus$.next(true);
       this.reconnected$.next(typeof attemptNumber === 'number' ? attemptNumber : 1);
     });
     this.socket.on('reconnect_failed', () => {
-      console.error('Reconnection failed');
-      this.connectionStatus$.next(false);
+      console.error('Reconnection failed, attempting manual reconnect');
+      this.handleTokenExpirationOrDisconnect();
     });
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', () => {
+        console.log('Browser came online, reconnecting socket...');
+        this.reconnectNow();
+      });
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && !this.isConnected()) {
+          console.log('App visible again and socket disconnected, reconnecting...');
+          this.reconnectNow();
+        }
+      });
+    }
+  }
+
+  private handleTokenExpirationOrDisconnect(): void {
+    if (this.isRefreshingToken) return;
+    this.isRefreshingToken = true;
+    const refreshToken = this.authService.getRefreshToken();
+    if (refreshToken) {
+      this.authService.refreshToken().pipe(take(1)).subscribe({
+        next: (res) => {
+          if (res?.access_token) {
+            localStorage.setItem('auth_token', res.access_token);
+            if (res.refreshToken) localStorage.setItem('refresh_token', res.refreshToken);
+          }
+          this.isRefreshingToken = false;
+          this.reconnectNow();
+        },
+        error: () => {
+          this.isRefreshingToken = false;
+          setTimeout(() => this.reconnectNow(), 3000);
+        },
+      });
+    } else {
+      this.isRefreshingToken = false;
+      setTimeout(() => this.reconnectNow(), 2000);
+    }
+  }
+
+  public reconnectNow(): void {
+    if (this.socket?.connected) return;
+    const token = this.authService.getAuthToken();
+    if (!token) return;
+    if (this.socket) {
+      (this.socket.io.opts as any).query = { token };
+      this.socket.connect();
+    } else {
+      this.init();
+    }
   }
 
   isConnected(): boolean {

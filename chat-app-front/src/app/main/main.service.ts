@@ -181,6 +181,8 @@ export class MainService {
   chatListUpdated$ = this.chatListUpdatedSubject.asObservable();
   private messagesLoadedSubject = new Subject<void>();
   messagesLoaded$ = this.messagesLoadedSubject.asObservable();
+  private messageDeletedSubject = new Subject<{ messageId: string }>();
+  messageDeleted$ = this.messageDeletedSubject.asObservable();
   private reactionUpdatedSubject = new Subject<{ messageId: string; reactions: any[] }>();
   reactionUpdated$ = this.reactionUpdatedSubject.asObservable();
 
@@ -952,22 +954,7 @@ export class MainService {
 
     this.socketService.on('messageDeleted', (payload: { messageId: string }) => {
       this.zone.run(() => {
-        this.chatItems.forEach((chatItem) => {
-          chatItem.messages = chatItem.messages || [];
-          const idx = chatItem.messages.findIndex((m) => m._id === payload.messageId);
-          if (idx !== -1) {
-            chatItem.messages[idx].isDeleted = true;
-            chatItem.messages[idx].content = '';
-            if (this.currentChat?._id === chatItem._id) {
-              this.currentChat.messages = this.currentChat.messages || [];
-              const cIdx = this.currentChat.messages.findIndex((m) => m._id === payload.messageId);
-              if (cIdx !== -1) {
-                this.currentChat.messages[cIdx].isDeleted = true;
-                this.currentChat.messages[cIdx].content = '';
-              }
-            }
-          }
-        });
+        this.applyMessageDeleted(payload.messageId);
       });
     });
 
@@ -1477,6 +1464,44 @@ export class MainService {
 
   editMessage(messageId: string, content: string): Observable<any> {
     return this.httpRequestService.put('message', messageId, { content });
+  }
+
+  applyMessageDeleted(messageId: string): void {
+    let updatedAny = false;
+    this.chatItems.forEach((chatItem) => {
+      chatItem.messages = chatItem.messages || [];
+      const idx = chatItem.messages.findIndex((m) => m._id === messageId);
+      if (idx !== -1) {
+        chatItem.messages[idx].isDeleted = true;
+        chatItem.messages[idx].content = '';
+        updatedAny = true;
+      }
+      if (chatItem.lastMessage?._id === messageId) {
+        chatItem.lastMessage.isDeleted = true;
+        chatItem.lastMessage.content = '';
+        updatedAny = true;
+      }
+    });
+
+    if (this.currentChat) {
+      this.currentChat.messages = this.currentChat.messages || [];
+      const cIdx = this.currentChat.messages.findIndex((m) => m._id === messageId);
+      if (cIdx !== -1) {
+        this.currentChat.messages[cIdx].isDeleted = true;
+        this.currentChat.messages[cIdx].content = '';
+        updatedAny = true;
+      }
+      if (this.currentChat.lastMessage?._id === messageId) {
+        this.currentChat.lastMessage.isDeleted = true;
+        this.currentChat.lastMessage.content = '';
+        updatedAny = true;
+      }
+    }
+
+    this.messageDeletedSubject.next({ messageId });
+    if (updatedAny) {
+      this.chatListUpdatedSubject.next([...this.chatItems]);
+    }
   }
 
   deleteMessage(messageId: string): Observable<any> {

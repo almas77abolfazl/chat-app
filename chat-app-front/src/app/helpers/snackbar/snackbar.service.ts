@@ -12,7 +12,7 @@ export class SnackbarService {
   show(
     messageOrKey: string,
     type: SnackBarType = 'info',
-    duration: number = 3000,
+    duration: number = 5000,
     params?: Record<string, string | number>,
   ): MatSnackBarRef<any> {
     const horizontalPosition: MatSnackBarHorizontalPosition = 'end';

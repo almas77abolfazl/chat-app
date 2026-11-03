@@ -157,6 +157,36 @@ describe('MessageService', () => {
         }),
       );
     });
+
+    it('saves media message with empty caption without validation error', async () => {
+      const mediaMessage = {
+        ...mockMessage,
+        _id: new Types.ObjectId(),
+        content: '',
+        mediaType: 'image',
+        fileUrl: '/uploads/media/test.png',
+      };
+      messageModel.create = jest.fn().mockResolvedValue(mediaMessage);
+      chatModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(mockChat) });
+      messageModel.findById = jest.fn().mockReturnValue({
+        populate: jest.fn().mockReturnThis(),
+        exec: jest.fn().mockResolvedValue(mediaMessage),
+      });
+
+      const res = await messageService.saveMessageToChat(mockChat._id.toString(), senderId.toString(), '', {
+        mediaType: 'image',
+        fileUrl: '/uploads/media/test.png',
+      });
+
+      expect(messageModel.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: '',
+          mediaType: 'image',
+          fileUrl: '/uploads/media/test.png',
+        }),
+      );
+      expect(res).toBeDefined();
+    });
     it('creates system message for call record', async () => {
       const callMsg = { ...mockMessage, _id: new Types.ObjectId(), mediaType: 'system', systemAction: 'CALL_ENDED' };
       messageModel.create = jest.fn().mockResolvedValue(callMsg);

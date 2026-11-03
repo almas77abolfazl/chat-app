@@ -513,6 +513,24 @@
                 }
               }
             }
+
+            .media-msg-label,
+            .deleted-msg-label {
+              display: inline-flex;
+              align-items: center;
+              gap: 0.35rem;
+
+              .media-icon,
+              .deleted-icon {
+                font-size: 0.78rem;
+                opacity: 0.85;
+              }
+            }
+
+            .media-msg-label {
+              color: var(--color-primary);
+              font-weight: 500;
+            }
           }
         }
 
