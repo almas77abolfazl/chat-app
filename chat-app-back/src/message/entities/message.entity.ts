@@ -62,6 +62,9 @@ export class Message {
   @Prop({ default: false })
   isDeleted: boolean;
 
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
+  deletedForUsers: Types.ObjectId[];
+
   @Prop({ enum: ['image', 'video', 'file', 'voice', 'sticker', 'gif', 'emoji', 'system'], default: null })
   mediaType: string;
 

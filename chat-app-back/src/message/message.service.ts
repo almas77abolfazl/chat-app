@@ -203,9 +203,33 @@ export class MessageService {
     return this.hydrateMessage(populated);
   }
 
-  async deleteMessage(messageId: string, userId: string): Promise<void> {
+  async deleteMessage(messageId: string, userId: string, forEveryone: boolean = true): Promise<void> {
     const message = await this.messageModel.findById(messageId).exec();
     if (!message) throw new NotFoundException('Message not found');
+
+    if (!forEveryone) {
+      const userObjectId = Types.ObjectId.isValid(userId) ? new Types.ObjectId(userId) : userId;
+      // "Delete for me": caller must be a participant in the chat or sender/receiver
+      if (message.chat) {
+        const chatQuery = this.chatModel.findById(message.chat);
+        const chat = chatQuery?.exec ? await chatQuery.exec() : await chatQuery;
+        if (chat && !chat.participants.some((p: any) => p.toString() === userId)) {
+          throw new ForbiddenException('You are not a participant of this chat');
+        }
+      } else if (message.sender.toString() !== userId && message.receiver?.toString() !== userId) {
+        throw new ForbiddenException('You do not have access to this message');
+      }
+
+      if (!message.deletedForUsers) {
+        message.deletedForUsers = [];
+      }
+      if (!message.deletedForUsers.some((u: any) => u.toString() === userId)) {
+        message.deletedForUsers.push(userObjectId as any);
+        await message.save();
+      }
+      return;
+    }
+
     let canDelete = message.sender.toString() === userId;
     if (!canDelete && message.chat) {
       const chatQuery = this.chatModel.findById(message.chat);
@@ -227,11 +251,11 @@ export class MessageService {
     await message.save();
   }
 
-  async deleteMessagesBulk(messageIds: string[], userId: string): Promise<{ deletedIds: string[] }> {
+  async deleteMessagesBulk(messageIds: string[], userId: string, forEveryone: boolean = true): Promise<{ deletedIds: string[] }> {
     const deletedIds: string[] = [];
     for (const id of messageIds) {
       try {
-        await this.deleteMessage(id, userId);
+        await this.deleteMessage(id, userId, forEveryone);
         deletedIds.push(id);
       } catch {
         // Skip messages user doesn't have permission to delete
@@ -290,15 +314,15 @@ export class MessageService {
     limit = Math.max(1, Math.min(Number(limit) || 20, 100));
     const skip = (page - 1) * limit;
 
+    const userObjectId = new Types.ObjectId(userId);
+    const filter = {
+      chat: new Types.ObjectId(chatId),
+      deletedForUsers: { $ne: userObjectId },
+    };
+
     const [messages, totalMessages] = await Promise.all([
-      this.messageModel
-        .find({ chat: new Types.ObjectId(chatId) })
-        .populate('sender', 'firstName lastName profilePicture')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .exec(),
-      this.messageModel.countDocuments({ chat: new Types.ObjectId(chatId) }).exec(),
+      this.messageModel.find(filter).populate('sender', 'firstName lastName profilePicture').sort({ createdAt: -1 }).skip(skip).limit(limit).exec(),
+      this.messageModel.countDocuments(filter).exec(),
     ]);
 
     let reactionMap: Record<string, { emoji: string; count: number; users: string[] }[]> = {};
@@ -341,26 +365,31 @@ export class MessageService {
       throw new ForbiddenException('You are not a participant of this chat');
     }
 
+    const userObjectId = new Types.ObjectId(userId);
     const [photosCount, videosCount, filesCount, voiceCount] = await Promise.all([
       this.messageModel.countDocuments({
         chat: new Types.ObjectId(chatId),
         mediaType: { $in: ['image', 'gif'] },
         isDeleted: { $ne: true },
+        deletedForUsers: { $ne: userObjectId },
       }),
       this.messageModel.countDocuments({
         chat: new Types.ObjectId(chatId),
         mediaType: 'video',
         isDeleted: { $ne: true },
+        deletedForUsers: { $ne: userObjectId },
       }),
       this.messageModel.countDocuments({
         chat: new Types.ObjectId(chatId),
         mediaType: 'file',
         isDeleted: { $ne: true },
+        deletedForUsers: { $ne: userObjectId },
       }),
       this.messageModel.countDocuments({
         chat: new Types.ObjectId(chatId),
         mediaType: 'voice',
         isDeleted: { $ne: true },
+        deletedForUsers: { $ne: userObjectId },
       }),
     ]);
 
@@ -379,7 +408,11 @@ export class MessageService {
       throw new ForbiddenException('You are not a participant of this chat');
     }
 
-    const filter: any = { chat: new Types.ObjectId(chatId), isDeleted: { $ne: true } };
+    const filter: any = {
+      chat: new Types.ObjectId(chatId),
+      isDeleted: { $ne: true },
+      deletedForUsers: { $ne: new Types.ObjectId(userId) },
+    };
     if (type === 'media' || type === 'photo' || type === 'photos') {
       filter.mediaType = { $in: ['image', 'gif', 'video'] };
     } else if (type === 'file' || type === 'files') {
@@ -439,6 +472,7 @@ export class MessageService {
 
         const filter: any = {
           chat: new Types.ObjectId(req.chatId),
+          deletedForUsers: { $ne: new Types.ObjectId(userId) },
         };
         if (sinceDate) {
           filter.createdAt = { $gt: sinceDate };

@@ -397,20 +397,25 @@ export class MessageGateway {
   }
 
   @SubscribeMessage('messageDelete')
-  async handleMessageDelete(@MessageBody() data: { messageId: string }, @ConnectedSocket() client: Socket) {
+  async handleMessageDelete(@MessageBody() data: { messageId: string; forEveryone?: boolean }, @ConnectedSocket() client: Socket) {
     try {
       const user = client.data.user as IUser;
       const message = await this.messageModel.findById(data.messageId).exec();
       if (message) {
-        const chatId = message.chat.toString();
-        await this.messageService.deleteMessage(data.messageId, user._id.toString());
-        const participantIds = await this.chatService.getParticipantIds(chatId);
-        for (const pid of participantIds) {
-          if (pid === user._id.toString()) {
-            client.emit('messageDeleted', { messageId: data.messageId });
-          } else {
-            this.server.to(pid).emit('messageDeleted', { messageId: data.messageId });
+        const chatId = message.chat?.toString();
+        const forEveryone = data.forEveryone !== false;
+        await this.messageService.deleteMessage(data.messageId, user._id.toString(), forEveryone);
+        if (forEveryone && chatId) {
+          const participantIds = await this.chatService.getParticipantIds(chatId);
+          for (const pid of participantIds) {
+            if (pid === user._id.toString()) {
+              client.emit('messageDeleted', { messageId: data.messageId, chatId, onlyForMe: false });
+            } else {
+              this.server.to(pid).emit('messageDeleted', { messageId: data.messageId, chatId, onlyForMe: false });
+            }
           }
+        } else {
+          client.emit('messageDeleted', { messageId: data.messageId, chatId, onlyForMe: true });
         }
       }
     } catch (error) {
@@ -485,8 +490,12 @@ export class MessageGateway {
     }
   }
 
-  async broadcastMessageDeleted(messageId: string, chatId?: string) {
+  async broadcastMessageDeleted(messageId: string, chatId?: string, onlyUserId?: string) {
     try {
+      if (onlyUserId && this.server) {
+        this.server.to(onlyUserId).emit('messageDeleted', { messageId, chatId, onlyForMe: true });
+        return;
+      }
       let resolvedChatId = chatId;
       if (!resolvedChatId) {
         const message = await this.messageModel.findById(messageId).exec();
@@ -497,10 +506,10 @@ export class MessageGateway {
       if (resolvedChatId && this.server) {
         const participantIds = await this.chatService.getParticipantIds(resolvedChatId);
         for (const pid of participantIds) {
-          this.server.to(pid).emit('messageDeleted', { messageId, chatId: resolvedChatId });
+          this.server.to(pid).emit('messageDeleted', { messageId, chatId: resolvedChatId, onlyForMe: false });
         }
       } else if (this.server) {
-        this.server.emit('messageDeleted', { messageId });
+        this.server.emit('messageDeleted', { messageId, onlyForMe: false });
       }
     } catch (error) {
       console.error('Failed to broadcast message deleted:', error);

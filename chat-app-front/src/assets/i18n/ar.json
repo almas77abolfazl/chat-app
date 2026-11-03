@@ -364,6 +364,15 @@
     "deleteButton": "حذف",
     "cancelButton": "إلغاء"
   },
+  "deleteMessageDialog": {
+    "title": "حذف الرسالة",
+    "confirmSingle": "هل أنت متأكد من حذف هذه الرسالة؟",
+    "confirmMultiple": "هل أنت متأكد من حذف {{count}} رسالة محددة؟",
+    "alsoDeleteFor": "حذف أيضاً لـ {{name}}",
+    "deleteForAll": "حذف للجميع",
+    "deleteButton": "حذف",
+    "cancelButton": "إلغاء"
+  },
   "admin": {
     "title": "إدارة المشرفين",
     "admins": "المشرفون",

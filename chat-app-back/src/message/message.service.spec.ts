@@ -306,15 +306,31 @@ describe('MessageService', () => {
       await expect(messageService.deleteMessage(mockMessage._id.toString(), 'not-sender')).rejects.toThrow(ForbiddenException);
     });
 
-    it('soft deletes the message', async () => {
+    it('soft deletes the message for everyone', async () => {
       const messageToDelete: any = { ...mockMessage, save: jest.fn().mockResolvedValue(undefined) };
       messageModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(messageToDelete) });
 
-      await messageService.deleteMessage(messageToDelete._id.toString(), senderId.toString());
+      await messageService.deleteMessage(messageToDelete._id.toString(), senderId.toString(), true);
 
       expect(messageToDelete.isDeleted).toBe(true);
       expect(messageToDelete.deletedAt).toBeDefined();
       expect(messageToDelete.content).toBe('این پیام حذف شد');
+    });
+
+    it('marks message as deleted for caller only when forEveryone is false', async () => {
+      const otherUserId = new Types.ObjectId();
+      const messageToDelete: any = {
+        ...mockMessage,
+        deletedForUsers: [],
+        save: jest.fn().mockResolvedValue(undefined),
+      };
+      messageModel.findById.mockReturnValue({ exec: jest.fn().mockResolvedValue(messageToDelete) });
+
+      await messageService.deleteMessage(messageToDelete._id.toString(), otherUserId.toString(), false);
+
+      expect(messageToDelete.isDeleted).toBe(false);
+      expect(messageToDelete.deletedForUsers).toContainEqual(otherUserId);
+      expect(messageToDelete.save).toHaveBeenCalled();
     });
   });
 
@@ -354,7 +370,10 @@ describe('MessageService', () => {
 
       const result = await messageService.getMessagesByChat(mockChat._id.toString(), senderId.toString(), -1, 0);
 
-      expect(messageModel.find).toHaveBeenCalledWith({ chat: new Types.ObjectId(mockChat._id.toString()) });
+      expect(messageModel.find).toHaveBeenCalledWith({
+        chat: new Types.ObjectId(mockChat._id.toString()),
+        deletedForUsers: { $ne: new Types.ObjectId(senderId.toString()) },
+      });
       expect(result.currentPage).toBe(1);
     });
   });

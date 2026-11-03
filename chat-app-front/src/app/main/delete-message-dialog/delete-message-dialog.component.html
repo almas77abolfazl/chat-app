@@ -1,0 +1,28 @@
+<div class="delete-dialog-container">
+  <div class="dialog-header">
+    <div class="header-icon-danger">
+      <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+    </div>
+    <div class="header-title">{{ 'deleteMessageDialog.title' | i18n }}</div>
+  </div>
+
+  <div class="dialog-body">
+    <p class="dialog-message">{{ confirmText }}</p>
+
+    @if (data.canDeleteForEveryone && !data.isSavedMessages) {
+    <label class="checkbox-row">
+      <input type="checkbox" [(ngModel)]="forEveryone" class="custom-checkbox" />
+      <span class="checkbox-label">{{ alsoDeleteLabel }}</span>
+    </label>
+    }
+  </div>
+
+  <div class="dialog-actions">
+    <button type="button" class="btn btn-cancel" (click)="cancel()">
+      {{ 'deleteMessageDialog.cancelButton' | i18n }}
+    </button>
+    <button type="button" class="btn btn-danger" (click)="confirm()">
+      {{ 'deleteMessageDialog.deleteButton' | i18n }}
+    </button>
+  </div>
+</div>

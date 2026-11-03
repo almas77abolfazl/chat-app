@@ -963,9 +963,9 @@ export class MainService {
       });
     });
 
-    this.socketService.on('messageDeleted', (payload: { messageId: string }) => {
+    this.socketService.on('messageDeleted', (payload: { messageId: string; onlyForMe?: boolean }) => {
       this.zone.run(() => {
-        this.applyMessageDeleted(payload.messageId);
+        this.applyMessageDeleted(payload.messageId, !!payload.onlyForMe);
       });
     });
 
@@ -1410,7 +1410,7 @@ export class MainService {
             localStorage.setItem('user-bio', data.bio || '');
             if (data.file) {
               this.saveAvatar(data.file).subscribe();
-            } else if (data.pictureSrc) {
+            } else if (data.pictureSrc && !data.pictureSrc.startsWith('data:')) {
               const myId = this.authService.getUserId();
               if (myId) {
                 this.updateAvatarInState(myId, data.pictureSrc);
@@ -1550,19 +1550,28 @@ export class MainService {
     return this.httpRequestService.put('message', messageId, { content });
   }
 
-  applyMessageDeleted(messageId: string): void {
+  applyMessageDeleted(messageId: string, onlyForMe: boolean = false): void {
     let updatedAny = false;
     this.chatItems.forEach((chatItem) => {
       chatItem.messages = chatItem.messages || [];
       const idx = chatItem.messages.findIndex((m) => m._id === messageId);
       if (idx !== -1) {
-        chatItem.messages[idx].isDeleted = true;
-        chatItem.messages[idx].content = '';
+        if (onlyForMe) {
+          chatItem.messages.splice(idx, 1);
+        } else {
+          chatItem.messages[idx].isDeleted = true;
+          chatItem.messages[idx].content = '';
+        }
         updatedAny = true;
       }
       if (chatItem.lastMessage?._id === messageId) {
-        chatItem.lastMessage.isDeleted = true;
-        chatItem.lastMessage.content = '';
+        if (onlyForMe) {
+          const remaining = chatItem.messages;
+          chatItem.lastMessage = remaining.length > 0 ? remaining[remaining.length - 1] : undefined;
+        } else {
+          chatItem.lastMessage.isDeleted = true;
+          chatItem.lastMessage.content = '';
+        }
         updatedAny = true;
       }
     });
@@ -1571,13 +1580,22 @@ export class MainService {
       this.currentChat.messages = this.currentChat.messages || [];
       const cIdx = this.currentChat.messages.findIndex((m) => m._id === messageId);
       if (cIdx !== -1) {
-        this.currentChat.messages[cIdx].isDeleted = true;
-        this.currentChat.messages[cIdx].content = '';
+        if (onlyForMe) {
+          this.currentChat.messages.splice(cIdx, 1);
+        } else {
+          this.currentChat.messages[cIdx].isDeleted = true;
+          this.currentChat.messages[cIdx].content = '';
+        }
         updatedAny = true;
       }
       if (this.currentChat.lastMessage?._id === messageId) {
-        this.currentChat.lastMessage.isDeleted = true;
-        this.currentChat.lastMessage.content = '';
+        if (onlyForMe) {
+          const remaining = this.currentChat.messages;
+          this.currentChat.lastMessage = remaining.length > 0 ? remaining[remaining.length - 1] : undefined;
+        } else {
+          this.currentChat.lastMessage.isDeleted = true;
+          this.currentChat.lastMessage.content = '';
+        }
         updatedAny = true;
       }
     }
@@ -1588,12 +1606,16 @@ export class MainService {
     }
   }
 
-  deleteMessage(messageId: string): Observable<any> {
-    return this.httpRequestService.delete('message', messageId);
+  deleteMessage(messageId: string, forEveryone: boolean = true): Observable<any> {
+    const uri = forEveryone ? 'message' : 'message?forEveryone=false';
+    // If query string is used with id, httpRequestService builds ${ROOT_URL}/${uri}/${id} => /v1/message?forEveryone=false/123 which is invalid.
+    // Instead pass messageId?forEveryone=false or let uri be 'message' and id include query param.
+    const pathWithQuery = forEveryone ? messageId : `${messageId}?forEveryone=false`;
+    return this.httpRequestService.delete('message', pathWithQuery);
   }
 
-  deleteMessagesBulk(messageIds: string[]): Observable<any> {
-    return this.httpRequestService.delete('message/bulk', undefined, undefined, { messageIds });
+  deleteMessagesBulk(messageIds: string[], forEveryone: boolean = true): Observable<any> {
+    return this.httpRequestService.delete('message/bulk', undefined, undefined, { messageIds, forEveryone });
   }
 
   forwardMessages(messageIds: string[], targetChatId: string): Observable<any> {

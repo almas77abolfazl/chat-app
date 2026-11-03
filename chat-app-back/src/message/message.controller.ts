@@ -95,13 +95,15 @@ export class MessageController {
 
   @Delete('bulk')
   @UseGuards(JwtAuthGuard)
-  async deleteMessagesBulk(@Req() request: RequestWithUser, @Body() body: { messageIds: string[] }) {
+  async deleteMessagesBulk(@Req() request: RequestWithUser, @Body() body: { messageIds: string[]; forEveryone?: boolean }) {
     if (!Array.isArray(body?.messageIds) || body.messageIds.length === 0) {
       throw new BadRequestException('messageIds array is required');
     }
-    const result = await this.messageService.deleteMessagesBulk(body.messageIds, request.user._id.toString());
+    const forEveryone = body.forEveryone !== false;
+    const userId = request.user._id.toString();
+    const result = await this.messageService.deleteMessagesBulk(body.messageIds, userId, forEveryone);
     for (const id of result.deletedIds) {
-      await this.messageGateway.broadcastMessageDeleted(id);
+      await this.messageGateway.broadcastMessageDeleted(id, undefined, forEveryone ? undefined : userId);
     }
     return result;
   }
@@ -120,9 +122,11 @@ export class MessageController {
 
   @Delete(':messageId')
   @UseGuards(JwtAuthGuard)
-  async deleteMessage(@Req() request: RequestWithUser, @Param('messageId') messageId: string) {
-    const result = await this.messageService.deleteMessage(messageId, request.user._id.toString());
-    await this.messageGateway.broadcastMessageDeleted(messageId);
+  async deleteMessage(@Req() request: RequestWithUser, @Param('messageId') messageId: string, @Query('forEveryone') forEveryoneQuery?: string) {
+    const forEveryone = forEveryoneQuery === undefined || forEveryoneQuery === 'true' || forEveryoneQuery === '1';
+    const userId = request.user._id.toString();
+    const result = await this.messageService.deleteMessage(messageId, userId, forEveryone);
+    await this.messageGateway.broadcastMessageDeleted(messageId, undefined, forEveryone ? undefined : userId);
     return result;
   }
 

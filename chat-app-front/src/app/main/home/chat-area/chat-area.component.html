@@ -773,7 +773,7 @@
       <span>{{ 'actions.copy' | i18n }}</span>
     </button>
 
-    @if (ownMessage(contextMenuTarget)) {
+    @if (!contextMenuTarget.isDeleted) {
     <div class="context-menu-divider"></div>
     <button type="button" class="context-menu-item danger" (click)="onContextMenuAction('delete')">
       <fa-icon [icon]="['fas', 'trash']"></fa-icon>

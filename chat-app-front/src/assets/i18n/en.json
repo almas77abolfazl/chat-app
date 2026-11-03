@@ -364,6 +364,15 @@
     "deleteButton": "Delete",
     "cancelButton": "Cancel"
   },
+  "deleteMessageDialog": {
+    "title": "Delete Message",
+    "confirmSingle": "Are you sure you want to delete this message?",
+    "confirmMultiple": "Are you sure you want to delete {{count}} selected messages?",
+    "alsoDeleteFor": "Also delete for {{name}}",
+    "deleteForAll": "Delete for everyone",
+    "deleteButton": "Delete",
+    "cancelButton": "Cancel"
+  },
   "admin": {
     "title": "Admin Management",
     "admins": "Admins",

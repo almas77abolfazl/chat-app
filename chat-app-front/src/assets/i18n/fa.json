@@ -364,6 +364,15 @@
     "deleteButton": "حذف",
     "cancelButton": "انصراف"
   },
+  "deleteMessageDialog": {
+    "title": "حذف پیام",
+    "confirmSingle": "آیا از حذف این پیام مطمئن هستید؟",
+    "confirmMultiple": "آیا از حذف {{count}} پیام انتخاب‌شده مطمئن هستید؟",
+    "alsoDeleteFor": "همچنین برای {{name}} حذف شود",
+    "deleteForAll": "برای همه اعضا حذف شود",
+    "deleteButton": "حذف",
+    "cancelButton": "انصراف"
+  },
   "admin": {
     "title": "مدیریت مدیران",
     "admins": "مدیران",

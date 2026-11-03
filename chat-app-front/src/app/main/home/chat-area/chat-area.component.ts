@@ -26,6 +26,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 import { ProfileComponent } from '../../profile/profile.component';
 import { DeleteChatDialogComponent } from '../../delete-chat-dialog/delete-chat-dialog.component';
+import { DeleteMessageDialogComponent, DeleteMessageDialogResult } from '../../delete-message-dialog/delete-message-dialog.component';
 import { ForwardDialogComponent } from '../../forward-dialog/forward-dialog.component';
 import { MediaSendDialogComponent, MediaSendDialogResult } from '../../media-send-dialog/media-send-dialog.component';
 import { compressImage } from '../../../helpers/image-compressor.helper';
@@ -836,15 +837,43 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
     const ids = Array.from(this.selectedMessageIds);
     if (ids.length === 0) return;
 
-    const confirmMsg = this.translationService.t('chat.deleteSelectedConfirm', { count: ids.length });
-    if (confirm(confirmMsg)) {
+    const chat = this.mainService.currentChat;
+    const isSaved = !!chat?.isSavedMessages;
+    const isGroupOrChannel = !!(chat?.isGroup || chat?.isChannel);
+    const peerName = chat ? (isGroupOrChannel ? chat.name : `${chat.firstName || ''} ${chat.lastName || ''}`.trim()) : '';
+
+    // Check if user has permission to delete for everyone
+    const myId = this.ownId()?.toString();
+    const canDeleteForEveryone = !isSaved && (
+      isGroupOrChannel
+        ? (chat?.ownerId === myId || (chat as any)?.isAdmin)
+        : true
+    );
+
+    const dialogRef = this.dialog.open(DeleteMessageDialogComponent, {
+      width: '380px',
+      maxWidth: '92vw',
+      panelClass: 'rtl-dialog',
+      data: {
+        count: ids.length,
+        canDeleteForEveryone,
+        peerName,
+        isGroupOrChannel,
+        isSavedMessages: isSaved,
+      },
+    });
+
+    dialogRef.afterClosed().pipe(take(1)).subscribe((result: DeleteMessageDialogResult | undefined) => {
+      if (!result?.confirmed) return;
+      const forEveryone = isSaved ? false : (canDeleteForEveryone && result.forEveryone);
+
       this.mainService
-        .deleteMessagesBulk(ids)
+        .deleteMessagesBulk(ids, forEveryone)
         .pipe(take(1))
         .subscribe({
           next: () => {
             for (const id of ids) {
-              this.mainService.applyMessageDeleted(id);
+              this.mainService.applyMessageDeleted(id, !forEveryone);
             }
             this.syncVirtualScrollMessages();
             this.cdr.markForCheck();
@@ -855,7 +884,7 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
             this.mainService.snackbar.error(this.translationService.t('chat.deleteError'), 3000);
           },
         });
-    }
+    });
   }
 
   forwardSelectedMessages() {
@@ -954,17 +983,55 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
   }
 
   deleteMessage(message: Message) {
-    if (!this.ownMessage(message)) return;
-    if (confirm(this.translationService.t('actions.confirmDelete'))) {
-      this.mainService.deleteMessage(message._id).pipe(take(1)).subscribe({
-        next: () => {
-          this.mainService.applyMessageDeleted(message._id);
-          this.syncVirtualScrollMessages();
-          this.cdr.markForCheck();
-        },
-        error: () => {},
-      });
-    }
+    if (!message || message.isDeleted) return;
+
+    const chat = this.mainService.currentChat;
+    const isSaved = !!chat?.isSavedMessages;
+    const isGroupOrChannel = !!(chat?.isGroup || chat?.isChannel);
+    const peerName = chat ? (isGroupOrChannel ? chat.name : `${chat.firstName || ''} ${chat.lastName || ''}`.trim()) : '';
+
+    const isOwn = this.ownMessage(message);
+    const myId = this.ownId()?.toString();
+
+    // In direct chats, user can delete for everyone only if it's their own message.
+    // In groups/channels, admin or owner can delete any message for everyone.
+    const canDeleteForEveryone = !isSaved && (
+      isOwn ||
+      (isGroupOrChannel && (chat?.ownerId === myId || (chat as any)?.isAdmin))
+    );
+
+    const dialogRef = this.dialog.open(DeleteMessageDialogComponent, {
+      width: '380px',
+      maxWidth: '92vw',
+      panelClass: 'rtl-dialog',
+      data: {
+        count: 1,
+        canDeleteForEveryone,
+        peerName,
+        isGroupOrChannel,
+        isSavedMessages: isSaved,
+      },
+    });
+
+    dialogRef.afterClosed().pipe(take(1)).subscribe((result: DeleteMessageDialogResult | undefined) => {
+      if (!result?.confirmed) return;
+      const forEveryone = isSaved ? false : (canDeleteForEveryone && result.forEveryone);
+
+      this.mainService
+        .deleteMessage(message._id, forEveryone)
+        .pipe(take(1))
+        .subscribe({
+          next: () => {
+            this.mainService.applyMessageDeleted(message._id, !forEveryone);
+            this.syncVirtualScrollMessages();
+            this.cdr.markForCheck();
+            this.mainService.snackbar.success(this.translationService.t('chat.deleteSuccess'), 2500);
+          },
+          error: () => {
+            this.mainService.snackbar.error(this.translationService.t('chat.deleteError'), 3000);
+          },
+        });
+    });
   }
 
   getUserReaction(message: Message): string | undefined {
