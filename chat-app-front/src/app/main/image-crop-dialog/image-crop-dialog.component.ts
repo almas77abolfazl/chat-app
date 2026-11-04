@@ -68,20 +68,27 @@ export class ImageCropDialogComponent implements AfterViewInit {
 
   private loadImage(): void {
     if (!this.data?.imageSrc) return;
-    this.img.crossOrigin = 'anonymous';
+    if (!this.data.imageSrc.startsWith('data:') && !this.data.imageSrc.startsWith('blob:')) {
+      this.img.crossOrigin = 'anonymous';
+    }
     this.img.onload = () => {
       this.isLoaded = true;
       this.initCropScale();
       this.render();
+    };
+    this.img.onerror = (err) => {
+      console.error('Failed to load image for cropping', err);
     };
     this.img.src = this.data.imageSrc;
   }
 
   private initCropScale(): void {
     const canvas = this.canvasRef.nativeElement;
-    const size = Math.min(canvas.clientWidth || 340, canvas.clientHeight || 340);
+    const size = Math.min(canvas.clientWidth || 320, canvas.clientHeight || 320) || 320;
     canvas.width = size;
     canvas.height = size;
+
+    if (!this.img.width || !this.img.height) return;
 
     // Minimum zoom so image at least covers the square crop area
     const minScale = Math.max(size / this.img.width, size / this.img.height);
