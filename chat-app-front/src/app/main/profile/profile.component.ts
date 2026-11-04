@@ -404,6 +404,12 @@ export class ProfileComponent implements OnInit {
     const filename = this.avatars[this.activeAvatarIndex];
     if (!filename) return;
 
+    const confirmMsg =
+      this.translationService.t('profile.confirmDeleteAvatar') || 'آیا از حذف این عکس پروفایل اطمینان دارید؟';
+    if (!window.confirm(confirmMsg)) {
+      return;
+    }
+
     this.mainService
       .deleteAvatar(filename)
       .pipe(take(1))
@@ -411,6 +417,9 @@ export class ProfileComponent implements OnInit {
         next: (updatedList: string[]) => {
           this.avatars = updatedList || [];
           this.activeAvatarIndex = 0;
+          if (this.avatars.length === 0) {
+            this.showFullscreenAvatar = false;
+          }
           const newAvatar = this.avatars[0] || '';
           this.mainService.pictureSrc = newAvatar;
           if (newAvatar) {

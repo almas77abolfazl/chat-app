@@ -2,11 +2,13 @@ import { Component, Inject, ChangeDetectionStrategy, signal, ChangeDetectorRef, 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialog } from '@angular/material/dialog';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { I18nPipe } from '../../helpers/i18n.pipe';
 import { MainService } from '../main.service';
 import { getTelegramGradient, getInitials } from '../../helpers/avatar.helper';
+import { ImageCropDialogComponent } from '../image-crop-dialog/image-crop-dialog.component';
+import { take } from 'rxjs';
 
 @Component({
   selector: 'app-edit-profile',
@@ -21,6 +23,7 @@ export class EditProfileComponent {
   readonly imageError = signal(false);
   readonly previewUrl = signal<string | null>(null);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly dialog = inject(MatDialog);
 
   constructor(
     public dialogRef: MatDialogRef<EditProfileComponent>,
@@ -71,16 +74,29 @@ export class EditProfileComponent {
   onProfilePictureChange(event: any): void {
     const selectedFile = event.target.files?.[0];
     if (selectedFile) {
-      this.file = selectedFile;
-      this.imageError.set(false);
       const reader = new FileReader();
       reader.onload = () => {
-        const result = reader.result as string;
-        this.previewUrl.set(result);
-        this.data.pictureSrc = result;
-        this.cdr.markForCheck();
+        const rawSrc = reader.result as string;
+        const cropDialogRef = this.dialog.open(ImageCropDialogComponent, {
+          width: '380px',
+          maxWidth: '96vw',
+          data: { imageSrc: rawSrc },
+          autoFocus: false,
+        });
+
+        cropDialogRef.afterClosed().pipe(take(1)).subscribe((result) => {
+          if (result) {
+            this.file = result.file;
+            this.previewUrl.set(result.previewUrl);
+            this.data.pictureSrc = result.previewUrl;
+            this.imageError.set(false);
+            this.cdr.markForCheck();
+          }
+        });
       };
-      reader.readAsDataURL(this.file);
+      reader.readAsDataURL(selectedFile);
+      // Reset input value so re-selecting same file triggers change
+      event.target.value = '';
     }
   }
 }

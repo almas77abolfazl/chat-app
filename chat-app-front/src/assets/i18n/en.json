@@ -223,6 +223,7 @@
     "avatarDeleteError": "Failed to delete photo",
     "avatarSaveError": "Failed to save avatar",
     "avatarSaved": "Profile photo updated successfully",
+    "confirmDeleteAvatar": "Are you sure you want to delete this profile photo?",
     "profileUpdated": "Profile updated successfully",
     "profileUpdateError": "Failed to update profile",
     "nextPhoto": "Next photo",
@@ -573,5 +574,12 @@
     "requestNow": "Allow Access",
     "retry": "Retry",
     "dismiss": "Dismiss"
+  },
+  "crop": {
+    "title": "Crop Profile Photo",
+    "zoom": "Zoom",
+    "rotate": "Rotate",
+    "cancel": "Cancel",
+    "apply": "Apply & Save"
   }
 }

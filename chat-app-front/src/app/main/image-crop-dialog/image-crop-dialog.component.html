@@ -1,0 +1,55 @@
+<div class="crop-dialog-container">
+  <div class="crop-dialog-header">
+    <h3>{{ 'crop.title' | i18n }}</h3>
+    <button type="button" class="close-btn" (click)="onCancel()" aria-label="Close">
+      <fa-icon [icon]="['fas', 'times']"></fa-icon>
+    </button>
+  </div>
+
+  <div class="crop-viewport-wrapper" (wheel)="onWheel($event)">
+    <canvas
+      #cropCanvas
+      class="crop-canvas"
+      (mousedown)="onPointerDown($event)"
+      (mousemove)="onPointerMove($event)"
+      (mouseup)="onPointerUp()"
+      (mouseleave)="onPointerUp()"
+      (touchstart)="onPointerDown($event)"
+      (touchmove)="onPointerMove($event)"
+      (touchend)="onPointerUp()"
+    ></canvas>
+
+    <!-- Circular Overlay Mask (Telegram Style) -->
+    <div class="crop-mask-circle" pointer-events="none"></div>
+    <div class="crop-grid-overlay"></div>
+  </div>
+
+  <div class="crop-dialog-controls">
+    <div class="zoom-slider-row">
+      <fa-icon [icon]="['fas', 'search-minus']" class="slider-icon"></fa-icon>
+      <input
+        type="range"
+        [min]="minZoom()"
+        [max]="maxZoom()"
+        step="0.05"
+        [ngModel]="zoom()"
+        (ngModelChange)="onZoomChange($event)"
+        class="zoom-slider"
+      />
+      <fa-icon [icon]="['fas', 'search-plus']" class="slider-icon"></fa-icon>
+      <button type="button" class="icon-tool-btn" (click)="rotate()" title="{{ 'crop.rotate' | i18n }}">
+        <fa-icon [icon]="['fas', 'rotate-right']"></fa-icon>
+      </button>
+    </div>
+  </div>
+
+  <div class="crop-dialog-actions">
+    <button mat-button class="cancel-btn" (click)="onCancel()">
+      {{ 'crop.cancel' | i18n }}
+    </button>
+    <button mat-raised-button color="primary" class="apply-btn" (click)="onConfirm()">
+      {{ 'crop.apply' | i18n }}
+    </button>
+  </div>
+</div>
+

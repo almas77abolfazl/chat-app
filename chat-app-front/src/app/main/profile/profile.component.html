@@ -352,9 +352,15 @@
   @if (showFullscreenAvatar && activeAvatarUrl) {
   <div class="fullscreen-overlay" (click)="closeFullscreenAvatar($event)">
     <div class="fullscreen-header">
-      <button class="icon-btn close-fullscreen-btn" (click)="closeFullscreenAvatar($event)">
+      <button class="icon-btn close-fullscreen-btn" (click)="closeFullscreenAvatar($event)" [attr.aria-label]="'actions.close' | i18n">
         <fa-icon [icon]="['fas', 'times']"></fa-icon>
       </button>
+
+      @if (isCurrentUser && avatars.length > 0) {
+      <button class="icon-btn delete-fullscreen-btn" (click)="deleteCurrentAvatar($event)" [attr.aria-label]="'profile.deleteAvatar' | i18n" [title]="'profile.deleteAvatar' | i18n">
+        <fa-icon [icon]="['fas', 'trash']"></fa-icon>
+      </button>
+      }
     </div>
 
     <div class="fullscreen-image-wrapper" (click)="$event.stopPropagation()">

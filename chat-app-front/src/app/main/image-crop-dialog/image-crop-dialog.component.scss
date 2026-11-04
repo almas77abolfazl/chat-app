@@ -1,0 +1,147 @@
+.crop-dialog-container {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--surface-card, #ffffff);
+  color: var(--text-color, #1e293b);
+  border-radius: 16px;
+  overflow: hidden;
+  padding: 16px;
+  user-select: none;
+}
+
+:host-context([data-theme='dark']) .crop-dialog-container,
+:host-context(.dark) .crop-dialog-container {
+  background-color: var(--surface-card, #1e293b);
+  color: var(--text-color, #f8fafc);
+}
+
+.crop-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+
+  h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+  }
+
+  .close-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-secondary, #64748b);
+    padding: 6px 8px;
+    font-size: 1.1rem;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: var(--hover-color, rgba(0, 0, 0, 0.05));
+    }
+  }
+}
+
+.crop-viewport-wrapper {
+  position: relative;
+  width: 320px;
+  height: 320px;
+  margin: 0 auto;
+  border-radius: 12px;
+  overflow: hidden;
+  background-color: #0b0f19;
+  cursor: grab;
+  touch-action: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.crop-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Telegram-like Circular Mask Overlay with frosted shade outside the circle */
+.crop-mask-circle {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  /* Box shadow method creates dark vignette outside inner border circle */
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+}
+
+.crop-grid-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: 50%;
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+  background-size: 33.333% 33.333%;
+  opacity: 0.6;
+}
+
+.crop-dialog-controls {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.zoom-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 8px;
+
+  .slider-icon {
+    color: var(--text-secondary, #64748b);
+    font-size: 0.95rem;
+  }
+
+  .zoom-slider {
+    flex: 1;
+    cursor: pointer;
+    accent-color: var(--primary-color, #2563eb);
+  }
+
+  .icon-tool-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-color, #334155);
+    font-size: 1.1rem;
+    padding: 6px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: var(--hover-color, rgba(0, 0, 0, 0.08));
+    }
+  }
+}
+
+.crop-dialog-actions {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+
+  .cancel-btn {
+    border-radius: 8px;
+  }
+
+  .apply-btn {
+    border-radius: 8px;
+    font-weight: 600;
+  }
+}
+

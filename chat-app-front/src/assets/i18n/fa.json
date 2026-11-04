@@ -223,6 +223,7 @@
     "avatarDeleteError": "خطا در حذف عکس",
     "avatarSaveError": "خطا در ذخیره آواتار",
     "avatarSaved": "عکس پروفایل با موفقیت ذخیره شد",
+    "confirmDeleteAvatar": "آیا از حذف این عکس پروفایل اطمینان دارید؟",
     "profileUpdated": "پروفایل با موفقیت به‌روزرسانی شد",
     "profileUpdateError": "خطا در به‌روزرسانی پروفایل",
     "nextPhoto": "عکس بعدی",
@@ -573,5 +574,12 @@
     "requestNow": "درخواست مجوز",
     "retry": "تلاش مجدد",
     "dismiss": "انصراف"
+  },
+  "crop": {
+    "title": "برش عکس پروفایل",
+    "zoom": "بزرگ‌نمایی",
+    "rotate": "چرخش",
+    "cancel": "انصراف",
+    "apply": "انتخاب و ذخیره"
   }
 }

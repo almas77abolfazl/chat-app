@@ -223,6 +223,7 @@
     "avatarDeleteError": "فشل حذف الصورة",
     "avatarSaveError": "فشل حفظ الصورة الشخصية",
     "avatarSaved": "تم تحديث الصورة الشخصية بنجاح",
+    "confirmDeleteAvatar": "هل أنت متأكد من حذف هذه الصورة الشخصية؟",
     "profileUpdated": "تم تحديث الملف الشخصي بنجاح",
     "profileUpdateError": "فشل تحديث الملف الشخصي",
     "nextPhoto": "الصورة التالية",
@@ -573,6 +574,13 @@
     "requestNow": "السماح بالوصول",
     "retry": "إعادة المحاولة",
     "dismiss": "إلغاء"
+  },
+  "crop": {
+    "title": "قص صورة الملف الشخصي",
+    "zoom": "تكبير",
+    "rotate": "تدوير",
+    "cancel": "إلغاء",
+    "apply": "اختيار وحفظ"
   }
 }
 

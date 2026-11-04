@@ -1,4 +1,4 @@
-import { Component, OnInit, ChangeDetectionStrategy, signal } from '@angular/core';
+import { Component, OnInit, ChangeDetectionStrategy, signal, effect, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { MatDialogRef } from '@angular/material/dialog';
@@ -20,6 +20,8 @@ import { take } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SettingsComponent implements OnInit {
+  private readonly cdr = inject(ChangeDetectorRef);
+
   readonly notificationsEnabledSignal = signal<boolean>(true);
   get notificationsEnabled(): boolean { return this.notificationsEnabledSignal(); }
   set notificationsEnabled(v: boolean) { this.notificationsEnabledSignal.set(v); }
@@ -52,7 +54,13 @@ export class SettingsComponent implements OnInit {
     public themeService: ThemeService,
     public translationService: TranslationService,
     public mainService: MainService
-  ) {}
+  ) {
+    effect(() => {
+      const pic = this.mainService.pictureSrcSignal();
+      this.userAvatar = this.mainService.getAvatarUrl(pic) || '';
+      this.cdr.markForCheck();
+    });
+  }
 
   ngOnInit(): void {
     this.userAvatar = this.mainService.getAvatarUrl(this.mainService.pictureSrc) || '';
