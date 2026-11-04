@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put, Req, UploadedFile, Use
 import { UserService } from './user.service';
 import { UpdateUserNamesDto } from './dto/update-user-names.dto';
 import { AddContactByPhoneDto } from './dto/add-contact-by-phone.dto';
+import { AddContactDto } from './dto/add-contact.dto';
 import { CreateFolderDto, UpdateFolderDto } from './dto/create-folder.dto';
 import { IUser } from './interfaces/user.interface';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
@@ -155,8 +156,8 @@ export class UserController {
 
   @UseGuards(JwtAuthGuard)
   @Post('contacts/:contactId')
-  async addContact(@Req() request: RequestWithUser, @Param('contactId') contactId: string) {
-    return this.userService.addContact(request.user._id.toString(), contactId);
+  async addContact(@Req() request: RequestWithUser, @Param('contactId') contactId: string, @Body() dto?: AddContactDto) {
+    return this.userService.addContact(request.user._id.toString(), contactId, dto?.firstName, dto?.lastName);
   }
 
   @UseGuards(JwtAuthGuard)

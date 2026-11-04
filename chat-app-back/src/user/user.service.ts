@@ -216,6 +216,8 @@ export class UserService {
 
     let canSeePhone = false;
     let isContact = false;
+    let customFirstName: string | null = null;
+    let customLastName: string | null = null;
 
     if (requesterId) {
       if (requesterId === userId) {
@@ -229,9 +231,18 @@ export class UserService {
           profilePicture = null;
           avatars = [];
         } else {
-          const requester = await this.userModel.findById(requesterId).select('contacts phoneKnownContacts phoneSharedWith').exec();
+          const requester = await this.userModel.findById(requesterId).select('contacts contactDetails phoneKnownContacts phoneSharedWith').exec();
           if (requester) {
             isContact = (requester.contacts || []).some((c: any) => c.toString() === userId);
+            const customDetail = (requester.contactDetails || []).find((d: any) => d.userId?.toString() === userId);
+            if (customDetail) {
+              if (customDetail.firstName !== undefined && customDetail.firstName !== '') {
+                customFirstName = customDetail.firstName;
+              }
+              if (customDetail.lastName !== undefined && customDetail.lastName !== '') {
+                customLastName = customDetail.lastName;
+              }
+            }
             const isTargetContact = (user.contacts || []).some((c: any) => c.toString() === requesterId);
             const requesterKnewPhone = (requester.phoneKnownContacts || []).some((c: any) => c.toString() === userId);
             const targetSharedWithRequester = (user.phoneSharedWith || []).some((c: any) => c.toString() === requesterId);
@@ -257,8 +268,10 @@ export class UserService {
 
     return {
       _id: user._id,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      firstName: customFirstName !== null ? customFirstName : user.firstName,
+      lastName: customLastName !== null ? customLastName : user.lastName,
+      originalFirstName: user.firstName,
+      originalLastName: user.lastName,
       username: user.username,
       phoneNumber: canSeePhone ? user.phoneNumber : null,
       bio: user.bio,
@@ -340,6 +353,18 @@ export class UserService {
       .exec();
     if (!user) return [];
     const knownSet = new Set(((user as any).phoneKnownContacts || []).map((id: any) => id.toString()));
+    const customDetailsMap = new Map<string, { firstName?: string; lastName?: string }>();
+    if (user.contactDetails && Array.isArray(user.contactDetails)) {
+      for (const d of user.contactDetails) {
+        if (d?.userId) {
+          customDetailsMap.set(d.userId.toString(), {
+            firstName: d.firstName,
+            lastName: d.lastName,
+          });
+        }
+      }
+    }
+
     return (user.contacts as any[]).map((contact: any) => {
       const contactObj = contact.toObject ? contact.toObject() : { ...contact };
       const contactId = (contactObj._id || contactObj).toString();
@@ -347,22 +372,48 @@ export class UserService {
       const contactSharedPhone = (contactObj.phoneSharedWith || []).some((id: any) => id.toString() === userId);
       const contactKnewPhone = (contactObj.phoneKnownContacts || []).some((id: any) => id.toString() === userId);
       const canSeePhone = userKnewPhone || contactSharedPhone || contactKnewPhone;
+
+      const customName = customDetailsMap.get(contactId);
+      const firstName = customName?.firstName !== undefined && customName.firstName !== '' ? customName.firstName : contactObj.firstName;
+      const lastName = customName?.lastName !== undefined && customName.lastName !== '' ? customName.lastName : contactObj.lastName;
+
       return {
         ...contactObj,
+        firstName,
+        lastName,
+        originalFirstName: contactObj.firstName,
+        originalLastName: contactObj.lastName,
         phoneNumber: canSeePhone ? contactObj.phoneNumber : null,
       };
     });
   }
 
-  async addContact(userId: string, contactId: string): Promise<IUser> {
+  async addContact(userId: string, contactId: string, firstName?: string, lastName?: string): Promise<IUser> {
     const user = await this.userModel.findById(userId).exec();
     if (!user) {
       throw new NotFoundException('User not found');
     }
+    user.contacts ??= [];
+    user.contactDetails ??= [];
+
     if (!user.contacts.some((id: any) => id.toString() === contactId)) {
       user.contacts.push(new Types.ObjectId(contactId) as any);
-      await user.save();
     }
+
+    const contactObjId = new Types.ObjectId(contactId);
+    const existingDetailIdx = user.contactDetails.findIndex((d) => d.userId.toString() === contactId);
+    const detailObj = {
+      userId: contactObjId,
+      firstName: firstName?.trim() ?? '',
+      lastName: lastName?.trim() ?? '',
+    };
+    if (existingDetailIdx !== -1) {
+      user.contactDetails[existingDetailIdx] = detailObj;
+    } else {
+      user.contactDetails.push(detailObj);
+    }
+
+    await user.save();
     return user;
   }
 
@@ -380,6 +431,7 @@ export class UserService {
     }
 
     user.contacts ??= [];
+    user.contactDetails ??= [];
     user.phoneKnownContacts ??= [];
     targetUser.phoneSharedWith ??= [];
 
@@ -393,6 +445,21 @@ export class UserService {
       user.contacts.push(targetObjId as any);
       userChanged = true;
     }
+
+    const existingDetailIdx = user.contactDetails.findIndex((d) => d.userId.toString() === targetUser._id.toString());
+    const detailObj = {
+      userId: targetObjId,
+      firstName: firstName?.trim() ?? '',
+      lastName: lastName?.trim() ?? '',
+    };
+    if (existingDetailIdx !== -1) {
+      user.contactDetails[existingDetailIdx] = detailObj;
+      userChanged = true;
+    } else {
+      user.contactDetails.push(detailObj);
+      userChanged = true;
+    }
+
     if (!user.phoneKnownContacts.some((id: any) => id.toString() === targetUser._id.toString())) {
       user.phoneKnownContacts.push(targetObjId as any);
       userChanged = true;
@@ -407,8 +474,8 @@ export class UserService {
 
     return {
       _id: targetUser._id.toString(),
-      firstName: firstName || targetUser.firstName || '',
-      lastName: lastName || targetUser.lastName || '',
+      firstName: firstName?.trim() || targetUser.firstName || '',
+      lastName: lastName?.trim() || targetUser.lastName || '',
       username: targetUser.username,
       profilePicture: targetUser.profilePicture,
       avatars: targetUser.avatars || [],
@@ -425,6 +492,9 @@ export class UserService {
       throw new NotFoundException('User not found');
     }
     user.contacts = user.contacts.filter((id) => id.toString() !== contactId);
+    if (user.contactDetails) {
+      user.contactDetails = user.contactDetails.filter((d) => d.userId.toString() !== contactId);
+    }
     if (user.phoneKnownContacts) {
       user.phoneKnownContacts = user.phoneKnownContacts.filter((id: any) => id.toString() !== contactId);
     }

@@ -6,10 +6,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { MessageModule } from 'src/message/message.module';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    forwardRef(() => MessageModule),
-  ],
+  imports: [MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]), forwardRef(() => MessageModule)],
   controllers: [UserController],
   providers: [UserService],
   exports: [UserService],

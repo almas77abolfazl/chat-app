@@ -18,6 +18,18 @@ export class ChatService {
 
   async getChatList(userId: string) {
     const userObjectId = new Types.ObjectId(userId);
+    const currentUser = this.userModel ? await this.userModel.findById(userId).select('contactDetails').exec() : null;
+    const customDetailsMap = new Map<string, { firstName?: string; lastName?: string }>();
+    if (currentUser?.contactDetails && Array.isArray(currentUser.contactDetails)) {
+      for (const d of currentUser.contactDetails) {
+        if (d?.userId) {
+          customDetailsMap.set(d.userId.toString(), {
+            firstName: d.firstName,
+            lastName: d.lastName,
+          });
+        }
+      }
+    }
     let chats = await this.chatModel
       .find({
         participants: userObjectId,
@@ -123,12 +135,21 @@ export class ChatService {
         }),
         otherParticipant: (() => {
           if (!otherParticipant) return null;
+          const otherId = otherParticipant._id.toString();
+          const customName = customDetailsMap.get(otherId);
+          const effectiveFirstName =
+            customName?.firstName !== undefined && customName.firstName !== '' ? customName.firstName : otherParticipant.firstName;
+          const effectiveLastName =
+            customName?.lastName !== undefined && customName.lastName !== '' ? customName.lastName : otherParticipant.lastName;
+
           const isBlocked = (otherParticipant.blockedUsers || []).some((b: any) => b.toString() === userId);
           if (isBlocked) {
             return {
               _id: otherParticipant._id,
-              firstName: otherParticipant.firstName,
-              lastName: otherParticipant.lastName,
+              firstName: effectiveFirstName,
+              lastName: effectiveLastName,
+              originalFirstName: otherParticipant.firstName,
+              originalLastName: otherParticipant.lastName,
               profilePicture: null,
               avatars: [],
               status: otherParticipant.status,
@@ -144,8 +165,10 @@ export class ChatService {
           const hideStatus = lastSeenRule === 'nobody' || (lastSeenRule === 'contacts' && !isContact);
           return {
             _id: otherParticipant._id,
-            firstName: otherParticipant.firstName,
-            lastName: otherParticipant.lastName,
+            firstName: effectiveFirstName,
+            lastName: effectiveLastName,
+            originalFirstName: otherParticipant.firstName,
+            originalLastName: otherParticipant.lastName,
             profilePicture: hidePhoto ? null : otherParticipant.profilePicture,
             avatars: hidePhoto ? [] : otherParticipant.avatars || [],
             status: otherParticipant.status,

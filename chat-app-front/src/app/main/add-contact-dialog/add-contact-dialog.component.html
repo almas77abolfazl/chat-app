@@ -1,0 +1,55 @@
+<div class="add-contact-dialog" [dir]="translationService.isRTL() ? 'rtl' : 'ltr'">
+  <div class="dialog-header">
+    <div class="header-icon-circle">
+      <fa-icon [icon]="['fas', 'user-plus']"></fa-icon>
+    </div>
+    <div class="header-texts">
+      <h2 class="dialog-title">{{ 'contacts.addNew' | i18n }}</h2>
+      <p class="dialog-subtitle">
+        @if (data.phoneNumber) {
+          <span>{{ data.phoneNumber }}</span>
+        } @else if (data.username) {
+          <span>@{{ data.username }}</span>
+        }
+      </p>
+    </div>
+  </div>
+
+  <div class="dialog-body">
+    <div class="form-group">
+      <label class="input-label">{{ 'contacts.firstName' | i18n }}</label>
+      <input
+        type="text"
+        class="form-input"
+        [(ngModel)]="firstName"
+        [placeholder]="'contacts.firstName' | i18n"
+        autofocus
+      />
+    </div>
+
+    <div class="form-group">
+      <label class="input-label">{{ 'contacts.lastName' | i18n }}</label>
+      <input
+        type="text"
+        class="form-input"
+        [(ngModel)]="lastName"
+        [placeholder]="'contacts.lastName' | i18n"
+      />
+    </div>
+  </div>
+
+  <div class="dialog-actions">
+    <button type="button" class="btn btn-cancel" (click)="onCancel()">
+      {{ 'actions.cancel' | i18n }}
+    </button>
+    <button
+      type="button"
+      class="btn btn-save"
+      (click)="onSave()"
+      [disabled]="!firstName.trim() && !lastName.trim()"
+    >
+      {{ 'actions.save' | i18n }}
+    </button>
+  </div>
+</div>
+

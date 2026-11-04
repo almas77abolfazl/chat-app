@@ -17,6 +17,12 @@ export interface IChatFolder {
   includedTypes?: string[];
 }
 
+export interface IContactDetail {
+  userId: Types.ObjectId | string;
+  firstName?: string;
+  lastName?: string;
+}
+
 export interface IUser extends Document {
   username?: string;
   phoneNumber: string;
@@ -27,7 +33,8 @@ export interface IUser extends Document {
   profilePicture?: string;
   avatars?: string[];
   status?: string;
-  contacts: string[];
+  contacts: (string | Types.ObjectId)[];
+  contactDetails?: IContactDetail[];
   blockedUsers?: Types.ObjectId[];
   sessions: ISession[];
   createdAt: Date;

@@ -1546,8 +1546,8 @@ export class MainService {
     return this.httpRequestService.get('user/contacts');
   }
 
-  addContact(contactId: string): Observable<any> {
-    return this.httpRequestService.post(`user/contacts/${contactId}`, {});
+  addContact(contactId: string, firstName?: string, lastName?: string): Observable<any> {
+    return this.httpRequestService.post(`user/contacts/${contactId}`, { firstName, lastName });
   }
 
   addContactByPhone(phoneNumber: string, firstName?: string, lastName?: string): Observable<any> {

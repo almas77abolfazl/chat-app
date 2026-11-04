@@ -37,6 +37,23 @@ export class User {
   @Prop({ default: [] })
   contacts: string[];
 
+  @Prop({
+    type: [
+      {
+        userId: { type: Types.ObjectId, ref: 'User' },
+        firstName: { type: String, default: '' },
+        lastName: { type: String, default: '' },
+        _id: false,
+      },
+    ],
+    default: [],
+  })
+  contactDetails?: {
+    userId: Types.ObjectId;
+    firstName?: string;
+    lastName?: string;
+  }[];
+
   @Prop({ type: [{ type: Types.ObjectId, ref: 'User' }], default: [] })
   phoneKnownContacts?: Types.ObjectId[];
 

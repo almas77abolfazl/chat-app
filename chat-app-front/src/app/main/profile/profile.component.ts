@@ -7,6 +7,7 @@ import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { ChatListItem } from '../../models/chat-list-item.model';
 import { EditProfileComponent } from '../edit-profile/edit-profile.component';
 import { AdminManagementDialogComponent } from '../admin-management-dialog/admin-management-dialog.component';
+import { AddContactDialogComponent } from '../add-contact-dialog/add-contact-dialog.component';
 import { MainService } from '../main.service';
 import { TranslationService } from '../../helpers/translation.service';
 import { WebRtcService } from '../../helpers/webrtc.service';
@@ -634,19 +635,44 @@ export class ProfileComponent implements OnInit {
           },
         });
     } else {
-      this.mainService
-        .addContact(this.targetUserId)
-        .pipe(take(1))
-        .subscribe({
-          next: () => {
-            this.isContact = true;
-            this.mainService.snackbar.success(this.translationService.t('contacts.addToContacts'), 3000);
-            this.mainService.getContacts().pipe(take(1)).subscribe();
-          },
-          error: () => {
-            this.mainService.snackbar.error('contacts.addError', 3000);
-          },
-        });
+      const targetUser = this.userProfile || this.chatData?.otherParticipant || this.chatData || {};
+      const dialogRef = this.dialog.open(AddContactDialogComponent, {
+        width: '380px',
+        panelClass: 'custom-dialog-container',
+        data: {
+          userId: this.targetUserId,
+          defaultFirstName: targetUser.firstName || '',
+          defaultLastName: targetUser.lastName || '',
+          phoneNumber: targetUser.phoneNumber || '',
+          username: targetUser.username || '',
+        },
+      });
+
+      dialogRef.afterClosed().pipe(take(1)).subscribe((result) => {
+        if (!result || !result.confirmed) return;
+        this.mainService
+          .addContact(this.targetUserId, result.firstName, result.lastName)
+          .pipe(take(1))
+          .subscribe({
+            next: () => {
+              this.isContact = true;
+              if (this.userProfile) {
+                this.userProfile = {
+                  ...this.userProfile,
+                  firstName: result.firstName || this.userProfile.firstName,
+                  lastName: result.lastName || this.userProfile.lastName,
+                };
+              }
+              this.mainService.snackbar.success(this.translationService.t('contacts.addToContacts'), 3000);
+              this.mainService.getContacts().pipe(take(1)).subscribe();
+              this.mainService.getChatList();
+              this.cdr.markForCheck();
+            },
+            error: () => {
+              this.mainService.snackbar.error('contacts.addError', 3000);
+            },
+          });
+      });
     }
   }
 
