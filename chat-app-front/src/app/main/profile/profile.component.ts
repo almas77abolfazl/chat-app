@@ -1,4 +1,5 @@
-import { Component, Inject, OnInit, ChangeDetectionStrategy, signal, inject } from '@angular/core';
+import { Component, Inject, OnInit, ChangeDetectionStrategy, signal, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
@@ -113,11 +114,35 @@ export class ProfileComponent implements OnInit {
   public readonly mainService = inject(MainService);
   public readonly translationService = inject(TranslationService);
   public readonly data: ProfileDialogData = inject(MAT_DIALOG_DATA);
+  private readonly cdr = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
 
   constructor() {}
 
   ngOnInit(): void {
     this.initData();
+    this.subscribeToAvatarUpdates();
+  }
+
+  private subscribeToAvatarUpdates(): void {
+    this.mainService.userAvatarUpdated$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((update) => {
+        if (!update?.userId) return;
+        const currentTargetId = this.targetUserId || this.chatData?.peerId;
+        if (currentTargetId === update.userId) {
+          if (this.userProfile) {
+            this.userProfile.profilePicture = update.avatar;
+            this.userProfile.avatars = update.avatars || [update.avatar];
+          }
+          this.avatars = (update.avatars && update.avatars.length > 0)
+            ? update.avatars
+            : (update.avatar ? [update.avatar] : []);
+          this.activeAvatarIndex = 0;
+          this.avatarLoadError = false;
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   private initData(): void {

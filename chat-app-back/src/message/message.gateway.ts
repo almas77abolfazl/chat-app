@@ -735,4 +735,53 @@ export class MessageGateway {
       console.error('Failed to broadcast media message:', e);
     }
   }
+
+  async broadcastUserAvatarUpdated(userId: string, avatarFilename: string, avatars: string[] = []) {
+    if (!this.server) return;
+    try {
+      const user = await this.userService.getUserWithPrivacy(userId);
+      if (!user) {
+        this.server.emit('userAvatarUpdated', { userId, avatar: avatarFilename, avatars });
+        return;
+      }
+      const blockedIds = (user.blockedUsers || []).map((id: any) => id.toString());
+      const contactIds = (user.contacts || []).map((id: any) => id.toString());
+      const photoRule = user.privacy?.profilePhoto || 'everybody';
+
+      const sockets = await this.server.fetchSockets();
+      for (const s of sockets) {
+        const viewer = s.data?.user as IUser | undefined;
+        if (!viewer) continue;
+        const viewerId = viewer._id.toString();
+
+        if (viewerId === userId) {
+          s.emit('userAvatarUpdated', { userId, avatar: avatarFilename, avatars });
+          continue;
+        }
+
+        let visibleAvatar: string | null = avatarFilename;
+        let visibleAvatars: string[] = avatars;
+
+        if (blockedIds.includes(viewerId)) {
+          visibleAvatar = null;
+          visibleAvatars = [];
+        } else if (photoRule === 'nobody') {
+          visibleAvatar = null;
+          visibleAvatars = [];
+        } else if (photoRule === 'contacts' && !contactIds.includes(viewerId)) {
+          visibleAvatar = null;
+          visibleAvatars = [];
+        }
+
+        s.emit('userAvatarUpdated', {
+          userId,
+          avatar: visibleAvatar,
+          avatars: visibleAvatars,
+        });
+      }
+    } catch (e) {
+      console.error('Failed to broadcast user avatar updated:', e);
+      this.server.emit('userAvatarUpdated', { userId, avatar: avatarFilename, avatars });
+    }
+  }
 }

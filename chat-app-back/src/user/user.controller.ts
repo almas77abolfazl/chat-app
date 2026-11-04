@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Req, UploadedFile, UseGuards, UseInterceptors, Inject, forwardRef } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UpdateUserNamesDto } from './dto/update-user-names.dto';
 import { AddContactByPhoneDto } from './dto/add-contact-by-phone.dto';
@@ -8,10 +8,15 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RequestWithUser } from 'src/auth/interfaces/request-with-user.model';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerOptions } from 'src/helpers/upload';
+import { MessageGateway } from 'src/message/message.gateway';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    @Inject(forwardRef(() => MessageGateway))
+    private readonly messageGateway: MessageGateway,
+  ) {}
 
   @UseGuards(JwtAuthGuard)
   @Post('updateUserNames')
@@ -29,13 +34,19 @@ export class UserController {
       throw new Error('No file uploaded!');
     }
 
-    return await this.userService.updateProfilePicture(userId, file.filename);
+    const updatedUser = await this.userService.updateProfilePicture(userId, file.filename);
+    await this.messageGateway.broadcastUserAvatarUpdated(userId, updatedUser.profilePicture || '', updatedUser.avatars || []);
+    return updatedUser;
   }
 
   @UseGuards(JwtAuthGuard)
   @Delete('avatar/:filename')
   async deleteAvatar(@Req() request: RequestWithUser, @Param('filename') filename: string) {
-    return this.userService.deleteAvatar(request.user._id.toString(), filename);
+    const userId = request.user._id.toString();
+    const avatars = await this.userService.deleteAvatar(userId, filename);
+    const newAvatar = avatars[0] || '';
+    await this.messageGateway.broadcastUserAvatarUpdated(userId, newAvatar, avatars);
+    return avatars;
   }
 
   @UseGuards(JwtAuthGuard)

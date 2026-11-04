@@ -185,6 +185,8 @@ export class MainService {
   messageDeleted$ = this.messageDeletedSubject.asObservable();
   private reactionUpdatedSubject = new Subject<{ messageId: string; reactions: any[] }>();
   reactionUpdated$ = this.reactionUpdatedSubject.asObservable();
+  private userAvatarUpdatedSubject = new Subject<{ userId: string; avatar: string; avatars: string[] }>();
+  userAvatarUpdated$ = this.userAvatarUpdatedSubject.asObservable();
 
   file: any;
 
@@ -1039,6 +1041,14 @@ export class MainService {
       });
     });
 
+    this.socketService.on('userAvatarUpdated', (payload: { userId: string; avatar: string; avatars: string[] }) => {
+      this.zone.run(() => {
+        if (!payload?.userId) return;
+        this.updateAvatarInState(payload.userId, payload.avatar);
+        this.userAvatarUpdatedSubject.next(payload);
+      });
+    });
+
     this.socketService.on('typingStatus', (payload: { chatId: string; userId: string; userName: string; isTyping: boolean }) => {
       this.zone.run(() => {
         const myId = this.authService.getUserId();
@@ -1359,12 +1369,14 @@ export class MainService {
     });
     if (chatChanged) {
       this.chatItems = updatedChats;
+      this.chatItemsSignal.set([...this.chatItems]);
       this.chatListUpdatedSubject.next(this.chatItems);
     }
 
     // Update in currentChat
     if (this.currentChat && (this.currentChat.peerId === userId || (isMe && this.currentChat.isSavedMessages))) {
       this.currentChat = { ...this.currentChat, avatar: formattedUrl };
+      this.currentChatSignal.set({ ...this.currentChat });
     }
   }
 

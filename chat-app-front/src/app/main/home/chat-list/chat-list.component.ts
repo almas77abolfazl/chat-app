@@ -122,6 +122,13 @@ export class ChatListComponent implements OnInit {
     this.mainService.typingUsers$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((m) => this.typingMap.set(m));
+
+    this.mainService.userAvatarUpdated$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((update) => {
+        this.brokenAvatars.clear();
+        this.myAvatarBroken.set(false);
+      });
   }
 
   getChatTypingText(chat: ChatListItem): string {

@@ -364,6 +364,14 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
       this.syncVirtualScrollMessages();
       this.cdr.markForCheck();
     });
+
+    this.mainService.userAvatarUpdated$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((payload) => {
+      const currentChat = this.mainService.currentChat;
+      if (currentChat && currentChat.peerId === payload.userId) {
+        this.brokenAvatars.delete(currentChat._id);
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   ngAfterViewInit() {

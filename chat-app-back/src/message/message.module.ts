@@ -17,7 +17,7 @@ import { ReactionSchema } from './reaction/reaction.entity';
     AuthModule,
     AgentModule,
     ChatModule,
-    UserModule,
+    forwardRef(() => UserModule),
     forwardRef(() => ReactionModule),
     MongooseModule.forFeature([{ name: 'Message', schema: MessageSchema }]),
     MongooseModule.forFeature([{ name: 'Chat', schema: ChatSchema }]),
