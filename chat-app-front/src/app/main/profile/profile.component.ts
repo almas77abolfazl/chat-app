@@ -659,8 +659,8 @@ export class ProfileComponent implements OnInit {
               if (this.userProfile) {
                 this.userProfile = {
                   ...this.userProfile,
-                  firstName: result.firstName || this.userProfile.firstName,
-                  lastName: result.lastName || this.userProfile.lastName,
+                  firstName: result.firstName,
+                  lastName: result.lastName,
                 };
               }
               this.mainService.snackbar.success(this.translationService.t('contacts.addToContacts'), 3000);

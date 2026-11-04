@@ -236,10 +236,10 @@ export class UserService {
             isContact = (requester.contacts || []).some((c: any) => c.toString() === userId);
             const customDetail = (requester.contactDetails || []).find((d: any) => d.userId?.toString() === userId);
             if (customDetail) {
-              if (customDetail.firstName !== undefined && customDetail.firstName !== '') {
+              if (customDetail.firstName !== undefined) {
                 customFirstName = customDetail.firstName;
               }
-              if (customDetail.lastName !== undefined && customDetail.lastName !== '') {
+              if (customDetail.lastName !== undefined) {
                 customLastName = customDetail.lastName;
               }
             }
@@ -374,8 +374,8 @@ export class UserService {
       const canSeePhone = userKnewPhone || contactSharedPhone || contactKnewPhone;
 
       const customName = customDetailsMap.get(contactId);
-      const firstName = customName?.firstName !== undefined && customName.firstName !== '' ? customName.firstName : contactObj.firstName;
-      const lastName = customName?.lastName !== undefined && customName.lastName !== '' ? customName.lastName : contactObj.lastName;
+      const firstName = customName && customName.firstName !== undefined ? customName.firstName : contactObj.firstName;
+      const lastName = customName && customName.lastName !== undefined ? customName.lastName : contactObj.lastName;
 
       return {
         ...contactObj,

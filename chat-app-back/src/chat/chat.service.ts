@@ -138,9 +138,9 @@ export class ChatService {
           const otherId = otherParticipant._id.toString();
           const customName = customDetailsMap.get(otherId);
           const effectiveFirstName =
-            customName?.firstName !== undefined && customName.firstName !== '' ? customName.firstName : otherParticipant.firstName;
+            customName && customName.firstName !== undefined ? customName.firstName : otherParticipant.firstName;
           const effectiveLastName =
-            customName?.lastName !== undefined && customName.lastName !== '' ? customName.lastName : otherParticipant.lastName;
+            customName && customName.lastName !== undefined ? customName.lastName : otherParticipant.lastName;
 
           const isBlocked = (otherParticipant.blockedUsers || []).some((b: any) => b.toString() === userId);
           if (isBlocked) {
