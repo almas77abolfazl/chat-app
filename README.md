@@ -1,122 +1,122 @@
 # ChatApp
 
-اپلیکیشن پیام‌رسان متن‌باز Real-time الهام‌گرفته از تلگرام با معماری مدرن NestJS 11 و Angular 22.
+An open-source, real-time messaging application inspired by Telegram, built with NestJS 11 and Angular 22.
 
 ---
 
-## نماهای برنامه (Screenshots)
+## Screenshots
 
-| صفحه اصلی چت (Desktop) | پنل تنظیمات والپیپر و بلور |
+| Desktop Chat View | Wallpaper & Blur Settings |
 | :---: | :---: |
-| ![Main Chat](docs/screenshots/02-main-chat.png) | ![Wallpaper Settings](docs/screenshots/03-wallpaper-panel.png) |
+| ![Desktop Chat View](docs/screenshots/02-main-chat.png) | ![Wallpaper Settings](docs/screenshots/03-wallpaper-panel.png) |
 
-| نسخه موبایل (Responsive PWA) | ورود با کد یکبار مصرف (OTP) |
+| Mobile Responsive View (PWA) | OTP Phone Login |
 | :---: | :---: |
 | ![Mobile View](docs/screenshots/04-mobile-view.png) | ![Login Screen](docs/screenshots/01-login.png) |
 
 ---
 
-## پشته فنی (Tech Stack)
+## Tech Stack
 
-### بک‌اند (Backend)
-- **فریم‌ورک**: NestJS 11 (TypeScript) با معماری ماژولار
-- **پایگاه داده**: MongoDB + Mongoose ODM
-- **ارتباط زنده**: WebSockets با Socket.io
-- **امنیت و احراز هویت**: JWT (Access Token + Refresh Token) و Rate-Limiting با Throttle Guard
-- **هوش مصنوعی**: ماژول Agentic سازگار با OpenAI API و Google Gemini (ابزارهای خلاصه‌سازی، استخراج تسک، پیشنهاد پاسخ)
-- **تست**: Jest (تست‌های واحد) + Supertest (E2E)
+### Backend
+- **Framework**: NestJS 11 (TypeScript) with modular architecture
+- **Database**: MongoDB with Mongoose ODM
+- **Real-Time Communication**: WebSockets powered by Socket.io
+- **Security & Auth**: JWT (Access Token + Refresh Token) and rate-limiting with Throttle Guard
+- **AI Agent**: Agentic module compatible with OpenAI-compatible APIs and Google Gemini (tool-calling for summarization, task extraction, smart replies)
+- **Testing**: Jest (unit tests) + Supertest (E2E)
 
-### فرانت‌اند (Frontend)
-- **فریم‌ورک**: Angular 22.2 (Standalone Components, Signals & Reactive Architecture)
-- **رابط کاربری**: Angular Material + FontAwesome + SCSS (سیستم متغیرهای CSS و تم تلگرامی)
-- **لیست پیام‌ها**: CDK Virtual Scroll (پیمایش سریع هزاران پیام بدون افت فریم)
-- **چندزبانه (i18n)**: فارسی (RTL)، انگلیسی (LTR)، عربی (RTL)
-- **تست**: Playwright E2E Testing
-
----
-
-## امکانات پیاده‌سازی‌شده (Features)
-
-### گفتگو و پیام‌رسانی
-- **چت بلادرنگ**: ارسال و دریافت آنی پیام‌ها با Socket.io و وضعیت‌های ارسال، تحویل و خوانده‌شدن (Checkmarks)
-- **انواع پیام**: پیام متنی، تصاویر، ویدیو، وویس، فایل و استیکر
-- **حذف پیام‌ها**: امکان حذف دوطرفه (Delete for everyone) یا یک‌طرفه (Delete for me)
-- **ارسال مستقیم از کلیپ‌بورد**: چسباندن عکس با `Ctrl+V` یا منوی راست‌کلیک در اینپوت چت
-- **ویرایش پیام**: ویرایش درون‌خطی پیام‌ها با برچسب (edited)
-- **ری‌اکشن**: ارسال و حذف ایموجی روی پیام‌ها
-- **پیش‌نمایش لینک (Link Preview)**: استخراج عنوان، توضیحات و تصویر وب‌سایت‌ها از لینک‌های درون متن
-
-### مدیریت گفتگوها و گروه‌ها
-- **پوشه‌بندی و تب‌ها**: دسته‌بندی چت‌ها به شخصی، گروه‌ها، کانال‌ها، ربات‌ها
-- **پیام‌های ذخیره‌شده (Saved Messages)**: فضای ابری خصوصی برای یادداشت‌ها و فورواردها
-- **کانال‌ها و گروه‌ها**: ایجاد گروه/کانال، تعیین ادمین‌ها و مجوزهای دسترسی اعضا
-- **جستجوی درون چت**: جستجوی متنی لحظه‌ای در تاریخچه گفتگو همراه با هایلایت و ناوبری بین نتایج
-
-### پروفایل، امنیت و مخاطبین
-- **ورود با شماره موبایل**: ارسال و بررسی کد ۶ رقمی OTP با پیش‌شماره کشورهای مختلف
-- **حفظ حریم خصوصی شماره**: نمایش شماره تلفن فرستنده ناشناس تنها در صورتی که او شما را ذخیره کرده باشد
-- **استیکی بنر فرستنده ناشناس**: دکمه‌های مستقیم ذخیره به مخاطبین، بلاک و نادیده‌گرفتن
-- **ویرایش مخاطب با نام دلخواه**: ثبت نام و نام خانوادگی اختصاصی برای شماره‌ها
-- **مدیریت آواتار**: انتخاب تصویر، برش کادر مربع (Square Crop 500x500)، حذف آواتار و سینک آنی سوکت
-
-### رابط کاربری و شخصی‌سازی
-- **والپیپرهای SVG و الگوهای پس‌زمینه**: پترن‌های وکتوری الهام‌گرفته از تلگرام (دودل، ستاره، شش‌ضلعی، سایبر) با رنگ‌های پاستلی
-- **تنظیمات زنده تصویر پس‌زمینه**: اسلایدر بلور (0–20px) و اسلایدر تاریکی/کنتراست (0–80%)
-- **آپلود تصویر پس‌زمینه دلخواه**: بارگذاری عکس شخصی برای محیط گفتگو
-- **جداساز کپسولی تاریخ**: نمایش تاریخ روز به صورت شیشه‌ای (Glass Pill) شناور و واکنش‌گرا
-- **واکنش‌گرا (Responsive)**: پشتیبانی یکپارچه از مانیتور دسکتاپ، تبلت و گوشی موبایل (PWA)
+### Frontend
+- **Framework**: Angular 22.2 (Standalone Components, Signals & Reactive Architecture)
+- **UI & Styling**: Angular Material + FontAwesome + SCSS (CSS custom properties design tokens)
+- **Virtual Scrolling**: CDK Virtual Scroll Viewport for rendering large chat histories without frame drops
+- **Internationalization (i18n)**: English (LTR), Persian (RTL), Arabic (RTL)
+- **Testing**: Playwright E2E Testing
 
 ---
 
-## راه‌اندازی و اجرا (Getting Started)
+## Features
 
-### ۱. اجرای سریع با Docker Compose (توصیه‌شده)
+### Messaging & Chat
+- **Real-Time Messaging**: Instant message delivery with Socket.io and status tracking (sent, delivered, read)
+- **Rich Media**: Support for text, images, videos, voice messages, files, and stickers
+- **Message Deletion**: Delete for everyone or delete only for yourself
+- **Clipboard Paste**: Paste images directly with `Ctrl+V` or right-click context menu into the chat input
+- **Inline Editing**: Edit sent messages inline with an `(edited)` tag
+- **Reactions**: Add and toggle emoji reactions on messages
+- **Link Previews**: Automatic metadata extraction (title, description, image) for links
+
+### Chat Management & Organization
+- **Chat Folders & Tabs**: Categorization for Personal, Groups, Channels, and Bots
+- **Saved Messages**: Private cloud storage for personal notes and forwarded messages
+- **Channels & Groups**: Create groups/channels with admin roles and customizable member permissions
+- **In-Chat Search**: Real-time text search inside chat history with match highlighting and counter navigation
+
+### Profile, Privacy & Contacts
+- **Phone Number Login**: International phone number authentication with 6-digit OTP verification
+- **Phone Number Privacy**: Unknown senders only reveal their phone number if they saved you as a contact
+- **Unknown Sender Banner**: Sticky action bar with Add to Contacts, Block, and Dismiss options
+- **Custom Contact Aliases**: Save custom first and last names for contacts
+- **Avatar Management**: Upload, square crop (500x500), delete, and instant real-time avatar sync across clients
+
+### Customization & Interface
+- **SVG Wallpaper Patterns**: Telegram-inspired vector patterns (Doodle, Stars, Hexagon, Cyber Grid) in subtle pastel tones
+- **Live Background Controls**: Interactive sliders for Blur (0–20px) and Dimming/brightness (0–80%)
+- **Custom Wallpaper Upload**: Upload custom images as chat background
+- **Floating Date Separator**: Glassmorphism pill with blur backdrop indicating message dates
+- **Responsive Layout**: Optimized for desktop browsers, tablets, and mobile screens (PWA)
+
+---
+
+## Getting Started
+
+### 1. Run with Docker Compose (Recommended)
 
 ```bash
-# ۱. کپی متغیرهای محیطی
+# Copy environment variables
 cp chat-app-back/.env.example chat-app-back/.env
 
-# ۲. اجرای کامل سرویس‌ها (MongoDB + API + Web)
+# Start full stack (MongoDB + API + Web)
 docker compose up -d --build
 ```
 
-- رابط کاربری وب: `http://localhost`
-- وب‌سرویس بک‌اند: `http://localhost:3000/v1`
-- پایگاه داده مونگو: پورت `27017`
+- Web App: `http://localhost`
+- Backend API: `http://localhost:3000/v1`
+- MongoDB: `localhost:27017`
 
-### ۲. اجرای دستی برای توسعه (Development)
+### 2. Manual Development Setup
 
-**بک‌اند (`chat-app-back`)**:
+**Backend (`chat-app-back`)**:
 ```bash
 cd chat-app-back
 npm install
-npm run start:dev   # پورت 3000 با پیشوند v1
+npm run start:dev   # Runs on http://localhost:3000 (prefix: v1)
 ```
 
-**فرانت‌اند (`chat-app-front`)**:
+**Frontend (`chat-app-front`)**:
 ```bash
 cd chat-app-front
 npm install
-npm start           # پورت 5500 با هاست 0.0.0.0
+npm start           # Runs on http://localhost:5500
 ```
 
 ---
 
-## تست‌ها و اعتبارسنجی (Tests & Quality)
+## Tests & Code Quality
 
 ```bash
-# تست‌های بک‌اند (Jest)
+# Backend unit tests (Jest)
 cd chat-app-back && npm test
 
-# بررسی استاندارد کد بک‌اند
+# Backend code formatting & linting
 cd chat-app-back && npm run lint
 
-# بیلد پروداکشن فرانت‌اند
+# Frontend production build
 cd chat-app-front && npm run build
 ```
 
 ---
 
-## مجوز (License)
+## License
 
-پروژه به صورت متن‌باز تحت پروانه [MIT](LICENSE) منتشر شده است.
+This project is open-source and available under the [MIT License](LICENSE).
