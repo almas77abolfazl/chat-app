@@ -1648,6 +1648,45 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   }
 
+  onCustomWallpaperSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (!input.files || input.files.length === 0) return;
+    const file = input.files[0];
+    if (!file.type.startsWith('image/')) {
+      this.mainService.snackbar.error('فقط فایل تصویری مجاز است', 3000);
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const result = e.target?.result as string;
+      if (result) {
+        this.chatBgService.setCustomImage(result);
+        this.cdr.markForCheck();
+      }
+    };
+    reader.readAsDataURL(file);
+    input.value = '';
+  }
+
+  onBlurChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const val = Number(target.value) || 0;
+    this.chatBgService.setBlur(val);
+  }
+
+  onDimChange(event: Event): void {
+    const target = event.target as HTMLInputElement;
+    const val = Number(target.value) || 0;
+    this.chatBgService.setDim(val);
+  }
+
+  resetWallpaper(): void {
+    this.chatBgService.setBlur(0);
+    this.chatBgService.setDim(0);
+    this.chatBgService.setBackground(CHAT_BACKGROUNDS[0]);
+    this.cdr.markForCheck();
+  }
+
   toggleBgSelector() {
     this.showBgSelector = !this.showBgSelector;
   }
@@ -1658,9 +1697,9 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
   }
 
   getBgPreview(bg: ChatBackground): string {
-    if (bg.type === 'solid') return 'var(--color-surface-container)';
-    if (bg.type === 'gradient') return 'linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-deep) 100%)';
-    return 'linear-gradient(135deg, #0088cc, #0077b6)';
+    if (bg.preview) return bg.preview;
+    if (bg.type === 'solid') return bg.value;
+    return bg.value;
   }
 
   toggleChatActions() {

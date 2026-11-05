@@ -1,4 +1,13 @@
 <div class="chat-area-container" [dir]="translationService.isRTL() ? 'rtl' : 'ltr'" (contextmenu)="onChatAreaContextMenu($event)" (paste)="onPaste($event)">
+  <div
+    class="chat-wallpaper-layer"
+    [style.background]="chatBgService.current.value"
+    [style.filter]="'blur(' + chatBgService.blur() + 'px)'"
+  ></div>
+  <div
+    class="chat-wallpaper-dim-layer"
+    [style.opacity]="chatBgService.dim() / 100"
+  ></div>
   @if (mainService.currentChat) {
 
   @if (isSelectionMode) {
@@ -128,19 +137,71 @@
       <div class="bg-selector-wrap" (click)="toggleBgSelector()" [attr.data-tooltip]="'chat.bgSelector' | i18n" data-tooltip-placement="bottom">
         <fa-icon [icon]="['fas', 'palette']" class="bg-selector-trigger"></fa-icon>
         @if (showBgSelector) {
-        <div class="bg-selector-dropdown">
-          @for (bg of bgOptions; track bg.name) {
-          <div
-            class="bg-option"
-            [class.active]="chatBgService.current.name === bg.name"
-            [style.background]="getBgPreview(bg)"
-            (click)="selectBg(bg); $event.stopPropagation()"
-          >
-            @if (chatBgService.current.name === bg.name) {
-            <fa-icon [icon]="['fas', 'check']" class="check-icon"></fa-icon>
+        <div class="bg-selector-dropdown" (click)="$event.stopPropagation()">
+          <div class="dropdown-header">
+            <span class="dropdown-title">{{ 'wallpaper.title' | i18n }}</span>
+            <button type="button" class="btn-reset" (click)="resetWallpaper()" [attr.title]="'wallpaper.reset' | i18n">
+              <fa-icon [icon]="['fas', 'rotate-right']"></fa-icon>
+            </button>
+          </div>
+
+          <div class="patterns-grid">
+            @for (bg of bgOptions; track bg.id) {
+            <div
+              class="bg-option"
+              [class.active]="chatBgService.current.id === bg.id"
+              [style.background]="getBgPreview(bg)"
+              [attr.title]="bg.name"
+              (click)="selectBg(bg)"
+            >
+              @if (chatBgService.current.id === bg.id) {
+              <fa-icon [icon]="['fas', 'check']" class="check-icon"></fa-icon>
+              }
+            </div>
             }
           </div>
-          }
+
+          <div class="custom-upload-section">
+            <label class="custom-upload-btn">
+              <fa-icon [icon]="['fas', 'image']"></fa-icon>
+              <span>{{ 'wallpaper.customUpload' | i18n }}</span>
+              <input type="file" accept="image/*" (change)="onCustomWallpaperSelected($event)" style="display: none;" />
+            </label>
+          </div>
+
+          <div class="sliders-section">
+            <div class="slider-row">
+              <div class="slider-label-row">
+                <span class="slider-label">{{ 'wallpaper.blur' | i18n }}</span>
+                <span class="slider-val">{{ chatBgService.blur() }}px</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="20"
+                step="1"
+                class="wallpaper-slider"
+                [value]="chatBgService.blur()"
+                (input)="onBlurChange($event)"
+              />
+            </div>
+
+            <div class="slider-row">
+              <div class="slider-label-row">
+                <span class="slider-label">{{ 'wallpaper.dim' | i18n }}</span>
+                <span class="slider-val">{{ chatBgService.dim() }}%</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="80"
+                step="2"
+                class="wallpaper-slider"
+                [value]="chatBgService.dim()"
+                (input)="onDimChange($event)"
+              />
+            </div>
+          </div>
         </div>
         }
       </div>

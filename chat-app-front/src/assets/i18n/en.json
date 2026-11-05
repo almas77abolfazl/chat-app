@@ -585,5 +585,14 @@
     "rotate": "Rotate",
     "cancel": "Cancel",
     "apply": "Apply & Save"
+  },
+  "wallpaper": {
+    "title": "Chat Wallpaper",
+    "patterns": "Patterns & Colors",
+    "customUpload": "Upload Custom Image",
+    "blur": "Blur Level",
+    "dim": "Dimming Level",
+    "reset": "Reset",
+    "chooseImage": "Choose Image"
   }
 }
