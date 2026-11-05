@@ -1299,6 +1299,17 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
   }
 
   onChatAreaContextMenu(event: MouseEvent) {
+    const target = event.target as HTMLElement | null;
+    if (
+      target &&
+      (target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable ||
+        target.closest('input, textarea, [contenteditable="true"]'))
+    ) {
+      // Allow browser native context menu (Cut, Copy, Paste, etc.)
+      return;
+    }
     event.preventDefault();
     this.closeContextMenu();
   }
