@@ -450,6 +450,11 @@ export class MainService {
       isOnline: isDirect ? peer?.isOnline : undefined,
       lastSeen: isDirect ? peer?.lastSeen : undefined,
       privacyStatus: isDirect ? peer?.privacyStatus : undefined,
+      phoneNumber: isDirect ? peer?.phoneNumber : undefined,
+      isContact: isDirect ? peer?.isContact : undefined,
+      savedMeAsContact: isDirect ? peer?.savedMeAsContact : undefined,
+      originalFirstName: isDirect ? peer?.originalFirstName : undefined,
+      originalLastName: isDirect ? peer?.originalLastName : undefined,
     } as ChatListItem;
   }
 

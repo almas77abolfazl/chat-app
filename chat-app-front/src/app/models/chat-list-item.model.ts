@@ -29,6 +29,11 @@ export interface ChatParticipant {
   _id: string;
   firstName?: string;
   lastName?: string;
+  originalFirstName?: string;
+  originalLastName?: string;
+  phoneNumber?: string | null;
+  isContact?: boolean;
+  savedMeAsContact?: boolean;
   profilePicture?: string;
   status?: string;
   isOnline?: boolean;
@@ -68,4 +73,9 @@ export interface ChatListItem {
   isOnline?: boolean;     // for 1:1 chats: peer's online status
   lastSeen?: Date;        // for 1:1 chats: peer's last seen timestamp
   privacyStatus?: 'recently' | 'a_long_time_ago' | null;
+  phoneNumber?: string | null;
+  isContact?: boolean;
+  savedMeAsContact?: boolean;
+  originalFirstName?: string;
+  originalLastName?: string;
 }

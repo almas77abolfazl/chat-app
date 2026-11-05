@@ -97,7 +97,11 @@
     "searchPrompt": "اكتب اسماً أو اسم مستخدم لبدء المحادثة",
     "directChat": "محادثة خاصة",
     "user": "مستخدم",
-    "all": "الكل"
+    "all": "الكل",
+    "unknownSenderBanner": "هذا المرسل ليس في قائمة جهات اتصالك.",
+    "addContactAction": "إضافة إلى جهات الاتصال",
+    "blockAction": "حظر",
+    "dismissAction": "تجاهل"
   },
   "voice": {
     "playbackSpeed": "سرعة التشغيل"
@@ -583,4 +587,3 @@
     "apply": "اختيار وحفظ"
   }
 }
-

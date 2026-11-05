@@ -97,7 +97,11 @@
     "searchPrompt": "برای شروع گفتگو، نام یا نام کاربری فرد را تایپ کنید",
     "directChat": "چت خصوصی",
     "user": "کاربر",
-    "all": "همه"
+    "all": "همه",
+    "unknownSenderBanner": "این فرستنده در مخاطبین شما نیست.",
+    "addContactAction": "افزودن به مخاطبین",
+    "blockAction": "مسدود کردن",
+    "dismissAction": "نادیده گرفتن"
   },
   "voice": {
     "playbackSpeed": "سرعت پخش"

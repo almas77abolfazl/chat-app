@@ -499,6 +499,113 @@
     }
   }
 
+  .unknown-sender-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.65rem 1.25rem;
+    background: var(--color-surface-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    z-index: 8;
+    animation: slide-down 0.2s cubic-bezier(0.2, 0.9, 0.3, 1) both;
+
+    .banner-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+
+      .banner-icon {
+        color: var(--color-primary);
+        font-size: 1.15rem;
+      }
+
+      .banner-texts {
+        display: flex;
+        flex-direction: column;
+        gap: 0.15rem;
+
+        .banner-title {
+          font-size: 0.88rem;
+          font-weight: 600;
+          color: var(--color-text);
+        }
+
+        .banner-phone {
+          font-size: 0.78rem;
+          color: var(--color-text-faint);
+          direction: ltr;
+          display: inline-block;
+        }
+      }
+    }
+
+    .banner-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      .btn-banner {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.4rem 0.85rem;
+        border-radius: var(--radius-full);
+        font-size: 0.82rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: none;
+        transition: all var(--transition-fast);
+
+        &.btn-add-contact {
+          background: var(--color-primary);
+          color: #ffffff;
+
+          &:hover {
+            filter: brightness(1.08);
+            transform: translateY(-1px);
+          }
+        }
+
+        &.btn-block {
+          background: color-mix(in srgb, var(--color-danger) 12%, transparent);
+          color: var(--color-danger);
+
+          &:hover {
+            background: color-mix(in srgb, var(--color-danger) 20%, transparent);
+          }
+        }
+
+        &.btn-dismiss {
+          background: transparent;
+          color: var(--color-text-faint);
+          padding: 0.4rem;
+          width: 2rem;
+          height: 2rem;
+          justify-content: center;
+
+          &:hover {
+            color: var(--color-text);
+            background: color-mix(in srgb, var(--color-text) 8%, transparent);
+          }
+        }
+      }
+    }
+
+    @media (max-width: 600px) {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.6rem;
+
+      .banner-actions {
+        justify-content: flex-end;
+      }
+    }
+  }
+
   .in-chat-search-bar {
     display: flex;
     align-items: center;

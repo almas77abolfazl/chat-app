@@ -227,6 +227,33 @@
   </div>
   }
 
+  @if (showUnknownSenderBanner) {
+  <div class="unknown-sender-banner">
+    <div class="banner-info">
+      <fa-icon [icon]="['fas', 'user-plus']" class="banner-icon"></fa-icon>
+      <div class="banner-texts">
+        <span class="banner-title">{{ 'chat.unknownSenderBanner' | i18n }}</span>
+        @if (mainService.currentChat?.phoneNumber) {
+          <span class="banner-phone">{{ mainService.currentChat.phoneNumber }}</span>
+        }
+      </div>
+    </div>
+    <div class="banner-actions">
+      <button type="button" class="btn-banner btn-add-contact" (click)="addUnknownSenderToContacts()">
+        <fa-icon [icon]="['fas', 'user-plus']"></fa-icon>
+        <span>{{ 'chat.addContactAction' | i18n }}</span>
+      </button>
+      <button type="button" class="btn-banner btn-block" (click)="toggleBlockPeer()">
+        <fa-icon [icon]="['fas', 'ban']"></fa-icon>
+        <span>{{ 'chat.blockAction' | i18n }}</span>
+      </button>
+      <button type="button" class="btn-banner btn-dismiss" (click)="dismissUnknownSenderBanner()" [attr.title]="'chat.dismissAction' | i18n">
+        <fa-icon [icon]="['fas', 'times']"></fa-icon>
+      </button>
+    </div>
+  </div>
+  }
+
   @if (mainService.currentChat?.pinnedMessage) {
   <div class="pinned-message-bar" (click)="scrollToMessage(mainService.currentChat.pinnedMessage._id)">
     <div class="pinned-bar-icon">

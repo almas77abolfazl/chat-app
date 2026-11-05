@@ -266,10 +266,25 @@ export class UserService {
       }
     }
 
+    let effectiveFirstName = customFirstName !== null ? customFirstName : user.firstName;
+    let effectiveLastName = customLastName !== null ? customLastName : user.lastName;
+
+    let savedMeAsContact = false;
+    if (requesterId && requesterId !== userId) {
+      savedMeAsContact = (user.contacts || []).some((c: any) => (c._id || c).toString() === requesterId);
+      // If current user has NOT saved target user in contacts,
+      // but target user HAS saved current user in contacts,
+      // show target's phone number as the primary name.
+      if (!isContact && savedMeAsContact && user.phoneNumber) {
+        effectiveFirstName = user.phoneNumber;
+        effectiveLastName = '';
+      }
+    }
+
     return {
       _id: user._id,
-      firstName: customFirstName !== null ? customFirstName : user.firstName,
-      lastName: customLastName !== null ? customLastName : user.lastName,
+      firstName: effectiveFirstName,
+      lastName: effectiveLastName,
       originalFirstName: user.firstName,
       originalLastName: user.lastName,
       username: user.username,
@@ -284,6 +299,7 @@ export class UserService {
       isBlocked: isBlockedByTarget,
       createdAt: user.createdAt,
       isContact,
+      savedMeAsContact,
     };
   }
 

@@ -18,7 +18,7 @@ export class ChatService {
 
   async getChatList(userId: string) {
     const userObjectId = new Types.ObjectId(userId);
-    const currentUser = this.userModel ? await this.userModel.findById(userId).select('contactDetails').exec() : null;
+    const currentUser = this.userModel ? await this.userModel.findById(userId).select('contacts contactDetails').exec() : null;
     const customDetailsMap = new Map<string, { firstName?: string; lastName?: string }>();
     if (currentUser?.contactDetails && Array.isArray(currentUser.contactDetails)) {
       for (const d of currentUser.contactDetails) {
@@ -38,7 +38,7 @@ export class ChatService {
       })
       .populate<{ participants: any[] }>(
         'participants',
-        'firstName lastName profilePicture avatars status isOnline lastSeen contacts blockedUsers privacy',
+        'firstName lastName profilePicture avatars status isOnline lastSeen contacts blockedUsers privacy phoneNumber',
       )
       .populate('lastMessage', 'content sender createdAt')
       .populate('pinnedMessage', 'content sender createdAt status isDeleted')
@@ -55,7 +55,7 @@ export class ChatService {
         })
         .populate<{ participants: any[] }>(
           'participants',
-          'firstName lastName profilePicture avatars status isOnline lastSeen contacts blockedUsers privacy',
+          'firstName lastName profilePicture avatars status isOnline lastSeen contacts blockedUsers privacy phoneNumber',
         )
         .populate('lastMessage', 'content sender createdAt')
         .populate('pinnedMessage', 'content sender createdAt status isDeleted')
@@ -137,10 +137,19 @@ export class ChatService {
           if (!otherParticipant) return null;
           const otherId = otherParticipant._id.toString();
           const customName = customDetailsMap.get(otherId);
-          const effectiveFirstName =
-            customName && customName.firstName !== undefined ? customName.firstName : otherParticipant.firstName;
-          const effectiveLastName =
-            customName && customName.lastName !== undefined ? customName.lastName : otherParticipant.lastName;
+          const isPeerSavedInMyContacts = (currentUser?.contacts || []).some((c: any) => (c._id || c).toString() === otherId);
+          const amISavedInPeerContacts = (otherParticipant.contacts || []).some((c: any) => (c._id || c).toString() === userId);
+
+          // If the user hasn't saved the peer in their contacts,
+          // but the peer HAS saved the current user in their contacts,
+          // display the peer's phone number as the primary name.
+          let effectiveFirstName = customName && customName.firstName !== undefined ? customName.firstName : otherParticipant.firstName;
+          let effectiveLastName = customName && customName.lastName !== undefined ? customName.lastName : otherParticipant.lastName;
+
+          if (!isPeerSavedInMyContacts && amISavedInPeerContacts && otherParticipant.phoneNumber) {
+            effectiveFirstName = otherParticipant.phoneNumber;
+            effectiveLastName = '';
+          }
 
           const isBlocked = (otherParticipant.blockedUsers || []).some((b: any) => b.toString() === userId);
           if (isBlocked) {
@@ -150,6 +159,9 @@ export class ChatService {
               lastName: effectiveLastName,
               originalFirstName: otherParticipant.firstName,
               originalLastName: otherParticipant.lastName,
+              phoneNumber: otherParticipant.phoneNumber || null,
+              isContact: isPeerSavedInMyContacts,
+              savedMeAsContact: amISavedInPeerContacts,
               profilePicture: null,
               avatars: [],
               status: otherParticipant.status,
@@ -158,17 +170,19 @@ export class ChatService {
               privacyStatus: 'a_long_time_ago',
             };
           }
-          const isContact = (otherParticipant.contacts || []).some((c: any) => c.toString() === userId);
           const photoRule = otherParticipant.privacy?.profilePhoto || 'everybody';
           const lastSeenRule = otherParticipant.privacy?.lastSeen || 'everybody';
-          const hidePhoto = photoRule === 'nobody' || (photoRule === 'contacts' && !isContact);
-          const hideStatus = lastSeenRule === 'nobody' || (lastSeenRule === 'contacts' && !isContact);
+          const hidePhoto = photoRule === 'nobody' || (photoRule === 'contacts' && !amISavedInPeerContacts);
+          const hideStatus = lastSeenRule === 'nobody' || (lastSeenRule === 'contacts' && !amISavedInPeerContacts);
           return {
             _id: otherParticipant._id,
             firstName: effectiveFirstName,
             lastName: effectiveLastName,
             originalFirstName: otherParticipant.firstName,
             originalLastName: otherParticipant.lastName,
+            phoneNumber: otherParticipant.phoneNumber || null,
+            isContact: isPeerSavedInMyContacts,
+            savedMeAsContact: amISavedInPeerContacts,
             profilePicture: hidePhoto ? null : otherParticipant.profilePicture,
             avatars: hidePhoto ? [] : otherParticipant.avatars || [],
             status: otherParticipant.status,

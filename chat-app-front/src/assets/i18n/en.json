@@ -97,7 +97,11 @@
     "searchPrompt": "Type a name or username to start chatting",
     "directChat": "Direct Chat",
     "user": "User",
-    "all": "All"
+    "all": "All",
+    "unknownSenderBanner": "This sender is not in your contacts.",
+    "addContactAction": "Add to Contacts",
+    "blockAction": "Block",
+    "dismissAction": "Dismiss"
   },
   "voice": {
     "playbackSpeed": "Playback speed"

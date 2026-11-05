@@ -29,6 +29,7 @@ import { DeleteChatDialogComponent } from '../../delete-chat-dialog/delete-chat-
 import { DeleteMessageDialogComponent, DeleteMessageDialogResult } from '../../delete-message-dialog/delete-message-dialog.component';
 import { ForwardDialogComponent } from '../../forward-dialog/forward-dialog.component';
 import { MediaSendDialogComponent, MediaSendDialogResult } from '../../media-send-dialog/media-send-dialog.component';
+import { AddContactDialogComponent } from '../../add-contact-dialog/add-contact-dialog.component';
 import { compressImage } from '../../../helpers/image-compressor.helper';
 import { VoicePlayerComponent } from '../../voice-player/voice-player.component';
 import { ContentPickerComponent } from './content-picker/content-picker.component';
@@ -275,12 +276,85 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
   get currentMatchIndex(): number { return this.currentMatchIndexSignal(); }
   set currentMatchIndex(v: number) { this.currentMatchIndexSignal.set(v); }
 
+  readonly dismissedBannerChatIdsSignal = signal<Set<string>>(new Set<string>());
   readonly isPeerBlockedSignal = signal<boolean>(false);
   get isPeerBlocked(): boolean { return this.isPeerBlockedSignal(); }
   set isPeerBlocked(v: boolean) { this.isPeerBlockedSignal.set(v); }
 
   readonly isSocketConnected = signal<boolean>(true);
   readonly webrtc = inject(WebRtcService);
+
+  get showUnknownSenderBanner(): boolean {
+    const chat = this.mainService.currentChat;
+    if (!chat || chat.isGroup || chat.isChannel || chat.isSavedMessages || this.mainService.isAgentChat(chat)) {
+      return false;
+    }
+    if (this.isPeerBlocked) return false;
+    if (this.dismissedBannerChatIdsSignal().has(chat._id)) return false;
+    // Show banner only if:
+    // 1. Current user has NOT saved peer in contacts (isContact === false)
+    // 2. Peer HAS saved current user in contacts (savedMeAsContact === true)
+    return chat.isContact === false && chat.savedMeAsContact === true;
+  }
+
+  dismissUnknownSenderBanner(): void {
+    const chat = this.mainService.currentChat;
+    if (!chat) return;
+    this.dismissedBannerChatIdsSignal.update((set) => {
+      const next = new Set(set);
+      next.add(chat._id);
+      return next;
+    });
+    this.cdr.markForCheck();
+  }
+
+  addUnknownSenderToContacts(): void {
+    const chat = this.mainService.currentChat;
+    if (!chat || !chat.peerId) return;
+
+    const partner = this.getDirectChatPartner() || {};
+    const defaultFirst = chat.originalFirstName || partner.originalFirstName || partner.firstName || '';
+    const defaultLast = chat.originalLastName || partner.originalLastName || partner.lastName || '';
+    const phone = chat.phoneNumber || partner.phoneNumber || '';
+
+    const dialogRef = this.dialog.open(AddContactDialogComponent, {
+      width: '380px',
+      panelClass: 'custom-dialog-container',
+      data: {
+        userId: chat.peerId,
+        defaultFirstName: defaultFirst,
+        defaultLastName: defaultLast,
+        phoneNumber: phone,
+      },
+    });
+
+    dialogRef.afterClosed().pipe(take(1)).subscribe((result) => {
+      if (!result || !result.confirmed) return;
+      this.mainService
+        .addContact(chat.peerId!, result.firstName, result.lastName)
+        .pipe(take(1))
+        .subscribe({
+          next: () => {
+            chat.isContact = true;
+            chat.firstName = result.firstName;
+            chat.lastName = result.lastName;
+            if (chat.otherParticipant) {
+              chat.otherParticipant.isContact = true;
+              chat.otherParticipant.firstName = result.firstName;
+              chat.otherParticipant.lastName = result.lastName;
+            }
+            this.dismissUnknownSenderBanner();
+            this.mainService.snackbar.success(this.translationService.t('contacts.addToContacts'), 3000);
+            this.mainService.getContacts().pipe(take(1)).subscribe();
+            this.mainService.getChatList();
+            this.cdr.markForCheck();
+          },
+          error: () => {
+            this.mainService.snackbar.error('contacts.addError', 3000);
+          },
+        });
+    });
+  }
 
   getDirectChatPartner(): any | null {
     const chat = this.mainService.currentChat;
@@ -540,6 +614,12 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
 
   senderName(message: any): string {
     if (this.ownMessage(message)) return '';
+    const chat = this.mainService.currentChat;
+    if (chat && !chat.isGroup && !chat.isChannel && !chat.isSavedMessages) {
+      if (chat.isContact === false && chat.savedMeAsContact === true && chat.phoneNumber) {
+        return chat.phoneNumber;
+      }
+    }
     const s = message.sender || {};
     if (s.firstName || s.lastName) return `${s.firstName ?? ''} ${s.lastName ?? ''}`.trim();
     return '';
