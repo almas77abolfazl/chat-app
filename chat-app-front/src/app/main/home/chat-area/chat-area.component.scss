@@ -2436,7 +2436,62 @@
     animation: big-emoji-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
-  /* Context menu */
+  @keyframes highlight-pinned-pulse {
+    0% {
+      box-shadow: 0 0 0 4px var(--color-primary), var(--shadow-lg);
+    }
+    100% {
+      box-shadow: none;
+    }
+  }
+
+  @keyframes pulse-search-match {
+    0%, 100% {
+      box-shadow: 0 0 0 4px color-mix(in srgb, #f59e0b 50%, transparent), 0 4px 16px rgba(245, 158, 11, 0.25);
+    }
+    50% {
+      box-shadow: 0 0 0 7px color-mix(in srgb, #f59e0b 65%, transparent), 0 6px 22px rgba(245, 158, 11, 0.45);
+    }
+  }
+
+  .highlight-pinned {
+    animation: highlight-pinned-pulse 2s ease-out !important;
+  }
+
+  @keyframes big-emoji-pop {
+    0% {
+      transform: scale(0.4);
+      opacity: 0;
+    }
+    70% {
+      transform: scale(1.15);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+.clickable-sender {
+  cursor: pointer;
+  transition: opacity var(--transition-fast), text-decoration var(--transition-fast);
+
+  &:hover {
+    text-decoration: underline;
+    opacity: 0.85;
+  }
+}
+
+@keyframes pulse-recording-dot {
+  0% { transform: scale(0.9); opacity: 0.7; }
+  50% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 10px var(--color-danger); }
+  100% { transform: scale(0.9); opacity: 0.7; }
+}
+}
+
+
+/* Context menu (Root Level) */
+/* Context menu */
   .context-menu {
     position: fixed;
     z-index: 100000;
@@ -2622,56 +2677,3 @@
       }
     }
   }
-
-  @keyframes highlight-pinned-pulse {
-    0% {
-      box-shadow: 0 0 0 4px var(--color-primary), var(--shadow-lg);
-    }
-    100% {
-      box-shadow: none;
-    }
-  }
-
-  @keyframes pulse-search-match {
-    0%, 100% {
-      box-shadow: 0 0 0 4px color-mix(in srgb, #f59e0b 50%, transparent), 0 4px 16px rgba(245, 158, 11, 0.25);
-    }
-    50% {
-      box-shadow: 0 0 0 7px color-mix(in srgb, #f59e0b 65%, transparent), 0 6px 22px rgba(245, 158, 11, 0.45);
-    }
-  }
-
-  .highlight-pinned {
-    animation: highlight-pinned-pulse 2s ease-out !important;
-  }
-
-  @keyframes big-emoji-pop {
-    0% {
-      transform: scale(0.4);
-      opacity: 0;
-    }
-    70% {
-      transform: scale(1.15);
-    }
-    100% {
-      transform: scale(1);
-      opacity: 1;
-    }
-  }
-
-.clickable-sender {
-  cursor: pointer;
-  transition: opacity var(--transition-fast), text-decoration var(--transition-fast);
-
-  &:hover {
-    text-decoration: underline;
-    opacity: 0.85;
-  }
-}
-
-@keyframes pulse-recording-dot {
-  0% { transform: scale(0.9); opacity: 0.7; }
-  50% { transform: scale(1.25); opacity: 1; box-shadow: 0 0 10px var(--color-danger); }
-  100% { transform: scale(0.9); opacity: 0.7; }
-}
-}

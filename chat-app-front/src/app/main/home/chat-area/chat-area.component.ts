@@ -1294,7 +1294,7 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
     this.cdr.markForCheck();
 
     requestAnimationFrame(() => {
-      const menuEl = document.querySelector('.chat-area-container .context-menu, div.context-menu') as HTMLElement;
+      const menuEl = document.querySelector('.context-menu') as HTMLElement;
       if (menuEl) {
         const rect = menuEl.getBoundingClientRect();
         let adjX = this.contextMenuX;

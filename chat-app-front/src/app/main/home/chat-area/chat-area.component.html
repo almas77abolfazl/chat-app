@@ -808,8 +808,9 @@
     <p class="hero-subtitle">{{ 'chat.selectOrStart' | i18n }}</p>
   </div>
   }
+</div>
 
-  @if (showContextMenu && contextMenuTarget) {
+@if (showContextMenu && contextMenuTarget) {
   <div class="context-menu" [dir]="translationService.isRTL() ? 'rtl' : 'ltr'" [style.left.px]="contextMenuX" [style.top.px]="contextMenuY" (click)="$event.stopPropagation()">
     @if (!contextMenuTarget.isDeleted) {
     <div class="context-reactions-bar">
@@ -876,4 +877,3 @@
     }
   </div>
   }
-</div>
