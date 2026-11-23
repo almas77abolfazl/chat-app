@@ -51,3 +51,98 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 
   return false;
 }
+
+/**
+ * Copies an image to the clipboard as a PNG blob via ClipboardItem.
+ * If the source is not a PNG (or is remote/CORS), it converts the image via an offscreen HTMLCanvasElement.
+ * Falls back to copying the image URL as text if ClipboardItem is not supported or rejected.
+ */
+export async function copyImageToClipboard(imageUrl: string): Promise<boolean> {
+  if (!imageUrl) {
+    return false;
+  }
+
+  try {
+    // Attempt to convert image to a clean PNG blob
+    const pngBlob = await convertImageToPngBlob(imageUrl);
+    if (pngBlob && typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.write === 'function' && typeof ClipboardItem !== 'undefined') {
+      try {
+        const item = new ClipboardItem({ 'image/png': pngBlob });
+        await navigator.clipboard.write([item]);
+        return true;
+      } catch (clipErr) {
+        console.warn('ClipboardItem write failed, falling back to text URL:', clipErr);
+      }
+    }
+  } catch (err) {
+    console.warn('convertImageToPngBlob failed:', err);
+  }
+
+  // Fallback to copying URL as plain text
+  return await copyToClipboard(imageUrl);
+}
+
+/**
+ * Loads an image from a URL or Blob and draws it on an offscreen canvas to obtain an image/png Blob.
+ */
+function convertImageToPngBlob(url: string): Promise<Blob | null> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(null);
+          return;
+        }
+        ctx.drawImage(img, 0, 0);
+        canvas.toBlob((blob) => {
+          resolve(blob);
+        }, 'image/png');
+      } catch {
+        resolve(null);
+      }
+    };
+
+    img.onerror = () => {
+      // If crossOrigin image loading failed, try fetching as blob directly
+      fetch(url)
+        .then((res) => res.blob())
+        .then((blob) => {
+          if (blob.type === 'image/png') {
+            resolve(blob);
+          } else {
+            const objectUrl = URL.createObjectURL(blob);
+            const fallbackImg = new Image();
+            fallbackImg.onload = () => {
+              URL.revokeObjectURL(objectUrl);
+              const canvas = document.createElement('canvas');
+              canvas.width = fallbackImg.naturalWidth || fallbackImg.width;
+              canvas.height = fallbackImg.naturalHeight || fallbackImg.height;
+              const ctx = canvas.getContext('2d');
+              if (!ctx) {
+                resolve(null);
+                return;
+              }
+              ctx.drawImage(fallbackImg, 0, 0);
+              canvas.toBlob((pngBlob) => resolve(pngBlob), 'image/png');
+            };
+            fallbackImg.onerror = () => {
+              URL.revokeObjectURL(objectUrl);
+              resolve(null);
+            };
+            fallbackImg.src = objectUrl;
+          }
+        })
+        .catch(() => resolve(null));
+    };
+
+    img.src = url;
+  });
+}
+

@@ -487,7 +487,7 @@
           @if (message.isDeleted) {
           <span class="deleted-msg">{{ 'chat.deletedMessage' | i18n }}</span>
           } @else if (message.mediaType === 'image' && message.fileUrl) {
-          <img [src]="getMediaUrl(message.fileUrl)" class="msg-image" alt="Image" />
+          <img [src]="getMediaUrl(message.fileUrl)" class="msg-image" alt="Image" (contextmenu)="openContextMenu($event, message)" />
           @if (message.content) {
           <div class="msg-caption">{{ message.content }}</div>
           }

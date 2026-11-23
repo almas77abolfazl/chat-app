@@ -42,7 +42,7 @@ import { TranslationService } from '../../../helpers/translation.service';
 import { WebRtcService } from '../../../helpers/webrtc.service';
 import { environment } from '../../../../environments/environment';
 import { getTelegramGradient, getInitials } from '../../../helpers/avatar.helper';
-import { copyToClipboard } from '../../../helpers/clipboard.helper';
+import { copyToClipboard, copyImageToClipboard } from '../../../helpers/clipboard.helper';
 
 export interface ContextMenuAction {
   label: string;
@@ -1251,18 +1251,39 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
     const menuEstimatedHeight = 320;
     const padding = 12;
 
+    const containerEl = document.querySelector('.chat-area-container') as HTMLElement | null;
+    const containerRect = containerEl ? containerEl.getBoundingClientRect() : null;
+
     let x = event.clientX;
     let y = event.clientY;
 
-    if (x + menuEstimatedWidth > window.innerWidth - padding) {
-      x = Math.max(padding, x - menuEstimatedWidth);
-    }
-    if (y + menuEstimatedHeight > window.innerHeight - padding) {
-      y = Math.max(padding, y - menuEstimatedHeight);
-    }
+    if (containerRect) {
+      x = event.clientX - containerRect.left;
+      y = event.clientY - containerRect.top;
 
-    this.contextMenuX = Math.max(padding, Math.min(x, window.innerWidth - menuEstimatedWidth - padding));
-    this.contextMenuY = Math.max(padding, Math.min(y, window.innerHeight - menuEstimatedHeight - padding));
+      const containerWidth = containerRect.width;
+      const containerHeight = containerRect.height;
+
+      if (x + menuEstimatedWidth > containerWidth - padding) {
+        x = Math.max(padding, x - menuEstimatedWidth);
+      }
+      if (y + menuEstimatedHeight > containerHeight - padding) {
+        y = Math.max(padding, y - menuEstimatedHeight);
+      }
+
+      this.contextMenuX = Math.max(padding, Math.min(x, containerWidth - menuEstimatedWidth - padding));
+      this.contextMenuY = Math.max(padding, Math.min(y, containerHeight - menuEstimatedHeight - padding));
+    } else {
+      if (x + menuEstimatedWidth > window.innerWidth - padding) {
+        x = Math.max(padding, x - menuEstimatedWidth);
+      }
+      if (y + menuEstimatedHeight > window.innerHeight - padding) {
+        y = Math.max(padding, y - menuEstimatedHeight);
+      }
+
+      this.contextMenuX = Math.max(padding, Math.min(x, window.innerWidth - menuEstimatedWidth - padding));
+      this.contextMenuY = Math.max(padding, Math.min(y, window.innerHeight - menuEstimatedHeight - padding));
+    }
     this.showContextMenu = true;
     this.showContentPicker = false;
     this.cdr.markForCheck();
@@ -1271,19 +1292,29 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
       const menuEl = document.querySelector('.chat-area-container .context-menu, div.context-menu') as HTMLElement;
       if (menuEl) {
         const rect = menuEl.getBoundingClientRect();
+        const boundaryWidth = containerRect ? containerRect.width : window.innerWidth;
+        const boundaryHeight = containerRect ? containerRect.height : window.innerHeight;
+        const currentContainerLeft = containerRect ? containerRect.left : 0;
+        const currentContainerTop = containerRect ? containerRect.top : 0;
+
+        const menuRelRight = rect.right - currentContainerLeft;
+        const menuRelLeft = rect.left - currentContainerLeft;
+        const menuRelBottom = rect.bottom - currentContainerTop;
+        const menuRelTop = rect.top - currentContainerTop;
+
         let adjX = this.contextMenuX;
         let adjY = this.contextMenuY;
 
-        if (rect.right > window.innerWidth - padding) {
-          adjX -= (rect.right - (window.innerWidth - padding));
+        if (menuRelRight > boundaryWidth - padding) {
+          adjX -= (menuRelRight - (boundaryWidth - padding));
         }
-        if (rect.left < padding) {
+        if (menuRelLeft < padding) {
           adjX = padding;
         }
-        if (rect.bottom > window.innerHeight - padding) {
-          adjY -= (rect.bottom - (window.innerHeight - padding));
+        if (menuRelBottom > boundaryHeight - padding) {
+          adjY -= (menuRelBottom - (boundaryHeight - padding));
         }
-        if (rect.top < padding) {
+        if (menuRelTop < padding) {
           adjY = padding;
         }
 
@@ -1387,12 +1418,22 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
         this.enterSelectionMode(this.contextMenuTarget!);
         break;
       case 'copy': {
-        const textToCopy = this.contextMenuTarget?.content || this.contextMenuTarget?.fileName || '';
-        copyToClipboard(textToCopy).then((success) => {
-          if (success) {
-            this.mainService.snackbar.success('actions.copied', 2000);
-          }
-        });
+        const target = this.contextMenuTarget;
+        if (target?.mediaType === 'image' && target?.fileUrl) {
+          const mediaUrl = this.getMediaUrl(target.fileUrl);
+          copyImageToClipboard(mediaUrl).then((success) => {
+            if (success) {
+              this.mainService.snackbar.success('actions.copied', 2000);
+            }
+          });
+        } else {
+          const textToCopy = target?.content || target?.fileName || '';
+          copyToClipboard(textToCopy).then((success) => {
+            if (success) {
+              this.mainService.snackbar.success('actions.copied', 2000);
+            }
+          });
+        }
         break;
       }
     }
@@ -1827,48 +1868,105 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
     }
   }
 
+  /**
+   * Intelligently splits a long text into chunks of at most maxLength characters,
+   * preferring line breaks (\n\n, \n), spaces, or as a last resort hard character cuts.
+   */
+  splitMessageContent(text: string, maxLength = 2000): string[] {
+    if (!text || text.length <= maxLength) {
+      return [text];
+    }
+
+    const chunks: string[] = [];
+    let remaining = text;
+
+    while (remaining.length > 0) {
+      if (remaining.length <= maxLength) {
+        chunks.push(remaining);
+        break;
+      }
+
+      // Look for suitable split point within maxLength
+      const slice = remaining.substring(0, maxLength);
+
+      // 1. Try double newline (paragraph boundary)
+      let splitIdx = slice.lastIndexOf('\n\n');
+      if (splitIdx > maxLength * 0.3) {
+        chunks.push(remaining.substring(0, splitIdx).trim());
+        remaining = remaining.substring(splitIdx + 2).trimStart();
+        continue;
+      }
+
+      // 2. Try single newline
+      splitIdx = slice.lastIndexOf('\n');
+      if (splitIdx > maxLength * 0.3) {
+        chunks.push(remaining.substring(0, splitIdx).trim());
+        remaining = remaining.substring(splitIdx + 1).trimStart();
+        continue;
+      }
+
+      // 3. Try space / word boundary
+      splitIdx = slice.lastIndexOf(' ');
+      if (splitIdx > maxLength * 0.3) {
+        chunks.push(remaining.substring(0, splitIdx).trim());
+        remaining = remaining.substring(splitIdx + 1).trimStart();
+        continue;
+      }
+
+      // 4. Hard cut at maxLength if no good punctuation/space is found
+      chunks.push(remaining.substring(0, maxLength));
+      remaining = remaining.substring(maxLength);
+    }
+
+    return chunks.filter((c) => c.length > 0);
+  }
+
+  async sendTextMessage(content: string, textarea: HTMLTextAreaElement) {
+    if (!content || !this.mainService.currentChat) return;
+
+    const linkPreview = this.detectedLinkPreviewSignal();
+    const skipLinkPreview = !linkPreview && !!this.dismissedUrlSignal();
+    this.detectedLinkPreviewSignal.set(null);
+    this.dismissedUrlSignal.set(null);
+    textarea.value = '';
+    textarea.style.height = 'auto';
+
+    const chunks = this.splitMessageContent(content, 2000);
+    const chat = this.mainService.currentChat;
+
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      await this.mainService.sendMessage(chat, textarea, {
+        content: chunk,
+        linkPreview: i === 0 ? linkPreview || undefined : undefined,
+        skipLinkPreview: i === 0 ? skipLinkPreview : true,
+      });
+
+      // Small delay between chunks so backend & socket messages arrive and persist in order
+      if (i < chunks.length - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 80));
+      }
+    }
+
+    this.showScrollBottom = false;
+    this.scrollToBottom('smooth');
+    this.cdr.markForCheck();
+  }
+
   async onChatInputKeyDown(event: KeyboardEvent, textarea: HTMLTextAreaElement) {
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       const content = textarea.value.trim();
-      if (content && this.mainService.currentChat) {
-        const linkPreview = this.detectedLinkPreviewSignal();
-        const skipLinkPreview = !linkPreview && !!this.dismissedUrlSignal();
-        this.detectedLinkPreviewSignal.set(null);
-        this.dismissedUrlSignal.set(null);
-        textarea.value = '';
-        textarea.style.height = 'auto';
-
-        await this.mainService.sendMessage(this.mainService.currentChat, textarea, {
-          content,
-          linkPreview: linkPreview || undefined,
-          skipLinkPreview,
-        });
-        this.showScrollBottom = false;
-        this.scrollToBottom('smooth');
-        this.cdr.markForCheck();
+      if (content) {
+        await this.sendTextMessage(content, textarea);
       }
     }
   }
 
   async sendFromButton(textarea: HTMLTextAreaElement) {
     const content = textarea.value.trim();
-    if (content && this.mainService.currentChat) {
-      const linkPreview = this.detectedLinkPreviewSignal();
-      const skipLinkPreview = !linkPreview && !!this.dismissedUrlSignal();
-      this.detectedLinkPreviewSignal.set(null);
-      this.dismissedUrlSignal.set(null);
-      textarea.value = '';
-      textarea.style.height = 'auto';
-
-      await this.mainService.sendMessage(this.mainService.currentChat, textarea, {
-        content,
-        linkPreview: linkPreview || undefined,
-        skipLinkPreview,
-      });
-      this.showScrollBottom = false;
-      this.scrollToBottom('smooth');
-      this.cdr.markForCheck();
+    if (content) {
+      await this.sendTextMessage(content, textarea);
     }
   }
 

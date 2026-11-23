@@ -2441,8 +2441,8 @@
 
   /* Context menu */
   .context-menu {
-    position: fixed;
-    z-index: 2000;
+    position: absolute;
+    z-index: 10000;
     min-width: 190px;
     max-width: min(280px, calc(100vw - 24px));
     max-height: calc(100vh - 24px);
