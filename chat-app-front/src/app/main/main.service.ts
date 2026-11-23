@@ -1573,22 +1573,12 @@ export class MainService {
       chatItem.messages = chatItem.messages || [];
       const idx = chatItem.messages.findIndex((m) => m._id === messageId);
       if (idx !== -1) {
-        if (onlyForMe) {
-          chatItem.messages.splice(idx, 1);
-        } else {
-          chatItem.messages[idx].isDeleted = true;
-          chatItem.messages[idx].content = '';
-        }
+        chatItem.messages.splice(idx, 1);
         updatedAny = true;
       }
       if (chatItem.lastMessage?._id === messageId) {
-        if (onlyForMe) {
-          const remaining = chatItem.messages;
-          chatItem.lastMessage = remaining.length > 0 ? remaining[remaining.length - 1] : undefined;
-        } else {
-          chatItem.lastMessage.isDeleted = true;
-          chatItem.lastMessage.content = '';
-        }
+        const remaining = chatItem.messages;
+        chatItem.lastMessage = remaining.length > 0 ? remaining[remaining.length - 1] : undefined;
         updatedAny = true;
       }
     });
@@ -1597,28 +1587,20 @@ export class MainService {
       this.currentChat.messages = this.currentChat.messages || [];
       const cIdx = this.currentChat.messages.findIndex((m) => m._id === messageId);
       if (cIdx !== -1) {
-        if (onlyForMe) {
-          this.currentChat.messages.splice(cIdx, 1);
-        } else {
-          this.currentChat.messages[cIdx].isDeleted = true;
-          this.currentChat.messages[cIdx].content = '';
-        }
+        this.currentChat.messages.splice(cIdx, 1);
         updatedAny = true;
       }
       if (this.currentChat.lastMessage?._id === messageId) {
-        if (onlyForMe) {
-          const remaining = this.currentChat.messages;
-          this.currentChat.lastMessage = remaining.length > 0 ? remaining[remaining.length - 1] : undefined;
-        } else {
-          this.currentChat.lastMessage.isDeleted = true;
-          this.currentChat.lastMessage.content = '';
-        }
+        const remaining = this.currentChat.messages;
+        this.currentChat.lastMessage = remaining.length > 0 ? remaining[remaining.length - 1] : undefined;
         updatedAny = true;
       }
+      this.currentChatSignal.set({ ...this.currentChat, messages: [...this.currentChat.messages] });
     }
 
     this.messageDeletedSubject.next({ messageId });
     if (updatedAny) {
+      this.chatItemsSignal.set([...this.chatItems]);
       this.chatListUpdatedSubject.next([...this.chatItems]);
     }
   }
@@ -1928,13 +1910,14 @@ export class MainService {
           }
         }
         if (response.currentPage <= 1) {
-          // Server is source of truth for first page; keep local pending messages on top
+          // Server is source of truth for first page; filter out any soft-deleted messages
           const pending = (this.currentChat.messages || []).filter((m) => m._pending);
-          this.currentChat.messages = [...serverMessages.reverse(), ...pending];
+          const activeServerMessages = serverMessages.filter((m) => !m.isDeleted);
+          this.currentChat.messages = [...activeServerMessages.reverse(), ...pending];
         } else {
-          // Prepend older messages from server, avoiding duplicates
+          // Prepend older messages from server, avoiding duplicates and deleted messages
           const existingIds = new Set((this.currentChat.messages || []).map((m) => m._id));
-          const serverNew = serverMessages.filter((m) => !existingIds.has(m._id));
+          const serverNew = serverMessages.filter((m) => !existingIds.has(m._id) && !m.isDeleted);
           this.currentChat.messages = [...serverNew.reverse(), ...(this.currentChat.messages || [])];
         }
         this.currentPage = response.currentPage;

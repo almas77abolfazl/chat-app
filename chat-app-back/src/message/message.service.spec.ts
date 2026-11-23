@@ -314,7 +314,7 @@ describe('MessageService', () => {
 
       expect(messageToDelete.isDeleted).toBe(true);
       expect(messageToDelete.deletedAt).toBeDefined();
-      expect(messageToDelete.content).toBe('این پیام حذف شد');
+      expect(messageToDelete.content).toBe('');
     });
 
     it('marks message as deleted for caller only when forEveryone is false', async () => {
@@ -372,6 +372,7 @@ describe('MessageService', () => {
 
       expect(messageModel.find).toHaveBeenCalledWith({
         chat: new Types.ObjectId(mockChat._id.toString()),
+        isDeleted: { $ne: true },
         deletedForUsers: { $ne: new Types.ObjectId(senderId.toString()) },
       });
       expect(result.currentPage).toBe(1);

@@ -247,8 +247,32 @@ export class MessageService {
     }
     message.isDeleted = true;
     message.deletedAt = new Date();
-    message.content = 'این پیام حذف شد';
+    message.content = '';
     await message.save();
+
+    // If this message was the chat's lastMessage or pinnedMessage, update the chat
+    if (message.chat && this.chatModel) {
+      const chatQuery = this.chatModel.findById(message.chat);
+      const chat = chatQuery?.exec ? await chatQuery.exec() : await chatQuery;
+      if (chat) {
+        let chatModified = false;
+        if (chat.lastMessage && chat.lastMessage.toString() === messageId) {
+          const prevMsgQuery = this.messageModel
+            .findOne({ chat: chat._id, isDeleted: { $ne: true } })
+            .sort({ createdAt: -1 });
+          const prevMsg = prevMsgQuery?.exec ? await prevMsgQuery.exec() : await prevMsgQuery;
+          chat.lastMessage = prevMsg ? (prevMsg._id as any) : null;
+          chatModified = true;
+        }
+        if (chat.pinnedMessage && chat.pinnedMessage.toString() === messageId) {
+          chat.pinnedMessage = undefined as any;
+          chatModified = true;
+        }
+        if (chatModified && typeof chat.save === 'function') {
+          await chat.save();
+        }
+      }
+    }
   }
 
   async deleteMessagesBulk(messageIds: string[], userId: string, forEveryone: boolean = true): Promise<{ deletedIds: string[] }> {
@@ -317,6 +341,7 @@ export class MessageService {
     const userObjectId = new Types.ObjectId(userId);
     const filter = {
       chat: new Types.ObjectId(chatId),
+      isDeleted: { $ne: true },
       deletedForUsers: { $ne: userObjectId },
     };
 

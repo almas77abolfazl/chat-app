@@ -53,33 +53,49 @@ export async function copyToClipboard(text: string): Promise<boolean> {
 }
 
 /**
- * Copies an image to the clipboard as a PNG blob via ClipboardItem.
- * If the source is not a PNG (or is remote/CORS), it converts the image via an offscreen HTMLCanvasElement.
- * Falls back to copying the image URL as text if ClipboardItem is not supported or rejected.
+ * Copies an image to the clipboard.
+ * 1. Attempts modern async Clipboard API write with image/png ClipboardItem.
+ * 2. If Clipboard API write is unsupported/fails or is blocked (e.g. non-secure LAN HTTP),
+ *    it copies the image URL as text to clipboard so user still gets the file link.
  */
 export async function copyImageToClipboard(imageUrl: string): Promise<boolean> {
   if (!imageUrl) {
     return false;
   }
 
-  try {
-    // Attempt to convert image to a clean PNG blob
-    const pngBlob = await convertImageToPngBlob(imageUrl);
-    if (pngBlob && typeof navigator !== 'undefined' && navigator.clipboard && typeof navigator.clipboard.write === 'function' && typeof ClipboardItem !== 'undefined') {
-      try {
+  // Modern async ClipboardItem write
+  if (
+    typeof navigator !== 'undefined' &&
+    navigator.clipboard &&
+    typeof navigator.clipboard.write === 'function' &&
+    typeof ClipboardItem !== 'undefined'
+  ) {
+    try {
+      const pngBlob = await convertImageToPngBlob(imageUrl);
+      if (pngBlob) {
         const item = new ClipboardItem({ 'image/png': pngBlob });
         await navigator.clipboard.write([item]);
         return true;
-      } catch (clipErr) {
-        console.warn('ClipboardItem write failed, falling back to text URL:', clipErr);
       }
+    } catch (clipErr) {
+      console.warn('ClipboardItem write failed, trying text fallback:', clipErr);
     }
-  } catch (err) {
-    console.warn('convertImageToPngBlob failed:', err);
   }
 
-  // Fallback to copying URL as plain text
-  return await copyToClipboard(imageUrl);
+  // Universal Fallback: copy image absolute URL to clipboard
+  const absoluteUrl = makeAbsoluteUrl(imageUrl);
+  return await copyToClipboard(absoluteUrl);
+}
+
+function makeAbsoluteUrl(url: string): string {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
+    return url;
+  }
+  if (typeof window !== 'undefined' && window.location) {
+    return new URL(url, window.location.origin).href;
+  }
+  return url;
 }
 
 /**
@@ -87,62 +103,62 @@ export async function copyImageToClipboard(imageUrl: string): Promise<boolean> {
  */
 function convertImageToPngBlob(url: string): Promise<Blob | null> {
   return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-
-    img.onload = () => {
-      try {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth || img.width;
-        canvas.height = img.naturalHeight || img.height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          resolve(null);
+    // First try fetching the image data directly (works cleanly when served on same origin / backend proxy)
+    fetch(url)
+      .then((res) => {
+        if (!res.ok) throw new Error('Fetch status ' + res.status);
+        return res.blob();
+      })
+      .then((blob) => {
+        if (blob.type === 'image/png') {
+          resolve(blob);
           return;
         }
-        ctx.drawImage(img, 0, 0);
-        canvas.toBlob((blob) => {
-          resolve(blob);
-        }, 'image/png');
-      } catch {
-        resolve(null);
-      }
-    };
-
-    img.onerror = () => {
-      // If crossOrigin image loading failed, try fetching as blob directly
-      fetch(url)
-        .then((res) => res.blob())
-        .then((blob) => {
-          if (blob.type === 'image/png') {
-            resolve(blob);
-          } else {
-            const objectUrl = URL.createObjectURL(blob);
-            const fallbackImg = new Image();
-            fallbackImg.onload = () => {
-              URL.revokeObjectURL(objectUrl);
-              const canvas = document.createElement('canvas');
-              canvas.width = fallbackImg.naturalWidth || fallbackImg.width;
-              canvas.height = fallbackImg.naturalHeight || fallbackImg.height;
-              const ctx = canvas.getContext('2d');
-              if (!ctx) {
-                resolve(null);
-                return;
-              }
-              ctx.drawImage(fallbackImg, 0, 0);
-              canvas.toBlob((pngBlob) => resolve(pngBlob), 'image/png');
-            };
-            fallbackImg.onerror = () => {
-              URL.revokeObjectURL(objectUrl);
-              resolve(null);
-            };
-            fallbackImg.src = objectUrl;
+        // If not PNG, convert via offscreen canvas
+        const objectUrl = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => {
+          URL.revokeObjectURL(objectUrl);
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth || img.width;
+          canvas.height = img.naturalHeight || img.height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            resolve(null);
+            return;
           }
-        })
-        .catch(() => resolve(null));
-    };
-
-    img.src = url;
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob((pngBlob) => resolve(pngBlob), 'image/png');
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          resolve(null);
+        };
+        img.src = objectUrl;
+      })
+      .catch(() => {
+        // Fallback: draw via Image with crossOrigin
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.naturalWidth || img.width;
+            canvas.height = img.naturalHeight || img.height;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+              resolve(null);
+              return;
+            }
+            ctx.drawImage(img, 0, 0);
+            canvas.toBlob((pngBlob) => resolve(pngBlob), 'image/png');
+          } catch {
+            resolve(null);
+          }
+        };
+        img.onerror = () => resolve(null);
+        img.src = url;
+      });
   });
 }
 

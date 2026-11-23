@@ -40,7 +40,11 @@ export class ChatService {
         'participants',
         'firstName lastName profilePicture avatars status isOnline lastSeen contacts blockedUsers privacy phoneNumber',
       )
-      .populate('lastMessage', 'content sender createdAt')
+      .populate({
+        path: 'lastMessage',
+        match: { isDeleted: { $ne: true } },
+        select: 'content sender createdAt',
+      })
       .populate('pinnedMessage', 'content sender createdAt status isDeleted')
       .sort({ updatedAt: -1 })
       .exec();
@@ -57,7 +61,11 @@ export class ChatService {
           'participants',
           'firstName lastName profilePicture avatars status isOnline lastSeen contacts blockedUsers privacy phoneNumber',
         )
-        .populate('lastMessage', 'content sender createdAt')
+        .populate({
+        path: 'lastMessage',
+        match: { isDeleted: { $ne: true } },
+        select: 'content sender createdAt',
+      })
         .populate('pinnedMessage', 'content sender createdAt status isDeleted')
         .sort({ updatedAt: -1 })
         .exec();

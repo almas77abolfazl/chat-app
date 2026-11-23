@@ -116,10 +116,60 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
   private lastMessagesLength = 0;
   private lastChatId?: string;
 
+  // Image preview modal state
+  readonly previewImageModalUrlSignal = signal<string | null>(null);
+  get previewImageModalUrl(): string | null {
+    return this.previewImageModalUrlSignal();
+  }
+  set previewImageModalUrl(v: string | null) {
+    this.previewImageModalUrlSignal.set(v);
+  }
+
+  openImagePreview(imageUrl: string, event?: MouseEvent) {
+    if (event) {
+      event.stopPropagation();
+    }
+    if (!imageUrl) return;
+    this.previewImageModalUrl = this.getMediaUrl(imageUrl);
+    this.cdr.markForCheck();
+  }
+
+  closeImagePreview() {
+    this.previewImageModalUrl = null;
+    this.cdr.markForCheck();
+  }
+
+  copyPreviewModalImage() {
+    const url = this.previewImageModalUrl;
+    if (!url) return;
+    copyImageToClipboard(url).then((success) => {
+      if (success) {
+        this.mainService.snackbar.success('actions.copied', 2000);
+      }
+    });
+  }
+
+  downloadPreviewModalImage() {
+    const url = this.previewImageModalUrl;
+    if (!url) return;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = url.split('/').pop() || 'image.png';
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  get visibleMessages(): Message[] {
+    return (this.mainService.currentChat?.messages || []).filter((m) => !m.isDeleted);
+  }
+
   ngDoCheck(): void {
     const currentChat = this.mainService.currentChat;
     const currentChatId = currentChat?._id;
-    const currentLen = currentChat?.messages?.length || 0;
+    const visibleMsgs = this.visibleMessages;
+    const currentLen = visibleMsgs.length;
 
     if (currentChatId !== this.lastChatId) {
       this.lastChatId = currentChatId;
@@ -129,7 +179,7 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
     } else if (currentLen !== this.lastMessagesLength) {
       const isAppend = currentLen > this.lastMessagesLength;
       this.lastMessagesLength = currentLen;
-      const res = this.scrollStrategy.setMessages(currentChat?.messages || []);
+      const res = this.scrollStrategy.setMessages(visibleMsgs);
       if (isAppend && !res.isPrepend) {
         if (!this.showScrollBottom) {
           this.scrollToBottom('smooth');
@@ -140,7 +190,7 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
   }
 
   syncVirtualScrollMessages(): void {
-    const msgs = this.mainService.currentChat?.messages || [];
+    const msgs = this.visibleMessages;
     this.lastMessagesLength = msgs.length;
     this.scrollStrategy.setMessages(msgs);
     this.cdr.markForCheck();
@@ -460,6 +510,10 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
 
   @HostListener('document:keydown.escape')
   onEscapeKey() {
+    if (this.previewImageModalUrl) {
+      this.closeImagePreview();
+      return;
+    }
     if (this.showInChatSearch) {
       this.closeInChatSearch();
       return;

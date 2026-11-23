@@ -2439,7 +2439,83 @@
     animation: big-emoji-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
-  /* Context menu */
+  /* Full Image Preview Lightbox */
+  .image-lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 20000;
+    background: rgba(0, 0, 0, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn var(--transition-fast) ease-out both;
+
+    .image-lightbox-toolbar {
+      position: absolute;
+      top: 1.25rem;
+      right: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      z-index: 20001;
+
+      .lightbox-btn {
+        width: 2.6rem;
+        height: 2.6rem;
+        border-radius: var(--radius-full);
+        background: rgba(255, 255, 255, 0.15);
+        color: #ffffff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1.1rem;
+        transition: background var(--transition-fast), transform var(--transition-fast);
+
+        &:hover {
+          background: rgba(255, 255, 255, 0.3);
+          transform: scale(1.08);
+        }
+
+        &.close-btn:hover {
+          background: var(--color-danger);
+          border-color: var(--color-danger);
+        }
+      }
+    }
+
+    .image-lightbox-content {
+      max-width: 92vw;
+      max-height: 88vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+
+      .lightbox-image {
+        max-width: 100%;
+        max-height: 88vh;
+        object-fit: contain;
+        border-radius: var(--radius-md);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+        animation: scaleIn var(--transition-fast) cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+    }
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes scaleIn {
+    from { transform: scale(0.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
   .context-menu {
     position: absolute;
     z-index: 10000;

@@ -389,7 +389,7 @@
     }
 
     <div
-      *cdkVirtualFor="let message of (mainService.currentChat?.messages || []); let i = index; trackBy: trackByMessageId"
+      *cdkVirtualFor="let message of visibleMessages; let i = index; trackBy: trackByMessageId"
       class="virtual-message-item"
       [appMeasureHeight]="i"
       (heightMeasured)="onHeightMeasured(i, $event)"
@@ -487,7 +487,13 @@
           @if (message.isDeleted) {
           <span class="deleted-msg">{{ 'chat.deletedMessage' | i18n }}</span>
           } @else if (message.mediaType === 'image' && message.fileUrl) {
-          <img [src]="getMediaUrl(message.fileUrl)" class="msg-image" alt="Image" (contextmenu)="openContextMenu($event, message)" />
+          <img
+            [src]="getMediaUrl(message.fileUrl)"
+            class="msg-image"
+            alt="Image"
+            (click)="openImagePreview(message.fileUrl, $event)"
+            (contextmenu)="openContextMenu($event, message)"
+          />
           @if (message.content) {
           <div class="msg-caption">{{ message.content }}</div>
           }
@@ -868,6 +874,26 @@
       <span>{{ 'actions.delete' | i18n }}</span>
     </button>
     }
+  </div>
+  }
+
+  <!-- Full Image Preview Modal (Lightbox) -->
+  @if (previewImageModalUrl) {
+  <div class="image-lightbox-overlay" (click)="closeImagePreview()">
+    <div class="image-lightbox-toolbar" (click)="$event.stopPropagation()">
+      <button type="button" class="lightbox-btn" (click)="copyPreviewModalImage()" [attr.title]="'actions.copy' | i18n">
+        <fa-icon [icon]="['fas', 'copy']"></fa-icon>
+      </button>
+      <button type="button" class="lightbox-btn" (click)="downloadPreviewModalImage()" [attr.title]="'actions.download' | i18n">
+        <fa-icon [icon]="['fas', 'download']"></fa-icon>
+      </button>
+      <button type="button" class="lightbox-btn close-btn" (click)="closeImagePreview()" [attr.title]="'actions.cancel' | i18n">
+        <fa-icon [icon]="['fas', 'times']"></fa-icon>
+      </button>
+    </div>
+    <div class="image-lightbox-content" (click)="$event.stopPropagation()">
+      <img [src]="previewImageModalUrl" class="lightbox-image" alt="Preview" />
+    </div>
   </div>
   }
 </div>
