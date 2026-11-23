@@ -44,9 +44,9 @@ export interface ImagePreviewDialogData {
       inset: 0;
       width: 100vw;
       height: 100vh;
-      background: rgba(0, 0, 0, 0.9);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
       display: flex;
       flex-direction: column;
       align-items: center;
