@@ -876,24 +876,4 @@
     }
   </div>
   }
-
-  <!-- Full Image Preview Modal (Lightbox) -->
-  @if (previewImageModalUrl) {
-  <div class="image-lightbox-overlay" (click)="closeImagePreview()">
-    <div class="image-lightbox-toolbar" (click)="$event.stopPropagation()">
-      <button type="button" class="lightbox-btn" (click)="copyPreviewModalImage()" [attr.title]="'actions.copy' | i18n">
-        <fa-icon [icon]="['fas', 'copy']"></fa-icon>
-      </button>
-      <button type="button" class="lightbox-btn" (click)="downloadPreviewModalImage()" [attr.title]="'actions.download' | i18n">
-        <fa-icon [icon]="['fas', 'download']"></fa-icon>
-      </button>
-      <button type="button" class="lightbox-btn close-btn" (click)="closeImagePreview()" [attr.title]="'actions.cancel' | i18n">
-        <fa-icon [icon]="['fas', 'times']"></fa-icon>
-      </button>
-    </div>
-    <div class="image-lightbox-content" (click)="$event.stopPropagation()">
-      <img [src]="previewImageModalUrl" class="lightbox-image" alt="Preview" />
-    </div>
-  </div>
-  }
 </div>

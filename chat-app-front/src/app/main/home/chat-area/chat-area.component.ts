@@ -29,6 +29,7 @@ import { DeleteChatDialogComponent } from '../../delete-chat-dialog/delete-chat-
 import { DeleteMessageDialogComponent, DeleteMessageDialogResult } from '../../delete-message-dialog/delete-message-dialog.component';
 import { ForwardDialogComponent } from '../../forward-dialog/forward-dialog.component';
 import { MediaSendDialogComponent, MediaSendDialogResult } from '../../media-send-dialog/media-send-dialog.component';
+import { ImagePreviewDialogComponent, ImagePreviewDialogData } from '../../image-preview-dialog/image-preview-dialog.component';
 import { AddContactDialogComponent } from '../../add-contact-dialog/add-contact-dialog.component';
 import { compressImage } from '../../../helpers/image-compressor.helper';
 import { VoicePlayerComponent } from '../../voice-player/voice-player.component';
@@ -116,49 +117,23 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
   private lastMessagesLength = 0;
   private lastChatId?: string;
 
-  // Image preview modal state
-  readonly previewImageModalUrlSignal = signal<string | null>(null);
-  get previewImageModalUrl(): string | null {
-    return this.previewImageModalUrlSignal();
-  }
-  set previewImageModalUrl(v: string | null) {
-    this.previewImageModalUrlSignal.set(v);
-  }
-
   openImagePreview(imageUrl: string, event?: MouseEvent) {
     if (event) {
       event.stopPropagation();
     }
     if (!imageUrl) return;
-    this.previewImageModalUrl = this.getMediaUrl(imageUrl);
-    this.cdr.markForCheck();
-  }
-
-  closeImagePreview() {
-    this.previewImageModalUrl = null;
-    this.cdr.markForCheck();
-  }
-
-  copyPreviewModalImage() {
-    const url = this.previewImageModalUrl;
-    if (!url) return;
-    copyImageToClipboard(url).then((success) => {
-      if (success) {
-        this.mainService.snackbar.success('actions.copied', 2000);
-      }
+    const mediaUrl = this.getMediaUrl(imageUrl);
+    this.dialog.open<ImagePreviewDialogComponent, ImagePreviewDialogData>(ImagePreviewDialogComponent, {
+      data: { imageUrl: mediaUrl },
+      panelClass: 'image-preview-dialog-panel',
+      maxWidth: '100vw',
+      maxHeight: '100vh',
+      width: '100vw',
+      height: '100vh',
+      hasBackdrop: true,
+      backdropClass: 'cdk-overlay-dark-backdrop',
+      autoFocus: false,
     });
-  }
-
-  downloadPreviewModalImage() {
-    const url = this.previewImageModalUrl;
-    if (!url) return;
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = url.split('/').pop() || 'image.png';
-    a.target = '_blank';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
   }
 
   get visibleMessages(): Message[] {
@@ -510,10 +485,6 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
 
   @HostListener('document:keydown.escape')
   onEscapeKey() {
-    if (this.previewImageModalUrl) {
-      this.closeImagePreview();
-      return;
-    }
     if (this.showInChatSearch) {
       this.closeInChatSearch();
       return;
@@ -1305,39 +1276,19 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
     const menuEstimatedHeight = 320;
     const padding = 12;
 
-    const containerEl = document.querySelector('.chat-area-container') as HTMLElement | null;
-    const containerRect = containerEl ? containerEl.getBoundingClientRect() : null;
-
     let x = event.clientX;
     let y = event.clientY;
 
-    if (containerRect) {
-      x = event.clientX - containerRect.left;
-      y = event.clientY - containerRect.top;
-
-      const containerWidth = containerRect.width;
-      const containerHeight = containerRect.height;
-
-      if (x + menuEstimatedWidth > containerWidth - padding) {
-        x = Math.max(padding, x - menuEstimatedWidth);
-      }
-      if (y + menuEstimatedHeight > containerHeight - padding) {
-        y = Math.max(padding, y - menuEstimatedHeight);
-      }
-
-      this.contextMenuX = Math.max(padding, Math.min(x, containerWidth - menuEstimatedWidth - padding));
-      this.contextMenuY = Math.max(padding, Math.min(y, containerHeight - menuEstimatedHeight - padding));
-    } else {
-      if (x + menuEstimatedWidth > window.innerWidth - padding) {
-        x = Math.max(padding, x - menuEstimatedWidth);
-      }
-      if (y + menuEstimatedHeight > window.innerHeight - padding) {
-        y = Math.max(padding, y - menuEstimatedHeight);
-      }
-
-      this.contextMenuX = Math.max(padding, Math.min(x, window.innerWidth - menuEstimatedWidth - padding));
-      this.contextMenuY = Math.max(padding, Math.min(y, window.innerHeight - menuEstimatedHeight - padding));
+    if (x + menuEstimatedWidth > window.innerWidth - padding) {
+      x = Math.max(padding, x - menuEstimatedWidth);
     }
+    if (y + menuEstimatedHeight > window.innerHeight - padding) {
+      y = Math.max(padding, y - menuEstimatedHeight);
+    }
+
+    this.contextMenuX = Math.round(Math.max(padding, Math.min(x, window.innerWidth - menuEstimatedWidth - padding)));
+    this.contextMenuY = Math.round(Math.max(padding, Math.min(y, window.innerHeight - menuEstimatedHeight - padding)));
+
     this.showContextMenu = true;
     this.showContentPicker = false;
     this.cdr.markForCheck();
@@ -1346,29 +1297,19 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
       const menuEl = document.querySelector('.chat-area-container .context-menu, div.context-menu') as HTMLElement;
       if (menuEl) {
         const rect = menuEl.getBoundingClientRect();
-        const boundaryWidth = containerRect ? containerRect.width : window.innerWidth;
-        const boundaryHeight = containerRect ? containerRect.height : window.innerHeight;
-        const currentContainerLeft = containerRect ? containerRect.left : 0;
-        const currentContainerTop = containerRect ? containerRect.top : 0;
-
-        const menuRelRight = rect.right - currentContainerLeft;
-        const menuRelLeft = rect.left - currentContainerLeft;
-        const menuRelBottom = rect.bottom - currentContainerTop;
-        const menuRelTop = rect.top - currentContainerTop;
-
         let adjX = this.contextMenuX;
         let adjY = this.contextMenuY;
 
-        if (menuRelRight > boundaryWidth - padding) {
-          adjX -= (menuRelRight - (boundaryWidth - padding));
+        if (rect.right > window.innerWidth - padding) {
+          adjX -= (rect.right - (window.innerWidth - padding));
         }
-        if (menuRelLeft < padding) {
+        if (rect.left < padding) {
           adjX = padding;
         }
-        if (menuRelBottom > boundaryHeight - padding) {
-          adjY -= (menuRelBottom - (boundaryHeight - padding));
+        if (rect.bottom > window.innerHeight - padding) {
+          adjY -= (rect.bottom - (window.innerHeight - padding));
         }
-        if (menuRelTop < padding) {
+        if (rect.top < padding) {
           adjY = padding;
         }
 
