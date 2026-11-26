@@ -1318,33 +1318,36 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
 
   scrollToMessage(messageId: string) {
     if (!messageId) return;
-    const messages = this.mainService.currentChat?.messages || [];
+    const messages = this.visibleMessages;
     const index = messages.findIndex((m) => m._id === messageId);
     if (index === -1) return;
 
-    this.scrollStrategy.scrollToIndex(index, 'smooth', 'center');
+    // Jump to the target index immediately so virtual scroll renders and measures
+    // the surrounding items without updateMeasuredHeight aborting a long smooth scroll.
+    this.scrollStrategy.scrollToIndex(index, 'auto', 'center');
 
     let attempts = 0;
     const tryFocusElement = () => {
       const el = document.getElementById('msg-' + messageId);
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        el.classList.remove('highlight-pinned');
-        void el.offsetWidth;
-        el.classList.add('highlight-pinned');
-        setTimeout(() => el.classList.remove('highlight-pinned'), 2000);
+        this.scrollStrategy.scrollToIndex(index, 'auto', 'center');
+        requestAnimationFrame(() => {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          el.classList.remove('highlight-pinned');
+          void el.offsetWidth;
+          el.classList.add('highlight-pinned');
+          setTimeout(() => el.classList.remove('highlight-pinned'), 2000);
+        });
         return;
       }
       attempts++;
-      if (attempts === 3) {
-        this.scrollStrategy.scrollToIndex(index, 'auto', 'center');
-      }
       if (attempts < 8) {
-        setTimeout(tryFocusElement, 80);
+        this.scrollStrategy.scrollToIndex(index, 'auto', 'center');
+        setTimeout(tryFocusElement, 60);
       }
     };
 
-    setTimeout(tryFocusElement, 100);
+    setTimeout(tryFocusElement, 60);
   }
 
   openContextMenu(event: MouseEvent, message: Message) {
