@@ -266,7 +266,12 @@
         </div>
 
         <div class="chat-info">
-          <div class="chat-name">{{ displayName(chat) }}</div>
+          <div class="chat-name">
+            @if (chat.isSecret) {
+            <fa-icon [icon]="['fas', 'lock']" style="color: #10b981; font-size: 0.78em; margin-inline-end: 0.35rem;" [attr.title]="'e2ee.secretChat' | i18n"></fa-icon>
+            }
+            {{ displayName(chat) }}
+          </div>
           <div class="chat-last-message">
             @if (getChatTypingText(chat)) {
             <span class="chat-typing-indicator">

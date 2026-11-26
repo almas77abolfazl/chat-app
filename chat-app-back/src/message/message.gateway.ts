@@ -1,5 +1,5 @@
 import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
-import { UseGuards } from '@nestjs/common';
+import { Optional, UseGuards } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { MessageService } from './message.service';
 import { AuthService } from 'src/auth/auth.service';
@@ -10,6 +10,7 @@ import { BotService } from 'src/agent/bot/bot.service';
 import { ChatService } from 'src/chat/chat.service';
 import { UserService } from 'src/user/user.service';
 import { ReactionService } from './reaction/reaction.service';
+import { NotificationsService } from 'src/notifications/notifications.service';
 import { Message, MessageDocument } from './entities/message.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -38,6 +39,7 @@ export class MessageGateway {
     private chatService: ChatService,
     private userService: UserService,
     private reactionService: ReactionService,
+    @Optional() private notificationsService?: NotificationsService,
   ) {}
 
   afterInit() {
@@ -167,6 +169,8 @@ export class MessageGateway {
         linkPreview: messageData?.linkPreview,
         skipLinkPreview: messageData?.skipLinkPreview,
         waveform: messageData?.waveform || media?.waveform,
+        isEncrypted: !!messageData?.isEncrypted,
+        iv: messageData?.iv,
       });
       const participantIds = await this.chatService.getParticipantIds(chatId);
       for (const pid of participantIds) {
@@ -180,6 +184,19 @@ export class MessageGateway {
             senderId: senderId,
             senderName: `${sender.firstName ?? ''} ${sender.lastName ?? ''}`.trim(),
           });
+          // Deliver native Web Push when recipient has no active socket or is in background
+          const socketsInRoom = this.server?.sockets?.adapter?.rooms?.get(pid);
+          if (!socketsInRoom || socketsInRoom.size === 0) {
+            const senderName = `${sender.firstName ?? ''} ${sender.lastName ?? ''}`.trim() || 'New message';
+            const pushBody = (msg as any)?.isEncrypted
+              ? '🔒 Encrypted message'
+              : msg?.content?.trim() || (media?.mediaType ? `[${media.mediaType}]` : 'New message');
+            void this.notificationsService?.sendPushToUser(pid, {
+              title: senderName,
+              body: pushBody,
+              chatId,
+            });
+          }
         }
       }
     } catch (error) {

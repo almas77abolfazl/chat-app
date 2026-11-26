@@ -59,6 +59,9 @@ export interface ChatListItem {
   isGroup?: boolean;
   isChannel?: boolean;
   isSavedMessages?: boolean;
+  isSecret?: boolean;
+  selfDestructSeconds?: number;
+  peerPublicKey?: string | null;
   isDraft?: boolean;
   isOwner?: boolean;
   ownerId?: string;

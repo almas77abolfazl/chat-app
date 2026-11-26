@@ -11,12 +11,14 @@ import { AgentModule } from 'src/agent/agent.module';
 import { UserModule } from 'src/user/user.module';
 import { ReactionModule } from './reaction/reaction.module';
 import { ReactionSchema } from './reaction/reaction.entity';
+import { NotificationsModule } from 'src/notifications/notifications.module';
 
 @Module({
   imports: [
     AuthModule,
     AgentModule,
     ChatModule,
+    NotificationsModule,
     forwardRef(() => UserModule),
     forwardRef(() => ReactionModule),
     MongooseModule.forFeature([{ name: 'Message', schema: MessageSchema }]),

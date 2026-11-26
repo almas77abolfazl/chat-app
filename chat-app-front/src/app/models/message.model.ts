@@ -21,6 +21,9 @@ export interface Message {
   isDeleted?: boolean;
   deletedForEveryone?: boolean;
   mediaType?: 'image' | 'video' | 'file' | 'voice' | 'sticker' | 'gif' | 'emoji' | 'system';
+  isEncrypted?: boolean;
+  iv?: string;
+  expiresAt?: Date | string;
   systemAction?: string;
   metadata?: Record<string, any>;
   fileUrl?: string;

@@ -493,6 +493,13 @@ export class ProfileComponent implements OnInit {
     }
   }
 
+  startSecretChat(): void {
+    const uid = this.targetUserId || this.chatData?.peerId || this.chatData?.otherParticipant?._id;
+    if (!uid) return;
+    this.dialogRef.close();
+    this.mainService.startSecretChat(uid).pipe(take(1)).subscribe();
+  }
+
   startAudioCall(): void {
     const targetId = this.targetUserId || this.chatData?.peerId || this.chatData?.otherParticipant?._id;
     if (!targetId || this.isCurrentUser || this.isGroup || this.isChannel) return;

@@ -17,6 +17,8 @@ import { CacheService } from '../helpers/cache.service';
 import { environment } from '../../environments/environment';
 import { SnackbarService } from '../helpers/snackbar/snackbar.service';
 import { TranslationService } from '../helpers/translation.service';
+import { PushNotificationService } from '../helpers/push-notification.service';
+import { E2eeService } from '../helpers/e2ee.service';
 
 export interface OutboxItem {
   tempId: string;
@@ -204,6 +206,8 @@ export class MainService {
   public readonly snackbar = inject(SnackbarService);
   private readonly zone = inject(NgZone);
   public readonly translationService = inject(TranslationService);
+  public readonly pushService = inject(PushNotificationService);
+  public readonly e2eeService = inject(E2eeService);
 
   constructor() {
     const cachedAvatar = typeof localStorage !== 'undefined' ? localStorage.getItem('user-avatar') : null;
@@ -212,6 +216,7 @@ export class MainService {
     }
     const myId = this.authService.getUserId();
     if (myId) {
+      void this.e2eeService.ensureIdentityKeys(myId);
       this.getUserProfile(myId).pipe(take(1)).subscribe({
         next: (profile: any) => {
           if (profile?.profilePicture) {
@@ -222,6 +227,23 @@ export class MainService {
     }
     this.loadSyncTimestamps();
     this.loadOutboxQueue();
+    this.pushService.openChat$.subscribe((chatId) => {
+      const target = this.findChatById(chatId);
+      if (target) {
+        this.zone.run(() => this.openChat(target));
+      }
+    });
+    if (typeof window !== 'undefined') {
+      void this.pushService.syncIfAlreadyGranted();
+      const params = new URLSearchParams(window.location.search);
+      const chatIdParam = params.get('chatId');
+      if (chatIdParam) {
+        this.chatListUpdated$.pipe(take(1)).subscribe(() => {
+          const target = this.findChatById(chatIdParam);
+          if (target) this.openChat(target);
+        });
+      }
+    }
   }
 
   private getStorageKey(base: string): string {
@@ -439,6 +461,9 @@ export class MainService {
       isGroup: chat.isGroup,
       isChannel: chat.isChannel,
       isSavedMessages: !!chat.isSavedMessages,
+      isSecret: !!chat.isSecret,
+      selfDestructSeconds: chat.selfDestructSeconds || 0,
+      peerPublicKey: chat.peerPublicKey || null,
       isOwner: chat.ownerId === this.authService.getUserId(),
       ownerId: chat.ownerId,
       admins: chat.admins || [],
@@ -791,11 +816,15 @@ export class MainService {
             return;
           }
           const msg = payload.message;
+        void this.decryptMessageIfNeeded(msg, chatItem);
+        this.scheduleSelfDestructIfNeeded(msg);
           if (msg.sender) {
             const sender = typeof msg.sender === 'object' ? msg.sender : { _id: msg.senderId };
             msg.sender = sender;
             msg.senderId = sender?._id?.toString();
           }
+          void this.decryptMessageIfNeeded(msg, chatItem);
+          this.scheduleSelfDestructIfNeeded(msg);
           const messages = [...(chatItem.messages || [])];
           const pendingIdx = messages.findIndex((m) => m._pending === true);
           if (pendingIdx !== -1) {
@@ -861,6 +890,8 @@ export class MainService {
         const chatItem = this.findChatById(payload.chatId) || (this.currentChat?._id === payload.chatId ? this.currentChat : null);
         if (!chatItem) return;
         const msg = payload.message;
+        void this.decryptMessageIfNeeded(msg, chatItem);
+        this.scheduleSelfDestructIfNeeded(msg);
         const messages = [...(chatItem.messages || [])];
         const pendingIdx = messages.findIndex(
           (m) => (payload.tempId && m._tempId === payload.tempId) ||
@@ -914,6 +945,8 @@ export class MainService {
         }
 
         const msg = payload.message;
+        void this.decryptMessageIfNeeded(msg, chatItem);
+        this.scheduleSelfDestructIfNeeded(msg);
         const senderName = payload.senderName || 'Unknown';
         const content = msg.content?.substring(0, 50) || (msg.mediaType ? `[${msg.mediaType}]` : 'New message');
         const truncated = content.length >= 50 ? '...' : '';
@@ -1739,10 +1772,29 @@ export class MainService {
     const chatId = currentChat._id as string;
     this.stopTyping(chatId);
 
+    let outgoingContent = content;
+    let isEncrypted = false;
+    let iv: string | undefined;
+
+    if (currentChat.isSecret && currentChat.peerId) {
+      const myId = this.authService.getUserId();
+      const encrypted = await this.e2eeService.encryptForPeer(
+        myId,
+        currentChat.peerId,
+        currentChat.peerPublicKey,
+        content,
+      );
+      if (encrypted) {
+        outgoingContent = encrypted.ciphertext;
+        iv = encrypted.iv;
+        isEncrypted = true;
+      }
+    }
+
     this.enqueueOutbox({
       tempId,
       chatId,
-      content,
+      content: outgoingContent,
       linkPreview: options?.linkPreview,
       skipLinkPreview: options?.skipLinkPreview,
       createdAt: new Date().toISOString(),
@@ -1751,10 +1803,12 @@ export class MainService {
     if (this.socketService.isConnected()) {
       this.socketService.sendMessage({
         chatId,
-        content,
+        content: outgoingContent,
         linkPreview: options?.linkPreview,
         skipLinkPreview: options?.skipLinkPreview,
         tempId,
+        isEncrypted,
+        iv,
       });
     }
 
@@ -1957,6 +2011,10 @@ export class MainService {
           const serverNew = serverMessages.filter((m) => !existingIds.has(m._id) && !m.isDeleted);
           this.currentChat.messages = [...serverNew.reverse(), ...(this.currentChat.messages || [])];
         }
+        for (const m of this.currentChat.messages) {
+          void this.decryptMessageIfNeeded(m, this.currentChat);
+          this.scheduleSelfDestructIfNeeded(m);
+        }
         this.currentPage = response.currentPage;
         this.totalPages = response.totalPages;
         this.currentChatSignal.set({ ...this.currentChat, messages: [...this.currentChat.messages] });
@@ -2067,6 +2125,69 @@ export class MainService {
 
   unpinMessage(chatId: string, messageId?: string) {
     this.socketService.emit('unpinMessage', { chatId, messageId });
+  }
+
+  private async decryptMessageIfNeeded(msg: Message, chatItem: ChatListItem): Promise<void> {
+    if (!msg?.isEncrypted || !msg?.iv || !chatItem?.peerId) return;
+    const myId = this.authService.getUserId();
+    if (!myId) return;
+    const plain = await this.e2eeService.decryptFromPeer(
+      myId,
+      chatItem.peerId,
+      chatItem.peerPublicKey,
+      msg.content,
+      msg.iv,
+    );
+    msg.content = plain;
+    if (this.currentChat?._id === chatItem._id) {
+      this.currentChatSignal.set({ ...this.currentChat, messages: [...(this.currentChat.messages || [])] });
+    }
+    this.chatItemsSignal.set([...this.chatItems]);
+  }
+
+  private scheduleSelfDestructIfNeeded(msg: Message): void {
+    if (!msg?.expiresAt || !msg?._id) return;
+    const msLeft = new Date(msg.expiresAt).getTime() - Date.now();
+    if (msLeft <= 0) {
+      this.applyMessageDeleted(msg._id, false);
+      return;
+    }
+    setTimeout(() => {
+      this.applyMessageDeleted(msg._id, false);
+    }, Math.min(msLeft, 2147483647));
+  }
+
+  startSecretChat(targetUserId: string, selfDestructSeconds: number = 0): Observable<any> {
+    return this.httpRequestService.post('e2ee/secret-chat', { targetUserId, selfDestructSeconds }).pipe(
+      take(1),
+      tap((res: any) => {
+        if (!res?.chatId) return;
+        let item = this.findChatById(res.chatId);
+        if (!item) {
+          item = this.mapChatItem(res);
+          this.chatItems.unshift(item);
+          this.chatItemsSignal.set([...this.chatItems]);
+          this.chatListUpdatedSubject.next([...this.chatItems]);
+        }
+        this.openChat(item);
+      }),
+    );
+  }
+
+  updateSecretTimer(chatId: string, seconds: number): Observable<any> {
+    return this.httpRequestService.post(`e2ee/secret-chat/${chatId}/timer`, { selfDestructSeconds: seconds }).pipe(
+      take(1),
+      tap((res: any) => {
+        const nextVal = res?.selfDestructSeconds ?? seconds;
+        const item = this.findChatById(chatId);
+        if (item) item.selfDestructSeconds = nextVal;
+        if (this.currentChat?._id === chatId) {
+          this.currentChat.selfDestructSeconds = nextVal;
+          this.currentChatSignal.set({ ...this.currentChat, selfDestructSeconds: nextVal });
+        }
+        this.chatItemsSignal.set([...this.chatItems]);
+      }),
+    );
   }
 
   deleteChat(chatId: string, deleteForBoth: boolean = false): Observable<any> {

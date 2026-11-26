@@ -600,5 +600,10 @@
     "chooseImage": "Choose Image",
     "invalidImage": "Only image files are allowed",
     "storageError": "Failed to save wallpaper image. Please check browser storage space"
+  },
+  "e2ee": {
+    "secretChat": "Secret Chat",
+    "selfDestruct": "Self-Destruct Timer",
+    "timerOff": "Off"
   }
 }

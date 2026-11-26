@@ -86,6 +86,15 @@ export class Message {
   @Prop({ type: [Number], default: null })
   waveform?: number[];
 
+  @Prop({ default: false })
+  isEncrypted?: boolean;
+
+  @Prop({ type: String, default: null })
+  iv?: string;
+
+  @Prop({ type: Date, default: null })
+  expiresAt?: Date;
+
   @Prop({
     type: {
       fromUserId: { type: Types.ObjectId, ref: 'User' },

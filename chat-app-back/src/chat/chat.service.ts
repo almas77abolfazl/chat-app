@@ -38,7 +38,7 @@ export class ChatService {
       })
       .populate<{ participants: any[] }>(
         'participants',
-        'firstName lastName profilePicture avatars status isOnline lastSeen contacts blockedUsers privacy phoneNumber',
+        'firstName lastName profilePicture avatars status isOnline lastSeen contacts blockedUsers privacy phoneNumber e2eePublicKey',
       )
       .populate({
         path: 'lastMessage',
@@ -108,6 +108,9 @@ export class ChatService {
         isGroup: chat.isGroup,
         isChannel: chat.isChannel,
         isSavedMessages: !!chat.isSavedMessages,
+        isSecret: !!chat.isSecret,
+        selfDestructSeconds: chat.selfDestructSeconds || 0,
+        peerPublicKey: otherParticipant?.e2eePublicKey || null,
         avatar: chat.avatar || null,
         avatars: chat.avatars || [],
         ownerId: chat.owner?.toString() || null,
@@ -273,6 +276,7 @@ export class ChatService {
       .findOne({
         isGroup: false,
         isChannel: false,
+        isSecret: { $ne: true },
         participants: { $all: [aId, bId], $size: 2 },
       })
       .exec();
@@ -292,6 +296,7 @@ export class ChatService {
       .findOne({
         isGroup: false,
         isChannel: false,
+        isSecret: { $ne: true },
         isSavedMessages: true,
         participants: userObjId,
       })

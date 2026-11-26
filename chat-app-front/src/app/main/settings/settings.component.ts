@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { ThemeService, Theme } from '../../helpers/theme.service';
 import { TranslationService, Language } from '../../helpers/translation.service';
 import { MainService } from '../main.service';
+import { PushNotificationService } from '../../helpers/push-notification.service';
 import { I18nPipe } from '../../helpers/i18n.pipe';
 import { PrivacyRule, UserPrivacy } from '../../models/chat-list-item.model';
 import { getTelegramGradient, getInitials } from '../../helpers/avatar.helper';
@@ -21,6 +22,7 @@ import { take } from 'rxjs';
 })
 export class SettingsComponent implements OnInit {
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly pushService = inject(PushNotificationService);
 
   readonly notificationsEnabledSignal = signal<boolean>(true);
   get notificationsEnabled(): boolean { return this.notificationsEnabledSignal(); }
@@ -158,10 +160,18 @@ export class SettingsComponent implements OnInit {
   }
 
   toggleNotifications(): void {
-    this.notificationsEnabled = !this.notificationsEnabled;
-    this.mainService.updateNotificationSettings(this.notificationsEnabled).pipe(take(1)).subscribe({
+    const next = !this.notificationsEnabled;
+    this.notificationsEnabled = next;
+    this.mainService.updateNotificationSettings(next).pipe(take(1)).subscribe({
+      next: () => {
+        if (next) {
+          void this.pushService.enablePushNotifications();
+        } else {
+          void this.pushService.disablePushNotifications();
+        }
+      },
       error: () => {
-        this.notificationsEnabled = !this.notificationsEnabled;
+        this.notificationsEnabled = !next;
         this.mainService.snackbar.error('settings.saveError', 3000);
       },
     });

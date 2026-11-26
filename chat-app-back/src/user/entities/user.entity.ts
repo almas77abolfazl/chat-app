@@ -78,6 +78,9 @@ export class User {
   @Prop({ default: true })
   notifications: boolean;
 
+  @Prop({ type: String, default: null })
+  e2eePublicKey?: string;
+
   @Prop({
     type: {
       lastSeen: { type: String, default: 'everybody' },

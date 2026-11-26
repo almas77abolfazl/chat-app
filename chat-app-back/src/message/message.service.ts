@@ -28,7 +28,14 @@ export class MessageService {
     content: string,
     media?: { mediaType: string; fileUrl: string; fileName?: string; fileSize?: number; waveform?: number[] },
     forwardFrom?: { fromUserId?: string; fromSenderName?: string; originalChatId?: string },
-    options?: { linkPreview?: LinkPreviewData; skipLinkPreview?: boolean; waveform?: number[] },
+    options?: {
+      linkPreview?: LinkPreviewData;
+      skipLinkPreview?: boolean;
+      waveform?: number[];
+      isEncrypted?: boolean;
+      iv?: string;
+      expiresAt?: Date;
+    },
   ): Promise<any> {
     const chat = await this.findChatForMessage(chatId);
     const senderObjectId = new Types.ObjectId(senderId);
@@ -84,6 +91,11 @@ export class MessageService {
         : undefined,
       linkPreview: linkPreview || undefined,
       waveform: media?.waveform || options?.waveform || undefined,
+      isEncrypted: !!options?.isEncrypted,
+      iv: options?.iv || undefined,
+      expiresAt:
+        options?.expiresAt ||
+        (chat.isSecret && (chat.selfDestructSeconds || 0) > 0 ? new Date(Date.now() + (chat.selfDestructSeconds || 0) * 1000) : undefined),
     });
 
     chat.messages.push(message._id as unknown as Types.ObjectId);
@@ -562,6 +574,9 @@ export class MessageService {
       deletedAt: message.deletedAt,
       isDeleted: message.isDeleted,
       mediaType: message.mediaType,
+      isEncrypted: !!message.isEncrypted,
+      iv: message.iv || undefined,
+      expiresAt: message.expiresAt || undefined,
       fileUrl: message.fileUrl,
       fileName: message.fileName,
       fileSize: message.fileSize,

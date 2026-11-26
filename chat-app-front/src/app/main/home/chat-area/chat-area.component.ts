@@ -1300,6 +1300,29 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
     return `${senderPrefix}${this.translationService.t('chat.pinnedMessage')}`;
   }
 
+  cycleSelfDestructTimer(): void {
+    const chat = this.mainService.currentChat;
+    if (!chat?.isSecret || !chat?._id) return;
+    const options = [0, 5, 60, 3600];
+    const current = chat.selfDestructSeconds || 0;
+    const idx = options.indexOf(current);
+    const next = options[(idx + 1) % options.length];
+    this.mainService.updateSecretTimer(chat._id, next).subscribe({
+      next: () => {
+        const label = this.formatSelfDestructLabel(next);
+        this.mainService.snackbar.info(`${this.translationService.t('e2ee.selfDestruct')}: ${label}`, 2500);
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  formatSelfDestructLabel(seconds: number): string {
+    if (!seconds) return this.translationService.t('e2ee.timerOff');
+    if (seconds < 60) return `${seconds}s`;
+    if (seconds < 3600) return `${Math.round(seconds / 60)}m`;
+    return `${Math.round(seconds / 3600)}h`;
+  }
+
   pinMessage(message: Message) {
     if (!this.canPinMessages()) return;
     const chatId = this.mainService.currentChat?._id;

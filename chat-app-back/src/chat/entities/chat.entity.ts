@@ -38,6 +38,12 @@ export class Chat extends Document {
   @Prop({ default: false })
   isSavedMessages?: boolean;
 
+  @Prop({ default: false })
+  isSecret?: boolean;
+
+  @Prop({ type: Number, default: 0 })
+  selfDestructSeconds?: number;
+
   @Prop({ type: Types.ObjectId, ref: 'User' })
   owner?: Types.ObjectId;
 
