@@ -436,6 +436,7 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
       this.checkPeerBlocked();
       this.markCurrentChatMessagesRead();
       this.replyingToId = null;
+      this.activePinnedIndexSignal.set(0);
       this.cdr.markForCheck();
     });
 
@@ -1236,17 +1237,83 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
     });
   }
 
+  readonly activePinnedIndexSignal = signal<number>(0);
+
+  get pinnedMessages(): Message[] {
+    const chat = this.mainService.currentChat;
+    if (!chat) return [];
+    const list = (chat.pinnedMessages || []).filter((m) => !!m && !m.isDeleted);
+    if (list.length > 0) return list;
+    return chat.pinnedMessage && !chat.pinnedMessage.isDeleted ? [chat.pinnedMessage] : [];
+  }
+
+  get activePinnedMessage(): Message | null {
+    const list = this.pinnedMessages;
+    if (list.length === 0) return null;
+    const idx = this.activePinnedIndexSignal() % list.length;
+    return list[idx] || list[0];
+  }
+
+  get activePinnedIndex(): number {
+    const list = this.pinnedMessages;
+    if (list.length === 0) return 0;
+    return this.activePinnedIndexSignal() % list.length;
+  }
+
+  canPinMessages(): boolean {
+    const chat = this.mainService.currentChat;
+    if (!chat) return false;
+    if (!chat.isGroup && !chat.isChannel) return true;
+    const myId = this.mainService.authService.getUserId();
+    if (chat.isOwner || (chat.ownerId && chat.ownerId === myId)) return true;
+    const admin = chat.admins?.find((a) => a.userId === myId);
+    return !!admin?.permissions?.canPinMessages;
+  }
+
+  onPinnedBarClick(): void {
+    const list = this.pinnedMessages;
+    const current = this.activePinnedMessage;
+    if (!current?._id) return;
+    this.scrollToMessage(current._id);
+    if (list.length > 1) {
+      this.activePinnedIndexSignal.set((this.activePinnedIndex + 1) % list.length);
+    }
+  }
+
+  pinnedMessagePreview(msg: Message | null): string {
+    if (!msg) return '';
+    const senderPrefix =
+      (this.mainService.currentChat?.isGroup || this.mainService.currentChat?.isChannel) && msg.sender
+        ? `${this.senderName(msg)}: `
+        : '';
+    if (msg.content?.trim()) {
+      return `${senderPrefix}${msg.content.trim()}`;
+    }
+    if (msg.mediaType === 'image') return `${senderPrefix}${this.translationService.t('chat.mediaPhoto')}`;
+    if (msg.mediaType === 'video') return `${senderPrefix}${this.translationService.t('chat.mediaVideo')}`;
+    if (msg.mediaType === 'voice') return `${senderPrefix}${this.translationService.t('chat.mediaVoice')}`;
+    if (msg.mediaType === 'file') return `${senderPrefix}${msg.fileName || this.translationService.t('chat.mediaFile')}`;
+    if (msg.mediaType === 'gif') return `${senderPrefix}GIF`;
+    if (msg.mediaType === 'sticker') return `${senderPrefix}${this.translationService.t('chat.stickers')}`;
+    return `${senderPrefix}${this.translationService.t('chat.pinnedMessage')}`;
+  }
+
   pinMessage(message: Message) {
+    if (!this.canPinMessages()) return;
     const chatId = this.mainService.currentChat?._id;
     if (!chatId || !message?._id) return;
     this.mainService.pinMessage(chatId, message._id);
+    this.activePinnedIndexSignal.set(0);
     this.closeContextMenu();
   }
 
-  unpinMessage() {
+  unpinMessage(messageId?: string) {
+    if (!this.canPinMessages()) return;
     const chatId = this.mainService.currentChat?._id;
     if (!chatId) return;
-    this.mainService.unpinMessage(chatId);
+    const targetId = messageId || this.activePinnedMessage?._id;
+    this.mainService.unpinMessage(chatId, targetId);
+    this.activePinnedIndexSignal.set(0);
   }
 
   scrollToMessage(messageId: string) {
@@ -1342,10 +1409,7 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
 
   isMessagePinned(message: Message): boolean {
     if (!message) return false;
-    const pinned = this.mainService.currentChat?.pinnedMessage;
-    if (!pinned) return false;
-    const pinnedId = typeof pinned === 'string' ? pinned : (pinned as any)._id;
-    return pinnedId === message._id;
+    return this.pinnedMessages.some((m) => (typeof m === 'string' ? m : m._id) === message._id);
   }
 
   addContextMenuReaction(emoji: string) {
@@ -1367,7 +1431,7 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
         break;
       case 'pin':
         if (this.isMessagePinned(this.contextMenuTarget!)) {
-          this.unpinMessage();
+          this.unpinMessage(this.contextMenuTarget!._id);
           this.mainService.snackbar.info(this.translationService.t('actions.unpin'), 2000);
         } else {
           this.pinMessage(this.contextMenuTarget!);

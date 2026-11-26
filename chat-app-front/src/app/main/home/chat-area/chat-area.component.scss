@@ -67,6 +67,27 @@
       background: color-mix(in srgb, var(--color-primary) 10%, transparent);
     }
 
+    .pinned-segments {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      height: 26px;
+      width: 3px;
+      flex-shrink: 0;
+
+      .pinned-segment {
+        flex: 1;
+        width: 100%;
+        border-radius: 999px;
+        background: color-mix(in srgb, var(--color-primary) 28%, transparent);
+        transition: background var(--transition-fast);
+
+        &.active {
+          background: var(--color-primary);
+        }
+      }
+    }
+
     .pinned-bar-icon {
       color: var(--color-primary);
       font-size: 0.95rem;
@@ -87,6 +108,15 @@
         font-weight: 700;
         color: var(--color-primary);
         line-height: 1.2;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+
+        .pinned-bar-counter {
+          font-size: 0.68rem;
+          font-weight: 600;
+          opacity: 0.8;
+        }
       }
 
       .pinned-bar-text {

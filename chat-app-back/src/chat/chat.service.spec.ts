@@ -136,4 +136,53 @@ describe('ChatService', () => {
       expect(mockChat.save).toHaveBeenCalled();
     });
   });
+
+  describe('Pinned Messages', () => {
+    const msgId1 = '507f1f77bcf86cd799439021';
+    const msgId2 = '507f1f77bcf86cd799439022';
+
+    beforeEach(() => {
+      mockChat.isGroup = true;
+      mockChat.isChannel = false;
+      mockChat.participants = ['507f1f77bcf86cd799439012', '507f1f77bcf86cd799439013'];
+      mockChat.admins = [];
+      (mockChat as any).pinnedMessage = null;
+      (mockChat as any).pinnedMessages = [];
+      mockChat.save.mockClear();
+    });
+
+    it('should allow group owner to pin multiple messages with newest first', async () => {
+      await service.pinMessage(mockChat._id, msgId1, mockChat.owner);
+      await service.pinMessage(mockChat._id, msgId2, mockChat.owner);
+      expect((mockChat as any).pinnedMessages.map((id: any) => id.toString())).toEqual([msgId2, msgId1]);
+      expect((mockChat as any).pinnedMessage.toString()).toBe(msgId2);
+    });
+
+    it('should forbid regular group member from pinning', async () => {
+      await expect(service.pinMessage(mockChat._id, msgId1, '507f1f77bcf86cd799439013')).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should allow admin with canPinMessages to pin and unpin', async () => {
+      mockChat.admins = [
+        {
+          userId: new Types.ObjectId('507f1f77bcf86cd799439013'),
+          permissions: { canPinMessages: true },
+        },
+      ] as any;
+      await service.pinMessage(mockChat._id, msgId1, '507f1f77bcf86cd799439013');
+      await service.pinMessage(mockChat._id, msgId2, '507f1f77bcf86cd799439013');
+      await service.unpinMessage(mockChat._id, '507f1f77bcf86cd799439013', msgId2);
+      expect((mockChat as any).pinnedMessages.map((id: any) => id.toString())).toEqual([msgId1]);
+      expect((mockChat as any).pinnedMessage.toString()).toBe(msgId1);
+    });
+
+    it('should allow any participant in direct chat to pin and unpin', async () => {
+      mockChat.isGroup = false;
+      await service.pinMessage(mockChat._id, msgId1, '507f1f77bcf86cd799439013');
+      expect((mockChat as any).pinnedMessages.map((id: any) => id.toString())).toEqual([msgId1]);
+      await service.unpinMessage(mockChat._id, '507f1f77bcf86cd799439013');
+      expect((mockChat as any).pinnedMessages).toEqual([]);
+      expect((mockChat as any).pinnedMessage).toBeNull();
+    });
+  });
 });

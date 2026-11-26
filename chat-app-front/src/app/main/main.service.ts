@@ -445,6 +445,7 @@ export class MainService {
       participants: chat.participants,
       lastMessage: chat.lastMessage,
       pinnedMessage: chat.pinnedMessage || null,
+      pinnedMessages: chat.pinnedMessages || (chat.pinnedMessage ? [chat.pinnedMessage] : []),
       messageCount: chat.unreadCount,
       updatedAt: chat.updatedAt,
       isOnline: isDirect ? peer?.isOnline : undefined,
@@ -996,15 +997,25 @@ export class MainService {
       });
     });
 
-      this.socketService.on('messagePinned', (payload: { chatId: string; pinnedMessage: Message | null }) => {
+    this.socketService.on('messagePinned', (payload: { chatId: string; pinnedMessage: Message | null; pinnedMessages?: Message[] }) => {
       this.zone.run(() => {
+        const nextPinnedList = payload.pinnedMessages ?? (payload.pinnedMessage ? [payload.pinnedMessage] : []);
+        const nextPinned = payload.pinnedMessage ?? nextPinnedList[0] ?? null;
         const chatItem = this.findChatById(payload.chatId);
         if (chatItem) {
-          chatItem.pinnedMessage = payload.pinnedMessage;
+          chatItem.pinnedMessage = nextPinned;
+          chatItem.pinnedMessages = nextPinnedList;
         }
         if (this.currentChat?._id === payload.chatId) {
-          this.currentChat.pinnedMessage = payload.pinnedMessage;
+          this.currentChat.pinnedMessage = nextPinned;
+          this.currentChat.pinnedMessages = nextPinnedList;
+          this.currentChatSignal.set({
+            ...this.currentChat,
+            pinnedMessage: nextPinned,
+            pinnedMessages: [...nextPinnedList],
+          });
         }
+        this.chatItemsSignal.set([...this.chatItems]);
         this.chatListUpdatedSubject.next(this.chatItems);
       });
     });
@@ -1581,6 +1592,17 @@ export class MainService {
         chatItem.lastMessage = remaining.length > 0 ? remaining[remaining.length - 1] : undefined;
         updatedAny = true;
       }
+      if (Array.isArray(chatItem.pinnedMessages)) {
+        const prevLen = chatItem.pinnedMessages.length;
+        chatItem.pinnedMessages = chatItem.pinnedMessages.filter((m) => m._id !== messageId);
+        if (chatItem.pinnedMessages.length !== prevLen) {
+          chatItem.pinnedMessage = chatItem.pinnedMessages[0] || null;
+          updatedAny = true;
+        }
+      } else if (chatItem.pinnedMessage?._id === messageId) {
+        chatItem.pinnedMessage = null;
+        updatedAny = true;
+      }
     });
 
     if (this.currentChat) {
@@ -1595,7 +1617,22 @@ export class MainService {
         this.currentChat.lastMessage = remaining.length > 0 ? remaining[remaining.length - 1] : undefined;
         updatedAny = true;
       }
-      this.currentChatSignal.set({ ...this.currentChat, messages: [...this.currentChat.messages] });
+      if (Array.isArray(this.currentChat.pinnedMessages)) {
+        const prevLen = this.currentChat.pinnedMessages.length;
+        this.currentChat.pinnedMessages = this.currentChat.pinnedMessages.filter((m) => m._id !== messageId);
+        if (this.currentChat.pinnedMessages.length !== prevLen) {
+          this.currentChat.pinnedMessage = this.currentChat.pinnedMessages[0] || null;
+          updatedAny = true;
+        }
+      } else if (this.currentChat.pinnedMessage?._id === messageId) {
+        this.currentChat.pinnedMessage = null;
+        updatedAny = true;
+      }
+      this.currentChatSignal.set({
+        ...this.currentChat,
+        messages: [...this.currentChat.messages],
+        pinnedMessages: this.currentChat.pinnedMessages ? [...this.currentChat.pinnedMessages] : [],
+      });
     }
 
     this.messageDeletedSubject.next({ messageId });
@@ -2028,8 +2065,8 @@ export class MainService {
     this.socketService.emit('pinMessage', { chatId, messageId });
   }
 
-  unpinMessage(chatId: string) {
-    this.socketService.emit('unpinMessage', { chatId });
+  unpinMessage(chatId: string, messageId?: string) {
+    this.socketService.emit('unpinMessage', { chatId, messageId });
   }
 
   deleteChat(chatId: string, deleteForBoth: boolean = false): Observable<any> {

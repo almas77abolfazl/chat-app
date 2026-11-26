@@ -67,6 +67,7 @@ export interface ChatListItem {
   participants?: ChatParticipant[];
   lastMessage: Message;
   pinnedMessage?: Message | null;
+  pinnedMessages?: Message[];
   updatedAt?: Date;
   messages?: Message[];
   messageCount?: number;

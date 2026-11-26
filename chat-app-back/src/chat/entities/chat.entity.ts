@@ -59,6 +59,9 @@ export class Chat extends Document {
   @Prop({ type: Types.ObjectId, ref: 'Message', default: null })
   pinnedMessage?: Types.ObjectId;
 
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Message' }], default: [] })
+  pinnedMessages?: Types.ObjectId[];
+
   @Prop({ type: Date, default: Date.now })
   updatedAt: Date;
 

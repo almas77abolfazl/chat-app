@@ -257,14 +257,19 @@ export class MessageService {
       if (chat) {
         let chatModified = false;
         if (chat.lastMessage && chat.lastMessage.toString() === messageId) {
-          const prevMsgQuery = this.messageModel
-            .findOne({ chat: chat._id, isDeleted: { $ne: true } })
-            .sort({ createdAt: -1 });
+          const prevMsgQuery = this.messageModel.findOne({ chat: chat._id, isDeleted: { $ne: true } }).sort({ createdAt: -1 });
           const prevMsg = prevMsgQuery?.exec ? await prevMsgQuery.exec() : await prevMsgQuery;
           chat.lastMessage = prevMsg ? (prevMsg._id as any) : null;
           chatModified = true;
         }
-        if (chat.pinnedMessage && chat.pinnedMessage.toString() === messageId) {
+        if (Array.isArray(chat.pinnedMessages) && chat.pinnedMessages.length > 0) {
+          const prevLen = chat.pinnedMessages.length;
+          chat.pinnedMessages = chat.pinnedMessages.filter((pid: any) => pid.toString() !== messageId);
+          if (chat.pinnedMessages.length !== prevLen) {
+            chat.pinnedMessage = chat.pinnedMessages[0] || (undefined as any);
+            chatModified = true;
+          }
+        } else if (chat.pinnedMessage && chat.pinnedMessage.toString() === messageId) {
           chat.pinnedMessage = undefined as any;
           chatModified = true;
         }

@@ -521,14 +521,18 @@ export class MessageGateway {
     try {
       const user = client.data.user as IUser;
       await this.chatService.pinMessage(data.chatId, data.messageId, user._id.toString());
-      const message = await this.messageModel.findById(data.messageId).populate('sender', 'firstName lastName profilePicture').exec();
-      const hydrated = this.messageService.hydrateMessage(message);
+      const pinnedMessages = await this.chatService.getHydratedPinnedMessages(data.chatId);
+      const hydratedList = pinnedMessages.map((m) => this.messageService.hydrateMessage(m));
+      const latestPinned = hydratedList[0] || null;
       const participantIds = await this.chatService.getParticipantIds(data.chatId);
+      const payload = {
+        chatId: data.chatId,
+        pinnedMessage: latestPinned,
+        pinnedMessages: hydratedList,
+      };
       for (const pid of participantIds) {
-        this.server.to(pid).emit('messagePinned', {
-          chatId: data.chatId,
-          pinnedMessage: hydrated,
-        });
+        this.server.to(pid).emit('messagePinned', payload);
+        this.server.to(pid).emit('message:pinned', payload);
       }
     } catch (error) {
       client.emit('messageError', { message: error?.message ?? 'Failed to pin message' });
@@ -536,16 +540,23 @@ export class MessageGateway {
   }
 
   @SubscribeMessage('unpinMessage')
-  async handleUnpinMessage(@MessageBody() data: { chatId: string }, @ConnectedSocket() client: Socket) {
+  async handleUnpinMessage(@MessageBody() data: { chatId: string; messageId?: string }, @ConnectedSocket() client: Socket) {
     try {
       const user = client.data.user as IUser;
-      await this.chatService.unpinMessage(data.chatId, user._id.toString());
+      await this.chatService.unpinMessage(data.chatId, user._id.toString(), data.messageId);
+      const pinnedMessages = await this.chatService.getHydratedPinnedMessages(data.chatId);
+      const hydratedList = pinnedMessages.map((m) => this.messageService.hydrateMessage(m));
+      const latestPinned = hydratedList[0] || null;
       const participantIds = await this.chatService.getParticipantIds(data.chatId);
+      const payload = {
+        chatId: data.chatId,
+        messageId: data.messageId || null,
+        pinnedMessage: latestPinned,
+        pinnedMessages: hydratedList,
+      };
       for (const pid of participantIds) {
-        this.server.to(pid).emit('messagePinned', {
-          chatId: data.chatId,
-          pinnedMessage: null,
-        });
+        this.server.to(pid).emit('messagePinned', payload);
+        this.server.to(pid).emit('message:unpinned', payload);
       }
     } catch (error) {
       client.emit('messageError', { message: error?.message ?? 'Failed to unpin message' });

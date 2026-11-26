@@ -45,7 +45,18 @@ export class ChatService {
         match: { isDeleted: { $ne: true } },
         select: 'content sender createdAt',
       })
-      .populate('pinnedMessage', 'content sender createdAt status isDeleted')
+      .populate({
+        path: 'pinnedMessage',
+        match: { isDeleted: { $ne: true } },
+        select: 'content mediaType fileName sender createdAt status isDeleted',
+        populate: { path: 'sender', select: 'firstName lastName profilePicture' },
+      })
+      .populate({
+        path: 'pinnedMessages',
+        match: { isDeleted: { $ne: true } },
+        select: 'content mediaType fileName sender createdAt status isDeleted',
+        populate: { path: 'sender', select: 'firstName lastName profilePicture' },
+      })
       .sort({ updatedAt: -1 })
       .exec();
 
@@ -62,11 +73,22 @@ export class ChatService {
           'firstName lastName profilePicture avatars status isOnline lastSeen contacts blockedUsers privacy phoneNumber',
         )
         .populate({
-        path: 'lastMessage',
-        match: { isDeleted: { $ne: true } },
-        select: 'content sender createdAt',
-      })
-        .populate('pinnedMessage', 'content sender createdAt status isDeleted')
+          path: 'lastMessage',
+          match: { isDeleted: { $ne: true } },
+          select: 'content sender createdAt',
+        })
+        .populate({
+          path: 'pinnedMessage',
+          match: { isDeleted: { $ne: true } },
+          select: 'content mediaType fileName sender createdAt status isDeleted',
+          populate: { path: 'sender', select: 'firstName lastName profilePicture' },
+        })
+        .populate({
+          path: 'pinnedMessages',
+          match: { isDeleted: { $ne: true } },
+          select: 'content mediaType fileName sender createdAt status isDeleted',
+          populate: { path: 'sender', select: 'firstName lastName profilePicture' },
+        })
         .sort({ updatedAt: -1 })
         .exec();
     }
@@ -200,7 +222,16 @@ export class ChatService {
           };
         })(),
         lastMessage: chat.lastMessage,
-        pinnedMessage: chat.pinnedMessage || null,
+        pinnedMessage: (() => {
+          const rawList = ((chat as any).pinnedMessages || []).filter((m: any) => m && !m.isDeleted);
+          const fallback = chat.pinnedMessage && !(chat.pinnedMessage as any).isDeleted ? chat.pinnedMessage : null;
+          return rawList.length > 0 ? rawList[0] : fallback;
+        })(),
+        pinnedMessages: (() => {
+          const rawList = ((chat as any).pinnedMessages || []).filter((m: any) => m && !m.isDeleted);
+          const fallback = chat.pinnedMessage && !(chat.pinnedMessage as any).isDeleted ? chat.pinnedMessage : null;
+          return rawList.length > 0 ? rawList : fallback ? [fallback] : [];
+        })(),
         unreadCount,
         updatedAt: chat.updatedAt,
       };
@@ -211,7 +242,16 @@ export class ChatService {
     const chat = await this.chatModel
       .findById(chatId)
       .populate('participants', 'firstName lastName profilePicture avatars status isOnline lastSeen phoneNumber')
-      .populate('pinnedMessage')
+      .populate({
+        path: 'pinnedMessage',
+        match: { isDeleted: { $ne: true } },
+        populate: { path: 'sender', select: 'firstName lastName profilePicture' },
+      })
+      .populate({
+        path: 'pinnedMessages',
+        match: { isDeleted: { $ne: true } },
+        populate: { path: 'sender', select: 'firstName lastName profilePicture' },
+      })
       .exec();
     if (!chat) return null;
     if (!chat.participants.some((p: any) => (p._id || p).toString() === userId)) {
@@ -400,26 +440,94 @@ export class ChatService {
     return chat;
   }
 
-  async pinMessage(chatId: string, messageId: string, userId: string): Promise<ChatDocument> {
-    const chat = await this.findChat(chatId, userId);
-    if (!chat) throw new NotFoundException('Chat not found');
-    if (chat.isChannel && chat.owner?.toString() !== userId) {
-      throw new ForbiddenException('Only channel owner can pin messages');
+  private assertCanPinMessages(chat: ChatDocument, userId: string): void {
+    if (chat.isGroup || chat.isChannel) {
+      const isOwner = chat.owner?.toString() === userId;
+      const admin = chat.admins?.find((a: any) => a.userId?.toString() === userId);
+      const canPin = isOwner || !!admin?.permissions?.canPinMessages;
+      if (!canPin) {
+        throw new ForbiddenException('Only owner or admins with canPinMessages permission can pin/unpin messages');
+      }
     }
-    chat.pinnedMessage = new Types.ObjectId(messageId) as any;
+  }
+
+  async pinMessage(chatId: string, messageId: string, userId: string): Promise<ChatDocument> {
+    const chat = await this.chatModel.findById(chatId).exec();
+    if (!chat) throw new NotFoundException('Chat not found');
+    if (!chat.participants.some((p: any) => (p._id || p).toString() === userId)) {
+      throw new ForbiddenException('You are not a member of this chat');
+    }
+    this.assertCanPinMessages(chat, userId);
+
+    if (this.messageModel && typeof this.messageModel.findOne === 'function') {
+      const msg = await this.messageModel.findOne({ _id: messageId, chat: chat._id, isDeleted: { $ne: true } }).exec();
+      if (!msg) {
+        throw new NotFoundException('Message not found');
+      }
+    }
+
+    const msgObjectId = new Types.ObjectId(messageId);
+    const existingList: Types.ObjectId[] = Array.isArray(chat.pinnedMessages) ? [...chat.pinnedMessages] : [];
+    if (existingList.length === 0 && chat.pinnedMessage) {
+      const legacyId = (chat.pinnedMessage as any)._id || chat.pinnedMessage;
+      if (legacyId) existingList.push(new Types.ObjectId(legacyId.toString()));
+    }
+
+    const filtered = existingList.filter((id) => id.toString() !== messageId);
+    filtered.unshift(msgObjectId);
+    chat.pinnedMessages = filtered as any;
+    chat.pinnedMessage = filtered[0] as any;
     await chat.save();
     return chat;
   }
 
-  async unpinMessage(chatId: string, userId: string): Promise<ChatDocument> {
-    const chat = await this.findChat(chatId, userId);
+  async unpinMessage(chatId: string, userId: string, messageId?: string): Promise<ChatDocument> {
+    const chat = await this.chatModel.findById(chatId).exec();
     if (!chat) throw new NotFoundException('Chat not found');
-    if (chat.isChannel && chat.owner?.toString() !== userId) {
-      throw new ForbiddenException('Only channel owner can unpin messages');
+    if (!chat.participants.some((p: any) => (p._id || p).toString() === userId)) {
+      throw new ForbiddenException('You are not a member of this chat');
     }
-    chat.pinnedMessage = null as any;
+    this.assertCanPinMessages(chat, userId);
+
+    if (messageId) {
+      const existingList: Types.ObjectId[] = Array.isArray(chat.pinnedMessages) ? [...chat.pinnedMessages] : [];
+      if (existingList.length === 0 && chat.pinnedMessage) {
+        const legacyId = (chat.pinnedMessage as any)._id || chat.pinnedMessage;
+        if (legacyId) existingList.push(new Types.ObjectId(legacyId.toString()));
+      }
+      const remaining = existingList.filter((id) => id.toString() !== messageId);
+      chat.pinnedMessages = remaining as any;
+      chat.pinnedMessage = (remaining.length > 0 ? remaining[0] : null) as any;
+    } else {
+      chat.pinnedMessages = [] as any;
+      chat.pinnedMessage = null as any;
+    }
+
     await chat.save();
     return chat;
+  }
+
+  async getHydratedPinnedMessages(chatId: string): Promise<MessageDocument[]> {
+    const chat = await this.chatModel
+      .findById(chatId)
+      .populate({
+        path: 'pinnedMessages',
+        match: { isDeleted: { $ne: true } },
+        populate: { path: 'sender', select: 'firstName lastName profilePicture' },
+      })
+      .populate({
+        path: 'pinnedMessage',
+        match: { isDeleted: { $ne: true } },
+        populate: { path: 'sender', select: 'firstName lastName profilePicture' },
+      })
+      .exec();
+    if (!chat) return [];
+    const list = ((chat as any).pinnedMessages || []).filter((m: any) => m && !m.isDeleted);
+    if (list.length > 0) return list;
+    if (chat.pinnedMessage && !(chat.pinnedMessage as any).isDeleted) {
+      return [chat.pinnedMessage as unknown as MessageDocument];
+    }
+    return [];
   }
 
   async updateChatAvatar(chatId: string, userId: string, filename: string): Promise<ChatDocument> {
@@ -608,6 +716,7 @@ export class ChatService {
     }
     chat.lastMessage = undefined;
     chat.pinnedMessage = undefined;
+    chat.pinnedMessages = [];
     await chat.save();
   }
 }
