@@ -1,5 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { toObservable } from '@angular/core/rxjs-interop';
+import { compressImage } from '../../helpers/image-compressor.helper';
 
 export type ChatBackgroundType = 'solid' | 'gradient' | 'pattern' | 'custom';
 
@@ -90,6 +91,12 @@ export const CHAT_BACKGROUNDS: ChatBackground[] = [
 
 @Injectable({ providedIn: 'root' })
 export class ChatBackgroundService {
+  private static readonly IDB_NAME = 'chat_app_wallpapers';
+  private static readonly IDB_STORE = 'wallpapers';
+  private static readonly IDB_CUSTOM_KEY = 'custom_wallpaper';
+
+  private customObjectUrl: string | null = null;
+
   readonly currentBg = signal<ChatBackground>(this.getInitialBackground());
   readonly bg$ = toObservable(this.currentBg);
 
@@ -100,6 +107,7 @@ export class ChatBackgroundService {
     const initial = this.currentBg();
     this.blur.set(initial.blur || 0);
     this.dim.set(initial.dim || 0);
+    void this.restoreCustomWallpaperIfNeeded();
   }
 
   private getInitialBackground(): ChatBackground {
@@ -108,12 +116,52 @@ export class ChatBackgroundService {
     if (saved) {
       try {
         const parsed = JSON.parse(saved) as ChatBackground;
+        if (parsed.type === 'custom') {
+          return {
+            ...parsed,
+            value: parsed.value || CHAT_BACKGROUNDS[0].value,
+            preview: parsed.preview || CHAT_BACKGROUNDS[0].preview,
+          };
+        }
         if (parsed.value) return parsed;
-      } catch (e) {
-        // fallback
+      } catch {
+        // fallback to default
       }
     }
     return CHAT_BACKGROUNDS[0];
+  }
+
+  private async restoreCustomWallpaperIfNeeded(): Promise<void> {
+    if (typeof localStorage === 'undefined') return;
+    const saved = localStorage.getItem('chat_bg');
+    if (!saved) return;
+    try {
+      const parsed = JSON.parse(saved) as ChatBackground;
+      if (parsed.type !== 'custom') return;
+
+      // Migrate legacy base64 data-URI from localStorage to IndexedDB
+      if (parsed.value && parsed.value.includes('data:image/')) {
+        const match = parsed.value.match(/data:image\/[^"')]+/);
+        if (match) {
+          const res = await fetch(match[0]);
+          const blob = await res.blob();
+          await this.saveWallpaperBlob(blob);
+          this.applyCustomBlob(blob, parsed.blur ?? this.blur(), parsed.dim ?? this.dim());
+          this.saveToStorage(this.currentBg());
+          return;
+        }
+      }
+
+      const blob = await this.loadWallpaperBlob();
+      if (blob) {
+        this.applyCustomBlob(blob, parsed.blur ?? this.blur(), parsed.dim ?? this.dim());
+      } else {
+        // Custom image missing from IndexedDB — fall back cleanly
+        this.setBackground(CHAT_BACKGROUNDS[0]);
+      }
+    } catch {
+      // Ignore storage restoration errors
+    }
   }
 
   get current(): ChatBackground {
@@ -126,6 +174,10 @@ export class ChatBackgroundService {
       blur: this.blur(),
       dim: this.dim(),
     };
+    if (bg.type !== 'custom') {
+      this.revokeCustomObjectUrl();
+      void this.deleteWallpaperBlob();
+    }
     this.currentBg.set(updated);
     this.saveToStorage(updated);
   }
@@ -144,6 +196,18 @@ export class ChatBackgroundService {
     this.saveToStorage(updated);
   }
 
+  async setCustomWallpaperFile(file: File): Promise<boolean> {
+    try {
+      const compressed = await compressImage(file, 1920, 0.85);
+      await this.saveWallpaperBlob(compressed);
+      this.applyCustomBlob(compressed, this.blur(), this.dim());
+      this.saveToStorage(this.currentBg());
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
   setCustomImage(dataUrl: string): void {
     const customBg: ChatBackground = {
       id: 'custom-upload',
@@ -155,16 +219,116 @@ export class ChatBackgroundService {
       dim: this.dim(),
     };
     this.currentBg.set(customBg);
-    this.saveToStorage(customBg);
+    void (async () => {
+      try {
+        const res = await fetch(dataUrl);
+        const blob = await res.blob();
+        await this.saveWallpaperBlob(blob);
+      } catch {
+        // ignore
+      }
+      this.saveToStorage(customBg);
+    })();
+  }
+
+  private applyCustomBlob(blob: Blob, blur: number, dim: number): void {
+    this.revokeCustomObjectUrl();
+    const objectUrl = URL.createObjectURL(blob);
+    this.customObjectUrl = objectUrl;
+    const customBg: ChatBackground = {
+      id: 'custom-upload',
+      type: 'custom',
+      value: `url("${objectUrl}")`,
+      name: 'custom',
+      preview: `url("${objectUrl}")`,
+      blur,
+      dim,
+    };
+    this.currentBg.set(customBg);
+  }
+
+  private revokeCustomObjectUrl(): void {
+    if (this.customObjectUrl) {
+      URL.revokeObjectURL(this.customObjectUrl);
+      this.customObjectUrl = null;
+    }
   }
 
   private saveToStorage(bg: ChatBackground): void {
-    if (typeof localStorage !== 'undefined') {
-      try {
-        localStorage.setItem('chat_bg', JSON.stringify(bg));
-      } catch (err) {
-        console.warn('Could not save wallpaper to localStorage (exceeded quota?)', err);
+    if (typeof localStorage === 'undefined') return;
+    try {
+      // Never store large custom image blobs/data-URIs in localStorage
+      const metadata: ChatBackground =
+        bg.type === 'custom'
+          ? { id: bg.id, type: 'custom', value: '', preview: '', name: bg.name, blur: bg.blur, dim: bg.dim }
+          : bg;
+      localStorage.setItem('chat_bg', JSON.stringify(metadata));
+    } catch (err) {
+      console.warn('Could not save wallpaper metadata to localStorage', err);
+    }
+  }
+
+  private openDb(): Promise<IDBDatabase> {
+    return new Promise((resolve, reject) => {
+      if (typeof indexedDB === 'undefined') {
+        reject(new Error('IndexedDB is not supported'));
+        return;
       }
+      const req = indexedDB.open(ChatBackgroundService.IDB_NAME, 1);
+      req.onupgradeneeded = () => {
+        const db = req.result;
+        if (!db.objectStoreNames.contains(ChatBackgroundService.IDB_STORE)) {
+          db.createObjectStore(ChatBackgroundService.IDB_STORE);
+        }
+      };
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error || new Error('Failed to open IndexedDB'));
+    });
+  }
+
+  private async saveWallpaperBlob(blob: Blob): Promise<void> {
+    const db = await this.openDb();
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const tx = db.transaction(ChatBackgroundService.IDB_STORE, 'readwrite');
+        tx.objectStore(ChatBackgroundService.IDB_STORE).put(blob, ChatBackgroundService.IDB_CUSTOM_KEY);
+        tx.oncomplete = () => resolve();
+        tx.onerror = () => reject(tx.error || new Error('Failed to save wallpaper to IndexedDB'));
+      });
+    } finally {
+      db.close();
+    }
+  }
+
+  private async loadWallpaperBlob(): Promise<Blob | null> {
+    const db = await this.openDb();
+    try {
+      return await new Promise<Blob | null>((resolve, reject) => {
+        const tx = db.transaction(ChatBackgroundService.IDB_STORE, 'readonly');
+        const req = tx.objectStore(ChatBackgroundService.IDB_STORE).get(ChatBackgroundService.IDB_CUSTOM_KEY);
+        req.onsuccess = () => resolve((req.result as Blob) || null);
+        req.onerror = () => reject(req.error || new Error('Failed to read wallpaper from IndexedDB'));
+      });
+    } finally {
+      db.close();
+    }
+  }
+
+  private async deleteWallpaperBlob(): Promise<void> {
+    try {
+      const db = await this.openDb();
+      try {
+        await new Promise<void>((resolve, reject) => {
+          const tx = db.transaction(ChatBackgroundService.IDB_STORE, 'readwrite');
+          tx.objectStore(ChatBackgroundService.IDB_STORE).delete(ChatBackgroundService.IDB_CUSTOM_KEY);
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+      } finally {
+        db.close();
+      }
+    } catch {
+      // ignore cleanup errors
     }
   }
 }

@@ -1802,24 +1802,20 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
   }
 
-  onCustomWallpaperSelected(event: Event): void {
+  async onCustomWallpaperSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     if (!input.files || input.files.length === 0) return;
     const file = input.files[0];
+    input.value = '';
     if (!file.type.startsWith('image/')) {
-      this.mainService.snackbar.error('فقط فایل تصویری مجاز است', 3000);
+      this.mainService.snackbar.error(this.translationService.t('wallpaper.invalidImage'), 3000);
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const result = e.target?.result as string;
-      if (result) {
-        this.chatBgService.setCustomImage(result);
-        this.cdr.markForCheck();
-      }
-    };
-    reader.readAsDataURL(file);
-    input.value = '';
+    const ok = await this.chatBgService.setCustomWallpaperFile(file);
+    if (!ok) {
+      this.mainService.snackbar.error(this.translationService.t('wallpaper.storageError'), 4000);
+    }
+    this.cdr.markForCheck();
   }
 
   onBlurChange(event: Event): void {

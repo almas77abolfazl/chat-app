@@ -597,6 +597,8 @@
     "blur": "Blur Level",
     "dim": "Dimming Level",
     "reset": "Reset",
-    "chooseImage": "Choose Image"
+    "chooseImage": "Choose Image",
+    "invalidImage": "Only image files are allowed",
+    "storageError": "Failed to save wallpaper image. Please check browser storage space"
   }
 }
