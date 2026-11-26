@@ -862,6 +862,8 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
     this.brokenAvatars.add(chatId);
   }
 
+  private isScrollingToMessage = false;
+
   onScroll(event?: Event) {
     const vp = this.virtualViewport();
     if (!vp || !this.mainService.currentChat) return;
@@ -873,7 +875,7 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
     const distanceFromBottom = totalSize - (scrollOffset + viewportSize);
     this.showScrollBottom = distanceFromBottom > 150;
 
-    if (scrollOffset > 100) return;
+    if (scrollOffset > 100 || this.isScrollingToMessage) return;
 
     this.loadOlderMessages();
   }
@@ -1316,34 +1318,70 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
     this.activePinnedIndexSignal.set(0);
   }
 
-  scrollToMessage(messageId: string) {
+  scrollToMessage(messageId: string, pageLoadsLeft = 10) {
     if (!messageId) return;
     const messages = this.visibleMessages;
     const index = messages.findIndex((m) => m._id === messageId);
-    if (index === -1) return;
 
-    // Jump to the target index immediately so virtual scroll renders and measures
-    // the surrounding items without updateMeasuredHeight aborting a long smooth scroll.
+    if (index === -1) {
+      if (
+        pageLoadsLeft > 0 &&
+        this.mainService.currentPage < this.mainService.totalPages &&
+        !this.mainService.loadingMessages
+      ) {
+        this.mainService
+          .loadMessages(this.mainService.currentPage + 1)
+          .pipe(take(1))
+          .subscribe({
+            next: () => {
+              this.syncVirtualScrollMessages();
+              this.cdr.markForCheck();
+              setTimeout(() => this.scrollToMessage(messageId, pageLoadsLeft - 1), 50);
+            },
+            error: () => {},
+          });
+      }
+      return;
+    }
+
+    this.isScrollingToMessage = true;
     this.scrollStrategy.scrollToIndex(index, 'auto', 'center');
+
+    const centerInViewport = (el: HTMLElement) => {
+      const vpEl = this.virtualViewport()?.elementRef?.nativeElement;
+      if (vpEl) {
+        const vpRect = vpEl.getBoundingClientRect();
+        const elRect = el.getBoundingClientRect();
+        const targetTop = vpEl.scrollTop + (elRect.top - vpRect.top) - (vpRect.height - elRect.height) / 2;
+        vpEl.scrollTop = Math.max(0, targetTop);
+      } else {
+        el.scrollIntoView({ behavior: 'auto', block: 'center' });
+      }
+    };
 
     let attempts = 0;
     const tryFocusElement = () => {
       const el = document.getElementById('msg-' + messageId);
       if (el) {
-        this.scrollStrategy.scrollToIndex(index, 'auto', 'center');
-        requestAnimationFrame(() => {
-          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          el.classList.remove('highlight-pinned');
-          void el.offsetWidth;
-          el.classList.add('highlight-pinned');
-          setTimeout(() => el.classList.remove('highlight-pinned'), 2000);
-        });
+        centerInViewport(el);
+        el.classList.remove('highlight-pinned');
+        void el.offsetWidth;
+        el.classList.add('highlight-pinned');
+        setTimeout(() => el.classList.remove('highlight-pinned'), 2000);
+        // Re-center once after layout/image measurements settle, then release scroll lock
+        setTimeout(() => {
+          const settledEl = document.getElementById('msg-' + messageId);
+          if (settledEl) centerInViewport(settledEl);
+          this.isScrollingToMessage = false;
+        }, 120);
         return;
       }
       attempts++;
       if (attempts < 8) {
         this.scrollStrategy.scrollToIndex(index, 'auto', 'center');
         setTimeout(tryFocusElement, 60);
+      } else {
+        this.isScrollingToMessage = false;
       }
     };
 
