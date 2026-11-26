@@ -1322,16 +1322,29 @@ export class ChatAreaComponent implements OnInit, AfterViewInit, DoCheck {
     const index = messages.findIndex((m) => m._id === messageId);
     if (index === -1) return;
 
-    this.scrollStrategy.scrollToIndex(index, 'smooth');
+    this.scrollStrategy.scrollToIndex(index, 'smooth', 'center');
 
-    setTimeout(() => {
+    let attempts = 0;
+    const tryFocusElement = () => {
       const el = document.getElementById('msg-' + messageId);
       if (el) {
         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el.classList.remove('highlight-pinned');
+        void el.offsetWidth;
         el.classList.add('highlight-pinned');
         setTimeout(() => el.classList.remove('highlight-pinned'), 2000);
+        return;
       }
-    }, 120);
+      attempts++;
+      if (attempts === 3) {
+        this.scrollStrategy.scrollToIndex(index, 'auto', 'center');
+      }
+      if (attempts < 8) {
+        setTimeout(tryFocusElement, 80);
+      }
+    };
+
+    setTimeout(tryFocusElement, 100);
   }
 
   openContextMenu(event: MouseEvent, message: Message) {
